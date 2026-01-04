@@ -1,0 +1,161 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
+use App\Models\Mitra;
+use Illuminate\Container\Attributes\Auth;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Throwable;
+
+class MitraController extends Controller
+{
+    public function index()
+    {
+        try {
+            $data = Mitra::with(['akunHutang', 'akunPiutang'])
+                ->latest()
+                ->paginate(10);
+
+            return apiResponse(true, 'Data mitra berhasil diambil', $data);
+        } catch (Throwable $e) {
+            return apiResponse(false, 'Gagal mengambil data mitra', null, $e->getMessage(), 500);
+        }
+    }
+
+    public function show($id)
+    {
+        try {
+            $mitra = Mitra::with(['akunHutang', 'akunPiutang'])->find($id);
+
+            if (!$mitra) {
+                return apiResponse(false, 'Mitra tidak ditemukan', null, null, 404);
+            }
+
+            return apiResponse(true, 'Detail mitra', $mitra);
+        } catch (Throwable $e) {
+            return apiResponse(false, 'Gagal mengambil detail mitra', null, $e->getMessage(), 500);
+        }
+    }
+
+    public function store(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'nama' => 'required|string|max:150',
+                'tipe_mitra' => 'required|in:Supplier,Client,Both',
+                'email' => 'nullable|email',
+                'nomor_mitra' => 'nullable|unique:mitras,nomor_mitra',
+            ]);
+
+            if ($validator->fails()) {
+                return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
+            }
+
+            $data = $request->all();
+            $data['akun_hutang_id']  = 18;
+            $data['akun_piutang_id'] = 5;
+
+            $mitra = Mitra::create($data);
+
+            $this->logActivity(
+                'Create',
+                'mitras',
+                $mitra->id,
+                null,
+                $mitra->toArray()
+            );
+
+            return apiResponse(true, 'Mitra berhasil dibuat', $mitra, null, 201);
+
+            return apiResponse(true, 'Mitra berhasil dibuat', $mitra, null, 201);
+        } catch (Throwable $e) {
+            return apiResponse(false, 'Gagal membuat mitra', null, $e->getMessage(), 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            $mitra = Mitra::find($id);
+
+            if (!$mitra) {
+                return apiResponse(false, 'Mitra tidak ditemukan', null, null, 404);
+            }
+
+            $dataSebelum = $mitra->toArray();
+
+            $validator = Validator::make($request->all(), [
+                'nama' => 'sometimes|required|string|max:150',
+                'tipe_mitra' => 'sometimes|required|in:Supplier,Client,Both',
+                'email' => 'nullable|email',
+                'nomor_mitra' => 'nullable|unique:mitras,nomor_mitra,' . $id,
+            ]);
+
+            if ($validator->fails()) {
+                return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
+            }
+
+            $mitra->update($request->all());
+
+            $this->logActivity(
+                'Update',
+                'mitras',
+                $mitra->id,
+                $dataSebelum,
+                $mitra->fresh()->toArray()
+            );
+
+            return apiResponse(true, 'Mitra berhasil diperbarui', $mitra);
+        } catch (Throwable $e) {
+            return apiResponse(false, 'Gagal memperbarui mitra', null, $e->getMessage(), 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $mitra = Mitra::find($id);
+
+            if (!$mitra) {
+                return apiResponse(false, 'Mitra tidak ditemukan', null, null, 404);
+            }
+
+            $dataSebelum = $mitra->toArray();
+
+            $mitra->delete();
+
+            $this->logActivity(
+                'Soft Delete',
+                'mitras',
+                $mitra->id,
+                $dataSebelum,
+                null
+            );
+
+            return apiResponse(true, 'Mitra berhasil dihapus');
+        } catch (Throwable $e) {
+            return apiResponse(false, 'Gagal menghapus mitra', null, $e->getMessage(), 500);
+        }
+    }
+
+    private function logActivity(
+        string $tindakan,
+        string $tabel,
+        int $dataId,
+        $dataSebelum = null,
+        $dataSesudah = null
+    ) {
+        ActivityLog::create([
+            'user_id'       => '1',
+            'tindakan'      => $tindakan,
+            'tabel_terkait' => $tabel,
+            'data_id'       => $dataId,
+            'data_sebelum'  => $dataSebelum,
+            'data_sesudah'  => $dataSesudah,
+            'ip_address'    => request()->ip(),
+        ]);
+    }
+}
