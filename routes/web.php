@@ -8,4 +8,4 @@ Route::get('/', function () {
 
 Route::get('users', function () {
     return view('Users.index');
-});
+})->name('users.index');
