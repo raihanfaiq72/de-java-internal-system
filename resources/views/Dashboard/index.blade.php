@@ -915,3 +915,10 @@
         <!-- end page content -->
     </div>
     @endsection
+
+    @push('js')
+    <script src="{{url('')}}/assets/libs/apexcharts/apexcharts.min.js"></script>
+    <script src="{{url('')}}/assets/apexcharts.com/samples/assets/stock-prices.js"></script>
+    <script src="{{url('')}}/assets/js/pages/index.init.js"></script>
+    <script src="{{url('')}}/assets/js/DynamicSelect.js"></script>
+    @endpush

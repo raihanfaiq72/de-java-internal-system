@@ -22,6 +22,8 @@
     <link href="{{url('')}}/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
     <link href="{{url('')}}/assets/css/app.min.css" rel="stylesheet" type="text/css" />
 
+    @stack('css')
+
 </head>
 
 <body>
@@ -375,12 +377,10 @@
 
     <script src="{{url('')}}/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="{{url('')}}/assets/libs/simplebar/simplebar.min.js"></script>
-
-    <script src="{{url('')}}/assets/libs/apexcharts/apexcharts.min.js"></script>
-    <script src="{{url('')}}/assets/apexcharts.com/samples/assets/stock-prices.js"></script>
-    <script src="{{url('')}}/assets/js/pages/index.init.js"></script>
-    <script src="{{url('')}}/assets/js/DynamicSelect.js"></script>
+    @stack('js')
     <script src="{{url('')}}/assets/js/app.js"></script>
+
+
 </body>
 <!--end body-->
 
