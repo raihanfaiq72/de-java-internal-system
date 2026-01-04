@@ -13,7 +13,16 @@ return new class extends Migration
     {
         Schema::create('invoice_items', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
+            $table->foreignId('invoice_id')->constrained('invoices');
+            $table->foreignId('produk_id')->nullable()->constrained('products');
+
+            $table->string('nama_produk_manual')->nullable();
+            $table->text('deskripsi_produk')->nullable();
+
+            $table->decimal('qty', 15, 2);
+            $table->decimal('harga_satuan', 15, 2);
+            $table->decimal('diskon_nilai', 15, 2)->default(0);
+            $table->decimal('total_harga_item', 15, 2);
         });
     }
 

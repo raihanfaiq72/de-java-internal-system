@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('journals', function (Blueprint $table) {
             $table->id();
+            $table->date('tgl_jurnal');
+            $table->string('nomor_referensi', 100)->nullable();
+            $table->text('keterangan')->nullable();
             $table->timestamps();
         });
     }

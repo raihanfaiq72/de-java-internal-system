@@ -13,8 +13,13 @@ return new class extends Migration
     {
         Schema::create('units', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
+            $table->foreignId('unit_category_id')
+                ->constrained('unit_categories');
+            $table->string('nama_unit', 50);
+            $table->string('simbol', 10);
+            $table->text('keterangan')->nullable();
         });
+
     }
 
     /**

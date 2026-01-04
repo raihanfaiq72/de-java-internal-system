@@ -13,8 +13,11 @@ return new class extends Migration
     {
         Schema::create('unit_categories', function (Blueprint $table) {
             $table->id();
+            $table->string('nama_kategori', 100);
+            $table->decimal('konversi_nilai', 15, 2)->default(1);
             $table->timestamps();
         });
+
     }
 
     /**

@@ -11,10 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('c_o_a_s', function (Blueprint $table) {
+        Schema::create('chart_of_accounts', function (Blueprint $table) {
             $table->id();
+            $table->string('kode_akun', 20)->unique();
+            $table->string('nama_akun', 100);
+            $table->enum('kelompok_akun', [
+                'Aktiva', 'Kewajiban', 'Modal', 'Pendapatan', 'Beban'
+            ]);
+            $table->boolean('is_kas_bank')->default(false);
             $table->timestamps();
+            $table->softDeletes();
         });
+
     }
 
     /**
@@ -22,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('c_o_a_s');
+        Schema::dropIfExists('chart_of_accounts');
     }
 };

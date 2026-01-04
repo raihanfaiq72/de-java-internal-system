@@ -13,8 +13,12 @@ return new class extends Migration
     {
         Schema::create('taxes', function (Blueprint $table) {
             $table->id();
+            $table->string('nama_pajak', 100);
+            $table->decimal('persentase', 5, 3);
+            $table->enum('tipe_pajak', ['Exclusive', 'Inclusive', 'Gross Up']);
             $table->timestamps();
         });
+
     }
 
     /**

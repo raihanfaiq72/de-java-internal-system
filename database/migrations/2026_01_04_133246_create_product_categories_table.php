@@ -13,8 +13,12 @@ return new class extends Migration
     {
         Schema::create('product_categories', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
+            $table->string('nama_kategori', 100);
+            $table->foreignId('parent_id')->nullable()
+                ->constrained('product_categories');
+            $table->text('deskripsi')->nullable();
         });
+
     }
 
     /**

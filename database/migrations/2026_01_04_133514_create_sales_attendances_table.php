@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('sales_attendances', function (Blueprint $table) {
             $table->id();
+            $table->integer('user_id');
+            $table->date('tgl_presensi');
+            $table->time('jam_masuk')->nullable();
+            $table->time('jam_keluar')->nullable();
+            $table->string('lokasi_gps')->nullable();
+            $table->string('keterangan')->nullable();
             $table->timestamps();
         });
     }

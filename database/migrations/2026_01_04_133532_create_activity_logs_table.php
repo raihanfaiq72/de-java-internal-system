@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('activity_logs', function (Blueprint $table) {
             $table->id();
+            $table->integer('user_id');
+            $table->string('tindakan', 50);
+            $table->string('tabel_terkait', 50);
+            $table->integer('data_id');
+            $table->json('data_sebelum')->nullable();
+            $table->json('data_sesudah')->nullable();
+            $table->string('ip_address', 45)->nullable();
             $table->timestamps();
         });
     }

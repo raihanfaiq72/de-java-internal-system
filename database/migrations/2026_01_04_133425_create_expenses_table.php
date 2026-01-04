@@ -13,7 +13,16 @@ return new class extends Migration
     {
         Schema::create('expenses', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('akun_keuangan_id')->constrained('chart_of_accounts');
+            $table->string('nama_biaya');
+            $table->string('nama_vendor')->nullable();
+            $table->foreignId('akun_beban_id')->constrained('chart_of_accounts');
+            $table->date('tgl_biaya');
+            $table->string('kategori_biaya', 100)->nullable();
+            $table->decimal('jumlah', 15, 2);
+            $table->text('keterangan')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

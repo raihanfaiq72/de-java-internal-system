@@ -13,7 +13,11 @@ return new class extends Migration
     {
         Schema::create('invoice_item_taxes', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
+            $table->foreignId('invoice_item_id')
+                ->constrained('invoice_items');
+            $table->foreignId('tax_id')
+                ->constrained('taxes');
+            $table->decimal('nilai_pajak_diterapkan', 15, 2);
         });
     }
 

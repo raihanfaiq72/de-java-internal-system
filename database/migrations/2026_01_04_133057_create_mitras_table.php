@@ -13,8 +13,29 @@ return new class extends Migration
     {
         Schema::create('mitras', function (Blueprint $table) {
             $table->id();
+            $table->string('nomor_mitra', 50)->unique()->nullable();
+            $table->string('badan_usaha', 20)->nullable();
+            $table->string('nama', 150);
+            $table->string('no_hp', 20)->nullable();
+            $table->string('email', 100)->nullable();
+            $table->enum('tipe_mitra', ['Supplier', 'Client', 'Both']);
+            $table->text('alamat')->nullable();
+
+            $table->string('kontak_nama', 100)->nullable();
+            $table->string('kontak_jabatan', 100)->nullable();
+            $table->string('kontak_no_hp', 20)->nullable();
+            $table->string('kontak_email', 100)->nullable();
+
+            $table->foreignId('akun_hutang_id')->nullable()
+                ->constrained('chart_of_accounts');
+
+            $table->foreignId('akun_piutang_id')->nullable()
+                ->constrained('chart_of_accounts');
+
             $table->timestamps();
+            $table->softDeletes();
         });
+
     }
 
     /**

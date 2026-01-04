@@ -13,7 +13,10 @@ return new class extends Migration
     {
         Schema::create('journal_details', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
+            $table->foreignId('journal_id')->constrained('journals');
+            $table->foreignId('akun_id')->constrained('chart_of_accounts');
+            $table->decimal('debit', 15, 2)->default(0);
+            $table->decimal('kredit', 15, 2)->default(0);
         });
     }
 
