@@ -15,7 +15,7 @@ class SuperAdminSeeder extends Seeder
         $roleId = DB::table('roles')->updateOrInsert(
             ['name' => 'superadmin'],
             [
-                'description' => 'Super Admin',
+                'description' => 'Ini role Super Admin',
                 'created_at' => $now,
                 'updated_at' => $now
             ]
