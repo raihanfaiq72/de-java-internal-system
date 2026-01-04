@@ -3,8 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Payment extends Model
 {
-    //
+    use SoftDeletes;
+
+    protected $table = 'payments';
+
+    protected $fillable = [
+        'invoice_id',
+        'nomor_pembayaran',
+        'ref_no',
+        'tgl_pembayaran',
+        'metode_pembayaran',
+        'jumlah_bayar',
+        'akun_keuangan_id',
+        'catatan',
+    ];
 }
