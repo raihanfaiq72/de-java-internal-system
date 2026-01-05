@@ -18,6 +18,7 @@ Route::prefix('mitra-api')->group(function() {
     Route::get('/{id}', [MitraController::class, 'show']);
     Route::put('/{id}', [MitraController::class, 'update']);
     Route::delete('/{id}', [MitraController::class, 'destroy']);
+    Route::get('/search/{value}', [MitraController::class, 'search']);
 });
 
 Route::get('/user', function (Request $request) {

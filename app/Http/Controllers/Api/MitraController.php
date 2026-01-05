@@ -141,6 +141,43 @@ class MitraController extends Controller
         }
     }
 
+    public function search($value)
+    {
+        try {
+            $data = Mitra::with(['akunHutang', 'akunPiutang'])
+                ->where(function ($q) use ($value) {
+                    $q->where('nama', 'LIKE', "%{$value}%")
+                    ->orWhere('nomor_mitra', 'LIKE', "%{$value}%")
+                    ->orWhere('email', 'LIKE', "%{$value}%")
+                    ->orWhere('no_hp', 'LIKE', "%{$value}%")
+                    ->orWhere('tipe_mitra', 'LIKE', "%{$value}%")
+                    ->orWhere('badan_usaha', 'LIKE', "%{$value}%")
+                    ->orWhere('alamat', 'LIKE', "%{$value}%")
+                    ->orWhere('kontak_nama', 'LIKE', "%{$value}%")
+                    ->orWhere('kontak_jabatan', 'LIKE', "%{$value}%")
+                    ->orWhere('kontak_no_hp', 'LIKE', "%{$value}%")
+                    ->orWhere('kontak_email', 'LIKE', "%{$value}%");
+                })
+                ->latest()
+                ->paginate(10);
+
+            return apiResponse(
+                true,
+                'Hasil pencarian mitra',
+                $data
+            );
+
+        } catch (Throwable $e) {
+            return apiResponse(
+                false,
+                'Gagal melakukan pencarian mitra',
+                null,
+                $e->getMessage(),
+                500
+            );
+        }
+    }
+
     private function logActivity(
         string $tindakan,
         string $tabel,
