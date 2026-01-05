@@ -108,7 +108,6 @@ Route::prefix('payment-api')->group(function () {
     Route::get('/', [PaymentController::class, 'index']);
     Route::post('/', [PaymentController::class, 'store']);
     Route::get('/{id}', [PaymentController::class, 'show']);
-    Route::put('/{id}', [PaymentController::class, 'update']);
     Route::delete('/{id}', [PaymentController::class, 'destroy']);
     Route::get('/search/{value}', [PaymentController::class, 'search']);
 });
