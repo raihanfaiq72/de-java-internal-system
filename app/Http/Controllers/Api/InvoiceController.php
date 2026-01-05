@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\ActivityLog;
+use App\Models\InvoiceItem;
+use App\Models\InvoiceItemTaxe;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class InvoiceController extends Controller
@@ -88,6 +91,77 @@ class InvoiceController extends Controller
             ->paginate(10);
 
         return apiResponse(true, 'Hasil pencarian invoice', $data);
+    }
+
+    public function createFullInvoice(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'invoice.tipe_invoice'   => 'required|in:Sales,Purchase',
+            'invoice.nomor_invoice'  => 'required|unique:invoices,nomor_invoice',
+            'invoice.tgl_invoice'    => 'required|date',
+            'invoice.mitra_id'       => 'required|exists:mitras,id',
+
+            'items'                  => 'required|array|min:1',
+            'items.*.qty'            => 'required|numeric|min:0.01',
+            'items.*.harga_satuan'   => 'required|numeric|min:0',
+            'items.*.taxes'          => 'nullable|array',
+            'items.*.taxes.*.tax_id' => 'required|exists:taxes,id',
+        ]);
+
+        if ($validator->fails()) {
+            return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
+        }
+
+        return DB::transaction(function () use ($request) {
+
+            $invoice = Invoice::create($request->invoice);
+
+            $this->logActivity(
+                'Create',
+                'invoices',
+                $invoice->id,
+                null,
+                $invoice
+            );
+
+            foreach ($request->items as $itemData) {
+
+                $itemData['invoice_id'] = $invoice->id;
+
+                $item = InvoiceItem::create($itemData);
+
+                $this->logActivity(
+                    'Create',
+                    'invoice_items',
+                    $item->id,
+                    null,
+                    $item
+                );
+
+                if (!empty($itemData['taxes'])) {
+                    foreach ($itemData['taxes'] as $taxData) {
+
+                        $tax = InvoiceItemTaxe::create([
+                            'invoice_item_id'       => $item->id,
+                            'tax_id'                => $taxData['tax_id'],
+                            'nilai_pajak_diterapkan'=> $taxData['nilai_pajak_diterapkan'] ?? 0
+                        ]);
+
+                        $this->logActivity(
+                            'Create',
+                            'invoice_item_taxes',
+                            $tax->id,
+                            null,
+                            $tax
+                        );
+                    }
+                }
+            }
+
+            return apiResponse(true, 'Invoice berhasil dibuat lengkap', [
+                'invoice' => $invoice->load('items.taxes.tax')
+            ], null, 201);
+        });
     }
 
     private function logActivity($tindakan, $tabel, $dataId, $before, $after)

@@ -78,6 +78,8 @@ Route::prefix('tax-api')->group(function () {
     Route::get('/search/{value}', [TaxController::class, 'search']);
 });
 
+Route::post('/invoice-create-api', [InvoiceController::class, 'createFullInvoice']);
+
 Route::prefix('invoice-api')->group(function () {
     Route::get('/', [InvoiceController::class, 'index']);
     Route::post('/', [InvoiceController::class, 'store']);
