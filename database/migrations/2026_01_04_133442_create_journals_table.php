@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('nomor_referensi', 100)->nullable();
             $table->text('keterangan')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

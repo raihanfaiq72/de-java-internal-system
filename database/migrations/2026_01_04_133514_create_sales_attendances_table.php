@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('lokasi_gps')->nullable();
             $table->string('keterangan')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

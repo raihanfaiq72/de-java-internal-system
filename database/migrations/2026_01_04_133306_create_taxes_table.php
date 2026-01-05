@@ -17,6 +17,7 @@ return new class extends Migration
             $table->decimal('persentase', 5, 3);
             $table->enum('tipe_pajak', ['Exclusive', 'Inclusive', 'Gross Up']);
             $table->timestamps();
+            $table->softDeletes();
         });
 
     }

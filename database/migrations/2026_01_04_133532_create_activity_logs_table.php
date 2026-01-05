@@ -21,6 +21,7 @@ return new class extends Migration
             $table->json('data_sesudah')->nullable();
             $table->string('ip_address', 45)->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('nama_unit', 50);
             $table->string('simbol', 10);
             $table->text('keterangan')->nullable();
+            $table->softDeletes();
         });
 
     }
