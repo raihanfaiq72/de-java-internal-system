@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('tax_id')
                 ->constrained('taxes');
             $table->decimal('nilai_pajak_diterapkan', 15, 2);
+            $table->timestamps();
             $table->softDeletes();
         });
     }

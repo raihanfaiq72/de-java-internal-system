@@ -23,6 +23,7 @@ return new class extends Migration
             $table->decimal('harga_satuan', 15, 2);
             $table->decimal('diskon_nilai', 15, 2)->default(0);
             $table->decimal('total_harga_item', 15, 2);
+            $table->timestamps();
             $table->softDeletes();
         });
     }

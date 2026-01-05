@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\InvoiceItemController;
 use App\Http\Controllers\Api\MitraController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -79,6 +80,15 @@ Route::prefix('invoice-api')->group(function () {
     Route::put('/{id}', [InvoiceController::class, 'update']);
     Route::delete('/{id}', [InvoiceController::class, 'destroy']);
     Route::get('/search/{value}', [InvoiceController::class, 'search']);
+});
+
+Route::prefix('invoice-item-api')->group(function () {
+    Route::get('/', [InvoiceItemController::class, 'index']);
+    Route::post('/', [InvoiceItemController::class, 'store']);
+    Route::get('/{id}', [InvoiceItemController::class, 'show']);
+    Route::put('/{id}', [InvoiceItemController::class, 'update']);
+    Route::delete('/{id}', [InvoiceItemController::class, 'destroy']);
+    Route::get('/search/{value}', [InvoiceItemController::class, 'search']);
 });
 
 Route::get('/user', function (Request $request) {
