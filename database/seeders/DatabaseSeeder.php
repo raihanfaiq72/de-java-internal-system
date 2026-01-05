@@ -12,6 +12,7 @@ use Database\Seeders\AccountingLogSeeder;
 use Database\Seeders\MitraSeeder;
 use Database\Seeders\ProductSeeder;
 use Database\Seeders\TransactionSeeder;
+use Database\Seeders\PaymentSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -36,5 +37,6 @@ class DatabaseSeeder extends Seeder
         $this->call(MitraSeeder::class);
         $this->call(ProductSeeder::class);
         $this->call(TransactionSeeder::class);
+        $this->call(PaymentSeeder::class);
     }
 }
