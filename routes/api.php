@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\ProductCategoryController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\SalesAttendanceController;
 use App\Http\Controllers\Api\TaxController;
 use App\Http\Controllers\Api\UnitCategoryController;
 use App\Http\Controllers\Api\UnitController;
@@ -119,6 +120,13 @@ Route::prefix('expense-api')->group(function () {
     Route::put('/{id}', [ExpenseController::class, 'update']);
     Route::delete('/{id}', [ExpenseController::class, 'destroy']);
     Route::get('/search/{value}', [ExpenseController::class, 'search']);
+});
+
+Route::prefix('sales-attendance-api')->group(function () {
+    Route::get('/', [SalesAttendanceController::class, 'index']);
+    Route::post('/', [SalesAttendanceController::class, 'store']);
+    Route::get('/{id}', [SalesAttendanceController::class, 'show']);
+    Route::put('/{id}', [SalesAttendanceController::class, 'update']);
 });
 
 Route::get('/user', function (Request $request) {
