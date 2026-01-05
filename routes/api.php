@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\ProductCategoryController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\TaxController;
 use App\Http\Controllers\Api\UnitCategoryController;
 use App\Http\Controllers\Api\UnitController;
 
@@ -59,6 +60,15 @@ Route::prefix('product-api')->group(function () {
     Route::put('/{id}', [ProductController::class, 'update']);
     Route::delete('/{id}', [ProductController::class, 'destroy']);
     Route::get('/search/{value}', [ProductController::class, 'search']);
+});
+
+Route::prefix('tax-api')->group(function () {
+    Route::get('/', [TaxController::class, 'index']);
+    Route::post('/', [TaxController::class, 'store']);
+    Route::get('/{id}', [TaxController::class, 'show']);
+    Route::put('/{id}', [TaxController::class, 'update']);
+    Route::delete('/{id}', [TaxController::class, 'destroy']);
+    Route::get('/search/{value}', [TaxController::class, 'search']);
 });
 
 Route::get('/user', function (Request $request) {
