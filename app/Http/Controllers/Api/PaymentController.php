@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\ActivityLog;
 use App\Models\Invoice;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -117,34 +118,77 @@ class PaymentController extends Controller
         });
     }
 
-    public function update(Request $request, $id)
-    {
-        $data = Payment::find($id);
-        if (!$data) {
-            return apiResponse(false, 'Pembayaran tidak ditemukan', null, null, 404);
-        }
-
-        $before = $data->toArray();
-        $data->update($request->all());
-
-        $this->logActivity('Update', 'payments', $id, $before, $data);
-
-        return apiResponse(true, 'Pembayaran berhasil diperbarui', $data);
-    }
-
     public function destroy($id)
     {
-        $data = Payment::find($id);
-        if (!$data) {
-            return apiResponse(false, 'Pembayaran tidak ditemukan', null, null, 404);
-        }
+        return DB::transaction(function () use ($id) {
 
-        $before = $data->toArray();
-        $data->delete();
+            $payment = Payment::lockForUpdate()->find($id);
 
-        $this->logActivity('Soft Delete', 'payments', $id, $before, null);
+            if (!$payment) {
+                return apiResponse(false, 'Pembayaran tidak ditemukan', null, null, 404);
+            }
 
-        return apiResponse(true, 'Pembayaran berhasil dihapus');
+            $invoice = Invoice::lockForUpdate()->find($payment->invoice_id);
+
+            if (!$invoice) {
+                return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
+            }
+
+            $before = $payment->toArray();
+
+            $payment->delete();
+
+            $totalBayar = round(
+                $invoice->payment()->sum('jumlah_bayar'),
+                2
+            );
+
+            $totalInvoice = round($invoice->total_akhir, 2);
+            $hariIni      = Carbon::today();
+
+            if ($totalBayar <= 0) {
+
+                if ($invoice->tgl_jatuh_tempo && Carbon::parse($invoice->tgl_jatuh_tempo)->lt($hariIni)) {
+                    $statusPembayaran = 'Overdue';
+                } else {
+                    $statusPembayaran = 'Unpaid';
+                }
+
+            } elseif ($totalBayar < $totalInvoice) {
+
+                if ($invoice->tgl_jatuh_tempo && Carbon::parse($invoice->tgl_jatuh_tempo)->lt($hariIni)) {
+                    $statusPembayaran = 'Overdue';
+                } else {
+                    $statusPembayaran = 'Partially Paid';
+                }
+
+            } else {
+                $statusPembayaran = 'Paid';
+            }
+
+            $invoice->update([
+                'status_pembayaran' => $statusPembayaran
+            ]);
+
+            $this->logActivity(
+                'Soft Delete',
+                'payments',
+                $payment->id,
+                $before,
+                [
+                    'invoice_id' => $invoice->id,
+                    'status_pembayaran_baru' => $statusPembayaran,
+                    'total_bayar_setelah_delete' => $totalBayar
+                ]
+            );
+
+            return apiResponse(true, 'Pembayaran berhasil dihapus dan status invoice diperbarui', [
+                'invoice_id' => $invoice->id,
+                'total_invoice' => $totalInvoice,
+                'total_dibayar' => $totalBayar,
+                'status_pembayaran' => $statusPembayaran
+            ]);
+        });
     }
 
     private function logActivity($tindakan, $tabel, $dataId, $before, $after)
