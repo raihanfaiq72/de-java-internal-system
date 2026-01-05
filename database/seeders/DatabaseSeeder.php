@@ -13,6 +13,7 @@ use Database\Seeders\MitraSeeder;
 use Database\Seeders\ProductSeeder;
 use Database\Seeders\TransactionSeeder;
 use Database\Seeders\PaymentSeeder;
+use Database\Seeders\InvoiceItemTaxSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -38,5 +39,6 @@ class DatabaseSeeder extends Seeder
         $this->call(ProductSeeder::class);
         $this->call(TransactionSeeder::class);
         $this->call(PaymentSeeder::class);
+        $this->call(InvoiceItemTaxSeeder::class);
     }
 }
