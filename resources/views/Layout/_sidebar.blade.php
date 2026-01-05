@@ -55,7 +55,7 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="cards.html">
+                    <a class="nav-link" href="{{route('sales')}}">
                         <i class="iconoir-cart menu-icon"></i>
                         <span>Pembelian</span>
                     </a>
