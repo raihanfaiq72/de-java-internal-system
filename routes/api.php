@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\InvoiceItemController;
 use App\Http\Controllers\Api\InvoiceItemTaxController;
 use App\Http\Controllers\Api\MitraController;
+use App\Http\Controllers\Api\PaymentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -99,6 +100,15 @@ Route::prefix('invoice-item-tax-api')->group(function () {
     Route::put('/{id}', [InvoiceItemTaxController::class, 'update']);
     Route::delete('/{id}', [InvoiceItemTaxController::class, 'destroy']);
     Route::get('/search/{value}', [InvoiceItemTaxController::class, 'search']);
+});
+
+Route::prefix('payment-api')->group(function () {
+    Route::get('/', [PaymentController::class, 'index']);
+    Route::post('/', [PaymentController::class, 'store']);
+    Route::get('/{id}', [PaymentController::class, 'show']);
+    Route::put('/{id}', [PaymentController::class, 'update']);
+    Route::delete('/{id}', [PaymentController::class, 'destroy']);
+    Route::get('/search/{value}', [PaymentController::class, 'search']);
 });
 
 Route::get('/user', function (Request $request) {

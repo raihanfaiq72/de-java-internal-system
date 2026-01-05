@@ -21,4 +21,9 @@ class Payment extends Model
         'akun_keuangan_id',
         'catatan',
     ];
+
+    public function invoice()
+    {
+        return $this->belongsTo(Invoice::class, 'invoice_id');
+    }
 }
