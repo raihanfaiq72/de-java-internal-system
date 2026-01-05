@@ -15,7 +15,7 @@ class PaymentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Payment::with('invoice');
+        $query = Payment::with('invoice.items.product');
 
         if ($request->invoice_id) {
             $query->where('invoice_id', $request->invoice_id);
@@ -27,7 +27,7 @@ class PaymentController extends Controller
 
     public function show($id)
     {
-        $data = Payment::with('invoice')->find($id);
+        $data = Payment::with('invoice.items.product')->find($id);
         if (!$data) {
             return apiResponse(false, 'Pembayaran tidak ditemukan', null, null, 404);
         }

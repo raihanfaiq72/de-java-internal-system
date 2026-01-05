@@ -12,7 +12,7 @@ class InvoiceController extends Controller
 {
     public function index()
     {
-        $data = Invoice::with(['mitra', 'payment'])
+        $data = Invoice::with(['mitra', 'items.product', 'payment'])
             ->latest()
             ->paginate(10);
 
@@ -21,7 +21,7 @@ class InvoiceController extends Controller
 
     public function show($id)
     {
-        $data = Invoice::with(['mitra', 'items', 'payment'])
+        $data = Invoice::with(['mitra', 'items.product', 'payment'])
             ->find($id);
 
         if (!$data) {
