@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\ActivityLog;
+use App\Models\Invoice;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class PaymentController extends Controller
@@ -46,11 +48,73 @@ class PaymentController extends Controller
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
-        $data = Payment::create($request->all());
+        return DB::transaction(function () use ($request) {
 
-        $this->logActivity('Create', 'payments', $data->id, null, $data);
+            $invoice = Invoice::lockForUpdate()->find($request->invoice_id);
 
-        return apiResponse(true, 'Pembayaran berhasil dicatat', $data, null, 201);
+            if (!$invoice) {
+                return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
+            }
+
+            $totalSudahDibayar = $invoice->payment()->sum('jumlah_bayar');
+
+            $sisaTagihan = $invoice->total_akhir - $totalSudahDibayar;
+
+            if ($request->jumlah_bayar > $sisaTagihan) {
+                return apiResponse(
+                    false,
+                    'Jumlah bayar melebihi sisa tagihan',
+                    [
+                        'sisa_tagihan' => $sisaTagihan
+                    ],
+                    null,
+                    422
+                );
+            }
+
+            $payment = Payment::create($request->all());
+
+            $totalSetelahBayar = round($totalSudahDibayar + $request->jumlah_bayar, 2);
+            $totalInvoice      = round($invoice->total_akhir, 2);
+
+            if ($totalSetelahBayar <= 0) {
+                $statusPembayaran = 'Unpaid';
+            } elseif ($totalSetelahBayar < $totalInvoice) {
+                $statusPembayaran = 'Partially Paid';
+            } else {
+                $statusPembayaran = 'Paid';
+            }
+
+            if (
+                $invoice->status_pembayaran === 'Overdue' &&
+                $totalSetelahBayar < $invoice->total_akhir
+            ) {
+                $statusPembayaran = 'Overdue';
+            }
+
+            $invoice->update([
+                'status_pembayaran' => $statusPembayaran
+            ]);
+
+            $this->logActivity(
+                'Create',
+                'payments',
+                $payment->id,
+                null,
+                $payment
+            );
+
+            return apiResponse(true, 'Pembayaran berhasil dicatat', [
+                'payment' => $payment,
+                'invoice' => [
+                    'id' => $invoice->id,
+                    'total_akhir' => $invoice->total_akhir,
+                    'total_dibayar' => $totalSetelahBayar,
+                    'sisa_tagihan' => $invoice->total_akhir - $totalSetelahBayar,
+                    'status_pembayaran' => $statusPembayaran
+                ]
+            ], null, 201);
+        });
     }
 
     public function update(Request $request, $id)
