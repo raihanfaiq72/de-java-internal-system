@@ -16,4 +16,9 @@ class InvoiceItemTaxe extends Model
         'tax_id',
         'nilai_pajak_diterapkan',
     ];
+
+    public function invoiceItem()
+    {
+        return $this->belongsTo(InvoiceItem::class, 'invoice_item_id');
+    }
 }
