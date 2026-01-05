@@ -19,4 +19,9 @@ class SalesAttendance extends Model
         'lokasi_gps',
         'keterangan',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }
