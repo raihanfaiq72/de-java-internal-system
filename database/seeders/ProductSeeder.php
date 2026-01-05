@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Faker\Factory as Faker;
 
 class ProductSeeder extends Seeder
 {
@@ -13,38 +13,46 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
-        $catId = DB::table('unit_categories')->insertGetId([
-            'nama_kategori' => 'Satuan',
-            'konversi_nilai' => 1.0
-        ]);
-
-        $unitId = DB::table('units')->insertGetId([
-            'unit_category_id' => $catId,
-            'nama_unit' => 'Pcs',
-            'simbol' => 'Pcs'
-        ]);
-
-        $prodCatId = DB::table('product_categories')->insertGetId([
-            'nama_kategori' => 'Elektronik',
-            'deskripsi' => 'Kategori barang elektronik'
-        ]);
-
+        $faker = Faker::create();
+        
+        // Ambil atau buat ID yang diperlukan
+        $catId = DB::table('unit_categories')->insertGetId(['nama_kategori' => 'Unit', 'konversi_nilai' => 1]);
+        $unitId = DB::table('units')->insertGetId(['unit_category_id' => $catId, 'nama_unit' => 'Pcs', 'simbol' => 'Pcs']);
+        $prodCatId = DB::table('product_categories')->insertGetId(['nama_kategori' => 'General', 'deskripsi' => 'Testing']);
         $akunId = DB::table('chart_of_accounts')->first()->id ?? 1;
-        $akunDiskonPenjualanId = $akunId;
-        $akunDiskonPembelianId = $akunId;
 
-        DB::table('products')->insert([
-            'sku_kode' => 'PROD-001',
-            'nama_produk' => 'Laptop Pro 14',
-            'product_category_id' => $prodCatId,
-            'unit_category_id' => $catId,
-            'unit_id' => $unitId,
-            'harga_beli' => 10000000,
-            'harga_jual' => 12500000,
-            'akun_penjualan_id' => $akunId,
-            'akun_pembelian_id' => $akunId,
-            'akun_diskon_penjualan_id' => $akunDiskonPenjualanId, 
-            'akun_diskon_pembelian_id' => $akunDiskonPembelianId,   
-        ]);
+        $totalData = 3000;
+        $batchSize = 500;
+        $data = [];
+
+        for ($i = 1; $i <= $totalData; $i++) {
+            $data[] = [
+                // MENGGUNAKAN PAD UNTUK MENJAMIN KEUNIKAN: PROD-00001, PROD-00002, dst.
+                'sku_kode' => 'PROD-' . str_pad($i, 5, '0', STR_PAD_LEFT), 
+                'nama_produk' => 'Produk Test ' . $i,
+                'product_category_id' => $prodCatId,
+                'unit_category_id' => $catId,
+                'unit_id' => $unitId,
+                'harga_beli' => $faker->numberBetween(5000, 50000),
+                'harga_jual' => $faker->numberBetween(60000, 150000),
+                'akun_penjualan_id' => $akunId,
+                'akun_pembelian_id' => $akunId,
+                'akun_diskon_penjualan_id' => $akunId,
+                'akun_diskon_pembelian_id' => $akunId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+
+            // Masukkan data per batch agar hemat memori
+            if ($i % $batchSize == 0) {
+                DB::table('products')->insert($data);
+                $data = []; // Reset array setelah insert
+            }
+        }
+
+        // Masukkan sisa data jika totalData tidak habis dibagi batchSize
+        if (!empty($data)) {
+            DB::table('products')->insert($data);
+        }
     }
 }

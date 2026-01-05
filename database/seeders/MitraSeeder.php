@@ -2,37 +2,36 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Faker\Factory as Faker;
 
 class MitraSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $akunHutang = DB::table('chart_of_accounts')->where('kode_akun', 'like', '2%')->value('id') ?? 1;
-        $akunPiutang = DB::table('chart_of_accounts')->where('kode_akun', 'like', '1%')->value('id') ?? 1;
+        $faker = Faker::create('id_ID');
+        $akunHutang = DB::table('chart_of_accounts')->where('kode_akun', '2101')->value('id') ?? 1;
+        $akunPiutang = DB::table('chart_of_accounts')->where('kode_akun', '1301')->value('id') ?? 1;
 
-        DB::table('mitras')->insert([
-            [
-                'nomor_mitra' => 'MTR-001',
-                'badan_usaha' => 'PT',
-                'nama' => 'Global Teknologi Nusantara',
-                'tipe_mitra' => 'Client',
+        $data = [];
+        for ($i = 1; $i <= 3000; $i++) {
+            $data[] = [
+                'nomor_mitra' => 'MTR-' . str_pad($i, 5, '0', STR_PAD_LEFT),
+                'badan_usaha' => $faker->randomElement(['PT', 'CV', 'UD']),
+                'nama' => $faker->company,
+                'tipe_mitra' => $faker->randomElement(['Client', 'Supplier']),
+                'alamat' => $faker->address,
+                'no_hp' => $faker->phoneNumber,
                 'akun_hutang_id' => $akunHutang,
                 'akun_piutang_id' => $akunPiutang,
-            ],
-            [
-                'nomor_mitra' => 'MTR-002',
-                'badan_usaha' => 'CV',
-                'nama' => 'Sumber Makmur Jaya',
-                'tipe_mitra' => 'Supplier',
-                'akun_hutang_id' => $akunHutang,
-                'akun_piutang_id' => $akunPiutang,
-            ]
-        ]);
+                'created_at' => now()
+            ];
+
+            if ($i % 500 == 0) {
+                DB::table('mitras')->insert($data);
+                $data = [];
+            }
+        }
     }
 }
