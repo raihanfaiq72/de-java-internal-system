@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\InvoiceItemController;
 use App\Http\Controllers\Api\InvoiceItemTaxController;
@@ -109,6 +110,15 @@ Route::prefix('payment-api')->group(function () {
     Route::put('/{id}', [PaymentController::class, 'update']);
     Route::delete('/{id}', [PaymentController::class, 'destroy']);
     Route::get('/search/{value}', [PaymentController::class, 'search']);
+});
+
+Route::prefix('expense-api')->group(function () {
+    Route::get('/', [ExpenseController::class, 'index']);
+    Route::post('/', [ExpenseController::class, 'store']);
+    Route::get('/{id}', [ExpenseController::class, 'show']);
+    Route::put('/{id}', [ExpenseController::class, 'update']);
+    Route::delete('/{id}', [ExpenseController::class, 'destroy']);
+    Route::get('/search/{value}', [ExpenseController::class, 'search']);
 });
 
 Route::get('/user', function (Request $request) {
