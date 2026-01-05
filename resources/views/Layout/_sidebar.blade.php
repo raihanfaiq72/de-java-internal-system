@@ -28,7 +28,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="transactions.html">
+                                <a class="nav-link" href="{{route('mitra')}}">
                                     <i class="iconoir-handshake me-2"></i> Mitra
                                 </a>
                             </li>
