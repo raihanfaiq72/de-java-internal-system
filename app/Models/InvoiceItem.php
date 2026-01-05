@@ -31,4 +31,9 @@ class InvoiceItem extends Model
     {
         return $this->belongsTo(Product::class, 'produk_id');
     }
+
+    public function taxes()
+    {
+        return $this->hasMany(InvoiceItemTaxe::class, 'invoice_item_id');
+    }
 }

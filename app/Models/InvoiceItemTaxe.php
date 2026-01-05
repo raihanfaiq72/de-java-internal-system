@@ -21,4 +21,9 @@ class InvoiceItemTaxe extends Model
     {
         return $this->belongsTo(InvoiceItem::class, 'invoice_item_id');
     }
+
+    public function tax()
+    {
+        return $this->belongsTo(Taxe::class, 'tax_id');
+    }
 }
