@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\SalesAttendanceController;
 use App\Http\Controllers\Api\TaxController;
 use App\Http\Controllers\Api\UnitCategoryController;
 use App\Http\Controllers\Api\UnitController;
+use App\Http\Controllers\Api\UserController;
 
 Route::prefix('admin')->group(function() {
     Route::apiResource('roles', RoleController::class);
@@ -126,6 +127,15 @@ Route::prefix('sales-attendance-api')->group(function () {
     Route::post('/', [SalesAttendanceController::class, 'store']);
     Route::get('/{id}', [SalesAttendanceController::class, 'show']);
     Route::put('/{id}', [SalesAttendanceController::class, 'update']);
+});
+
+Route::prefix('user-api')->group(function () {
+    Route::get('/', [UserController::class, 'index']);
+    Route::post('/', [UserController::class, 'store']);
+    Route::get('/{id}', [UserController::class, 'show']);
+    Route::put('/{id}', [UserController::class, 'update']);
+    Route::delete('/{id}', [UserController::class, 'destroy']);
+    Route::get('/search/{value}', [UserController::class, 'search']);
 });
 
 Route::get('/user', function (Request $request) {
