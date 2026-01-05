@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\UnitCategoryController;
+use App\Http\Controllers\Api\UnitController;
 
 Route::prefix('admin')->group(function() {
     Route::apiResource('roles', RoleController::class);
@@ -31,6 +32,14 @@ Route::prefix('unit-categories-api')->group(function () {
     Route::get('/search/{value}', [UnitCategoryController::class, 'search']);
 });
 
+Route::prefix('unit-api')->group(function () {
+    Route::get('/', [UnitController::class, 'index']);
+    Route::post('/', [UnitController::class, 'store']);
+    Route::get('/{id}', [UnitController::class, 'show']);
+    Route::put('/{id}', [UnitController::class, 'update']);
+    Route::delete('/{id}', [UnitController::class, 'destroy']);
+    Route::get('/search/{value}', [UnitController::class, 'search']);
+});
 
 Route::get('/user', function (Request $request) {
     return $request->user();
