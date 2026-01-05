@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\PermissionController;
+use App\Http\Controllers\Api\ProductCategoryController;
 use App\Http\Controllers\Api\UnitCategoryController;
 use App\Http\Controllers\Api\UnitController;
 
@@ -39,6 +40,15 @@ Route::prefix('unit-api')->group(function () {
     Route::put('/{id}', [UnitController::class, 'update']);
     Route::delete('/{id}', [UnitController::class, 'destroy']);
     Route::get('/search/{value}', [UnitController::class, 'search']);
+});
+
+Route::prefix('product-categories-api')->group(function () {
+    Route::get('/', [ProductCategoryController::class, 'index']);
+    Route::post('/', [ProductCategoryController::class, 'store']);
+    Route::get('/{id}', [ProductCategoryController::class, 'show']);
+    Route::put('/{id}', [ProductCategoryController::class, 'update']);
+    Route::delete('/{id}', [ProductCategoryController::class, 'destroy']);
+    Route::get('/search/{value}', [ProductCategoryController::class, 'search']);
 });
 
 Route::get('/user', function (Request $request) {

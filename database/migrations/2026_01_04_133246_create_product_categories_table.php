@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('parent_id')->nullable()
                 ->constrained('product_categories');
             $table->text('deskripsi')->nullable();
+            $table->timestamps();
             $table->softDeletes();
         });
 
