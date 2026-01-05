@@ -9,7 +9,7 @@ class AuthController extends Controller
 {
     public function login()
     {
-        return view('Page.Auth.login');
+        return view('Auth.login');
     }
 
     public function loginProses(Request $request)
@@ -36,5 +36,12 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    // logic syo
+
+    public function syo()
+    {
+        return view('Auth.syo');
     }
 }

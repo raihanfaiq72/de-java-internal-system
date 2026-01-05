@@ -29,6 +29,7 @@
 <body>
 
     <!-- Top Bar Start -->
+    @unless(Request::is('select-your-outlet'))
     <div class="topbar d-print-none">
         <div class="container-fluid">
             <nav class="topbar-custom d-flex justify-content-between" id="topbar-custom">
@@ -53,17 +54,19 @@
                     <li class="dropdown">
                         <a class="nav-link dropdown-toggle arrow-none nav-icon" data-bs-toggle="dropdown" href="#"
                             role="button" aria-haspopup="false" aria-expanded="false" data-bs-offset="0,19">
-                            <img src="{{url('')}}/assets/images/flags/us_flag.jpg" alt="" class="thumb-sm rounded-circle">
+                            <img src="{{url('')}}/assets/images/flags/us_flag.jpg" alt=""
+                                class="thumb-sm rounded-circle">
                         </a>
                         <div class="dropdown-menu">
-                            <a class="dropdown-item" href="#"><img src="{{url('')}}/assets/images/flags/us_flag.jpg" alt=""
-                                    height="15" class="me-2">English</a>
-                            <a class="dropdown-item" href="#"><img src="{{url('')}}/assets/images/flags/spain_flag.jpg" alt=""
-                                    height="15" class="me-2">Spanish</a>
-                            <a class="dropdown-item" href="#"><img src="{{url('')}}/assets/images/flags/germany_flag.jpg" alt=""
-                                    height="15" class="me-2">German</a>
-                            <a class="dropdown-item" href="#"><img src="{{url('')}}/assets/images/flags/french_flag.jpg" alt=""
-                                    height="15" class="me-2">French</a>
+                            <a class="dropdown-item" href="#"><img src="{{url('')}}/assets/images/flags/us_flag.jpg"
+                                    alt="" height="15" class="me-2">English</a>
+                            <a class="dropdown-item" href="#"><img src="{{url('')}}/assets/images/flags/spain_flag.jpg"
+                                    alt="" height="15" class="me-2">Spanish</a>
+                            <a class="dropdown-item" href="#"><img
+                                    src="{{url('')}}/assets/images/flags/germany_flag.jpg" alt="" height="15"
+                                    class="me-2">German</a>
+                            <a class="dropdown-item" href="#"><img src="{{url('')}}/assets/images/flags/french_flag.jpg"
+                                    alt="" height="15" class="me-2">French</a>
                         </div>
                     </li>
                     <!--end topbar-language-->
@@ -308,12 +311,14 @@
                     <li class="dropdown topbar-item">
                         <a class="nav-link dropdown-toggle arrow-none nav-icon" data-bs-toggle="dropdown" href="#"
                             role="button" aria-haspopup="false" aria-expanded="false" data-bs-offset="0,19">
-                            <img src="{{url('')}}/assets/images/users/avatar-1.jpg" alt="" class="thumb-md rounded-circle">
+                            <img src="{{url('')}}/assets/images/users/avatar-1.jpg" alt=""
+                                class="thumb-md rounded-circle">
                         </a>
                         <div class="dropdown-menu dropdown-menu-end py-0">
                             <div class="d-flex align-items-center dropdown-item py-2 bg-secondary-subtle">
                                 <div class="flex-shrink-0">
-                                    <img src="{{url('')}}/assets/images/users/avatar-1.jpg" alt="" class="thumb-md rounded-circle">
+                                    <img src="{{url('')}}/assets/images/users/avatar-1.jpg" alt=""
+                                        class="thumb-md rounded-circle">
                                 </div>
                                 <div class="flex-grow-1 ms-2 text-truncate align-self-center">
                                     <h6 class="my-0 fw-medium text-dark fs-13">William Martin</h6>
@@ -345,8 +350,10 @@
             <!-- end navbar-->
         </div>
     </div>
+    @endunless
     <!-- Top Bar End -->
     <!-- leftbar-tab-menu -->
+    @unless(Request::is('select-your-outlet'))
     <div class="startbar d-print-none">
         <!--start brand-->
         <div class="brand">
@@ -362,13 +369,14 @@
         </div>
         <!--end brand-->
         <!--start startbar-menu-->
+
         @include('Layout.sidebar')
         <!--end startbar-menu-->
     </div>
     <!--end startbar-->
     <div class="startbar-overlay d-print-none"></div>
     <!-- end leftbar-tab-menu-->
-
+    @endunless
     @yield('main')
     <!-- end page-wrapper -->
 
