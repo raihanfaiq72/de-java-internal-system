@@ -24,6 +24,12 @@
             min-height: 100vh;
             color: #1d1d1f;
             overflow-x: hidden;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* State ketika mengalihkan */
+        body.is-redirecting {
+            transform: scale(0.95);
         }
 
         .page-header {
@@ -37,7 +43,6 @@
             letter-spacing: -0.03em;
         }
 
-        /* Container & Grid */
         .cards-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -48,7 +53,6 @@
             transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* Office Card Premium Style */
         .office-card {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(10px);
@@ -116,7 +120,6 @@
 
         .office-meta span i { margin-right: 8px; color: var(--mac-blue); }
 
-        /* Custom Button */
         .btn-mac-primary {
             background-color: var(--mac-blue);
             color: white;
@@ -125,6 +128,9 @@
             font-weight: 600;
             border: none;
             transition: all 0.3s;
+            text-decoration: none;
+            display: block;
+            text-align: center;
         }
         .btn-mac-primary:hover {
             background-color: #0063CC;
@@ -132,7 +138,6 @@
             color: white;
         }
 
-        /* Add Card Style */
         .add-card {
             border: 2px dashed #c7c7cc;
             background: transparent;
@@ -142,14 +147,9 @@
             justify-content: center;
             cursor: pointer;
         }
-        .add-card:hover {
-            border-color: var(--mac-blue);
-            background: rgba(0, 122, 255, 0.02);
-        }
         .add-card i { font-size: 3rem; color: #c7c7cc; transition: color 0.3s; }
         .add-card:hover i { color: var(--mac-blue); }
 
-        /* Fullscreen Form Overlay */
         .full-form-overlay {
             position: fixed;
             top: 0;
@@ -176,30 +176,67 @@
             overflow-y: auto;
         }
 
-        .form-header h2 { font-weight: 700; margin-bottom: 10px; }
-        .form-header p { color: #86868b; margin-bottom: 40px; }
-
-        .form-label { font-weight: 600; font-size: 0.9rem; color: #1d1d1f; }
-        .form-control, .form-select {
-            border-radius: 12px;
-            padding: 12px 16px;
-            border: 1px solid #d2d2d7;
-            background-color: #f5f5f7;
-            margin-bottom: 20px;
-        }
-        .form-control:focus {
-            background-color: white;
-            border-color: var(--mac-blue);
-            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
-        }
-
         .overlay-shift {
             transform: translateX(-200px);
             filter: blur(5px);
             pointer-events: none;
         }
 
-        /* Delay for animation */
+        /* --- ANIMASI PENGALIHAN (REDIRECT) --- */
+        .redirect-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(0px);
+            -webkit-backdrop-filter: blur(0px);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+
+        .redirect-overlay.active {
+            visibility: visible;
+            opacity: 1;
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+        }
+
+        .mac-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 122, 255, 0.1);
+            border-left-color: var(--mac-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .redirect-text {
+            margin-top: 20px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1d1d1f;
+            transform: translateY(10px);
+            opacity: 0;
+            transition: all 0.5s ease 0.2s;
+        }
+
+        .redirect-overlay.active .redirect-text {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
         .delay-1 { animation-delay: 0.1s; }
         .delay-2 { animation-delay: 0.2s; }
         .delay-3 { animation-delay: 0.3s; }
@@ -207,10 +244,15 @@
 </head>
 <body>
 
+<div class="redirect-overlay" id="redirectOverlay">
+    <div class="mac-spinner"></div>
+    <div class="redirect-text" id="redirectText">Menyiapkan Ruang Kerja...</div>
+</div>
+
 <div class="container pb-5" id="mainWrapper">
     <header class="page-header">
-        <p class="text-primary fw-bold mb-1">Manajemen Aset</p>
-        <h2 class="page-title">Pilih Kantor</h2>
+        <p class="text-primary fw-bold mb-1">Hello Owner</p>
+        <h2 class="page-title">Kelola Kantor</h2>
     </header>
 
     <div class="cards-container" id="cardsContainer">
@@ -224,9 +266,8 @@
             <div class="office-meta">
                 <span><i class="icofont-location-pin"></i> Jl. Sudirman No. 12, Jakarta</span>
                 <span><i class="icofont-users-alt-3"></i> 124 Karyawan</span>
-                <span><i class="icofont-phone"></i> (021) 555-0192</span>
             </div>
-            <a href="{{url('dashboard')}}" class="btn btn-mac-primary w-100">Masuk ke Kantor</a>
+            <a href="{{url('dashboard')}}" class="btn btn-mac-primary w-100 redirect-link">Masuk ke Kantor</a>
         </div>
 
         <div class="office-card delay-2">
@@ -239,9 +280,8 @@
             <div class="office-meta">
                 <span><i class="icofont-location-pin"></i> Jl. Gatot Subroto No. 45, Bandung</span>
                 <span><i class="icofont-users-alt-3"></i> 45 Karyawan</span>
-                <span><i class="icofont-phone"></i> (022) 444-0122</span>
             </div>
-            <a href="#" class="btn btn-mac-primary w-100">Masuk ke Kantor</a>
+            <a href="#" class="btn btn-mac-primary w-100 redirect-link">Masuk ke Kantor</a>
         </div>
 
         <div class="office-card add-card delay-3" id="addBtn">
@@ -255,71 +295,53 @@
 <div class="full-form-overlay" id="fullForm">
     <div class="form-content">
         <div class="form-header">
-            <h2>Tambah Kantor Baru</h2>
-            <p>Silakan lengkapi data kantor baru di bawah ini untuk didaftarkan ke sistem.</p>
+            <h2 class="fw-bold">Tambah Kantor Baru</h2>
+            <p class="text-muted">Lengkapi data untuk mendaftarkan cabang baru.</p>
         </div>
-        
-        <form id="officeForm" onsubmit="event.preventDefault();">
-            <div class="row">
-                <div class="col-md-12">
-                    <label class="form-label">Nama Kantor Cabang</label>
-                    <input type="text" class="form-control" placeholder="Contoh: Kantor Cabang Surabaya">
-                </div>
-                
-                <div class="col-md-6">
-                    <label class="form-label">Kategori Kantor</label>
-                    <select class="form-select">
-                        <option value="pusat">Kantor Pusat</option>
-                        <option value="cabang">Kantor Cabang</option>
-                        <option value="gudang">Gudang Logistik</option>
-                        <option value="virtual">Virtual Office</option>
-                    </select>
-                </div>
-                
-                <div class="col-md-6">
-                    <label class="form-label">Nomor Telepon</label>
-                    <input type="text" class="form-control" placeholder="+62 ...">
-                </div>
-
-                <div class="col-md-12">
-                    <label class="form-label">Email Kantor</label>
-                    <input type="email" class="form-control" placeholder="office@company.com">
-                </div>
-
-                <div class="col-md-12">
-                    <label class="form-label">Alamat Lengkap</label>
-                    <textarea class="form-control" rows="3" placeholder="Nama jalan, gedung, lantai..."></textarea>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Provinsi</label>
-                    <select class="form-select">
-                        <option>DKI Jakarta</option>
-                        <option>Jawa Barat</option>
-                        <option>Jawa Timur</option>
-                    </select>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Kota</label>
-                    <input type="text" class="form-control" placeholder="Masukan Kota">
-                </div>
-
-                <div class="col-md-12">
-                    <label class="form-label">Manager Kantor / Penanggung Jawab</label>
-                    <input type="text" class="form-control" placeholder="Nama lengkap">
-                </div>
-
-                <div class="col-md-12 mt-4 d-flex gap-3">
-                    <button class="btn btn-mac-primary flex-grow-1 py-3" onclick="alert('Data Berhasil Disimpan!')">Simpan Data Kantor</button>
-                    <button type="button" class="btn btn-light px-4 border" id="cancelBtn">Batal</button>
-                </div>
+        <div class="mt-4">
+            <label class="form-label">Nama Kantor</label>
+            <input type="text" class="form-control" placeholder="Contoh: Surabaya Branch">
+            <label class="form-label mt-3">Alamat</label>
+            <textarea class="form-control" rows="3"></textarea>
+            <div class="d-flex gap-2 mt-4">
+                <button class="btn btn-mac-primary flex-grow-1 py-3">Simpan</button>
+                <button class="btn btn-light px-4 border" id="cancelBtn">Batal</button>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 
 <script>
+    // Logic untuk Animasi Redirect
+    const redirectLinks = document.querySelectorAll('.redirect-link');
+    const redirectOverlay = document.getElementById('redirectOverlay');
+    const body = document.body;
+
+    redirectLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault(); // Stop pindah halaman instan
+            const targetUrl = this.getAttribute('href');
+
+            // 1. Tambah class ke body untuk efek mengecil (scale)
+            body.classList.add('is-redirecting');
+
+            // 2. Tampilkan overlay transisi
+            redirectOverlay.classList.add('active');
+
+            // 3. Eksekusi pindah halaman setelah animasi selesai (1.2 detik agar terlihat feel-nya)
+            setTimeout(() => {
+                if(targetUrl !== "#") {
+                    window.location.href = targetUrl;
+                } else {
+                    // Hanya untuk demo jika link adalah "#"
+                    alert("Kantor tidak ditemukan, mengembalikan ke Kelola Kantor");
+                    location.reload();
+                }
+            }, 1200);
+        });
+    });
+
+    // Logic untuk Form Tambah Kantor
     const addBtn = document.getElementById('addBtn');
     const fullForm = document.getElementById('fullForm');
     const cardsContainer = document.getElementById('cardsContainer');
@@ -336,12 +358,6 @@
         cardsContainer.classList.remove('overlay-shift');
         mainWrapper.style.opacity = "1";
         fullForm.classList.remove('show');
-    });
-
-    fullForm.addEventListener('click', (e) => {
-        if (e.target === fullForm) {
-            cancelBtn.click();
-        }
     });
 </script>
 
