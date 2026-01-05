@@ -8,6 +8,10 @@ use Illuminate\Database\Seeder;
 use Database\Seeders\ChartOfAccountSeeder;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\SuperAdminSeeder;
+use Database\Seeders\AccountingLogSeeder;
+use Database\Seeders\MitraSeeder;
+use Database\Seeders\ProductSeeder;
+use Database\Seeders\TransactionSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -28,5 +32,9 @@ class DatabaseSeeder extends Seeder
         $this->call(ChartOfAccountSeeder::class);
         $this->call(PermissionSeeder::class);
         $this->call(SuperAdminSeeder::class);
+        $this->call(AccountingLogSeeder::class);
+        $this->call(MitraSeeder::class);
+        $this->call(ProductSeeder::class);
+        $this->call(TransactionSeeder::class);
     }
 }

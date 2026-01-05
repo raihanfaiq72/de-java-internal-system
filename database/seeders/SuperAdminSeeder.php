@@ -12,7 +12,8 @@ class SuperAdminSeeder extends Seeder
     {
         $now = Carbon::now();
 
-        $roleId = DB::table('roles')->updateOrInsert(
+        // Buat role superadmin
+        DB::table('roles')->updateOrInsert(
             ['name' => 'superadmin'],
             [
                 'description' => 'Ini role Super Admin',
@@ -41,12 +42,11 @@ class SuperAdminSeeder extends Seeder
 
         $permissionIds = [];
         foreach ($permissions as $perm) {
-            $id = DB::table('permissions')->updateOrInsert(
+            // Gunakan name sebagai unique key sesuai constraint DB
+            DB::table('permissions')->updateOrInsert(
+                ['name' => $perm['name']],
                 [
                     'prefix_id' => $perm['prefix_id'],
-                    'name' => $perm['name']
-                ],
-                [
                     'action' => $perm['action'],
                     'created_at' => $now,
                     'updated_at' => $now
@@ -59,6 +59,7 @@ class SuperAdminSeeder extends Seeder
             $permissionIds[] = $permission->id;
         }
 
+        // Assign permission ke role
         foreach ($permissionIds as $pid) {
             DB::table('role_permissions')->updateOrInsert(
                 [
