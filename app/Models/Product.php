@@ -21,6 +21,7 @@ class Product extends Model
         'harga_beli',
         'harga_jual',
         'track_stock',
+        'qty',
         'foto_produk',
         'akun_penjualan_id',
         'akun_pembelian_id',

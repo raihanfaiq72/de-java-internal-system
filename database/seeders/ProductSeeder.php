@@ -35,6 +35,7 @@ class ProductSeeder extends Seeder
                 'unit_id' => $unitId,
                 'harga_beli' => $faker->numberBetween(5000, 50000),
                 'harga_jual' => $faker->numberBetween(60000, 150000),
+                'qty' => $faker->numberBetween(100, 500),
                 'akun_penjualan_id' => $akunId,
                 'akun_pembelian_id' => $akunId,
                 'akun_diskon_penjualan_id' => $akunId,

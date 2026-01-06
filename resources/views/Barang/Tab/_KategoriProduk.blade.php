@@ -1,43 +1,145 @@
 <div class="tab-pane fade" id="tab-kategori-produk" role="tabpanel">
+
     <div class="row g-2 mb-3 align-items-end">
         <div class="col-md-3">
             <label class="small fw-bold text-muted">Cari Kategori</label>
-            <input type="text" class="form-control form-control-sm" placeholder="Nama kategori...">
+            <input type="text" id="filter-kategori-search"
+                   class="form-control form-control-sm"
+                   placeholder="Nama kategori...">
         </div>
+
         <div class="col-md-auto">
-            <button class="btn btn-sm btn-dark px-3"><i class="fa fa-filter me-1"></i> Filter</button>
+            <button onclick="loadKategoriProduk()"
+                    class="btn btn-sm btn-dark px-3">
+                <i class="fa fa-filter me-1"></i> Filter
+            </button>
         </div>
+
         <div class="col text-end">
-            <button class="btn btn-sm btn-primary px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalKategoriProduk"><i class="fa fa-plus me-1"></i> TAMBAH
-                KATEGORI</button>
+            <button class="btn btn-sm btn-primary px-3 shadow-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalKategoriProduk">
+                <i class="fa fa-plus me-1"></i> TAMBAH KATEGORI
+            </button>
         </div>
     </div>
-    <table class="table table-sm table-bordered align-middle">
-        <thead class="table-light">
+
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Nama Kategori</th>
+                    <th>Parent</th>
+                    <th>Deskripsi</th>
+                    <th width="80" class="text-center">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="kategori-table-body">
+                <tr>
+                    <td colspan="4" class="text-center text-muted">Memuat data...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center px-2">
+        <span id="kategori-pagination-info" class="text-muted small"></span>
+        <nav>
+            <ul class="pagination pagination-sm mb-0" id="kategori-pagination-container"></ul>
+        </nav>
+    </div>
+
+</div>
+
+@include('Barang.Modal._KategoriProduk')
+
+@push('js')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    loadKategoriProduk();
+});
+
+function loadKategoriProduk(url = null) {
+    const search = document.getElementById('filter-kategori-search').value;
+    const apiUrl = url ?? `api/product-categories-api?search=${search}`;
+
+    fetch(apiUrl)
+        .then(res => res.json())
+        .then(res => {
+            if (!res.success) return;
+
+            renderKategoriTable(res.data.data);
+            renderKategoriPagination(res.data);
+        });
+}
+
+function renderKategoriTable(data) {
+    const tbody = document.getElementById('kategori-table-body');
+    tbody.innerHTML = '';
+
+    if (data.length === 0) {
+        tbody.innerHTML = `
             <tr>
-                <th>Nama Kategori</th>
-                <th>Parent</th>
-                <th>Deskripsi</th>
-                <th width="80" class="text-center">Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
+                <td colspan="4" class="text-center text-muted">Data tidak ditemukan</td>
+            </tr>`;
+        return;
+    }
+
+    data.forEach(item => {
+        tbody.insertAdjacentHTML('beforeend', `
             <tr>
-                <td>Makanan Ringan</td>
-                <td>Makanan</td>
-                <td>Semua jenis snack</td>
+                <td class="fw-bold">${item.nama_kategori}</td>
+                <td>${item.parent?.nama_kategori ?? '-'}</td>
+                <td>${item.deskripsi ?? '-'}</td>
                 <td class="text-center">
                     <div class="dropdown">
                         <button class="btn btn-sm btn-light border dropdown-toggle"
-                            data-bs-toggle="dropdown">Aksi</button>
+                                data-bs-toggle="dropdown">Aksi</button>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">Edit</a></li>
-                            <li><a class="dropdown-item text-danger" href="#">Hapus</a></li>
+                            <li>
+                                <a class="dropdown-item"
+                                   href="javascript:void(0)"
+                                   onclick="editKategori(${item.id})">
+                                    <i class="fa fa-edit me-2 text-warning"></i> Edit
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger"
+                                   href="javascript:void(0)"
+                                   onclick="hapusKategori(${item.id})">
+                                    <i class="fa fa-trash me-2"></i> Hapus
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </td>
             </tr>
-        </tbody>
-    </table>
-</div>
-@include('Barang.Modal._KategoriProduk')
+        `);
+    });
+}
+
+function renderKategoriPagination(meta) {
+    document.getElementById('kategori-pagination-info').innerText =
+        `Menampilkan ${meta.from || 0} ke ${meta.to || 0} dari ${meta.total} data`;
+
+    const container = document.getElementById('kategori-pagination-container');
+    container.innerHTML = '';
+
+    meta.links.forEach(link => {
+        const active = link.active ? 'active' : '';
+        const disabled = !link.url ? 'disabled' : '';
+        const label = link.label.replace('&laquo;', '').replace('&raquo;', '');
+
+        container.insertAdjacentHTML('beforeend', `
+            <li class="page-item ${active} ${disabled}">
+                <a class="page-link shadow-none"
+                   href="javascript:void(0)"
+                   onclick="loadKategoriProduk('${link.url}')">
+                    ${label}
+                </a>
+            </li>
+        `);
+    });
+}
+</script>
+@endpush

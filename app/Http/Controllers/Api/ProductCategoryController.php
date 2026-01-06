@@ -10,9 +10,16 @@ use Illuminate\Support\Facades\Validator;
 
 class ProductCategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $data = ProductCategorie::with('parent')->latest()->paginate(10);
+        $query = ProductCategorie::with('parent');
+
+        if ($request->search) {
+            $query->where('nama_kategori', 'LIKE', "%{$request->search}%");
+        }
+
+        $data = $query->orderBy('nama_kategori')->paginate(10);
+
         return apiResponse(true, 'Data kategori produk', $data);
     }
 

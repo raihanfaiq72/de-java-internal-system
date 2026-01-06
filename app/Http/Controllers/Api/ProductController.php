@@ -5,14 +5,29 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ActivityLog;
+use App\Models\ProductCategorie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $data = Product::with(['category', 'unit'])->latest()->paginate(10);
+        $query = Product::with(['category', 'unit']);
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nama_produk', 'LIKE', "%{$request->search}%")
+                ->orWhere('sku_kode', 'LIKE', "%{$request->search}%");
+            });
+        }
+
+        if ($request->category) {
+            $query->where('category_id', $request->category);
+        }
+
+        $data = $query->latest()->paginate(10);
+
         return apiResponse(true, 'Data produk', $data);
     }
 
