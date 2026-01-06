@@ -10,7 +10,7 @@ use App\Http\Controllers\SalesController;
 Route::get('/',[AuthController::class,'login']);
 
 // select outlet
-Route::get('/select-your-outlet',[AuthController::class,'syo']);
+Route::get('/select-your-outlet',[AuthController::class,'syo'])->name('syo');
 
 // route per outlet
 

@@ -7,7 +7,7 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="index.html">
+                    <a class="nav-link" href="{{route('dashboard')}}">
                         <i class="iconoir-dashboard menu-icon"></i>
                         <span>Dashboard</span>
                         <span class="badge text-bg-info ms-auto">New</span>
@@ -95,7 +95,7 @@
                     <div class="collapse" id="sideSO">
                         <ul class="nav flex-column">
                             <li class="nav-item">
-                                <a class="nav-link" href="transactions.html">
+                                <a class="nav-link" href="{{route('sales')}}">
                                     <i class="iconoir-page-search me-2"></i> Sales Order
                                 </a>
                             </li>
@@ -129,6 +129,27 @@
                     <a class="nav-link" href="cards.html">
                         <i class="iconoir-archive menu-icon"></i>
                         <span>Laporan Stock</span>
+                    </a>
+                </li>
+
+                <li class="menu-label mt-2">
+                    <span>Setting</span>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{route('syo')}}">
+                        <i class="iconoir-build menu-icon"></i>
+                        <span>Ganti Kantor</span>
+                    </a>
+                </li>
+                <li class="menu-label mt-2">
+                    <span>Report</span>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="cards.html">
+                        <i class="iconoir-log menu-icon"></i>
+                        <span>Logout</span>
                     </a>
                 </li>
             </ul>
