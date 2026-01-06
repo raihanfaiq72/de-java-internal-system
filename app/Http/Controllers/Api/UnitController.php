@@ -11,9 +11,21 @@ use Throwable;
 
 class UnitController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $data = Unit::with('category')->latest()->paginate(10);
+        $query = Unit::with('category');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_unit', 'like', "%{$search}%")
+                ->orWhere('simbol', 'like', "%{$search}%");
+            });
+        }
+
+        $data = $query->latest()->paginate(10);
+
         return apiResponse(true, 'Data unit', $data);
     }
 

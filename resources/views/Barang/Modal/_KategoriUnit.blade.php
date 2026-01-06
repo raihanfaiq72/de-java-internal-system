@@ -1,40 +1,49 @@
-<div class="modal fade" id="modalKategoriUnit" tabindex="-1" role="dialog" aria-labelledby="modalKategoriUnitTitle"
-    aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
+<div class="modal fade" id="modalKategoriUnit" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
+
             <div class="modal-header">
-                <h6 class="modal-title m-0" id="modalKategoriUnitTitle">Center Modal</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h6 class="modal-title" id="kategoriUnitModalTitle">
+                    Tambah Kategori Unit
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <!--end modal-header-->
+
             <div class="modal-body">
-                <div class="row">
-                    <div class="col-lg-3 text-center align-self-center">
-                        <img src="assets/images/extra/card/btc.png" alt="" class="img-fluid">
+                <form id="formKategoriUnit">
+                    <input type="hidden" id="kategoriUnitId">
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Nama Kategori</label>
+                        <input type="text" id="nama_kategori"
+                            class="form-control form-control-sm"
+                            placeholder="Contoh: Berat">
+                        <div class="invalid-feedback"></div>
                     </div>
-                    <!--end col-->
-                    <div class="col-lg-9">
-                        <h5>Crypto Market Services</h5>
-                        <span class="badge bg-light text-dark">Disable Services</span>
-                        <small class="text-muted ms-2">07 Oct 2024</small>
-                        <ul class="mt-2 mb-0">
-                            <li>Lorem Ipsum is dummy text.</li>
-                            <li>It is a long established reader.</li>
-                            <li>Contrary to popular belief, Lorem simply.</li>
-                        </ul>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Konversi Dasar</label>
+                        <input type="number" step="0.01" id="konversi_nilai"
+                            class="form-control form-control-sm"
+                            placeholder="1.00">
+                        <div class="invalid-feedback"></div>
                     </div>
-                    <!--end col-->
-                </div>
-                <!--end row-->
+                </form>
             </div>
-            <!--end modal-body-->
+
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary btn-sm">Save changes</button>
+                <button type="button"
+                    class="btn btn-sm btn-secondary"
+                    data-bs-dismiss="modal">
+                    Batal
+                </button>
+                <button type="button"
+                    class="btn btn-sm btn-primary"
+                    id="btnSaveKategoriUnit">
+                    Simpan
+                </button>
             </div>
-            <!--end modal-footer-->
+
         </div>
-        <!--end modal-content-->
     </div>
-    <!--end modal-dialog-->
 </div>
