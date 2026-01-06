@@ -1,40 +1,44 @@
-<div class="modal fade" id="modalKategoriProduk" tabindex="-1" role="dialog" aria-labelledby="modalKategoriProdukTitle"
-    aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
+<div class="modal fade" id="modalKategoriProduk" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
+
             <div class="modal-header">
-                <h6 class="modal-title m-0" id="modalKategoriProdukTitle">Center Modal</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h6 class="modal-title" id="modalKategoriTitle">Tambah Kategori</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <!--end modal-header-->
+
             <div class="modal-body">
-                <div class="row">
-                    <div class="col-lg-3 text-center align-self-center">
-                        <img src="assets/images/extra/card/btc.png" alt="" class="img-fluid">
-                    </div>
-                    <!--end col-->
-                    <div class="col-lg-9">
-                        <h5>Crypto Market Services</h5>
-                        <span class="badge bg-light text-dark">Disable Services</span>
-                        <small class="text-muted ms-2">07 Oct 2024</small>
-                        <ul class="mt-2 mb-0">
-                            <li>Lorem Ipsum is dummy text.</li>
-                            <li>It is a long established reader.</li>
-                            <li>Contrary to popular belief, Lorem simply.</li>
-                        </ul>
-                    </div>
-                    <!--end col-->
+                <input type="hidden" id="kategori-id">
+
+                <div class="mb-2">
+                    <label class="small fw-bold">Nama Kategori</label>
+                    <input type="text" id="kategori-nama"
+                           class="form-control form-control-sm">
                 </div>
-                <!--end row-->
+
+                <div class="mb-2">
+                    <label class="small fw-bold">Parent Kategori</label>
+                    <select id="kategori-parent"
+                            class="form-select form-select-sm">
+                        <option value="">— Tanpa Parent —</option>
+                    </select>
+                </div>
+
+                <div class="mb-2">
+                    <label class="small fw-bold">Deskripsi</label>
+                    <textarea id="kategori-deskripsi"
+                              class="form-control form-control-sm"
+                              rows="2"></textarea>
+                </div>
             </div>
-            <!--end modal-body-->
+
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary btn-sm">Save changes</button>
+                <button class="btn btn-sm btn-secondary"
+                        data-bs-dismiss="modal">Batal</button>
+                <button class="btn btn-sm btn-primary"
+                        onclick="submitKategoriProduk()">Simpan</button>
             </div>
-            <!--end modal-footer-->
+
         </div>
-        <!--end modal-content-->
     </div>
-    <!--end modal-dialog-->
 </div>

@@ -17,8 +17,7 @@
 
         <div class="col text-end">
             <button class="btn btn-sm btn-primary px-3 shadow-sm"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modalKategoriProduk">
+                    onclick="tambahKategori()">
                 <i class="fa fa-plus me-1"></i> TAMBAH KATEGORI
             </button>
         </div>
@@ -56,9 +55,37 @@
 @push('js')
 <script>
 
+    let deleteKategoriId = null;
+
     document.addEventListener('DOMContentLoaded', () => {
         loadKategoriProduk();
+        loadKategoriParentOption();
+
+        let timeout;
+        document.getElementById('filter-kategori-search')
+            .addEventListener('input', () => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => loadKategoriProduk(), 400);
+            });
     });
+
+    async function loadKategoriParentOption() {
+        const select = document.getElementById('kategori-parent');
+        select.innerHTML = `<option value="">— Tanpa Parent —</option>`;
+
+        const res = await fetch(CATEGORY_API_URL);
+        const result = await res.json();
+
+        if (!result.success) return;
+
+        result.data.data.forEach(item => {
+            select.insertAdjacentHTML('beforeend', `
+                <option value="${item.id}">
+                    ${item.nama_kategori}
+                </option>
+            `);
+        });
+    }
 
     async function loadKategoriProduk(url = CATEGORY_API_URL) {
         if (typeof url !== 'string') url = CATEGORY_API_URL;
@@ -166,5 +193,102 @@
             `);
         });
     }
+
+    function tambahKategori() {
+        document.getElementById('modalKategoriTitle').innerText = 'Tambah Kategori';
+        document.getElementById('kategori-id').value = '';
+        document.getElementById('kategori-nama').value = '';
+        document.getElementById('kategori-parent').value = '';
+        document.getElementById('kategori-deskripsi').value = '';
+
+        new bootstrap.Modal('#modalKategoriProduk').show();
+    }
+
+    async function editKategori(id) {
+        const res = await fetch(`${CATEGORY_API_URL}/${id}`);
+        const result = await res.json();
+
+        if (!result.success) return;
+
+        const data = result.data;
+
+        document.getElementById('modalKategoriTitle').innerText = 'Edit Kategori';
+        document.getElementById('kategori-id').value = data.id;
+        document.getElementById('kategori-nama').value = data.nama_kategori;
+        document.getElementById('kategori-parent').value = data.parent_id ?? '';
+        document.getElementById('kategori-deskripsi').value = data.deskripsi ?? '';
+
+        new bootstrap.Modal('#modalKategoriProduk').show();
+    }
+
+    async function submitKategoriProduk() {
+        const id = document.getElementById('kategori-id').value;
+
+        const payload = {
+            nama_kategori: document.getElementById('kategori-nama').value,
+            parent_id: document.getElementById('kategori-parent').value || null,
+            deskripsi: document.getElementById('kategori-deskripsi').value
+        };
+
+        const url = id
+            ? `${CATEGORY_API_URL}/${id}`
+            : CATEGORY_API_URL;
+
+        const method = id ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await res.json();
+
+        if (!result.success) {
+            alert(result.message);
+            return;
+        }
+
+        bootstrap.Modal.getInstance(
+            document.getElementById('modalKategoriProduk')
+        ).hide();
+
+        loadKategoriProduk();
+    }
+
+    function hapusKategori(id) {
+        deleteKategoriId = id;
+
+        document.getElementById('confirmDeleteText').innerText =
+            'Yakin ingin menghapus kategori produk ini?';
+
+        new bootstrap.Modal('#modalConfirmDelete').show();
+    }
+
+    document.getElementById('btnConfirmDelete')
+        .addEventListener('click', async () => {
+
+        if (!deleteKategoriId) return;
+
+        const res = await fetch(
+            `${CATEGORY_API_URL}/${deleteKategoriId}`,
+            { method: 'DELETE' }
+        );
+
+        const result = await res.json();
+
+        if (!result.success) {
+            alert(result.message);
+            return;
+        }
+
+        bootstrap.Modal.getInstance(
+            document.getElementById('modalConfirmDelete')
+        ).hide();
+
+        deleteKategoriId = null;
+        loadKategoriProduk();
+    });
+
 </script>
 @endpush
