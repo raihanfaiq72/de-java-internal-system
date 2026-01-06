@@ -10,8 +10,10 @@
             <button class="btn btn-sm btn-dark px-3"><i class="fa fa-filter me-1"></i> Filter</button>
         </div>
         <div class="col text-end">
-            <button class="btn btn-sm btn-primary px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalKategoriUnit"><i class="fa fa-plus me-1"></i> TAMBAH KATEGORI
-                UNIT</button>
+            <button class="btn btn-sm btn-primary px-3 shadow-sm"
+                onclick="tambahKategoriUnit()">
+                <i class="fa fa-plus me-1"></i> TAMBAH KATEGORI UNIT
+            </button>
         </div>
     </div>
     <table class="table table-sm table-bordered align-middle">
@@ -35,9 +37,12 @@
 
 </div>
 @include('Barang.Modal._KategoriUnit')
+@include('Barang.Modal._ConfirmDelete')
 
 @push('js')
 <script>
+let deleteKategoriUnitId = null;
+
 document.addEventListener('DOMContentLoaded', () => {
     loadKategoriUnit();
 
@@ -141,5 +146,134 @@ function renderKategoriUnitPagination(meta) {
         `);
     });
 }
+
+function tambahKategoriUnit() {
+    document.getElementById('kategoriUnitModalTitle').innerText = 'Tambah Kategori Unit';
+    document.getElementById('formKategoriUnit').reset();
+    document.getElementById('kategoriUnitId').value = '';
+
+    clearValidation();
+
+    new bootstrap.Modal('#modalKategoriUnit').show();
+}
+
+async function editKategoriUnit(id) {
+    const res = await fetch(`/api/unit-categories-api/${id}`);
+    const result = await res.json();
+
+    if (!result.success) return alert('Data tidak ditemukan');
+
+    const data = result.data;
+
+    document.getElementById('kategoriUnitModalTitle').innerText = 'Edit Kategori Unit';
+    document.getElementById('kategoriUnitId').value = data.id;
+    document.getElementById('nama_kategori').value = data.nama_kategori;
+    document.getElementById('konversi_nilai').value = data.konversi_nilai;
+
+    clearValidation();
+
+    new bootstrap.Modal('#modalKategoriUnit').show();
+}
+
+document.getElementById('btnSaveKategoriUnit')
+    .addEventListener('click', async () => {
+
+    const id = document.getElementById('kategoriUnitId').value;
+    const payload = {
+        nama_kategori: document.getElementById('nama_kategori').value,
+        konversi_nilai: document.getElementById('konversi_nilai').value
+    };
+
+    const url = id
+        ? `/api/unit-categories-api/${id}`
+        : `/api/unit-categories-api`;
+
+    const method = id ? 'PUT' : 'POST';
+
+    clearValidation();
+
+    try {
+        const res = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await res.json();
+
+        if (!result.success) {
+            showValidation(result.errors);
+            return;
+        }
+
+        bootstrap.Modal.getInstance(
+            document.getElementById('modalKategoriUnit')
+        ).hide();
+
+        loadKategoriUnit();
+
+    } catch {
+        alert('Gagal menyimpan data');
+    }
+});
+
+function showValidation(errors = {}) {
+    Object.keys(errors).forEach(key => {
+        const input = document.getElementById(key);
+        if (!input) return;
+
+        input.classList.add('is-invalid');
+        input.nextElementSibling.innerText = errors[key][0];
+    });
+}
+
+function clearValidation() {
+    document.querySelectorAll('#formKategoriUnit .is-invalid')
+        .forEach(el => el.classList.remove('is-invalid'));
+}
+
+function hapusKategoriUnit(id) {
+    deleteKategoriUnitId = id;
+
+    document.getElementById('confirmDeleteText').innerText =
+        'Yakin ingin menghapus kategori unit ini?';
+
+    new bootstrap.Modal('#modalConfirmDelete').show();
+}
+
+document.getElementById('btnConfirmDelete')
+    .addEventListener('click', async () => {
+
+    if (!deleteKategoriUnitId) return;
+
+    try {
+        const res = await fetch(
+            `/api/unit-categories-api/${deleteKategoriUnitId}`,
+            { method: 'DELETE' }
+        );
+
+        const result = await res.json();
+
+        if (!result.success) {
+            alert(result.message || 'Gagal menghapus data');
+            return;
+        }
+
+        bootstrap.Modal.getInstance(
+            document.getElementById('modalConfirmDelete')
+        ).hide();
+
+        deleteKategoriUnitId = null;
+
+        loadKategoriUnit();
+
+    } catch {
+        alert('Terjadi kesalahan saat menghapus data');
+    }
+});
+
 </script>
 @endpush
