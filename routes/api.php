@@ -9,8 +9,6 @@ use App\Http\Controllers\Api\PaymentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\Api\RoleController;
-use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\ProductCategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\SalesAttendanceController;
@@ -18,11 +16,6 @@ use App\Http\Controllers\Api\TaxController;
 use App\Http\Controllers\Api\UnitCategoryController;
 use App\Http\Controllers\Api\UnitController;
 use App\Http\Controllers\Api\UserController;
-
-Route::prefix('admin')->group(function() {
-    // Route::apiResource('roles', RoleController::class);
-    // Route::apiResource('permissions', PermissionController::class);
-});
 
 Route::prefix('mitra-api')->group(function() {
     Route::get('/', [MitraController::class, 'index']);
