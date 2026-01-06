@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardPiutangController;
+use App\Http\Controllers\DashboardSalesController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\BarangController;
 
@@ -22,6 +23,8 @@ Route::get('/select-your-outlet',[AuthController::class,'syo'])->name('syo');
  */
 Route::get('dashboard',[DashboardController::class,'index'])->name('dashboard');
 Route::get('dashboard-piutang',[DashboardPiutangController::class,'index'])->name('dashboard.piutang');
+Route::get('dashboard-sales',[DashboardSalesController::class,'index'])->name('dashboard.sales');
+Route::get('dashboard-sales/detail/{id}',[DashboardSalesController::class,'detail'])->name('dashboard.sales.detail');
 Route::get('sales',[SalesController::class,'index'])->name('sales');
 Route::get('mitra',[MitraController::class,'index'])->name('mitra');
 Route::get('barang',[BarangController::class,'index'])->name('barang');

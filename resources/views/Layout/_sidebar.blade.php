@@ -58,7 +58,7 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="{{route('sales')}}">
+                    <a class="nav-link" href="{{route('dashboard.sales')}}">
                         <i class="iconoir-shop menu-icon"></i>
                         <span>Dashboard Sales (Kredit)</span>
                     </a>
