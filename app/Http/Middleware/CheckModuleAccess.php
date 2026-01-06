@@ -5,31 +5,42 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\DB;
 
 class CheckModuleAccess
 {
     public function handle(Request $request, Closure $next)
     {
         if (!Auth::check()) {
-            return redirect('/');
+            return redirect()->route('login');
         }
 
         $user = Auth::user();
         $routeName = $request->route()->getName();
-        
-        $path = database_path('otorisasi.json');
-        if (!File::exists($path)) {
-            return $next($request); 
-        }
+        $officeId = session('active_office_id');
 
-        $permissions = json_decode(File::get($path), true);
-        $allowedRoutes = $permissions[$user->username] ?? [];
+        $alwaysAllowed = ['dashboard', 'syo', 'set.outlet', 'login', 'logout'];
 
-        if ($routeName == 'dashboard' || in_array($routeName, $allowedRoutes)) {
+        if (in_array($routeName, $alwaysAllowed)) {
             return $next($request);
         }
 
-        abort(403, 'Anda tidak memiliki wewenang untuk mengakses modul ini.');
+        if (!$officeId) {
+            return redirect()->route('syo')->with('error', 'Silahkan pilih kantor terlebih dahulu.');
+        }
+
+        $hasAccess = DB::table('user_office_roles')
+            ->join('role_permissions', 'user_office_roles.role_id', '=', 'role_permissions.role_id')
+            ->join('permissions', 'role_permissions.permission_id', '=', 'permissions.id')
+            ->where('user_office_roles.user_id', $user->id)
+            ->where('user_office_roles.office_id', $officeId)
+            ->where('permissions.name', $routeName)
+            ->exists();
+
+        if ($hasAccess) {
+            return $next($request);
+        }
+
+        abort(403, 'Anda tidak memiliki wewenang untuk mengakses modul ini di kantor yang dipilih.');
     }
 }
