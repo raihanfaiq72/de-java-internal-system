@@ -51,7 +51,7 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
+                    <a class="nav-link" href="{{route('dashboard.piutang')}}">
                         <i class="iconoir-coins menu-icon"></i>
                         <span>Dashboard Piutang</span>
                     </a>
@@ -147,8 +147,8 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="cards.html">
-                        <i class="iconoir-log menu-icon"></i>
+                    <a class="nav-link" href="{{route('login')}}">
+                        <i class="iconoir-log-out menu-icon"></i>
                         <span>Logout</span>
                     </a>
                 </li>
