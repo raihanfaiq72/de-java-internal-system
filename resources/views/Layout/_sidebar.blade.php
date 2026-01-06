@@ -23,8 +23,8 @@
                     <div class="collapse" id="sidebarMaster">
                         <ul class="nav flex-column">
                             <li class="nav-item">
-                                <a class="nav-link" href="transactions.html">
-                                    <i class="iconoir-user-circle me-2"></i> Admin
+                                <a class="nav-link" href="{{route('users.index')}}">
+                                    <i class="iconoir-user-circle me-2"></i> User / Karyawan
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -37,9 +37,41 @@
                                     <i class="iconoir-package me-2"></i> Barang
                                 </a>
                             </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="menu-label mt-2 text-danger">
+                    <span>Administrator <small class="fw-bold">(Dev Only)</small></span>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#sidebarAuth" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarAuth">
+                        <i class="iconoir-lock menu-icon text-danger"></i>
+                        <span class="text-danger">Akses & Kantor</span>
+                    </a>
+                    <div class="collapse" id="sidebarAuth">
+                        <ul class="nav flex-column">
                             <li class="nav-item">
-                                <a class="nav-link" href="transactions.html">
-                                    <i class="iconoir-shield-check me-2"></i> Role
+                                <a class="nav-link" href="{{route('permissions.index')}}">
+                                    <i class="iconoir-code-brackets me-2"></i> Mapping Route 
+                                    <span class="badge badge-outline-danger ms-auto font-10">Dev</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{route('roles.index')}}">
+                                    <i class="iconoir-shield-check me-2"></i> Role & Permission
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{route('offices.index')}}">
+                                    <i class="iconoir-city me-2"></i> Daftar Kantor (Outlet)
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{route('user_plots.index')}}">
+                                    <i class="iconoir-group me-2"></i> Plotting User
                                 </a>
                             </li>
                         </ul>
@@ -60,7 +92,7 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{route('dashboard.sales')}}">
                         <i class="iconoir-shop menu-icon"></i>
-                        <span>Dashboard Sales (Kredit)</span>
+                        <span>Dashboard Sales</span>
                     </a>
                 </li>
 
@@ -142,16 +174,19 @@
                         <span>Ganti Kantor</span>
                     </a>
                 </li>
-                <li class="menu-label mt-2">
-                    <span>Report</span>
-                </li>
 
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('login')}}">
+                <li class="nav-item mt-3">
+                    <a href="#" class="nav-link text-danger"
+                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                         <i class="iconoir-log-out menu-icon"></i>
                         <span>Logout</span>
                     </a>
+
+                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                        @csrf
+                    </form>
                 </li>
+
             </ul>
         </div>
     </div>

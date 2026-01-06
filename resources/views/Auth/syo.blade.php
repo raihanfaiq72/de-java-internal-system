@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Pilih Kantor - Premium macOS Style</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -27,7 +28,6 @@
             transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* State ketika mengalihkan */
         body.is-redirecting {
             transform: scale(0.95);
         }
@@ -132,11 +132,6 @@
             display: block;
             text-align: center;
         }
-        .btn-mac-primary:hover {
-            background-color: #0063CC;
-            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
-            color: white;
-        }
 
         .add-card {
             border: 2px dashed #c7c7cc;
@@ -147,42 +142,7 @@
             justify-content: center;
             cursor: pointer;
         }
-        .add-card i { font-size: 3rem; color: #c7c7cc; transition: color 0.3s; }
-        .add-card:hover i { color: var(--mac-blue); }
 
-        .full-form-overlay {
-            position: fixed;
-            top: 0;
-            right: -100%;
-            width: 100%;
-            height: 100vh;
-            background: rgba(245, 245, 247, 0.95);
-            backdrop-filter: blur(20px);
-            z-index: 1000;
-            transition: right 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .full-form-overlay.show { right: 0; }
-
-        .form-content {
-            width: 100%;
-            max-width: 600px;
-            background: white;
-            height: 100%;
-            padding: 60px;
-            box-shadow: -10px 0 50px rgba(0,0,0,0.1);
-            overflow-y: auto;
-        }
-
-        .overlay-shift {
-            transform: translateX(-200px);
-            filter: blur(5px);
-            pointer-events: none;
-        }
-
-        /* --- ANIMASI PENGALIHAN (REDIRECT) --- */
         .redirect-overlay {
             position: fixed;
             top: 0;
@@ -191,7 +151,6 @@
             height: 100%;
             background: rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(0px);
-            -webkit-backdrop-filter: blur(0px);
             z-index: 2000;
             display: flex;
             flex-direction: column;
@@ -206,7 +165,6 @@
             visibility: visible;
             opacity: 1;
             backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
         }
 
         .mac-spinner {
@@ -218,24 +176,10 @@
             animation: spin 1s linear infinite;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .redirect-text {
-            margin-top: 20px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: #1d1d1f;
-            transform: translateY(10px);
-            opacity: 0;
-            transition: all 0.5s ease 0.2s;
-        }
-
-        .redirect-overlay.active .redirect-text {
-            transform: translateY(0);
-            opacity: 1;
-        }
+        .redirect-text { margin-top: 20px; font-weight: 600; color: #1d1d1f; opacity: 0; transition: all 0.5s ease 0.2s; }
+        .redirect-overlay.active .redirect-text { opacity: 1; }
 
         .delay-1 { animation-delay: 0.1s; }
         .delay-2 { animation-delay: 0.2s; }
@@ -251,114 +195,69 @@
 
 <div class="container pb-5" id="mainWrapper">
     <header class="page-header">
-        <p class="text-primary fw-bold mb-1">Hello Owner</p>
-        <h2 class="page-title">Kelola Kantor</h2>
+        <p class="text-primary fw-bold mb-1">Hello, {{ auth()->user()->name }}</p>
+        <h2 class="page-title">Pilih Ruang Kerja</h2>
     </header>
 
     <div class="cards-container" id="cardsContainer">
-        <div class="office-card delay-1">
+        @forelse($availableOffices as $index => $office)
+        <div class="office-card delay-{{ $index + 1 }}">
             <span class="office-status">Aktif</span>
             <div class="icon-box">
                 <i class="icofont-building"></i>
             </div>
-            <h5>Kantor Central</h5>
-            <p>Pusat operasional dan data manajemen utama perusahaan.</p>
+            <h5>{{ $office->name }}</h5>
+            <p>{{ $office->description ?? 'Kelola data dan operasional untuk kantor ini.' }}</p>
             <div class="office-meta">
-                <span><i class="icofont-location-pin"></i> Jl. Sudirman No. 12, Jakarta</span>
-                <span><i class="icofont-users-alt-3"></i> 124 Karyawan</span>
+                <span><i class="icofont-code"></i> Kode: {{ $office->code }}</span>
+                <span><i class="icofont-location-pin"></i> {{ $office->address ?? 'Lokasi Terdaftar' }}</span>
             </div>
-            <a href="{{url('dashboard')}}" class="btn btn-mac-primary w-100 redirect-link">Masuk ke Kantor</a>
+            <a href="javascript:void(0)" onclick="selectOffice({{ $office->id }})" class="btn btn-mac-primary w-100">Masuk ke Kantor</a>
         </div>
-
-        <div class="office-card delay-2">
-            <span class="office-status" style="background:#fff3e0; color:#ef6c00;">Cabang</span>
-            <div class="icon-box" style="background: linear-gradient(135deg, #FF9500, #FFCC00);">
-                <i class="icofont-delivery-house"></i>
-            </div>
-            <h5>Kantor Regional II</h5>
-            <p>Fokus pada distribusi logistik dan layanan area Barat.</p>
-            <div class="office-meta">
-                <span><i class="icofont-location-pin"></i> Jl. Gatot Subroto No. 45, Bandung</span>
-                <span><i class="icofont-users-alt-3"></i> 45 Karyawan</span>
-            </div>
-            <a href="#" class="btn btn-mac-primary w-100 redirect-link">Masuk ke Kantor</a>
+        @empty
+        <div class="alert alert-light border text-center p-5 w-100">
+            <h5 class="fw-bold">Akses Tidak Ditemukan</h5>
+            <p class="text-muted">Anda belum memiliki akses ke kantor manapun. Hubungi Admin.</p>
         </div>
+        @endforelse
 
-        <div class="office-card add-card delay-3" id="addBtn">
+        <div class="office-card add-card delay-3">
             <i class="icofont-plus-circle"></i>
             <h5 class="mt-3">Buka Kantor Baru</h5>
-            <p class="text-center">Ekspansi bisnis Anda dengan menambah cabang baru.</p>
-        </div>
-    </div>
-</div>
-
-<div class="full-form-overlay" id="fullForm">
-    <div class="form-content">
-        <div class="form-header">
-            <h2 class="fw-bold">Tambah Kantor Baru</h2>
-            <p class="text-muted">Lengkapi data untuk mendaftarkan cabang baru.</p>
-        </div>
-        <div class="mt-4">
-            <label class="form-label">Nama Kantor</label>
-            <input type="text" class="form-control" placeholder="Contoh: Surabaya Branch">
-            <label class="form-label mt-3">Alamat</label>
-            <textarea class="form-control" rows="3"></textarea>
-            <div class="d-flex gap-2 mt-4">
-                <button class="btn btn-mac-primary flex-grow-1 py-3">Simpan</button>
-                <button class="btn btn-light px-4 border" id="cancelBtn">Batal</button>
-            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Logic untuk Animasi Redirect
-    const redirectLinks = document.querySelectorAll('.redirect-link');
-    const redirectOverlay = document.getElementById('redirectOverlay');
-    const body = document.body;
+    function selectOffice(officeId) {
+        const redirectOverlay = document.getElementById('redirectOverlay');
+        const body = document.body;
 
-    redirectLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault(); // Stop pindah halaman instan
-            const targetUrl = this.getAttribute('href');
+        body.classList.add('is-redirecting');
+        redirectOverlay.classList.add('active');
 
-            // 1. Tambah class ke body untuk efek mengecil (scale)
-            body.classList.add('is-redirecting');
-
-            // 2. Tampilkan overlay transisi
-            redirectOverlay.classList.add('active');
-
-            // 3. Eksekusi pindah halaman setelah animasi selesai (1.2 detik agar terlihat feel-nya)
-            setTimeout(() => {
-                if(targetUrl !== "#") {
-                    window.location.href = targetUrl;
-                } else {
-                    // Hanya untuk demo jika link adalah "#"
-                    alert("Kantor tidak ditemukan, mengembalikan ke Kelola Kantor");
-                    location.reload();
-                }
-            }, 1200);
+        fetch("{{ route('set.outlet') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ office_id: officeId })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                setTimeout(() => {
+                    window.location.href = data.redirect_url;
+                }, 1200);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Terjadi kesalahan koneksi.");
+            location.reload();
         });
-    });
-
-    // Logic untuk Form Tambah Kantor
-    const addBtn = document.getElementById('addBtn');
-    const fullForm = document.getElementById('fullForm');
-    const cardsContainer = document.getElementById('cardsContainer');
-    const mainWrapper = document.getElementById('mainWrapper');
-    const cancelBtn = document.getElementById('cancelBtn');
-
-    addBtn.addEventListener('click', () => {
-        cardsContainer.classList.add('overlay-shift');
-        mainWrapper.style.opacity = "0.5";
-        fullForm.classList.add('show');
-    });
-
-    cancelBtn.addEventListener('click', () => {
-        cardsContainer.classList.remove('overlay-shift');
-        mainWrapper.style.opacity = "1";
-        fullForm.classList.remove('show');
-    });
+    }
 </script>
 
 </body>

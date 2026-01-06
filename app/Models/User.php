@@ -49,4 +49,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function plots()
+    {
+        return $this->hasMany(UserOfficeRole::class);
+    }
 }

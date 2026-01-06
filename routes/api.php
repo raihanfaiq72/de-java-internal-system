@@ -20,8 +20,8 @@ use App\Http\Controllers\Api\UnitController;
 use App\Http\Controllers\Api\UserController;
 
 Route::prefix('admin')->group(function() {
-    Route::apiResource('roles', RoleController::class);
-    Route::apiResource('permissions', PermissionController::class);
+    // Route::apiResource('roles', RoleController::class);
+    // Route::apiResource('permissions', PermissionController::class);
 });
 
 Route::prefix('mitra-api')->group(function() {
