@@ -24,12 +24,12 @@
                         <ul class="nav flex-column">
                             <li class="nav-item">
                                 <a class="nav-link" href="transactions.html">
-                                    <i class="iconoir-user-group me-2"></i> Admin
+                                    <i class="iconoir-user-circle me-2"></i> Admin
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{{route('mitra')}}">
-                                    <i class="iconoir-handshake me-2"></i> Mitra
+                                    <i class="iconoir-community me-2"></i> Mitra
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -74,7 +74,7 @@
                         <ul class="nav flex-column">
                             <li class="nav-item">
                                 <a class="nav-link" href="transactions.html">
-                                    <i class="iconoir-add-cart me-2"></i> Purchase Order
+                                    <i class="iconoir-hand-contactless me-2"></i> Purchase Order
                                 </a>
                             </li>
                              <li class="nav-item">
@@ -138,7 +138,7 @@
 
                 <li class="nav-item">
                     <a class="nav-link" href="{{route('syo')}}">
-                        <i class="iconoir-build menu-icon"></i>
+                        <i class="iconoir-coins-swap menu-icon"></i>
                         <span>Ganti Kantor</span>
                     </a>
                 </li>
