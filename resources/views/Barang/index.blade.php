@@ -67,6 +67,9 @@
         </div>
     </div>
 </div>
+@endsection
+
+@push('css')
 
 <style>
     .nav-pills .nav-link.active {
@@ -84,4 +87,5 @@
         letter-spacing: 0.5px;
     }
 </style>
-@endsection
+
+@endpush

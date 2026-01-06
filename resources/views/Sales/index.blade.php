@@ -114,6 +114,10 @@
 
 @include('Sales.Modal.modal-fullscreen')
 
+@endsection
+
+@push('css')
+
 <style>
     .col-fixed-check { width: 60px; flex-shrink: 0; }
     .col-fixed-aksi { width: 60px; flex-shrink: 0; }
@@ -129,6 +133,10 @@
     .bg-soft-secondary { background-color: #f8f9fc; }
     .badge { padding: 6px 10px; letter-spacing: 0.3px; }
 </style>
+
+@endpush
+
+@push('js')
 
 <script>
     const API_URL = 'http://localhost:8000/api/invoice-api';
@@ -249,4 +257,5 @@
         });
     }
 </script>
-@endsection
+
+@endpush
