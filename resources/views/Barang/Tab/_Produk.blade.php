@@ -38,7 +38,7 @@
                     <th>Unit</th>
                     <th>Harga Beli</th>
                     <th>Harga Jual</th>
-                    <th>Unit</th>
+                    <th>Kuntitas</th>
                     <th width="80" class="text-center">Aksi</th>
                 </tr>
             </thead>
@@ -63,52 +63,87 @@
 
 @push('js')
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        loadProductData();
+    const API_URL = 'http://localhost:8000/api/product-api';
+    const CATEGORY_API_URL = 'http://localhost:8000/api/product-categories-api';
+
+    document.addEventListener('DOMContentLoaded', () => {
         loadKategoriProduk();
+        loadProductData();
     });
 
-    function loadKategoriProduk() {
-        fetch('api/product-categories-api')
-            .then(res => res.json())
-            .then(res => {
-                console.log(res);
-                if (!res.success) return;
+    const formatIDR = (val) => new Intl.NumberFormat('id-ID', {
+        style: 'currency', currency: 'IDR', minimumFractionDigits: 0
+    }).format(val);
 
-                const select = document.getElementById('filter-produk-kategori');
+    async function loadKategoriProduk() {
+        const select = document.getElementById('filter-produk-kategori');
+        if (!select) return;
 
-                res.data.data.forEach(item => {
-                    select.insertAdjacentHTML('beforeend', `
-                        <option value="${item.id}">${item.nama_kategori}</option>
-                    `);
-                });
+        select.innerHTML = `<option value="">Semua Kategori</option>`;
+
+        try {
+            const res = await fetch(CATEGORY_API_URL);
+            const result = await res.json();
+
+            if (!result.success) return;
+
+            result.data.data.forEach(item => {
+                select.insertAdjacentHTML(
+                    'beforeend',
+                    `<option value="${item.id}">${item.nama_kategori}</option>`
+                );
             });
+        } catch (error) {
+            console.error('Gagal load kategori:', error);
+        }
     }
 
-    function loadProductData(url = null) {
-        const search = document.getElementById('filter-produk-search').value;
-        const kategori = document.getElementById('filter-produk-kategori').value;
+    async function loadProductData(url = API_URL) {
+        if (typeof url !== 'string') url = API_URL;
 
-        let apiUrl = url ?? `api/product-api?search=${search}&category=${kategori}`;
+        const tbody = document.getElementById('produk-table-body');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-4">
+                    <div class="spinner-border text-primary"></div>
+                </td>
+            </tr>`;
 
-        fetch(apiUrl)
-            .then(res => res.json())
-            .then(res => {
-                if (!res.success) return;
+        try {
+            const search = document.getElementById('filter-produk-search').value;
+            const kategori = document.getElementById('filter-produk-kategori').value;
 
-                renderProductTable(res.data.data);
-                renderProductPagination(res.data);
-            });
+            const fetchUrl = new URL(url);
+            if (search) fetchUrl.searchParams.append('search', search);
+            if (kategori) fetchUrl.searchParams.append('category', kategori);
+
+            const res = await fetch(fetchUrl);
+            const result = await res.json();
+
+            if (result.success) {
+                renderProductTable(result.data.data);
+                renderProductPagination(result.data);
+            }
+        } catch (error) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center text-danger">
+                        Gagal memuat data
+                    </td>
+                </tr>`;
+        }
     }
 
     function renderProductTable(data) {
         const tbody = document.getElementById('produk-table-body');
         tbody.innerHTML = '';
 
-        if (data.length === 0) {
+        if (!data || data.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="5" class="text-center text-muted">Data tidak ditemukan</td>
+                    <td colspan="8" class="text-center text-muted">
+                        Data tidak ditemukan
+                    </td>
                 </tr>`;
             return;
         }
@@ -120,8 +155,8 @@
                     <td>${item.nama_produk}</td>
                     <td>${item.category?.nama_kategori ?? '-'}</td>
                     <td>${item.unit?.nama_unit ?? '-'}</td>
-                    <td>${item.harga_beli ?? '-'}</td>
-                    <td>${item.harga_jual ?? '-'}</td>
+                    <td>${formatIDR(item.harga_beli) ?? '-'}</td>
+                    <td>${formatIDR(item.harga_jual) ?? '-'}</td>
                     <td>${item.qty ?? '-'}</td>
                     <td class="text-center">
                         <div class="dropdown">
@@ -179,4 +214,5 @@
         });
     }
 </script>
+
 @endpush

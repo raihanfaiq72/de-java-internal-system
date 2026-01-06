@@ -55,91 +55,116 @@
 
 @push('js')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    loadKategoriProduk();
-});
 
-function loadKategoriProduk(url = null) {
-    const search = document.getElementById('filter-kategori-search').value;
-    const apiUrl = url ?? `api/product-categories-api?search=${search}`;
+    document.addEventListener('DOMContentLoaded', () => {
+        loadKategoriProduk();
+    });
 
-    fetch(apiUrl)
-        .then(res => res.json())
-        .then(res => {
-            if (!res.success) return;
+    async function loadKategoriProduk(url = CATEGORY_API_URL) {
+        if (typeof url !== 'string') url = CATEGORY_API_URL;
 
-            renderKategoriTable(res.data.data);
-            renderKategoriPagination(res.data);
-        });
-}
-
-function renderKategoriTable(data) {
-    const tbody = document.getElementById('kategori-table-body');
-    tbody.innerHTML = '';
-
-    if (data.length === 0) {
+        const tbody = document.getElementById('kategori-table-body');
         tbody.innerHTML = `
             <tr>
-                <td colspan="4" class="text-center text-muted">Data tidak ditemukan</td>
+                <td colspan="4" class="text-center py-4">
+                    <div class="spinner-border text-primary"></div>
+                </td>
             </tr>`;
-        return;
+
+        try {
+            const search = document.getElementById('filter-kategori-search').value;
+
+            const fetchUrl = new URL(url);
+            if (search) fetchUrl.searchParams.append('search', search);
+
+            const res = await fetch(fetchUrl);
+            const result = await res.json();
+
+            if (result.success) {
+                renderKategoriTable(result.data.data);
+                renderKategoriPagination(result.data);
+            }
+        } catch (error) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center text-danger">
+                        Gagal memuat data
+                    </td>
+                </tr>`;
+        }
     }
 
-    data.forEach(item => {
-        tbody.insertAdjacentHTML('beforeend', `
-            <tr>
-                <td class="fw-bold">${item.nama_kategori}</td>
-                <td>${item.parent?.nama_kategori ?? '-'}</td>
-                <td>${item.deskripsi ?? '-'}</td>
-                <td class="text-center">
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-light border dropdown-toggle"
-                                data-bs-toggle="dropdown">Aksi</button>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a class="dropdown-item"
-                                   href="javascript:void(0)"
-                                   onclick="editKategori(${item.id})">
-                                    <i class="fa fa-edit me-2 text-warning"></i> Edit
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item text-danger"
-                                   href="javascript:void(0)"
-                                   onclick="hapusKategori(${item.id})">
-                                    <i class="fa fa-trash me-2"></i> Hapus
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </td>
-            </tr>
-        `);
-    });
-}
+    function renderKategoriTable(data) {
+        const tbody = document.getElementById('kategori-table-body');
+        tbody.innerHTML = '';
 
-function renderKategoriPagination(meta) {
-    document.getElementById('kategori-pagination-info').innerText =
-        `Menampilkan ${meta.from || 0} ke ${meta.to || 0} dari ${meta.total} data`;
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center text-muted">
+                        Data tidak ditemukan
+                    </td>
+                </tr>`;
+            return;
+        }
 
-    const container = document.getElementById('kategori-pagination-container');
-    container.innerHTML = '';
+        data.forEach(item => {
+            tbody.insertAdjacentHTML('beforeend', `
+                <tr>
+                    <td class="fw-bold">${item.nama_kategori}</td>
+                    <td>${item.parent?.nama_kategori ?? '-'}</td>
+                    <td>${item.deskripsi ?? '-'}</td>
+                    <td class="text-center">
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light border dropdown-toggle"
+                                    data-bs-toggle="dropdown">
+                                Aksi
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item"
+                                       href="javascript:void(0)"
+                                       onclick="editKategori(${item.id})">
+                                        <i class="fa fa-edit me-2 text-warning"></i> Edit
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item text-danger"
+                                       href="javascript:void(0)"
+                                       onclick="hapusKategori(${item.id})">
+                                        <i class="fa fa-trash me-2"></i> Hapus
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+            `);
+        });
+    }
 
-    meta.links.forEach(link => {
-        const active = link.active ? 'active' : '';
-        const disabled = !link.url ? 'disabled' : '';
-        const label = link.label.replace('&laquo;', '').replace('&raquo;', '');
+    function renderKategoriPagination(meta) {
+        document.getElementById('kategori-pagination-info').innerText =
+            `Menampilkan ${meta.from || 0} ke ${meta.to || 0} dari ${meta.total} data`;
 
-        container.insertAdjacentHTML('beforeend', `
-            <li class="page-item ${active} ${disabled}">
-                <a class="page-link shadow-none"
-                   href="javascript:void(0)"
-                   onclick="loadKategoriProduk('${link.url}')">
-                    ${label}
-                </a>
-            </li>
-        `);
-    });
-}
+        const container = document.getElementById('kategori-pagination-container');
+        container.innerHTML = '';
+
+        meta.links.forEach(link => {
+            const active = link.active ? 'active' : '';
+            const disabled = !link.url ? 'disabled' : '';
+            const label = link.label.replace('&laquo;', '').replace('&raquo;', '');
+
+            container.insertAdjacentHTML('beforeend', `
+                <li class="page-item ${active} ${disabled}">
+                    <a class="page-link shadow-none"
+                       href="javascript:void(0)"
+                       onclick="loadKategoriProduk('${link.url}')">
+                        ${label}
+                    </a>
+                </li>
+            `);
+        });
+    }
 </script>
 @endpush

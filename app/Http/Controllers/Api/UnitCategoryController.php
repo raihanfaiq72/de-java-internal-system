@@ -11,9 +11,18 @@ use Throwable;
 
 class UnitCategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $data = UnitCategorie::latest()->paginate(10);
+        $query = UnitCategorie::query();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where('nama_kategori', 'like', "%{$search}%");
+        }
+
+        $data = $query->latest()->paginate(10);
+
         return apiResponse(true, 'Data kategori unit', $data);
     }
 
