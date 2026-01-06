@@ -98,6 +98,23 @@ class ProductController extends Controller
         return apiResponse(true, 'Hasil pencarian produk', $data);
     }
 
+    public function nextSku()
+    {
+        $last = Product::orderBy('id', 'desc')->first();
+
+        if (!$last || !$last->sku_kode) {
+            return apiResponse(true, 'Next SKU', 'PROD-00001');
+        }
+
+        preg_match('/(\d+)$/', $last->sku_kode, $matches);
+        $number = isset($matches[1]) ? (int)$matches[1] + 1 : 1;
+
+        $sku = 'PROD-' . str_pad($number, 5, '0', STR_PAD_LEFT);
+
+        return apiResponse(true, 'Next SKU', $sku);
+    }
+
+
     private function logActivity($tindakan, $tabel, $dataId, $before, $after)
     {
         ActivityLog::create([
