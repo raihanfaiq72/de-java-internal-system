@@ -22,7 +22,7 @@
 
         <div class="col text-end">
             <button class="btn btn-sm btn-primary px-3 shadow-sm"
-                data-bs-toggle="modal" data-bs-target="#modalProduk">
+                onclick="tambahProduk()">
                 <i class="fa fa-plus me-1"></i> TAMBAH PRODUK
             </button>
         </div>
@@ -65,6 +65,8 @@
 <script>
     const API_URL = 'http://localhost:8000/api/product-api';
     const CATEGORY_API_URL = 'http://localhost:8000/api/product-categories-api';
+    const UNIT_CATEGORY_API = 'http://localhost:8000/api/unit-categories-api';
+    const UNIT_API = 'http://localhost:8000/api/unit-api';
 
     document.addEventListener('DOMContentLoaded', () => {
         loadKategoriProduk();
@@ -96,6 +98,82 @@
         } catch (error) {
             console.error('Gagal load kategori:', error);
         }
+    }
+
+    async function loadKategoriProdukModal() {
+        const select = document.getElementById('produk-kategori');
+        if (!select) return;
+
+        select.innerHTML = `<option value="">-- Pilih --</option>`;
+
+        const res = await fetch(CATEGORY_API_URL);
+        const result = await res.json();
+
+        if (!result.success) return;
+
+        result.data.data.forEach(item => {
+            select.insertAdjacentHTML(
+                'beforeend',
+                `<option value="${item.id}">${item.nama_kategori}</option>`
+            );
+        });
+    }
+
+    async function loadUnitCategoryModal() {
+        const select = document.getElementById('produk-unit-category');
+        if (!select) return;
+
+        select.innerHTML = `<option value="">-- Pilih --</option>`;
+
+        const res = await fetch(UNIT_CATEGORY_API);
+        const result = await res.json();
+
+        if (!result.success) return;
+
+        // HATI-HATI: API kamu paginate
+        const data = result.data.data ?? result.data;
+
+        data.forEach(item => {
+            select.insertAdjacentHTML(
+                'beforeend',
+                `<option value="${item.id}">${item.nama_kategori}</option>`
+            );
+        });
+    }
+
+    document.getElementById('produk-unit-category')
+        ?.addEventListener('change', loadUnitByCategory);
+
+    async function loadUnitByCategory() {
+        const categoryId = this.value;
+        const unitSelect = document.getElementById('produk-unit');
+
+        unitSelect.innerHTML = `<option value="">Loading...</option>`;
+        unitSelect.disabled = true;
+
+        if (!categoryId) {
+            unitSelect.innerHTML = `<option value="">-- Pilih --</option>`;
+            unitSelect.disabled = false;
+            return;
+        }
+
+        const res = await fetch(`${UNIT_API}?unit_category_id=${categoryId}`);
+        const result = await res.json();
+
+        if (!result.success) return;
+
+        unitSelect.innerHTML = `<option value="">-- Pilih --</option>`;
+
+        const data = result.data.data ?? result.data;
+
+        data.forEach(item => {
+            unitSelect.insertAdjacentHTML(
+                'beforeend',
+                `<option value="${item.id}">${item.nama_unit}</option>`
+            );
+        });
+
+        unitSelect.disabled = false;
     }
 
     async function loadProductData(url = API_URL) {
@@ -213,6 +291,112 @@
             `);
         });
     }
+</script>
+
+<script>
+let deleteProdukId = null;
+
+async function tambahProduk() {
+    document.getElementById('modalProdukTitle').innerText = 'Tambah Produk';
+
+    document.getElementById('produk-id').value = '';
+    document.getElementById('produk-sku').value = '';
+    document.getElementById('produk-nama').value = '';
+    document.getElementById('produk-harga-beli').value = '';
+    document.getElementById('produk-harga-jual').value = '';
+    document.getElementById('produk-qty').value = '';
+    document.getElementById('produk-deskripsi').value = '';
+
+    await loadKategoriProdukModal();
+    await loadUnitCategoryModal();
+
+    document.getElementById('produk-unit').innerHTML =
+        `<option value="">-- Pilih --</option>`;
+    document.getElementById('produk-unit').disabled = true;
+
+    new bootstrap.Modal('#modalProduk').show();
+}
+
+async function editProduk(id) {
+    const res = await fetch(`${API_URL}/${id}`);
+    const result = await res.json();
+
+    if (!result.success) return alert(result.message);
+
+    const p = result.data;
+
+    document.getElementById('modalProdukTitle').innerText = 'Edit Produk';
+
+    document.getElementById('produk-id').value = p.id;
+    document.getElementById('produk-sku').value = p.sku_kode;
+    document.getElementById('produk-nama').value = p.nama_produk;
+    document.getElementById('produk-kategori').value = p.product_category_id;
+    document.getElementById('produk-unit').value = p.unit_id;
+    document.getElementById('produk-harga-beli').value = p.harga_beli;
+    document.getElementById('produk-harga-jual').value = p.harga_jual;
+    document.getElementById('produk-qty').value = p.qty;
+    document.getElementById('produk-deskripsi').value = p.deskripsi_produk;
+
+    new bootstrap.Modal('#modalProduk').show();
+}
+
+async function submitProduk() {
+    const id = document.getElementById('produk-id').value;
+
+    const payload = {
+        sku_kode: document.getElementById('produk-sku').value,
+        nama_produk: document.getElementById('produk-nama').value,
+        product_category_id: document.getElementById('produk-kategori').value,
+        unit_category_id: document.getElementById('produk-unit-category').value,
+        unit_id: document.getElementById('produk-unit').value,
+        harga_beli: document.getElementById('produk-harga-beli').value,
+        harga_jual: document.getElementById('produk-harga-jual').value,
+        qty: document.getElementById('produk-qty').value,
+        deskripsi_produk: document.getElementById('produk-deskripsi').value,
+        akun_penjualan_id: 1,
+        akun_pembelian_id: 1,
+        akun_diskon_penjualan_id: 1,
+        akun_diskon_pembelian_id: 1,
+    };
+
+    const url = id ? `${API_URL}/${id}` : API_URL;
+    const method = id ? 'PUT' : 'POST';
+
+    const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    const result = await res.json();
+
+    if (!result.success) {
+        alert(result.message);
+        return;
+    }
+
+    bootstrap.Modal.getInstance(
+        document.getElementById('modalProduk')
+    ).hide();
+
+    loadProductData();
+}
+
+function hapusProduk(id) {
+    if (!confirm('Yakin ingin menghapus produk ini?')) return;
+
+    fetch(`${API_URL}/${id}`, {
+        method: 'DELETE'
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (!result.success) {
+            alert(result.message);
+            return;
+        }
+        loadProductData();
+    });
+}
 </script>
 
 @endpush

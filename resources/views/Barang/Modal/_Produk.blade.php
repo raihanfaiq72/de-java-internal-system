@@ -1,40 +1,83 @@
-<div class="modal fade" id="modalProduk" tabindex="-1" role="dialog" aria-labelledby="modalProdukTitle"
-    aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
+<div class="modal fade" id="modalProduk" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
+
             <div class="modal-header">
-                <h6 class="modal-title m-0" id="modalProdukTitle">Center Modal</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="modalProdukTitle">Tambah Produk</h5>
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
             </div>
-            <!--end modal-header-->
+
             <div class="modal-body">
-                <div class="row">
-                    <div class="col-lg-3 text-center align-self-center">
-                        <img src="assets/images/extra/card/btc.png" alt="" class="img-fluid">
+                <input type="hidden" id="produk-id">
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="small fw-bold">SKU</label>
+                        <input type="text" id="produk-sku"
+                               class="form-control form-control-sm">
                     </div>
-                    <!--end col-->
-                    <div class="col-lg-9">
-                        <h5>Crypto Market Services</h5>
-                        <span class="badge bg-light text-dark">Disable Services</span>
-                        <small class="text-muted ms-2">07 Oct 2024</small>
-                        <ul class="mt-2 mb-0">
-                            <li>Lorem Ipsum is dummy text.</li>
-                            <li>It is a long established reader.</li>
-                            <li>Contrary to popular belief, Lorem simply.</li>
-                        </ul>
+
+                    <div class="col-md-6">
+                        <label class="small fw-bold">Nama Produk</label>
+                        <input type="text" id="produk-nama"
+                               class="form-control form-control-sm">
                     </div>
-                    <!--end col-->
+
+                    <div class="col-md-4">
+                        <label class="small fw-bold">Kategori Produk</label>
+                        <select id="produk-kategori" class="form-select form-select-sm">
+                            <option value="">-- Pilih --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="small fw-bold">Kategori Unit</label>
+                        <select id="produk-unit-category" class="form-select form-select-sm">
+                            <option value="">-- Pilih --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="small fw-bold">Unit</label>
+                        <select id="produk-unit" class="form-select form-select-sm" disabled>
+                            <option value="">-- Pilih --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="small fw-bold">Harga Beli</label>
+                        <input type="number" id="produk-harga-beli"
+                               class="form-control form-control-sm">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="small fw-bold">Harga Jual</label>
+                        <input type="number" id="produk-harga-jual"
+                               class="form-control form-control-sm">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="small fw-bold">Qty</label>
+                        <input type="number" id="produk-qty"
+                               class="form-control form-control-sm">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="small fw-bold">Deskripsi</label>
+                        <textarea id="produk-deskripsi"
+                                  class="form-control form-control-sm"></textarea>
+                    </div>
                 </div>
-                <!--end row-->
             </div>
-            <!--end modal-body-->
+
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary btn-sm">Save changes</button>
+                <button class="btn btn-secondary btn-sm"
+                        data-bs-dismiss="modal">Batal</button>
+                <button class="btn btn-primary btn-sm"
+                        onclick="submitProduk()">Simpan</button>
             </div>
-            <!--end modal-footer-->
+
         </div>
-        <!--end modal-content-->
     </div>
-    <!--end modal-dialog-->
 </div>
