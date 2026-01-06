@@ -10,7 +10,7 @@
             </button>
         </div>
         <div class="col text-end">
-            <button class="btn btn-sm btn-primary px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalUnitUkuran"><i class="fa fa-plus me-1"></i> TAMBAH UNIT</button>
+            <button class="btn btn-sm btn-primary" onclick="tambahUnit()">TAMBAH UNIT</button>
         </div>
     </div>
     <div class="table-responsive">
@@ -40,8 +40,19 @@
 
 @push('js')
 <script>
+    let deleteUnitId = null;
+
     document.addEventListener('DOMContentLoaded', () => {
         loadUnit();
+
+        loadUnitCategoryOption();
+
+        let timeout;
+        document.getElementById('filter-unit-search')
+            .addEventListener('input', () => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => loadUnit(), 400);
+            });
     });
 
     async function loadUnit(url = 'http://localhost:8000/api/unit-api') {
@@ -131,5 +142,111 @@
             `);
         });
     }
+
+    async function loadUnitCategoryOption() {
+        const select = document.getElementById('unit-category');
+        select.innerHTML = '<option value="">Pilih Kategori</option>';
+
+        const res = await fetch('/api/unit-categories-api');
+        const result = await res.json();
+
+        result.data.data.forEach(item => {
+            select.insertAdjacentHTML('beforeend', `
+                <option value="${item.id}">${item.nama_kategori}</option>
+            `);
+        });
+    }
+
+    async function editUnit(id) {
+        const res = await fetch(`/api/unit-api/${id}`);
+        const result = await res.json();
+
+        if (!result.success) return;
+
+        const data = result.data;
+
+        document.getElementById('modalUnitTitle').innerText = 'Edit Unit';
+        document.getElementById('unit-id').value = data.id;
+        document.getElementById('unit-nama').value = data.nama_unit;
+        document.getElementById('unit-simbol').value = data.simbol;
+        document.getElementById('unit-category').value = data.unit_category_id;
+
+        new bootstrap.Modal('#modalUnitUkuran').show();
+    }
+
+    function tambahUnit() {
+        document.getElementById('modalUnitTitle').innerText = 'Tambah Unit';
+        document.getElementById('unit-id').value = '';
+        document.getElementById('unit-nama').value = '';
+        document.getElementById('unit-simbol').value = '';
+        document.getElementById('unit-category').value = '';
+
+        new bootstrap.Modal('#modalUnitUkuran').show();
+    }
+
+    async function submitUnit() {
+        const id = document.getElementById('unit-id').value;
+
+        const payload = {
+            nama_unit: document.getElementById('unit-nama').value,
+            simbol: document.getElementById('unit-simbol').value,
+            unit_category_id: document.getElementById('unit-category').value
+        };
+
+        const url = id ? `/api/unit-api/${id}` : '/api/unit-api';
+        const method = id ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await res.json();
+
+        if (!result.success) {
+            alert(result.message);
+            return;
+        }
+
+        bootstrap.Modal.getInstance(
+            document.getElementById('modalUnitUkuran')
+        ).hide();
+
+        loadUnit();
+    }
+
+    function hapusUnit(id) {
+        deleteUnitId = id;
+
+        document.getElementById('confirmDeleteText').innerText =
+            'Yakin ingin menghapus unit ini?';
+
+        new bootstrap.Modal('#modalConfirmDelete').show();
+    }
+
+    document.getElementById('btnConfirmDelete')
+        .addEventListener('click', async () => {
+
+        if (!deleteUnitId) return;
+
+        const res = await fetch(`/api/unit-api/${deleteUnitId}`, {
+            method: 'DELETE'
+        });
+
+        const result = await res.json();
+
+        if (!result.success) {
+            alert(result.message);
+            return;
+        }
+
+        bootstrap.Modal.getInstance(
+            document.getElementById('modalConfirmDelete')
+        ).hide();
+
+        deleteUnitId = null;
+        loadUnit();
+    });
 </script>
 @endpush
