@@ -37,6 +37,11 @@
                                     <i class="iconoir-package me-2"></i> Barang
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#">
+                                    <i class="iconoir-money-square me-2"></i> Pajak
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </li>
