@@ -33,7 +33,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="transactions.html">
+                                <a class="nav-link" href="{{route('barang')}}">
                                     <i class="iconoir-package me-2"></i> Barang
                                 </a>
                             </li>
