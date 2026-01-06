@@ -69,6 +69,8 @@ Route::prefix('product-api')->group(function () {
     Route::get('/search/{value}', [ProductController::class, 'search']);
 });
 
+Route::get('/product-next-sku', [ProductController::class, 'nextSku']);
+
 Route::prefix('tax-api')->group(function () {
     Route::get('/', [TaxController::class, 'index']);
     Route::post('/', [TaxController::class, 'store']);
