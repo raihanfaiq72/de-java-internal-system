@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardPiutangController;
 use App\Http\Controllers\DashboardSalesController;
 use App\Http\Controllers\SalesController;
+use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\MitraController;
 use App\Http\Controllers\OfficeController;
@@ -30,6 +31,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('dashboard-sales/detail/{id}', [DashboardSalesController::class, 'detail'])->name('dashboard.sales.detail');
         
         Route::get('sales', [SalesController::class, 'index'])->name('sales');
+        Route::get('sales-receipt',[SalesController::class,'receipt'])->name('sales.receipt');
+        Route::get('purchase', [purchaseController::class, 'index'])->name('purchase');
+        Route::get('purchase-receipt',[PurchaseController::class,'receipt'])->name('purchase.receipt');
         Route::get('mitra', [MitraController::class, 'index'])->name('mitra');
         Route::get('barang', [BarangController::class, 'index'])->name('barang');
         Route::get('users', fn() => view('Users.index'))->name('users.index');
