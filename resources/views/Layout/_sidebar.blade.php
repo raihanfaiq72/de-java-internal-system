@@ -110,13 +110,13 @@
                     <div class="collapse" id="sidePO">
                         <ul class="nav flex-column">
                             <li class="nav-item">
-                                <a class="nav-link" href="transactions.html">
-                                    <i class="iconoir-hand-contactless me-2"></i> Purchase Order
+                                <a class="nav-link" href="{{route('purchase')}}">
+                                    <i class="iconoir-hand-contactless me-2"></i> Pembelian
                                 </a>
                             </li>
                              <li class="nav-item">
-                                <a class="nav-link" href="transactions.html">
-                                    <i class="iconoir-delivery-truck me-2"></i> Receipt PO
+                                <a class="nav-link" href="{{route('purchase.receipt')}}">
+                                    <i class="iconoir-delivery-truck me-2"></i> Kuitansi PO
                                 </a>
                             </li>
                         </ul>
@@ -133,12 +133,12 @@
                         <ul class="nav flex-column">
                             <li class="nav-item">
                                 <a class="nav-link" href="{{route('sales')}}">
-                                    <i class="iconoir-page-search me-2"></i> Sales Order
+                                    <i class="iconoir-page-search me-2"></i> Penjualan 
                                 </a>
                             </li>
                              <li class="nav-item">
-                                <a class="nav-link" href="transactions.html">
-                                    <i class="iconoir-log-out me-2"></i> Receipt SO
+                                <a class="nav-link" href="{{route('sales.receipt')}}">
+                                    <i class="iconoir-log-out me-2"></i> Kuitansi SO
                                 </a>
                             </li>
                         </ul>
