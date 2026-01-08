@@ -90,14 +90,14 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{route('dashboard.piutang')}}">
                         <i class="iconoir-coins menu-icon"></i>
-                        <span>Dashboard Piutang</span>
+                        <span>Penjualan</span>
                     </a>
                 </li>
 
                 <li class="nav-item">
                     <a class="nav-link" href="{{route('dashboard.sales')}}">
                         <i class="iconoir-shop menu-icon"></i>
-                        <span>Dashboard Sales</span>
+                        <span>Pembelian</span>
                     </a>
                 </li>
 
@@ -105,45 +105,25 @@
                     <a class="nav-link" href="#sidePO" data-bs-toggle="collapse" role="button"
                         aria-expanded="false" aria-controls="sidePO">
                         <i class="iconoir-shop-window menu-icon"></i>
-                        <span>Purchase</span>
+                        <span>Finance</span>
                     </a>
                     <div class="collapse" id="sidePO">
                         <ul class="nav flex-column">
                             <li class="nav-item">
                                 <a class="nav-link" href="{{route('purchase')}}">
-                                    <i class="iconoir-hand-contactless me-2"></i> Pembelian
+                                    <i class="iconoir-hand-contactless me-2"></i> Kuitansi Penjualan
                                 </a>
                             </li>
                              <li class="nav-item">
                                 <a class="nav-link" href="{{route('purchase.receipt')}}">
-                                    <i class="iconoir-delivery-truck me-2"></i> Kuitansi PO
+                                    <i class="iconoir-delivery-truck me-2"></i> Kuitansi Pembelian
                                 </a>
                             </li>
                         </ul>
                     </div>
                 </li>
 
-                <li class="nav-item">
-                    <a class="nav-link" href="#sideSO" data-bs-toggle="collapse" role="button"
-                        aria-expanded="false" aria-controls="sideSO">
-                        <i class="iconoir-cart menu-icon"></i>
-                        <span>Sales Order</span>
-                    </a>
-                    <div class="collapse" id="sideSO">
-                        <ul class="nav flex-column">
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{route('sales')}}">
-                                    <i class="iconoir-page-search me-2"></i> Penjualan 
-                                </a>
-                            </li>
-                             <li class="nav-item">
-                                <a class="nav-link" href="{{route('sales.receipt')}}">
-                                    <i class="iconoir-log-out me-2"></i> Kuitansi SO
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
+                
             
 
                 <li class="menu-label mt-2">
