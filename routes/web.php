@@ -42,10 +42,20 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
             Route::put('/permissions/{id}', [PermissionController::class, 'update'])->name('permissions.update');
             Route::resource('roles', RoleController::class);
+            
+            // Offices
             Route::get('/offices', [OfficeController::class, 'index'])->name('offices.index');
             Route::post('/offices', [OfficeController::class, 'store'])->name('offices.store');
+            Route::get('/offices/{id}', [OfficeController::class, 'show'])->name('offices.show');
+            Route::put('/offices/{id}', [OfficeController::class, 'update'])->name('offices.update');
+            Route::delete('/offices/{id}', [OfficeController::class, 'destroy'])->name('offices.destroy');
+            
+            // User Plots
             Route::get('/user-plots', [UserPlotController::class, 'index'])->name('user_plots.index');
             Route::post('/user-plots', [UserPlotController::class, 'store'])->name('user_plots.store');
+            Route::get('/user-plots/{id}', [UserPlotController::class, 'show'])->name('user_plots.show');
+            Route::put('/user-plots/{id}', [UserPlotController::class, 'update'])->name('user_plots.update');
+            Route::delete('/user-plots/{id}', [UserPlotController::class, 'destroy'])->name('user_plots.destroy');
         });
     });
 });

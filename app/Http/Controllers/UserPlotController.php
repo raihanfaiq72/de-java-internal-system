@@ -37,4 +37,33 @@ class UserPlotController extends Controller
 
         return back()->with('success', 'User berhasil diplot ke kantor');
     }
+
+    public function show($id)
+    {
+        $plot = DB::table('user_office_roles')->where('id', $id)->first();
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['success' => true, 'data' => $plot]);
+        }
+        return abort(404);
+    }
+
+    public function update(Request $request, $id)
+    {
+        DB::table('user_office_roles')
+            ->where('id', $id)
+            ->update([
+                'user_id' => $request->user_id,
+                'office_id' => $request->office_id,
+                'role_id' => $request->role_id,
+                'updated_at' => now(),
+            ]);
+
+        return back()->with('success', 'Plotting berhasil diperbarui');
+    }
+
+    public function destroy($id)
+    {
+        DB::table('user_office_roles')->where('id', $id)->delete();
+        return back()->with('success', 'Plotting berhasil dihapus');
+    }
 }

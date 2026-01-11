@@ -41,13 +41,19 @@ class RoleController extends Controller
         return redirect()->route('role.index')->with('success', 'Role berhasil dibuat');
     }
 
-    public function edit($id)
+    public function show($id)
     {
         $role = Roles::with('permissions')->findOrFail($id);
-        $prefixes = Prefix::with('permissions')->get();
-        $rolePermissions = $role->permissions->pluck('id')->toArray();
-
-        return view('Role.edit', compact('role', 'prefixes', 'rolePermissions'));
+        
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => $role,
+                'permissions' => $role->permissions->pluck('id')->toArray()
+            ]);
+        }
+        
+        return view('Role.show', compact('role'));
     }
 
     public function update(Request $request, $id)
