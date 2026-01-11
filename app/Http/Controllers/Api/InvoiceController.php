@@ -13,18 +13,41 @@ use Illuminate\Support\Facades\Validator;
 
 class InvoiceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $data = Invoice::with(['mitra', 'items.product', 'payment'])
-            ->latest()
-            ->paginate(10);
+        $query = Invoice::with(['mitra', 'items.product', 'items.taxes', 'payment'])
+            ->withSum('payment', 'jumlah_bayar');
+
+        if ($request->tipe_invoice) {
+            $query->where('tipe_invoice', $request->tipe_invoice);
+        }
+
+        if ($request->status_dok) {
+            $query->where('status_dok', $request->status_dok);
+        }
+
+        if ($request->status_pembayaran) {
+            $query->where('status_pembayaran', $request->status_pembayaran);
+        }
+        
+        if ($request->search) {
+             $query->where(function($q) use ($request) {
+                $q->where('nomor_invoice', 'LIKE', "%{$request->search}%")
+                  ->orWhere('ref_no', 'LIKE', "%{$request->search}%")
+                  ->orWhereHas('mitra', function($qMitra) use ($request) {
+                      $qMitra->where('nama', 'LIKE', "%{$request->search}%");
+                  });
+             });
+        }
+
+        $data = $query->latest()->paginate(10);
 
         return apiResponse(true, 'Data invoice', $data);
     }
 
     public function show($id)
     {
-        $data = Invoice::with(['mitra', 'items.product', 'payment'])
+        $data = Invoice::with(['mitra', 'items.product', 'items.taxes', 'payment'])
             ->find($id);
 
         if (!$data) {
@@ -56,17 +79,44 @@ class InvoiceController extends Controller
 
     public function update(Request $request, $id)
     {
-        $invoice = Invoice::find($id);
-        if (!$invoice) {
-            return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
-        }
+        return DB::transaction(function () use ($request, $id) {
+            $invoice = Invoice::find($id);
+            if (!$invoice) {
+                return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
+            }
 
-        $before = $invoice->toArray();
-        $invoice->update($request->all());
+            // Update Invoice Details
+            $invoice->update($request->invoice ?? $request->all());
 
-        $this->logActivity('Update', 'invoices', $id, $before, $invoice);
+            // If items are provided, replace them (Full Sync)
+            if ($request->has('items') && is_array($request->items)) {
+                
+                // Get old items IDs for logging/cleanup if needed, then delete
+                $invoice->items()->each(function($item) {
+                    $item->taxes()->delete();
+                    $item->delete();
+                });
 
-        return apiResponse(true, 'Invoice berhasil diperbarui', $invoice);
+                foreach ($request->items as $itemData) {
+                    $itemData['invoice_id'] = $invoice->id;
+                    $item = InvoiceItem::create($itemData);
+
+                    if (!empty($itemData['taxes'])) {
+                        foreach ($itemData['taxes'] as $taxData) {
+                            InvoiceItemTaxe::create([
+                                'invoice_item_id'       => $item->id,
+                                'tax_id'                => $taxData['tax_id'],
+                                'nilai_pajak_diterapkan'=> $taxData['nilai_pajak_diterapkan'] ?? 0
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            $this->logActivity('Update', 'invoices', $id, null, $invoice->fresh('items'));
+
+            return apiResponse(true, 'Invoice berhasil diperbarui', $invoice->load('items.taxes.tax'));
+        });
     }
 
     public function destroy($id)
@@ -84,11 +134,23 @@ class InvoiceController extends Controller
         return apiResponse(true, 'Invoice berhasil dihapus');
     }
 
-    public function search($value)
+    public function search(Request $request, $value)
     {
-        $data = Invoice::where('nomor_invoice', 'LIKE', "%$value%")
-            ->orWhere('ref_no', 'LIKE', "%$value%")
-            ->paginate(10);
+        $query = Invoice::with(['mitra', 'items.product', 'items.taxes', 'payment'])
+            ->withSum('payment', 'jumlah_bayar')
+            ->where(function($q) use ($value) {
+                $q->where('nomor_invoice', 'LIKE', "%$value%")
+                  ->orWhere('ref_no', 'LIKE', "%$value%")
+                  ->orWhereHas('mitra', function($qMitra) use ($value) {
+                      $qMitra->where('nama', 'LIKE', "%{$value}%");
+                  });
+            });
+
+        if ($request->tipe_invoice) {
+            $query->where('tipe_invoice', $request->tipe_invoice);
+        }
+
+        $data = $query->latest()->paginate(10);
 
         return apiResponse(true, 'Hasil pencarian invoice', $data);
     }

@@ -94,7 +94,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="itemBodyList">
-                                    </tbody>
+                                </tbody>
                             </table>
                         </div>
                         <div class="p-3 bg-white border-top text-center">
@@ -166,7 +166,11 @@
     window.financeHelpers = window.financeHelpers || {
         formatIDR: (val) => new Intl.NumberFormat('id-ID', {
             style: 'currency', currency: 'IDR', minimumFractionDigits: 0
-        }).format(val)
+        }).format(val),
+        unformatIDR: (str) => {
+            if(!str) return 0;
+            return parseFloat(str.replace(/[^0-9,-]+/g,"").replace(",","."));
+        }
     };
 
     let productCollection = [], taxCollection = [], mitraCollection = [];
@@ -184,6 +188,7 @@
             taxCollection = tRes.data.data || tRes.data;
 
             const select = document.getElementById('modal_mitra_id');
+            select.innerHTML = '<option value="">Cari dan pilih mitra...</option>';
             mitraCollection.forEach(m => select.insertAdjacentHTML('beforeend', `<option value="${m.id}">${m.nama}</option>`));
         } catch (e) { console.error("Master data fail", e); }
     }
@@ -199,7 +204,9 @@
             document.getElementById('edit_invoice_id').value = id;
             
             try {
-                const res = await fetch(`${API_URL}/${id}`);
+                // Use window.financeApp.API_URL if available, else default
+                const baseUrl = (window.financeApp && window.financeApp.API_URL) ? window.financeApp.API_URL : '/api/invoice-api';
+                const res = await fetch(`${baseUrl}/${id}`);
                 const result = await res.json();
                 if (result.success) {
                     const inv = result.data;
@@ -212,10 +219,16 @@
                     document.getElementById('modal_syarat').value = inv.syarat_ketentuan;
                     document.getElementById('modal_diskon_tambahan').value = inv.diskon_tambahan_nilai || 0;
                     renderMitraDetail();
-                    inv.items.forEach(it => addNewProductRow(it));
+                    
+                    // Populate Items
+                    if(inv.items && inv.items.length > 0) {
+                        inv.items.forEach(it => addNewProductRow(it));
+                    } else {
+                        addNewProductRow();
+                    }
                     calculateInvoiceTotal();
                 }
-            } catch (e) { console.error("Edit fetch fail", e); }
+            } catch (e) { console.error("Edit fetch fail", e); alert('Gagal mengambil data invoice.'); }
         } else {
             document.getElementById('modalTitle').innerText = 'Buat Invoice Baru';
             document.getElementById('form_mode').value = 'create';
@@ -227,9 +240,12 @@
     }
 
     function addNewProductRow(existing = null) {
-        const rowId = existing ? existing.id : Date.now();
+        const rowId = existing ? existing.id : Date.now() + Math.floor(Math.random() * 1000);
         let optProd = productCollection.map(p => `<option value="${p.id}" data-price="${p.harga_jual}" ${existing && existing.produk_id == p.id ? 'selected' : ''}>${p.nama_produk}</option>`).join('');
-        let optTax = taxCollection.map(t => `<option value="${t.id}" data-rate="${t.nilai_pajak}" ${existing && existing.taxes && existing.taxes[0]?.tax_id == t.id ? 'selected' : ''}>${t.nama_pajak}</option>`).join('');
+        
+        // Handle Taxes
+        let currentTaxId = existing && existing.taxes && existing.taxes.length > 0 ? existing.taxes[0].tax_id : '';
+        let optTax = taxCollection.map(t => `<option value="${t.id}" data-rate="${t.nilai_pajak}" ${currentTaxId == t.id ? 'selected' : ''}>${t.nama_pajak}</option>`).join('');
 
         const html = `
             <tr id="row_${rowId}">
@@ -239,23 +255,27 @@
                     </select>
                     <input type="text" class="form-control f-row-input small text-muted prod-desc" value="${existing?.deskripsi_produk || ''}" placeholder="Tambahkan deskripsi (opsional)">
                 </td>
-                <td><input type="number" class="form-control f-row-input text-center fw-bold prod-qty" value="${existing ? Math.floor(existing.qty) : 1}" oninput="calculateInvoiceTotal()"></td>
-                <td><input type="number" class="form-control f-row-input text-end prod-price" value="${existing ? existing.harga_satuan : 0}" oninput="calculateInvoiceTotal()"></td>
-                <td><input type="number" class="form-control f-row-input text-end prod-disc" value="${existing ? existing.diskon_nilai : 0}" oninput="calculateInvoiceTotal()"></td>
+                <td><input type="number" class="form-control f-row-input text-center fw-bold prod-qty" value="${existing ? parseFloat(existing.qty) : 1}" oninput="calculateInvoiceTotal()"></td>
+                <td><input type="number" class="form-control f-row-input text-end prod-price" value="${existing ? parseFloat(existing.harga_satuan) : 0}" oninput="calculateInvoiceTotal()"></td>
+                <td><input type="number" class="form-control f-row-input text-end prod-disc" value="${existing ? parseFloat(existing.diskon_nilai) : 0}" oninput="calculateInvoiceTotal()"></td>
                 <td>
                     <select class="form-select f-row-input text-center prod-tax" onchange="calculateInvoiceTotal()">
                         <option value="" data-rate="0">N/A</option>${optTax}
                     </select>
                 </td>
                 <td class="text-end pe-4 fw-bold f-mono prod-subtotal">Rp 0</td>
-                <td class="text-center"><button type="button" class="btn btn-link text-danger p-0" onclick="removeRow(${rowId})"><i class="fa fa-times-circle"></i></button></td>
+                <td class="text-center"><button type="button" class="btn btn-link text-danger p-0" onclick="removeRow('${rowId}')"><i class="fa fa-times-circle"></i></button></td>
             </tr>`;
         document.getElementById('itemBodyList').insertAdjacentHTML('beforeend', html);
-        if(existing) calculateInvoiceTotal();
+        
+        // Calculate initial total for this row
+        // Give slight delay or immediate call
+        if(existing || true) calculateInvoiceTotal(); 
     }
 
     function removeRow(id) {
-        document.getElementById(`row_${id}`).remove();
+        const row = document.getElementById(`row_${id}`);
+        if(row) row.remove();
         calculateInvoiceTotal();
     }
 
@@ -273,7 +293,8 @@
             const q = parseFloat(row.querySelector('.prod-qty').value) || 0,
                   p = parseFloat(row.querySelector('.prod-price').value) || 0,
                   d = parseFloat(row.querySelector('.prod-disc').value) || 0,
-                  tr = parseFloat(row.querySelector('.prod-tax option:checked').dataset.rate) || 0;
+                  taxSel = row.querySelector('.prod-tax'),
+                  tr = parseFloat(taxSel.options[taxSel.selectedIndex].dataset.rate) || 0;
             
             let lineSub = (q * p) - d;
             if(lineSub < 0) lineSub = 0;
@@ -296,14 +317,95 @@
         const item = mitraCollection.find(x => x.id == id);
         document.getElementById('mitra_detail_display').innerHTML = item ? 
             `<strong>${item.nama}</strong><br>${item.alamat || 'Alamat tidak tersedia'}<br><i class="fa fa-phone me-1 small"></i> ${item.no_hp || '-'}` : 
-            "Detail muncul otomatis.";
+            `<i class="fa fa-info-circle me-2 text-primary"></i>Detail alamat dan kontak akan muncul otomatis.`;
     }
 
     function resetModalForm() {
         document.getElementById('invoiceForm').reset();
         document.getElementById('itemBodyList').innerHTML = '';
-        document.getElementById('mitra_detail_display').innerHTML = "Detail muncul otomatis.";
-        calculateInvoiceTotal();
+        document.getElementById('mitra_detail_display').innerHTML = `<i class="fa fa-info-circle me-2 text-primary"></i>Detail muncul otomatis.`;
+        document.getElementById('summary_subtotal').innerText = 'Rp 0';
+        document.getElementById('summary_tax').innerText = 'Rp 0';
+        document.getElementById('summary_grand_total').innerText = 'Rp 0';
+    }
+
+    async function saveFullInvoice() {
+        const mode = document.getElementById('form_mode').value;
+        const id = document.getElementById('edit_invoice_id').value;
+        
+        // Prepare Payload
+        const payload = {
+            invoice: {
+                tipe_invoice: 'Sales',
+                nomor_invoice: document.getElementById('modal_nomor_invoice').value,
+                tgl_invoice: document.getElementById('modal_tgl_invoice').value,
+                tgl_jatuh_tempo: document.getElementById('modal_tgl_jatuh_tempo').value,
+                mitra_id: document.getElementById('modal_mitra_id').value,
+                ref_no: document.getElementById('modal_ref_no').value,
+                keterangan: document.getElementById('modal_keterangan').value,
+                syarat_ketentuan: document.getElementById('modal_syarat').value,
+                diskon_tambahan_nilai: parseFloat(document.getElementById('modal_diskon_tambahan').value) || 0,
+                // Basic Defaults
+                status_dok: 'Approved', 
+                status_pembayaran: 'Unpaid',
+                biaya_kirim: 0,
+                uang_muka: 0
+            },
+            items: []
+        };
+
+        // Validate basic fields
+        if(!payload.invoice.mitra_id) { alert('Harap pilih Mitra!'); return; }
+        if(!payload.invoice.tgl_invoice) { alert('Harap isi Tanggal Invoice!'); return; }
+
+        let totalValid = 0;
+        document.querySelectorAll('#itemBodyList tr').forEach(row => {
+            const sel = row.querySelector('.prod-select');
+            const taxSel = row.querySelector('.prod-tax');
+            const taxRate = parseFloat(taxSel.options[taxSel.selectedIndex].dataset.rate) || 0;
+            const qty = parseFloat(row.querySelector('.prod-qty').value) || 0;
+            const price = parseFloat(row.querySelector('.prod-price').value) || 0;
+            
+            if(sel.value && qty > 0) {
+                payload.items.push({
+                    produk_id: sel.value,
+                    qty: qty,
+                    harga_satuan: price,
+                    diskon_nilai: parseFloat(row.querySelector('.prod-disc').value) || 0,
+                    taxes: taxSel.value ? [{ tax_id: taxSel.value, nilai_pajak_diterapkan: taxRate }] : []
+                });
+                totalValid++;
+            }
+        });
+
+        if(totalValid === 0) { alert('Harap tambahkan minimal satu item produk valid!'); return; }
+
+        const url = mode === 'edit' ? `/api/invoice-api/${id}` : '/api/invoice-create-api';
+        const method = mode === 'edit' ? 'PUT' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            const result = await response.json();
+            
+            if(result.success) {
+                alert('Dokumen berhasil disimpan!');
+                bootstrap.Modal.getInstance(document.getElementById('invoiceModal')).hide();
+                if(typeof loadInvoiceData === 'function') loadInvoiceData(); // Reload table
+            } else {
+                alert('Gagal menyimpan: ' + (result.message || JSON.stringify(result.errors)));
+            }
+        } catch(error) {
+            console.error('Save error', error);
+            alert('Terjadi kesalahan sistem saat menyimpan.');
+        }
     }
 
     // Load Data on Start
