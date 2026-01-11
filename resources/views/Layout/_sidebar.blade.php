@@ -95,7 +95,7 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="{{route('dashboard.sales')}}">
+                    <a class="nav-link" href="{{route('purchase')}}">
                         <i class="iconoir-shop menu-icon"></i>
                         <span>Pembelian</span>
                     </a>
