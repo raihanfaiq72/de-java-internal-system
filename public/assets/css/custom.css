@@ -1,28 +1,28 @@
  /* Logo transition */
-        .brand .logo-sm,
-        .brand .logo-lg {
-            transition: all 0.2s ease;
-        }
+ .brand .logo-sm,
+ .brand .logo-lg {
+     transition: all 0.2s ease;
+ }
 
-        /* default: sidebar expand */
-        .brand .logo-sm {
-            display: none;
-        }
+ /* default: sidebar expand */
+ .brand .logo-sm {
+     display: none;
+ }
 
-        .brand .logo-lg {
-            display: block;
-            white-space: nowrap;
-        }
+ .brand .logo-lg {
+     display: block;
+     white-space: nowrap;
+ }
 
-        /* SAAT SIDEBAR COLLAPSE - Approx pakai class 'sidebar-enable vertical-collapsed' atau body .vertical-collapsed */
-        body.vertical-collapsed .brand .logo-lg,
-        body.sidebar-enable.vertical-collapsed .brand .logo-lg {
-            display: none !important;
-            /* pastikan hilang */
-        }
+ /* SAAT SIDEBAR COLLAPSE - Approx pakai class 'sidebar-enable vertical-collapsed' atau body .vertical-collapsed */
+ body.vertical-collapsed .brand .logo-lg,
+ body.sidebar-enable.vertical-collapsed .brand .logo-lg {
+     display: none !important;
+     /* pastikan hilang */
+ }
 
-        body.vertical-collapsed .brand .logo-sm,
-        body.sidebar-enable.vertical-collapsed .brand .logo-sm {
-            display: inline-block !important;
-            /* muncul DJ */
-        }
+ body.vertical-collapsed .brand .logo-sm,
+ body.sidebar-enable.vertical-collapsed .brand .logo-sm {
+     display: inline-block !important;
+     /* muncul DJ */
+ }
