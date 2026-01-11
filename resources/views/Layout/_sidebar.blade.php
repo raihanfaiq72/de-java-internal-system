@@ -88,7 +88,7 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="{{route('dashboard.piutang')}}">
+                    <a class="nav-link" href="{{route('sales')}}">
                         <i class="iconoir-coins menu-icon"></i>
                         <span>Penjualan</span>
                     </a>
@@ -123,9 +123,6 @@
                     </div>
                 </li>
 
-                
-            
-
                 <li class="menu-label mt-2">
                     <span>Report</span>
                 </li>
@@ -139,7 +136,7 @@
                 <li class="nav-item">
                     <a class="nav-link" href="cards.html">
                         <i class="iconoir-graph-up menu-icon"></i>
-                        <span>Laporan Penjualan</span>
+                        <span>Laporan Penjualan</~span>
                     </a>
                 </li>
                 <li class="nav-item">

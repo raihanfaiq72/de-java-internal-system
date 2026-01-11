@@ -91,7 +91,7 @@ Route::post('/invoice-create-api', [InvoiceController::class, 'createFullInvoice
     ->name('invoice.create-full-api');
 
 Route::prefix('invoice-api')
-    ->name('invoice-api.')
+    ->name('invoice-api')
     ->group(function () {
         Route::get('/', [InvoiceController::class, 'index'])->name('index');
         Route::post('/', [InvoiceController::class, 'store'])->name('store');
