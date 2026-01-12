@@ -41,10 +41,18 @@ class UserPlotController extends Controller
     public function show($id)
     {
         $plot = DB::table('user_office_roles')->where('id', $id)->first();
-        if (request()->ajax() || request()->wantsJson()) {
-            return response()->json(['success' => true, 'data' => $plot]);
+
+        if (!$plot) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data tidak ditemukan'
+            ], 404);
         }
-        return abort(404);
+
+        return response()->json([
+            'success' => true,
+            'data' => $plot
+        ]);
     }
 
     public function update(Request $request, $id)
