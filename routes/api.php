@@ -28,7 +28,7 @@ Route::prefix('mitra-api')
         Route::get('/search/{value}', [MitraController::class, 'search'])->name('search');
     });
 
-Route::prefix('unit-category-api')
+Route::prefix('unit-categories-api')
     ->name('unit-category-api.')
     ->group(function () {
         Route::get('/', [UnitCategoryController::class, 'index'])->name('index');
@@ -50,7 +50,7 @@ Route::prefix('unit-api')
         Route::get('/search/{value}', [UnitController::class, 'search'])->name('search');
     });
 
-Route::prefix('product-category-api')
+Route::prefix('product-categories-api')
     ->name('product-category-api.')
     ->group(function () {
         Route::get('/', [ProductCategoryController::class, 'index'])->name('index');
