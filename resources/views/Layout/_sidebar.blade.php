@@ -7,7 +7,7 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="{{route('dashboard')}}">
+                    <a class="nav-link" href="{{ route('dashboard') }}">
                         <i class="iconoir-dashboard menu-icon"></i>
                         <span>Dashboard</span>
                         <span class="badge text-bg-info ms-auto">New</span>
@@ -23,17 +23,17 @@
                     <div class="collapse" id="sidebarMaster">
                         <ul class="nav flex-column">
                             <li class="nav-item">
-                                <a class="nav-link" href="{{route('users.index')}}">
+                                <a class="nav-link" href="{{ route('users.index') }}">
                                     <i class="iconoir-user-circle me-2"></i> User / Karyawan
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{route('mitra')}}">
+                                <a class="nav-link" href="{{ route('mitra') }}">
                                     <i class="iconoir-community me-2"></i> Mitra
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{route('barang')}}">
+                                <a class="nav-link" href="{{ route('barang') }}">
                                     <i class="iconoir-package me-2"></i> Barang
                                 </a>
                             </li>
@@ -59,23 +59,23 @@
                     <div class="collapse" id="sidebarAuth">
                         <ul class="nav flex-column">
                             <li class="nav-item">
-                                <a class="nav-link" href="{{route('permissions.index')}}">
-                                    <i class="iconoir-code-brackets me-2"></i> Mapping Route 
+                                <a class="nav-link" href="{{ route('permissions.index') }}">
+                                    <i class="iconoir-code-brackets me-2"></i> Mapping Route
                                     <span class="badge badge-outline-danger ms-auto font-10">Dev</span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{route('roles.index')}}">
+                                <a class="nav-link" href="{{ route('roles.index') }}">
                                     <i class="iconoir-shield-check me-2"></i> Role & Permission
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{route('offices.index')}}">
+                                <a class="nav-link" href="{{ route('offices.index') }}">
                                     <i class="iconoir-city me-2"></i> Daftar Kantor (Outlet)
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{route('user_plots.index')}}">
+                                <a class="nav-link" href="{{ route('user_plots.index') }}">
                                     <i class="iconoir-group me-2"></i> Plotting User
                                 </a>
                             </li>
@@ -88,34 +88,34 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="{{route('sales')}}">
+                    <a class="nav-link" href="{{ route('sales') }}">
                         <i class="iconoir-coins menu-icon"></i>
                         <span>Penjualan</span>
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="{{route('purchase')}}">
+                    <a class="nav-link" href="{{ route('purchase') }}">
                         <i class="iconoir-shop menu-icon"></i>
                         <span>Pembelian</span>
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="#sidePO" data-bs-toggle="collapse" role="button"
-                        aria-expanded="false" aria-controls="sidePO">
+                    <a class="nav-link" href="#sidePO" data-bs-toggle="collapse" role="button" aria-expanded="false"
+                        aria-controls="sidePO">
                         <i class="iconoir-shop-window menu-icon"></i>
                         <span>Finance</span>
                     </a>
                     <div class="collapse" id="sidePO">
                         <ul class="nav flex-column">
                             <li class="nav-item">
-                                <a class="nav-link" href="{{route('purchase')}}">
+                                <a class="nav-link" href="{{ route('sales.receipt') }}">
                                     <i class="iconoir-hand-contactless me-2"></i> Kuitansi Penjualan
                                 </a>
                             </li>
-                             <li class="nav-item">
-                                <a class="nav-link" href="{{route('purchase.receipt')}}">
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('purchase.receipt') }}">
                                     <i class="iconoir-delivery-truck me-2"></i> Kuitansi Pembelian
                                 </a>
                             </li>
@@ -151,7 +151,7 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="{{route('syo')}}">
+                    <a class="nav-link" href="{{ route('syo') }}">
                         <i class="iconoir-coins-swap menu-icon"></i>
                         <span>Ganti Kantor</span>
                     </a>
@@ -159,7 +159,7 @@
 
                 <li class="nav-item mt-3">
                     <a href="#" class="nav-link text-danger"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                         <i class="iconoir-log-out menu-icon"></i>
                         <span>Logout</span>
                     </a>
