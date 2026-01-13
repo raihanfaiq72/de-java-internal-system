@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardSalesController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\BarangController;
+use App\Http\Controllers\StockController;
 use App\Http\Controllers\MitraController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\UserPlotController;
@@ -36,6 +37,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('purchase-receipt',[PurchaseController::class,'receipt'])->name('purchase.receipt');
         Route::get('mitra', [MitraController::class, 'index'])->name('mitra');
         Route::get('barang', [BarangController::class, 'index'])->name('barang');
+        Route::get('stok', [StockController::class, 'index'])->name('stok');
         Route::get('users', fn() => view('Users.index'))->name('users.index');
 
         Route::prefix('admin')->group(function () {

@@ -38,6 +38,11 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link" href="{{ route('stok') }}">
+                                    <i class="iconoir-archive me-2"></i> Stok
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link" href="#">
                                     <i class="iconoir-money-square me-2"></i> Pajak
                                 </a>

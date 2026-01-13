@@ -7,12 +7,19 @@ use App\Models\Invoice;
 use App\Models\ActivityLog;
 use App\Models\InvoiceItem;
 use App\Models\InvoiceItemTaxe;
+use App\Services\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class InvoiceController extends Controller
 {
+    protected $stockService;
+
+    public function __construct(StockService $stockService)
+    {
+        $this->stockService = $stockService;
+    }
     public function index(Request $request)
     {
         $query = Invoice::with(['mitra', 'items.product', 'items.taxes', 'payment'])
@@ -192,13 +199,27 @@ class InvoiceController extends Controller
 
                 $item = InvoiceItem::create($itemData);
 
-                $this->logActivity(
-                    'Create',
-                    'invoice_items',
-                    $item->id,
-                    null,
-                    $item
-                );
+                // FIFO Stock Tracking
+                if ($item->product && $item->product->track_stock) {
+                    if ($invoice->tipe_invoice === 'Purchase') {
+                        $this->stockService->recordIn(
+                            $item->product_id,
+                            $item->qty,
+                            $item->harga_satuan,
+                            'Purchase',
+                            $invoice->id,
+                            "Purchase Invoice #{$invoice->nomor_invoice}"
+                        );
+                    } elseif ($invoice->tipe_invoice === 'Sales') {
+                        $this->stockService->recordOut(
+                            $item->product_id,
+                            $item->qty,
+                            'Sales',
+                            $invoice->id,
+                            "Sales Invoice #{$invoice->nomor_invoice}"
+                        );
+                    }
+                }
 
                 if (!empty($itemData['taxes'])) {
                     foreach ($itemData['taxes'] as $taxData) {

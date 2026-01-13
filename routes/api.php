@@ -13,9 +13,17 @@ use App\Http\Controllers\Api\ProductCategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\SalesAttendanceController;
 use App\Http\Controllers\Api\TaxController;
+use App\Http\Controllers\Api\StockController;
+use App\Http\Controllers\Api\OfficeController;
 use App\Http\Controllers\Api\UnitCategoryController;
 use App\Http\Controllers\Api\UnitController;
 use App\Http\Controllers\Api\UserController;
+
+Route::prefix('office-api')
+    ->name('office-api.')
+    ->group(function () {
+        Route::get('/', [OfficeController::class, 'index'])->name('index');
+    });
 
 Route::prefix('mitra-api')
     ->name('mitra-api.')
@@ -74,6 +82,15 @@ Route::prefix('product-api')
 
 Route::get('/product-next-sku-api', [ProductController::class, 'nextSku'])
     ->name('product.next-sku-api');
+
+Route::prefix('stock-api')
+    ->name('stock-api.')
+    ->group(function () {
+        Route::get('/', [StockController::class, 'index'])->name('index');
+        Route::get('/dashboard', [StockController::class, 'dashboard'])->name('dashboard');
+        Route::get('/mutations', [StockController::class, 'mutations'])->name('mutations');
+        Route::put('/{id}', [StockController::class, 'updateStock'])->name('update-stock');
+    });
 
 Route::prefix('tax-api')
     ->name('tax-api.')
