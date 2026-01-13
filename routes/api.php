@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\SalesAttendanceController;
 use App\Http\Controllers\Api\TaxController;
 use App\Http\Controllers\Api\StockController;
+use App\Http\Controllers\Api\StockLocationController;
 use App\Http\Controllers\Api\OfficeController;
 use App\Http\Controllers\Api\UnitCategoryController;
 use App\Http\Controllers\Api\UnitController;
@@ -89,7 +90,19 @@ Route::prefix('stock-api')
         Route::get('/', [StockController::class, 'index'])->name('index');
         Route::get('/dashboard', [StockController::class, 'dashboard'])->name('dashboard');
         Route::get('/mutations', [StockController::class, 'mutations'])->name('mutations');
+        Route::post('/opening-stock', [StockController::class, 'openingStock'])->name('opening-stock');
+        Route::post('/stock-opname', [StockController::class, 'stockOpname'])->name('stock-opname');
         Route::put('/{id}', [StockController::class, 'updateStock'])->name('update-stock');
+    });
+
+Route::prefix('stock-location-api')
+    ->name('stock-location-api.')
+    ->group(function () {
+        Route::get('/', [StockLocationController::class, 'index'])->name('index');
+        Route::post('/', [StockLocationController::class, 'store'])->name('store');
+        Route::get('/{id}', [StockLocationController::class, 'show'])->name('show');
+        Route::put('/{id}', [StockLocationController::class, 'update'])->name('update');
+        Route::delete('/{id}', [StockLocationController::class, 'destroy'])->name('destroy');
     });
 
 Route::prefix('tax-api')

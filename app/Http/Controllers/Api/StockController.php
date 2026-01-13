@@ -36,6 +36,22 @@ class StockController extends Controller
         }
 
         $query->where('track_stock', true);
+
+        if ($request->location_id) {
+            $query->withSum(['stock_mutations as location_qty' => function($q) use ($request) {
+                $q->where('stock_location_id', $request->location_id);
+            }], 'qty'); // Note: This sums ALL qty. For FIFO, we need IN - OUT.
+            
+            // Actually, we need to sum IN as positive and OUT as negative.
+            // Eloquent withSum doesn't easily support CASE WHEN. I'll use a raw subquery.
+            
+            $query->select('*')->addSelect([
+                'location_qty' => StockMutation::selectRaw('SUM(CASE WHEN type = "IN" THEN qty ELSE -qty END)')
+                    ->whereColumn('product_id', 'products.id')
+                    ->where('stock_location_id', $request->location_id)
+            ]);
+        }
+
         $data = $query->latest()->paginate(10);
 
         return apiResponse(true, 'Data stok produk', $data);
@@ -43,20 +59,26 @@ class StockController extends Controller
 
     public function dashboard(Request $request)
     {
-        $warehouseId = $request->warehouse_id;
+        $locationId = $request->location_id ?: $request->warehouse_id;
         $dateFrom = $request->date_from;
         $dateTo = $request->date_to;
 
         // Base product query
         $productQuery = Product::where('track_stock', true);
         
-        // Base Invoice query for pending orders
+        // Base Invoice query for pending orders (These might be office-based, not location-based)
         $pendingReceiveQuery = \App\Models\Invoice::where('tipe_invoice', 'Purchase')
             ->where('status_perjalanan', '!=', 'Diterima');
             
         $pendingShipQuery = \App\Models\Invoice::where('tipe_invoice', 'Sales')
             ->where('status_perjalanan', '!=', 'Terkirim')
             ->where('status_perjalanan', '!=', 'Diterima');
+
+        if ($locationId) {
+            // If locationId corresponds to Office ID, we can filter invoices
+            $pendingReceiveQuery->where('office_id', $locationId);
+            $pendingShipQuery->where('office_id', $locationId);
+        }
 
         if ($dateFrom) {
             $pendingReceiveQuery->where('tgl_invoice', '>=', $dateFrom);
@@ -70,8 +92,21 @@ class StockController extends Controller
         // Stats
         $pendingReceive = $pendingReceiveQuery->sum('total_akhir');
         $pendingShip = $pendingShipQuery->sum('total_akhir');
-        $totalQty = $productQuery->sum('qty');
-        $inventoryValue = $productQuery->selectRaw('SUM(qty * harga_beli) as total_value')->first()->total_value ?? 0;
+        
+        if ($locationId) {
+            $totalQty = StockMutation::where('stock_location_id', $locationId)
+                ->selectRaw('SUM(CASE WHEN type = "IN" THEN qty ELSE -qty END) as total')
+                ->first()->total ?? 0;
+            
+            // Valuation is harder per location if not tracking remaining cost per location batch
+            // For now, use global product cost
+            $inventoryValue = Product::where('track_stock', true)
+                ->selectRaw('SUM((SELECT SUM(CASE WHEN type = "IN" THEN qty ELSE -qty END) FROM stock_mutations WHERE product_id = products.id AND stock_location_id = ?) * harga_beli) as total_value', [$locationId])
+                ->first()->total_value ?? 0;
+        } else {
+            $totalQty = $productQuery->sum('qty');
+            $inventoryValue = $productQuery->selectRaw('SUM(qty * harga_beli) as total_value')->first()->total_value ?? 0;
+        }
 
         // Chart Data (Last 6 Months)
         $months = [];
@@ -88,15 +123,16 @@ class StockController extends Controller
             $start = $date->startOfMonth()->toDateTimeString();
             $end = $date->endOfMonth()->toDateTimeString();
 
-            $incoming = StockMutation::where('type', 'IN')
-                ->whereBetween('created_at', [$start, $end])
-                ->selectRaw('SUM(qty) as q, SUM(qty * cost_price) as v')
-                ->first();
+            $incomingQuery = StockMutation::where('type', 'IN')->whereBetween('created_at', [$start, $end]);
+            $outgoingQuery = StockMutation::where('type', 'OUT')->whereBetween('created_at', [$start, $end]);
 
-            $outgoing = StockMutation::where('type', 'OUT')
-                ->whereBetween('created_at', [$start, $end])
-                ->selectRaw('SUM(qty) as q, SUM(qty * cost_price) as v')
-                ->first();
+            if ($locationId) {
+                $incomingQuery->where('stock_location_id', $locationId);
+                $outgoingQuery->where('stock_location_id', $locationId);
+            }
+
+            $incoming = $incomingQuery->selectRaw('SUM(qty) as q, SUM(qty * cost_price) as v')->first();
+            $outgoing = $outgoingQuery->selectRaw('SUM(qty) as q, SUM(qty * cost_price) as v')->first();
             
             $qtyIncoming[] = (float)($incoming->q ?? 0);
             $qtyOutgoing[] = (float)($outgoing->q ?? 0);
@@ -106,16 +142,18 @@ class StockController extends Controller
 
         // Top & Bottom Products (based on OUT mutations)
         $topProducts = Product::where('track_stock', true)
-            ->withSum(['stock_mutations as sent_qty' => function($q) {
+            ->withSum(['stock_mutations as sent_qty' => function($q) use ($locationId) {
                 $q->where('type', 'OUT');
+                if ($locationId) $q->where('stock_location_id', $locationId);
             }], 'qty')
             ->orderByDesc('sent_qty')
             ->limit(5)
             ->get();
 
         $bottomProducts = Product::where('track_stock', true)
-            ->withSum(['stock_mutations as sent_qty' => function($q) {
+            ->withSum(['stock_mutations as sent_qty' => function($q) use ($locationId) {
                 $q->where('type', 'OUT');
+                if ($locationId) $q->where('stock_location_id', $locationId);
             }], 'qty')
             ->orderBy('sent_qty', 'asc')
             ->limit(5)
@@ -151,6 +189,10 @@ class StockController extends Controller
         if ($request->product_id) {
             $query->where('product_id', $request->product_id);
         }
+        
+        if ($request->location_id) {
+            $query->where('stock_location_id', $request->location_id);
+        }
 
         $data = $query->latest()->paginate(10);
 
@@ -161,6 +203,7 @@ class StockController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'qty' => 'required|numeric|min:0',
+            'stock_location_id' => 'nullable|exists:stock_locations,id',
             'notes' => 'nullable|string'
         ]);
 
@@ -169,10 +212,65 @@ class StockController extends Controller
         }
 
         try {
-            $this->stockService->adjustStock($id, $request->qty, $request->notes);
+            $this->stockService->adjustStock($id, $request->qty, $request->stock_location_id, $request->notes);
             return apiResponse(true, 'Stok berhasil diperbarui');
         } catch (\Exception $e) {
             return apiResponse(false, 'Gagal memperbarui stok: ' . $e->getMessage(), null, null, 500);
+        }
+    }
+
+    public function openingStock(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'product_id' => 'required|exists:products,id',
+            'stock_location_id' => 'required|exists:stock_locations,id',
+            'qty' => 'required|numeric|min:1',
+            'cost_price' => 'required|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
+        }
+
+        try {
+            $this->stockService->recordIn(
+                $request->product_id,
+                $request->qty,
+                $request->cost_price,
+                $request->stock_location_id,
+                'Opening Stock',
+                null,
+                'Initial stock entry'
+            );
+            return apiResponse(true, 'Persediaan awal berhasil dicatat');
+        } catch (\Exception $e) {
+            return apiResponse(false, 'Gagal mencatat persediaan awal: ' . $e->getMessage(), null, null, 500);
+        }
+    }
+
+    public function stockOpname(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'product_id' => 'required|exists:products,id',
+            'stock_location_id' => 'required|exists:stock_locations,id',
+            'qty_physical' => 'required|numeric|min:0',
+            'notes' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
+        }
+
+        try {
+            $this->stockService->adjustStock(
+                $request->product_id,
+                $request->qty_physical,
+                $request->stock_location_id,
+                $request->notes ?: 'Stock Opname'
+            );
+            return apiResponse(true, 'Stok opname berhasil dicatat');
+        } catch (\Exception $e) {
+            return apiResponse(false, 'Gagal mencatat stok opname: ' . $e->getMessage(), null, null, 500);
         }
     }
     private function logActivity($tindakan, $tabel, $dataId, $before, $after)

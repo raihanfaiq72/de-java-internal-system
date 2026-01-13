@@ -11,11 +11,12 @@ class StockService
     /**
      * Record stock IN (Purchase or positive Adjustment)
      */
-    public function recordIn($productId, $qty, $costPrice, $referenceType = null, $referenceId = null, $notes = null)
+    public function recordIn($productId, $qty, $costPrice, $stockLocationId = null, $referenceType = null, $referenceId = null, $notes = null)
     {
-        return DB::transaction(function () use ($productId, $qty, $costPrice, $referenceType, $referenceId, $notes) {
+        return DB::transaction(function () use ($productId, $qty, $costPrice, $stockLocationId, $referenceType, $referenceId, $notes) {
             $mutation = StockMutation::create([
                 'product_id' => $productId,
+                'stock_location_id' => $stockLocationId,
                 'type' => 'IN',
                 'qty' => $qty,
                 'remaining_qty' => $qty,
@@ -34,16 +35,21 @@ class StockService
     /**
      * Record stock OUT (Sales or negative Adjustment) using FIFO
      */
-    public function recordOut($productId, $qty, $referenceType = null, $referenceId = null, $notes = null)
+    public function recordOut($productId, $qty, $stockLocationId = null, $referenceType = null, $referenceId = null, $notes = null)
     {
-        return DB::transaction(function () use ($productId, $qty, $referenceType, $referenceId, $notes) {
+        return DB::transaction(function () use ($productId, $qty, $stockLocationId, $referenceType, $referenceId, $notes) {
             $remainingToDeduct = $qty;
 
-            // Find oldest IN mutations with remaining stock
-            $batches = StockMutation::where('product_id', $productId)
+            // Find oldest IN mutations with remaining stock IN THE SAME LOCATION
+            $query = StockMutation::where('product_id', $productId)
                 ->where('type', 'IN')
-                ->where('remaining_qty', '>', 0)
-                ->orderBy('created_at', 'asc')
+                ->where('remaining_qty', '>', 0);
+            
+            if ($stockLocationId) {
+                $query->where('stock_location_id', $stockLocationId);
+            }
+
+            $batches = $query->orderBy('created_at', 'asc')
                 ->lockForUpdate()
                 ->get();
 
@@ -61,10 +67,11 @@ class StockService
             // Record the OUT mutation
             $mutation = StockMutation::create([
                 'product_id' => $productId,
+                'stock_location_id' => $stockLocationId,
                 'type' => 'OUT',
                 'qty' => $qty,
                 'remaining_qty' => 0,
-                'cost_price' => ($qty > 0) ? ($totalCost / $qty) : 0, // Store unit cost for consistency
+                'cost_price' => ($qty > 0) ? ($totalCost / $qty) : 0, 
                 'reference_type' => $referenceType,
                 'reference_id' => $referenceId,
                 'notes' => $notes,
@@ -79,16 +86,21 @@ class StockService
     /**
      * Record an adjustment (positive or negative)
      */
-    public function adjustStock($productId, $newTotalQty, $notes = null)
+    public function adjustStock($productId, $newTotalQty, $stockLocationId = null, $notes = null)
     {
-        $product = Product::find($productId);
-        $currentQty = $product->qty;
+        // For total calculation, we need to know the current qty in that specific location
+        $currentQty = StockMutation::where('product_id', $productId)
+            ->where('stock_location_id', $stockLocationId)
+            ->selectRaw('SUM(CASE WHEN type = "IN" THEN qty ELSE -qty END) as total')
+            ->first()->total ?? 0;
+
         $diff = $newTotalQty - $currentQty;
 
         if ($diff > 0) {
-            return $this->recordIn($productId, $diff, $product->harga_beli, 'Adjustment', null, $notes);
+            $product = Product::find($productId);
+            return $this->recordIn($productId, $diff, $product->harga_beli, $stockLocationId, 'Adjustment', null, $notes);
         } elseif ($diff < 0) {
-            return $this->recordOut($productId, abs($diff), 'Adjustment', null, $notes);
+            return $this->recordOut($productId, abs($diff), $stockLocationId, 'Adjustment', null, $notes);
         }
 
         return null;

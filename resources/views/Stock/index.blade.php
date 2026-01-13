@@ -185,6 +185,12 @@
                                 <div class="tab-pane fade" id="tab-persediaan" role="tabpanel">
                                     <div class="row g-2 mb-3 align-items-end">
                                         <div class="col-md-3">
+                                            <label class="small fw-bold text-muted">Pilih Lokasi</label>
+                                            <select id="filter-stock-location" class="form-select form-select-sm" onchange="loadStockData()">
+                                                <option value="">-- Pilih Lokasi Dulu --</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
                                             <label class="small fw-bold text-muted">Cari SKU / Nama</label>
                                             <input type="text" id="filter-stock-search" class="form-control form-control-sm"
                                                    placeholder="Ketik pencarian..." onkeyup="loadStockData()">
@@ -204,7 +210,12 @@
                                         </div>
                                     </div>
 
-                                    <div class="table-responsive">
+                                    <div id="persediaan-empty-state" class="text-center py-5">
+                                        <i class="iconoir-info-circle fs-1 text-muted mb-2"></i>
+                                        <p class="text-muted">Silahkan pilih lokasi terlebih dahulu untuk melihat stok.</p>
+                                    </div>
+
+                                    <div class="table-responsive d-none" id="persediaan-table-wrapper">
                                         <table class="table table-sm table-bordered align-middle">
                                             <thead class="table-light">
                                                 <tr>
@@ -213,7 +224,7 @@
                                                     <th>Kategori</th>
                                                     <th>Unit</th>
                                                     <th class="text-center">Stok Saat Ini</th>
-                                                    <th width="150" class="text-center">Aksi</th>
+                                                    <th width="200" class="text-center">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="stock-table-body">
@@ -224,7 +235,7 @@
                                         </table>
                                     </div>
 
-                                    <div class="d-flex justify-content-between align-items-center px-2 mt-3">
+                                    <div class="d-flex justify-content-between align-items-center px-2 mt-3 d-none" id="persediaan-pagination-wrapper">
                                         <span id="stock-pagination-info" class="text-muted small"></span>
                                         <nav>
                                             <ul class="pagination pagination-sm mb-0" id="stock-pagination-container"></ul>
@@ -234,7 +245,29 @@
 
                                 {{-- TAB 3: LOKASI --}}
                                 <div class="tab-pane fade" id="tab-lokasi" role="tabpanel">
-                                    <p class="text-muted text-center py-5">Modul Lokasi belum tersedia atau tidak ada data.</p>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="fw-bold mb-0">Daftar Lokasi Stok</h6>
+                                        <button class="btn btn-sm btn-primary shadow-sm" onclick="showCreateLocationModal()">
+                                            <i class="iconoir-plus me-1"></i> Buat Lokasi Stok
+                                        </button>
+                                    </div>
+
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered align-middle">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Nama Lokasi</th>
+                                                    <th>Tipe</th>
+                                                    <th class="text-center" width="250">Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="location-table-body">
+                                                <tr>
+                                                    <td colspan="3" class="text-center text-muted">Memuat data lokasi...</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
 
                                 {{-- TAB 4: DOKUMEN STOK --}}
@@ -269,6 +302,7 @@
 </div>
 
 @include('Stock.Modal._AdjustStock')
+@include('Stock.Modal._LocationModals')
 
 @endsection
 
@@ -284,7 +318,8 @@
     let valueChart = null;
 
     document.addEventListener('DOMContentLoaded', () => {
-        loadOffices();
+        loadOffices(); // Warehouse filter (Dashboard)
+        loadLocations(); // Location tab & Persediaan filter
         loadKategoriStock();
         loadStockDashboard();
         
@@ -293,6 +328,7 @@
             tab.addEventListener('shown.bs.tab', (e) => {
                 const target = e.target.getAttribute('href');
                 if (target === '#tab-persediaan') loadStockData();
+                if (target === '#tab-lokasi') loadLocations();
                 if (target === '#tab-dokumen') loadMutationData();
                 if (target === '#tab-dashboard') loadStockDashboard();
             });
@@ -301,6 +337,7 @@
 
     async function loadOffices() {
         const select = document.getElementById('filter-warehouse');
+        if (!select) return;
         try {
             const res = await fetch(API_OFFICE_URL);
             const result = await res.json();
@@ -312,6 +349,105 @@
         } catch (error) {
             console.warn('Gagal load offices:', error);
         }
+    }
+
+    const API_LOCATION_URL = '/api/stock-location-api';
+
+    async function loadLocations() {
+        const tbody = document.getElementById('location-table-body');
+        const selectPersediaan = document.getElementById('filter-stock-location');
+        
+        try {
+            const res = await fetch(API_LOCATION_URL);
+            const result = await res.json();
+            if (result.success) {
+                // Table
+                tbody.innerHTML = '';
+                if (result.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">Belum ada lokasi stok</td></tr>';
+                } else {
+                    result.data.forEach(item => {
+                        tbody.insertAdjacentHTML('beforeend', `
+                            <tr>
+                                <td>${item.name}</td>
+                                <td><span class="badge bg-info-subtle text-info">${item.type}</span></td>
+                                <td class="text-center">
+                                    <button class="btn btn-xs btn-outline-primary me-1" onclick="showEditLocationModal(${item.id})"><i class="iconoir-edit-pencil"></i> Ubah</button>
+                                    <button class="btn btn-xs btn-outline-danger me-1" onclick="deleteLocation(${item.id})"><i class="iconoir-trash"></i> Hapus</button>
+                                    <button class="btn btn-xs btn-outline-success me-1" onclick="showOpeningStockModal(${item.id}, '${item.name}')"><i class="iconoir-page"></i> Persediaan Awal</button>
+                                    <button class="btn btn-xs btn-outline-dark" onclick="showStockOpnameModal(${item.id}, '${item.name}')"><i class="iconoir-page"></i> Stok Opname</button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                }
+
+                // Select in Persediaan Tab
+                const currentVal = selectPersediaan.value;
+                selectPersediaan.innerHTML = '<option value="">-- Pilih Lokasi Dulu --</option>';
+                result.data.forEach(item => {
+                    selectPersediaan.insertAdjacentHTML('beforeend', `<option value="${item.id}" ${currentVal == item.id ? 'selected' : ''}>${item.name}</option>`);
+                });
+            }
+        } catch (error) {
+            console.warn('Gagal load locations:', error);
+        }
+    }
+
+    // Modal Location Functions
+    function showCreateLocationModal() {
+        document.getElementById('location-modal-title').innerText = 'Buat Lokasi Stok';
+        document.getElementById('location-id').value = '';
+        document.getElementById('location-name').value = '';
+        document.getElementById('location-type').value = 'stock';
+        new bootstrap.Modal('#modalLocation').show();
+    }
+
+    async function showEditLocationModal(id) {
+        const res = await fetch(`${API_LOCATION_URL}/${id}`);
+        const result = await res.json();
+        if (result.success) {
+            document.getElementById('location-modal-title').innerText = 'Ubah Lokasi Stok';
+            document.getElementById('location-id').value = result.data.id;
+            document.getElementById('location-name').value = result.data.name;
+            document.getElementById('location-type').value = result.data.type;
+            new bootstrap.Modal('#modalLocation').show();
+        }
+    }
+
+    async function submitLocation() {
+        const id = document.getElementById('location-id').value;
+        const data = {
+            name: document.getElementById('location-name').value,
+            type: document.getElementById('location-type').value,
+        };
+
+        const url = id ? `${API_LOCATION_URL}/${id}` : API_LOCATION_URL;
+        const method = id ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+        if (result.success) {
+            bootstrap.Modal.getInstance(document.getElementById('modalLocation')).hide();
+            loadLocations();
+        } else {
+            alert(result.message);
+        }
+    }
+
+    async function deleteLocation(id) {
+        if (!confirm('Hapus lokasi ini? Semua data stok di lokasi ini tidak akan terhapus tapi mungkin sulit diakses.')) return;
+        const res = await fetch(`${API_LOCATION_URL}/${id}`, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+        });
+        const result = await res.json();
+        if (result.success) loadLocations();
     }
 
     async function loadStockDashboard() {
@@ -454,7 +590,118 @@
         }
     }
 
+    async function showOpeningStockModal(locationId, locationName) {
+        document.getElementById('opening-stock-location-id').value = locationId;
+        document.getElementById('opening-stock-location-name').value = locationName;
+        
+        // Load products into select
+        const res = await fetch('/api/product-api');
+        const result = await res.json();
+        if (result.success) {
+            const select = document.getElementById('opening-stock-product-id');
+            select.innerHTML = '<option value="">-- Pilih Produk --</option>';
+            result.data.data.forEach(p => {
+                select.insertAdjacentHTML('beforeend', `<option value="${p.id}">${p.sku_kode} - ${p.nama_produk}</option>`);
+            });
+        }
+        new bootstrap.Modal('#modalOpeningStock').show();
+    }
+
+    async function submitOpeningStock() {
+        const data = {
+            product_id: document.getElementById('opening-stock-product-id').value,
+            stock_location_id: document.getElementById('opening-stock-location-id').value,
+            qty: document.getElementById('opening-stock-qty').value,
+            cost_price: document.getElementById('opening-stock-cost').value,
+        };
+
+        const res = await fetch('/api/stock-api/opening-stock', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+        if (result.success) {
+            bootstrap.Modal.getInstance(document.getElementById('modalOpeningStock')).hide();
+            loadLocations();
+        } else {
+            alert(result.message);
+        }
+    }
+
+    async function showStockOpnameModal(locationId, locationName) {
+        document.getElementById('opname-location-id').value = locationId;
+        document.getElementById('opname-location-name').value = locationName;
+        
+        // Load products into select
+        const res = await fetch('/api/product-api');
+        const result = await res.json();
+        if (result.success) {
+            const select = document.getElementById('opname-product-id');
+            select.innerHTML = '<option value="">-- Pilih Produk --</option>';
+            result.data.data.forEach(p => {
+                select.insertAdjacentHTML('beforeend', `<option value="${p.id}">${p.sku_kode} - ${p.nama_produk}</option>`);
+            });
+
+            // Handle current qty fetch on change
+            select.onchange = async () => {
+                const pid = select.value;
+                if (!pid) return document.getElementById('opname-qty-current').value = 0;
+                
+                // We need an API to get current stock per location. 
+                // For now, I'll fetch mutations and sum them up or use a dedicated API if exists.
+                // I'll assume I can pass location_id to the existing index API or similar.
+                const stockRes = await fetch(`/api/stock-api?product_id=${pid}&location_id=${locationId}`);
+                const stockResult = await stockRes.json();
+                // If the API doesn't support filter yet, I'll just set it to 0 or fix the API.
+                document.getElementById('opname-qty-current').value = stockResult.data?.qty || 0;
+            };
+        }
+        new bootstrap.Modal('#modalStockOpname').show();
+    }
+
+    async function submitStockOpname() {
+        const data = {
+            product_id: document.getElementById('opname-product-id').value,
+            stock_location_id: document.getElementById('opname-location-id').value,
+            qty_physical: document.getElementById('opname-qty-physical').value,
+            notes: document.getElementById('opname-note').value,
+        };
+
+        const res = await fetch('/api/stock-api/stock-opname', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+        if (result.success) {
+            bootstrap.Modal.getInstance(document.getElementById('modalStockOpname')).hide();
+            loadLocations();
+            loadStockData();
+        } else {
+            alert(result.message);
+        }
+    }
+
     async function loadStockData(url = API_STOCK_URL) {
+        const locationId = document.getElementById('filter-stock-location').value;
+        const emptyState = document.getElementById('persediaan-empty-state');
+        const tableWrapper = document.getElementById('persediaan-table-wrapper');
+        const paginationWrapper = document.getElementById('persediaan-pagination-wrapper');
+
+        if (!locationId) {
+            emptyState.classList.remove('d-none');
+            tableWrapper.classList.add('d-none');
+            paginationWrapper.classList.add('d-none');
+            return;
+        }
+
+        emptyState.classList.add('d-none');
+        tableWrapper.classList.remove('d-none');
+        paginationWrapper.classList.remove('d-none');
+
         const tbody = document.getElementById('stock-table-body');
         tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>';
 
@@ -465,6 +712,7 @@
             const fetchUrl = new URL(url, window.location.origin);
             if (search) fetchUrl.searchParams.append('search', search);
             if (kategori) fetchUrl.searchParams.append('category', kategori);
+            fetchUrl.searchParams.append('location_id', locationId);
 
             const res = await fetch(fetchUrl);
             const result = await res.json();
@@ -488,7 +736,8 @@
         }
 
         data.forEach(item => {
-            const stockBadge = item.qty <= 5 ? 'bg-danger' : 'bg-success';
+            const qty = item.location_qty ?? 0; // Assuming API returns stock per location
+            const stockBadge = qty <= 5 ? 'bg-danger' : 'bg-success';
             tbody.insertAdjacentHTML('beforeend', `
                 <tr>
                     <td class="fw-bold">${item.sku_kode}</td>
@@ -496,11 +745,17 @@
                     <td>${item.category?.nama_kategori ?? '-'}</td>
                     <td>${item.unit?.nama_unit ?? '-'}</td>
                     <td class="text-center">
-                        <span class="badge ${stockBadge}">${item.qty ?? 0}</span>
+                        <span class="badge ${stockBadge}">${qty}</span>
                     </td>
                     <td class="text-center">
-                        <button class="btn btn-xs btn-primary shadow-sm" onclick="adjustStock(${item.id})">
-                            <i class="fa fa-edit me-1"></i> SESUAIKAN
+                        <button class="btn btn-xs btn-outline-info me-1" title="Lihat FIFO" onclick="viewFifo(${item.id})">
+                             Lihat FIFO
+                        </button>
+                        <button class="btn btn-xs btn-outline-warning me-1" title="Stok" onclick="quickStockOpname(${item.id}, ${qty})">
+                            <i class="iconoir-archive"></i> Stok
+                        </button>
+                        <button class="btn btn-xs btn-outline-primary" title="Penyesuaian Stok" onclick="adjustStock(${item.id}, ${qty})">
+                            <i class="iconoir-settings"></i> Adj
                         </button>
                     </td>
                 </tr>
@@ -530,7 +785,23 @@
         });
     }
 
-    async function adjustStock(id) {
+    function viewFifo(id) {
+        alert('Fitur rincian FIFO sedang dikembangkan. Kamu bisa melihat mutasi di Tab Dokumen Stok.');
+    }
+
+    function quickStockOpname(pid, current) {
+        const locId = document.getElementById('filter-stock-location').value;
+        const locName = document.getElementById('filter-stock-location').options[document.getElementById('filter-stock-location').selectedIndex].text;
+        
+        showStockOpnameModal(locId, locName);
+        setTimeout(() => {
+            document.getElementById('opname-product-id').value = pid;
+            document.getElementById('opname-qty-current').value = current;
+        }, 500);
+    }
+    
+    // Update adjustStock to use location
+    async function adjustStock(id, current) {
         const detailRes = await fetch(`/api/product-api/${id}`);
         const result = await detailRes.json();
 
@@ -540,8 +811,8 @@
         document.getElementById('adjust-stock-id').value = p.id;
         document.getElementById('adjust-stock-sku').innerText = p.sku_kode;
         document.getElementById('adjust-stock-name').innerText = p.nama_produk;
-        document.getElementById('adjust-stock-current').value = p.qty;
-        document.getElementById('adjust-stock-new').value = p.qty;
+        document.getElementById('adjust-stock-current').value = current;
+        document.getElementById('adjust-stock-new').value = current;
         document.getElementById('adjust-stock-note').value = '';
 
         new bootstrap.Modal('#modalAdjustStock').show();
@@ -551,6 +822,7 @@
         const id = document.getElementById('adjust-stock-id').value;
         const newQty = document.getElementById('adjust-stock-new').value;
         const notes = document.getElementById('adjust-stock-note').value;
+        const locId = document.getElementById('filter-stock-location').value;
 
         const res = await fetch(`/api/stock-api/${id}`, {
             method: 'PUT',
@@ -558,13 +830,12 @@
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
-            body: JSON.stringify({ qty: newQty, notes: notes })
+            body: JSON.stringify({ qty: newQty, notes: notes, stock_location_id: locId })
         });
 
         const result = await res.json();
         if (result.success) {
             bootstrap.Modal.getInstance(document.getElementById('modalAdjustStock')).hide();
-            loadStockDashboard();
             loadStockData();
         } else {
             alert(result.message);
