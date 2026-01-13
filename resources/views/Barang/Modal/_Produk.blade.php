@@ -74,7 +74,7 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary btn-sm"
                         data-bs-dismiss="modal">Batal</button>
-                <button class="btn btn-primary btn-sm"
+                <button id="btn-simpan-produk" class="btn btn-primary btn-sm"
                         onclick="submitProduk()">Simpan</button>
             </div>
 

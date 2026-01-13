@@ -298,6 +298,8 @@ let deleteProdukId = null;
 
 async function tambahProduk() {
     document.getElementById('modalProdukTitle').innerText = 'Tambah Produk';
+    document.getElementById('btn-simpan-produk').style.display = 'block';
+    setModalFieldsDisabled(false);
 
     document.getElementById('produk-id').value = '';
     document.getElementById('produk-sku').value = '';
@@ -317,6 +319,40 @@ async function tambahProduk() {
     new bootstrap.Modal('#modalProduk').show();
 }
 
+async function detailProduk(id) {
+    const res = await fetch(`${API_URL}/${id}`);
+    const result = await res.json();
+
+    if (!result.success) return alert(result.message);
+
+    const p = result.data;
+
+    document.getElementById('modalProdukTitle').innerText = 'Detail Produk';
+    document.getElementById('btn-simpan-produk').style.display = 'none';
+    setModalFieldsDisabled(true);
+
+    document.getElementById('produk-id').value = p.id;
+    document.getElementById('produk-sku').value = p.sku_kode;
+    document.getElementById('produk-nama').value = p.nama_produk;
+
+    await loadKategoriProdukModal();
+    document.getElementById('produk-kategori').value = p.product_category_id;
+
+    await loadUnitCategoryModal();
+    document.getElementById('produk-unit-category').value = p.unit_category_id;
+
+    // Load units for this category manually to set value
+    await loadUnitByCategoryManually(p.unit_category_id);
+    document.getElementById('produk-unit').value = p.unit_id;
+
+    document.getElementById('produk-harga-beli').value = p.harga_beli;
+    document.getElementById('produk-harga-jual').value = p.harga_jual;
+    document.getElementById('produk-qty').value = p.qty;
+    document.getElementById('produk-deskripsi').value = p.deskripsi_produk;
+
+    new bootstrap.Modal('#modalProduk').show();
+}
+
 async function editProduk(id) {
     const res = await fetch(`${API_URL}/${id}`);
     const result = await res.json();
@@ -326,18 +362,61 @@ async function editProduk(id) {
     const p = result.data;
 
     document.getElementById('modalProdukTitle').innerText = 'Edit Produk';
+    document.getElementById('btn-simpan-produk').style.display = 'block';
+    setModalFieldsDisabled(false);
 
     document.getElementById('produk-id').value = p.id;
     document.getElementById('produk-sku').value = p.sku_kode;
     document.getElementById('produk-nama').value = p.nama_produk;
+
+    await loadKategoriProdukModal();
     document.getElementById('produk-kategori').value = p.product_category_id;
+
+    await loadUnitCategoryModal();
+    document.getElementById('produk-unit-category').value = p.unit_category_id;
+
+    // Load units for this category manually to set value
+    await loadUnitByCategoryManually(p.unit_category_id);
     document.getElementById('produk-unit').value = p.unit_id;
+
     document.getElementById('produk-harga-beli').value = p.harga_beli;
     document.getElementById('produk-harga-jual').value = p.harga_jual;
     document.getElementById('produk-qty').value = p.qty;
     document.getElementById('produk-deskripsi').value = p.deskripsi_produk;
 
     new bootstrap.Modal('#modalProduk').show();
+}
+
+function setModalFieldsDisabled(disabled) {
+    const fields = [
+        'produk-sku', 'produk-nama', 'produk-kategori',
+        'produk-unit-category', 'produk-unit', 'produk-harga-beli',
+        'produk-harga-jual', 'produk-qty', 'produk-deskripsi'
+    ];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = disabled;
+    });
+}
+
+async function loadUnitByCategoryManually(categoryId) {
+    const unitSelect = document.getElementById('produk-unit');
+    if (!categoryId) return;
+
+    const res = await fetch(`${UNIT_API}?unit_category_id=${categoryId}`);
+    const result = await res.json();
+
+    if (!result.success) return;
+
+    unitSelect.innerHTML = `<option value="">-- Pilih --</option>`;
+    const data = result.data.data ?? result.data;
+    data.forEach(item => {
+        unitSelect.insertAdjacentHTML(
+            'beforeend',
+            `<option value="${item.id}">${item.nama_unit}</option>`
+        );
+    });
+    unitSelect.disabled = false;
 }
 
 async function submitProduk() {
