@@ -174,7 +174,6 @@ class InvoiceController extends Controller
             'items.*.qty'            => 'required|numeric|min:0.01',
             'items.*.harga_satuan'   => 'required|numeric|min:0',
             'items.*.taxes'          => 'nullable|array',
-            'items.*.taxes.*.tax_id' => 'required|exists:taxes,id',
         ]);
 
         if ($validator->fails()) {
@@ -203,17 +202,19 @@ class InvoiceController extends Controller
                 if ($item->product && $item->product->track_stock) {
                     if ($invoice->tipe_invoice === 'Purchase') {
                         $this->stockService->recordIn(
-                            $item->product_id,
+                            $item->produk_id, // Fixed: use produk_id from InvoiceItem
                             $item->qty,
                             $item->harga_satuan,
+                            $request->invoice['stock_location_id'] ?? null, // Support location
                             'Purchase',
                             $invoice->id,
                             "Purchase Invoice #{$invoice->nomor_invoice}"
                         );
                     } elseif ($invoice->tipe_invoice === 'Sales') {
                         $this->stockService->recordOut(
-                            $item->product_id,
+                            $item->produk_id, // Fixed: use produk_id from InvoiceItem
                             $item->qty,
+                            $request->invoice['stock_location_id'] ?? null, // Support location
                             'Sales',
                             $invoice->id,
                             "Sales Invoice #{$invoice->nomor_invoice}"
@@ -223,20 +224,21 @@ class InvoiceController extends Controller
 
                 if (!empty($itemData['taxes'])) {
                     foreach ($itemData['taxes'] as $taxData) {
+                        if (!empty($taxData['tax_id'])) {
+                            $tax = InvoiceItemTaxe::create([
+                                'invoice_item_id'       => $item->id,
+                                'tax_id'                => $taxData['tax_id'],
+                                'nilai_pajak_diterapkan'=> $taxData['nilai_pajak_diterapkan'] ?? 0
+                            ]);
 
-                        $tax = InvoiceItemTaxe::create([
-                            'invoice_item_id'       => $item->id,
-                            'tax_id'                => $taxData['tax_id'],
-                            'nilai_pajak_diterapkan'=> $taxData['nilai_pajak_diterapkan'] ?? 0
-                        ]);
-
-                        $this->logActivity(
-                            'Create',
-                            'invoice_item_taxes',
-                            $tax->id,
-                            null,
-                            $tax
-                        );
+                            $this->logActivity(
+                                'Create',
+                                'invoice_item_taxes',
+                                $tax->id,
+                                null,
+                                $tax
+                            );
+                        }
                     }
                 }
             }

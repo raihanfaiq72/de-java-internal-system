@@ -94,12 +94,11 @@
                             <table class="table align-middle mb-0" id="mainItemTable">
                                 <thead class="bg-light">
                                     <tr class="text-secondary small fw-bold">
-                                        <th class="ps-4 py-3" width="30%">ITEM & DESKRIPSI</th>
+                                        <th class="ps-4 py-3" width="40%">ITEM & DESKRIPSI</th>
                                         <th class="text-center" width="10%">QTY</th>
-                                        <th class="text-end" width="15%">HARGA BELI</th>
-                                        <th class="text-end" width="12%">DISKON (RP)</th>
-                                        <th class="text-center" width="13%">PAJAK</th>
-                                        <th class="text-end pe-4" width="15%">TOTAL</th>
+                                        <th class="text-end" width="20%">HARGA BELI</th>
+                                        <th class="text-end" width="15%">DISKON (RP)</th>
+                                        <th class="text-end pe-4" width="20%">TOTAL</th>
                                         <th width="5%"></th>
                                     </tr>
                                 </thead>
@@ -142,10 +141,6 @@
                                             class="form-control bg-transparent border-secondary text-white text-end fw-bold"
                                             value="0" oninput="calculateInvoiceTotal()">
                                     </div>
-                                </div>
-                                <div class="d-flex justify-content-between mb-3 text-warning">
-                                    <span class="small fw-semibold">Akumulasi Pajak</span>
-                                    <span id="summary_tax" class="f-mono">Rp 0</span>
                                 </div>
                                 <div class="border-top border-secondary my-3 opacity-25"></div>
                                 <div class="d-flex justify-content-between align-items-center">
@@ -239,20 +234,17 @@
     };
 
     let productCollection = [],
-        taxCollection = [],
         mitraCollection = [];
 
     // Initialize Master Data
     async function initializeInvoiceData() {
         try {
-            const [mRes, pRes, tRes] = await Promise.all([
+            const [mRes, pRes] = await Promise.all([
                 fetch('/api/mitra-api').then(r => r.json()),
-                fetch('/api/product-api').then(r => r.json()),
-                fetch('/api/tax-api').then(r => r.json())
+                fetch('/api/product-api').then(r => r.json())
             ]);
             mitraCollection = mRes.data.data || mRes.data;
             productCollection = pRes.data.data || pRes.data;
-            taxCollection = tRes.data.data || tRes.data;
 
             const select = document.getElementById('modal_mitra_id');
             select.innerHTML = '<option value="">Cari dan pilih supplier...</option>';
@@ -320,10 +312,6 @@
             `<option value="${p.id}" data-price="${p.harga_jual}" ${existing && existing.produk_id == p.id ? 'selected' : ''}>${p.nama_produk}</option>`
             ).join('');
 
-        let currentTaxId = existing && existing.taxes && existing.taxes.length > 0 ? existing.taxes[0].tax_id : '';
-        let optTax = taxCollection.map(t =>
-            `<option value="${t.id}" data-rate="${t.nilai_pajak}" ${currentTaxId == t.id ? 'selected' : ''}>${t.nama_pajak}</option>`
-            ).join('');
 
         const html = `
             <tr id="row_${rowId}">
@@ -336,11 +324,6 @@
                 <td><input type="number" class="form-control f-row-input text-center fw-bold prod-qty" value="${existing ? parseFloat(existing.qty) : 1}" oninput="calculateInvoiceTotal()"></td>
                 <td><input type="number" class="form-control f-row-input text-end prod-price" value="${existing ? parseFloat(existing.harga_satuan) : 0}" oninput="calculateInvoiceTotal()"></td>
                 <td><input type="number" class="form-control f-row-input text-end prod-disc" value="${existing ? parseFloat(existing.diskon_nilai) : 0}" oninput="calculateInvoiceTotal()"></td>
-                <td>
-                    <select class="form-select f-row-input text-center prod-tax" onchange="calculateInvoiceTotal()">
-                        <option value="" data-rate="0">N/A</option>${optTax}
-                    </select>
-                </td>
                 <td class="text-end pe-4 fw-bold f-mono prod-subtotal">Rp 0</td>
                 <td class="text-center"><button type="button" class="btn btn-link text-danger p-0" onclick="removeRow('${rowId}')"><i class="fa fa-times-circle"></i></button></td>
             </tr>`;
@@ -366,28 +349,23 @@
     }
 
     function calculateInvoiceTotal() {
-        let sub = 0,
-            taxAccum = 0;
+        let sub = 0;
         document.querySelectorAll('#itemBodyList tr').forEach(row => {
             const q = parseFloat(row.querySelector('.prod-qty').value) || 0,
                 p = parseFloat(row.querySelector('.prod-price').value) || 0,
-                d = parseFloat(row.querySelector('.prod-disc').value) || 0,
-                taxSel = row.querySelector('.prod-tax'),
-                tr = parseFloat(taxSel.options[taxSel.selectedIndex].dataset.rate) || 0;
+                d = parseFloat(row.querySelector('.prod-disc').value) || 0;
 
             let lineSub = (q * p) - d;
             if (lineSub < 0) lineSub = 0;
 
             row.querySelector('.prod-subtotal').innerText = window.financeHelpers.formatIDR(lineSub);
             sub += lineSub;
-            taxAccum += (lineSub * (tr / 100));
         });
 
         const extra = parseFloat(document.getElementById('modal_diskon_tambahan').value) || 0;
-        const grand = Math.max(0, sub + taxAccum - extra);
+        const grand = Math.max(0, sub - extra);
 
         document.getElementById('summary_subtotal').innerText = window.financeHelpers.formatIDR(sub);
-        document.getElementById('summary_tax').innerText = window.financeHelpers.formatIDR(taxAccum);
         document.getElementById('summary_grand_total').innerText = window.financeHelpers.formatIDR(grand);
     }
 
@@ -405,7 +383,6 @@
         document.getElementById('mitra_detail_display').innerHTML =
             `<i class="fa fa-info-circle me-2 text-primary"></i>Detail muncul otomatis.`;
         document.getElementById('summary_subtotal').innerText = 'Rp 0';
-        document.getElementById('summary_tax').innerText = 'Rp 0';
         document.getElementById('summary_grand_total').innerText = 'Rp 0';
     }
 
@@ -447,8 +424,6 @@
         let totalValid = 0;
         document.querySelectorAll('#itemBodyList tr').forEach(row => {
             const sel = row.querySelector('.prod-select');
-            const taxSel = row.querySelector('.prod-tax');
-            const taxRate = parseFloat(taxSel.options[taxSel.selectedIndex].dataset.rate) || 0;
             const qty = parseFloat(row.querySelector('.prod-qty').value) || 0;
             const price = parseFloat(row.querySelector('.prod-price').value) || 0;
 
@@ -458,11 +433,8 @@
                     qty: qty,
                     harga_satuan: price,
                     diskon_nilai: parseFloat(row.querySelector('.prod-disc').value) || 0,
-                    total_harga_item: parseFloat(row.querySelector('.prod-subtotal').value) || 0,
-                    taxes: taxSel.value ? [{
-                        tax_id: taxSel.value,
-                        nilai_pajak_diterapkan: taxRate
-                    }] : []
+                    total_harga_item: (qty * price) - (parseFloat(row.querySelector('.prod-disc').value) || 0),
+                    taxes: []
                 });
                 totalValid++;
             }
