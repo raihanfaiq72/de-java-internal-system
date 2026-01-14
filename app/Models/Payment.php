@@ -26,4 +26,9 @@ class Payment extends Model
     {
         return $this->belongsTo(Invoice::class, 'invoice_id');
     }
+
+    public function akun_keuangan()
+    {
+        return $this->belongsTo(COA::class, 'akun_keuangan_id');
+    }
 }

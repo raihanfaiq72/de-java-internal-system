@@ -15,7 +15,7 @@ class PaymentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Payment::with('invoice.items.product');
+        $query = Payment::with(['invoice.items.product', 'invoice.mitra', 'akun_keuangan']);
 
         if ($request->invoice_id) {
             $query->where('invoice_id', $request->invoice_id);
