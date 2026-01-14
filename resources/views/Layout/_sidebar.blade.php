@@ -132,22 +132,47 @@
                     <span>Report</span>
                 </li>
 
+                <li class="menu-label mt-2">
+                    <small class="text-uppercase text-muted fw-bold" style="font-size: 10px; letter-spacing: 0.5px;">Laporan Operasional</small>
+                </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="cards.html">
+                    <a class="nav-link" href="{{ route('report.sales') }}">
+                        <i class="iconoir-graph-up menu-icon"></i>
+                        <span>Laporan Penjualan</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('report.purchase') }}">
                         <i class="iconoir-reports menu-icon"></i>
                         <span>Laporan Pembelian</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="cards.html">
-                        <i class="iconoir-graph-up menu-icon"></i>
-                        <span>Laporan Penjualan</~span>
+                    <a class="nav-link" href="{{ route('report.stock') }}">
+                        <i class="iconoir-archive menu-icon"></i>
+                        <span>Laporan Stock</span>
+                    </a>
+                </li>
+
+                <li class="menu-label mt-3">
+                    <small class="text-uppercase text-muted fw-bold" style="font-size: 10px; letter-spacing: 0.5px;">Laporan Keuangan</small>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('report.balance-sheet') }}">
+                        <i class="iconoir-table-rows menu-icon"></i>
+                        <span>Neraca Keuangan</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="cards.html">
-                        <i class="iconoir-archive menu-icon"></i>
-                        <span>Laporan Stock</span>
+                    <a class="nav-link" href="{{ route('report.profit-loss') }}">
+                        <i class="iconoir-calculator menu-icon"></i>
+                        <span>Laba Rugi</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('report.ar-aging') }}">
+                        <i class="iconoir-calendar menu-icon"></i>
+                        <span>Umur Piutang (AR Aging)</span>
                     </a>
                 </li>
 

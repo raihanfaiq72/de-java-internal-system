@@ -14,6 +14,7 @@ use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\UserPlotController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\ReportController;
 
 Route::get('/', [AuthController::class, 'login'])->name('login');
 Route::post('/login-proses', [AuthController::class, 'loginProses'])->name('login.proses');
@@ -44,6 +45,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('barang', [BarangController::class, 'index'])->name('barang');
         Route::get('stok', [StockController::class, 'index'])->name('stok');
         Route::get('users', fn() => view('Users.index'))->name('users.index');
+
+        // Reports
+        Route::get('report/sales', [ReportController::class, 'salesReport'])->name('report.sales');
+        Route::get('report/purchase', [ReportController::class, 'purchaseReport'])->name('report.purchase');
+        Route::get('report/stock', [ReportController::class, 'stockReport'])->name('report.stock');
+        Route::get('report/ar-aging', [ReportController::class, 'arAging'])->name('report.ar-aging');
+        Route::get('report/balance-sheet', [ReportController::class, 'balanceSheet'])->name('report.balance-sheet');
+        Route::get('report/profit-loss', [ReportController::class, 'profitAndLoss'])->name('report.profit-loss');
 
         Route::prefix('admin')->group(function () {
             Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
