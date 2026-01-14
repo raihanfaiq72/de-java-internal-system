@@ -310,7 +310,7 @@
         const rowId = existing ? existing.id : Date.now() + Math.floor(Math.random() * 1000);
         let optProd = productCollection.map(p =>
             `<option value="${p.id}" data-price="${p.harga_jual}" ${existing && existing.produk_id == p.id ? 'selected' : ''}>${p.nama_produk}</option>`
-            ).join('');
+        ).join('');
 
 
         const html = `
@@ -402,6 +402,8 @@
                 keterangan: document.getElementById('modal_keterangan').value,
                 syarat_ketentuan: document.getElementById('modal_syarat').value,
                 diskon_tambahan_nilai: parseFloat(document.getElementById('modal_diskon_tambahan').value) || 0,
+                total_akhir: parseFloat(document.getElementById('summary_grand_total').innerText.replace(
+                    /[^0-9,-]+/g, "").replace(",", ".")) || 0,
                 // Basic Defaults
                 status_dok: 'Approved',
                 status_pembayaran: 'Unpaid',
@@ -433,7 +435,8 @@
                     qty: qty,
                     harga_satuan: price,
                     diskon_nilai: parseFloat(row.querySelector('.prod-disc').value) || 0,
-                    total_harga_item: (qty * price) - (parseFloat(row.querySelector('.prod-disc').value) || 0),
+                    total_harga_item: (qty * price) - (parseFloat(row.querySelector('.prod-disc')
+                        .value) || 0),
                     taxes: []
                 });
                 totalValid++;
