@@ -317,7 +317,7 @@
                             </div>
                         </button>
                         <div class="col-fixed-aksi text-center pe-2">
-                             <button class="btn btn-sm btn-light border shadow-none"><i class="fa fa-print"></i></button>
+                             <a href="{{ url('sales-receipt/print') }}/${item.id}" target="_blank" class="btn btn-sm btn-light border shadow-none"><i class="fa fa-print"></i></a>
                         </div>
                     </div>
                 </div>

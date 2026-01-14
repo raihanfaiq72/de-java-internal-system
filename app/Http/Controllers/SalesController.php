@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Invoice;
+use App\Models\Payment;
 
 class SalesController extends Controller
 {
@@ -24,6 +26,22 @@ class SalesController extends Controller
                     ->get();
 
         return view($this->views.'receipt', compact('mitras', 'accounts'));
+    }
+
+    public function printInvoice($id)
+    {
+        $invoice = Invoice::with(['mitra', 'items.product'])->find($id);
+        if (!$invoice) abort(404);
+
+        return view($this->views . 'Nota.SalesNota', compact('invoice'));
+    }
+
+    public function printReceipt($id)
+    {
+        $payment = Payment::with(['invoice.mitra', 'invoice.items.product', 'akun_keuangan'])->find($id);
+        if (!$payment) abort(404);
+
+        return view($this->views . 'Nota.ReceiptNota', compact('payment'));
     }
 }
 

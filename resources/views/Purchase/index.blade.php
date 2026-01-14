@@ -290,6 +290,7 @@
                             <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-muted" data-bs-toggle="dropdown"><i class="fa fa-ellipsis-h"></i></button>
                             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-finance">
                                 <li><a class="dropdown-item" href="javascript:void(0)" onclick="openInvoiceModal(${item.id})"><i class="fa fa-pencil text-primary me-2"></i> Edit Data</a></li>
+                                <li><a class="dropdown-item" href="{{ url('purchase/print') }}/${item.id}" target="_blank"><i class="fa fa-print text-dark me-2"></i> Cetak Nota</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="deleteInvoice(${item.id})"><i class="fa fa-trash me-2"></i> Hapus</a></li>
                             </ul>

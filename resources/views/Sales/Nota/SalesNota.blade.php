@@ -121,9 +121,9 @@
 <div class="nota-container">
     <div class="header">
         <div class="invoice-info">
-            <strong>06 January 2026</strong><br>
+            <strong>{{ \Carbon\Carbon::parse($invoice->tgl_invoice)->format('d F Y') }}</strong><br>
             No. Invoice<br>
-            <strong>INV - 88590</strong>
+            <strong>{{ $invoice->nomor_invoice }}</strong>
         </div>
     </div>
 
@@ -132,15 +132,15 @@
             <table>
                 <tr>
                     <td width="30%">Kepada Yth</td>
-                    <td>: BP HARTONO</td>
+                    <td>: {{ $invoice->mitra->nama ?? 'N/A' }}</td>
                 </tr>
                 <tr>
                     <td>Alamat</td>
-                    <td>: UNGARAN</td>
+                    <td>: {{ $invoice->mitra->alamat ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td>Salesman</td>
-                    <td>: HN</td>
+                    <td>: {{ $invoice->ref_no ?? '-' }}</td>
                 </tr>
             </table>
         </div>
@@ -160,28 +160,26 @@
             </tr>
         </thead>
         <tbody>
+            @php $total = 0; @endphp
+            @foreach($invoice->items as $index => $item)
+            @php $lineTotal = $item->qty * $item->harga_satuan; $total += $lineTotal; @endphp
             <tr>
-                <td>1</td>
-                <td>CN</td>
-                <td class="text-left">PRIMA XP 20W50 6X4</td>
-                <td>PCS</td>
-                <td>6</td>
-                <td class="text-right">159,142</td>
+                <td>{{ $index + 1 }}</td>
+                <td>{{ $item->product->kode_produk ?? '-' }}</td>
+                <td class="text-left">{{ $item->product->nama_produk ?? '-' }}</td>
+                <td>{{ $item->product->unit->nama_unit ?? '-' }}</td>
+                <td>{{ number_format($item->qty) }}</td>
+                <td class="text-right">{{ number_format($item->harga_satuan) }}</td>
                 <td></td>
-                <td class="text-right">954,852</td>
+                <td class="text-right">{{ number_format($lineTotal) }}</td>
             </tr>
+            @endforeach
+            {{-- Add empty rows to keep the layout consistent if needed --}}
+            @for($i = count($invoice->items); $i < 5; $i++)
             <tr>
-                <td>2</td>
-                <td></td>
-                <td class="text-left">UPSOL COOLANT 12X1</td>
-                <td>PCS</td>
-                <td>12</td>
-                <td class="text-right">8,100</td>
-                <td></td>
-                <td class="text-right">97,200</td>
+                <td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
             </tr>
-            <tr><td>3</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-            <tr><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            @endfor
         </tbody>
     </table>
 
@@ -212,16 +210,16 @@
         <div class="footer-right">
             <table class="total-table">
                 <tr>
-                    <td width="40%">CASH</td>
-                    <td class="text-right">Rp</td>
+                    <td width="40%">DP</td>
+                    <td class="text-right">Rp {{ number_format($invoice->payment->sum('jumlah_bayar') ?? 0) }}</td>
                 </tr>
                 <tr>
-                    <td>Titip Jual</td>
-                    <td class="text-right">Rp</td>
+                    <td>Sisa</td>
+                    <td class="text-right">Rp {{ number_format($invoice->total_akhir - ($invoice->payment->sum('jumlah_bayar') ?? 0)) }}</td>
                 </tr>
                 <tr>
                     <td><strong>TOTAL</strong></td>
-                    <td class="text-right"><strong>1,051,052</strong></td>
+                    <td class="text-right"><strong>{{ number_format($invoice->total_akhir) }}</strong></td>
                 </tr>
                 <tr>
                     <td>Administrasi</td>

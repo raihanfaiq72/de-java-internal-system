@@ -32,9 +32,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('dashboard-sales/detail/{id}', [DashboardSalesController::class, 'detail'])->name('dashboard.sales.detail');
         
         Route::get('sales', [SalesController::class, 'index'])->name('sales');
+        Route::get('sales/print/{id}', [SalesController::class, 'printInvoice'])->name('sales.print');
         Route::get('sales-receipt',[SalesController::class,'receipt'])->name('sales.receipt');
-        Route::get('purchase', [purchaseController::class, 'index'])->name('purchase');
+        Route::get('sales-receipt/print/{id}', [SalesController::class, 'printReceipt'])->name('sales.receipt.print');
+        
+        Route::get('purchase', [PurchaseController::class, 'index'])->name('purchase');
+        Route::get('purchase/print/{id}', [PurchaseController::class, 'printInvoice'])->name('purchase.print');
         Route::get('purchase-receipt',[PurchaseController::class,'receipt'])->name('purchase.receipt');
+        Route::get('purchase-receipt/print/{id}', [PurchaseController::class, 'printReceipt'])->name('purchase.receipt.print');
         Route::get('mitra', [MitraController::class, 'index'])->name('mitra');
         Route::get('barang', [BarangController::class, 'index'])->name('barang');
         Route::get('stok', [StockController::class, 'index'])->name('stok');
