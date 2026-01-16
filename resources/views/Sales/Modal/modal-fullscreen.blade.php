@@ -56,8 +56,8 @@
                                                 </div>
                                                 <div class="col-6">
                                                     <label class="f-label">Jatuh Tempo</label>
-                                                    <input type="date" id="modal_tgl_jatuh_tempo"
-                                                        class="form-control f-input">
+                                                    <input type="text" id="modal_tgl_jatuh_tempo"
+                                                        class="form-control f-input" placeholder="Pilih tanggal ...">
                                                 </div>
                                             </div>
                                         </div>
@@ -106,10 +106,14 @@
                                 </tbody>
                             </table>
                         </div>
-                        <div class="p-3 bg-white border-top text-center">
+                        <div class="p-3 bg-white border-top text-center d-flex justify-content-evenly">
                             <button type="button" class="btn btn-outline-primary btn-sm fw-bold px-4 rounded-pill"
                                 onclick="addNewProductRow()">
                                 <i class="fa fa-plus-circle me-1"></i> Tambah Item Baru
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm fw-bold px-4 rounded-pill"
+                                onclick="openStockModal()">
+                                <i class="fa fa-plus-circle me-1"></i>Tambah dari Stok
                             </button>
                         </div>
                     </div>
@@ -157,8 +161,62 @@
     </div>
 </div>
 
+<div class="modal fade" id="stockModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-light">
+                <h6 class="modal-title fw-bold" style="color: #000;">Pilih Produk dari Stok</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 w-100" id="stockTable">
+                        <thead class="bg-light">
+                            <tr>
+                                <th width="5%"><input type="checkbox" class="form-check-input"
+                                        id="checkAllStock" onclick="toggleAllStock(this)"></th>
+                                <th>Kode Produk</th>
+                                <th>Nama Produk</th>
+                                <th>Kategori</th>
+                                <th class="text-center">Stok</th>
+                                <th class="text-end">Harga Jual</th>
+                                <th>Track Stok</th>
+                                <th>Keterangan</th>
+                            </tr>
+                            <tr class="filter-row bg-white">
+                                <th></th>
+                                <th><input type="text" class="form-control form-control-sm col-filter"
+                                        data-col="1" placeholder="Cari Kode..."></th>
+                                <th><input type="text" class="form-control form-control-sm col-filter"
+                                        data-col="2" placeholder="Cari Nama..."></th>
+                                <th><input type="text" class="form-control form-control-sm col-filter"
+                                        data-col="3" placeholder="Cari Kategori..."></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockBodyList">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary fw-bold" onclick="addSelectedStockToInvoice()">
+                    Tambahkan Produk Terpilih
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
 <style>
-    /* Utility CSS untuk Modal agar Seragam dengan Main Page */
     .f-label {
         font-size: 11px;
         text-transform: uppercase;
@@ -199,12 +257,39 @@
         font-family: 'JetBrains Mono', monospace;
     }
 
+    .table-responsive {
+        overflow-y: visible !important;
+        overflow-x: clip !important;
+    }
+
+    .ts-dropdown {
+        z-index: 2000 !important;
+        position: absolute !important;
+        background: #ffffff !important;
+        border: 1px solid #e2e8e0 !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    #itemBodyList tr:focus-within {
+        z-index: 100;
+        position: relative;
+    }
+
     #mainItemTable .f-row-input {
         border: 1px solid transparent;
         background: transparent;
         padding: 6px;
         font-size: 13px;
         transition: all 0.2s;
+    }
+
+    #mainItemTable .table-responsive {
+        overflow: visible !important;
+    }
+
+    #mainItemTable td:first-child {
+        position: relative;
+        overflow: visible !important;
     }
 
     #mainItemTable tr:hover .f-row-input {
@@ -217,26 +302,123 @@
         border-color: #3b82f6;
         outline: none;
     }
+
+    #stockModal {
+        z-index: 2100 !important;
+    }
+
+    #stockModal .table-responsive {
+        max-height: 400px;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        border: 1px solid #e2e8f0;
+        display: block;
+    }
+
+    #stockModal .modal-footer {
+        z-index: 2101 !important;
+        position: relative;
+        background-color: #ffffff;
+    }
+
+    #stockModal .sticky-top {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background-color: #f8fafc;
+    }
+
+    #stockModal .modal-body {
+        overflow: hidden !important;
+    }
+
+    .modal-backdrop.show:nth-of-type(2) {
+        z-index: 2095 !important;
+    }
+
+    .flatpickr-calendar {
+        width: auto !important;
+    }
+
+    .flatpickr-calendar .has-sidebar {
+        display: flex !important;
+        flex-direction: row;
+        width: auto !important;
+    }
+
+    .flatpickr-innerContainer {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .fp-sidebar {
+        width: 100px;
+        border-left: 1px solid #e2e8f0;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        background: #f8fafc;
+    }
+
+    .fp-sidebar-btn {
+        background: white;
+        border: 1px solid #e2e8f0;
+        padding: 4px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: bold;
+        color: #64748b;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.2s;
+    }
+
+    .fp-sidebar-btn:hover {
+        background: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+    }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
 <script>
-    // Memastikan Helper IDR menggunakan Namespace Global agar tidak redeclare
     window.financeHelpers = window.financeHelpers || {
         formatIDR: (val) => new Intl.NumberFormat('id-ID', {
             style: 'currency',
             currency: 'IDR',
             minimumFractionDigits: 0
         }).format(val),
+        formatNumber: (val) => {
+            if (!val) return "";
+            let num = val.toString().replace(/[^0-9]/g, "");
+            return num.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        },
         unformatIDR: (str) => {
             if (!str) return 0;
             return parseFloat(str.replace(/[^0-9,-]+/g, "").replace(",", "."));
         }
     };
 
+    function formatInput(el) {
+        let rawValue = el.value;
+        el.value = window.financeHelpers.formatNumber(rawValue);
+        calculateInvoiceTotal();
+    }
+
     let productCollection = [],
         mitraCollection = [];
 
-    // Initialize Master Data
+    let tomSelectMitra = null;
+    let fpJatuhTempo;
+    let stockDataTable = null;
+
     async function initializeInvoiceData() {
         try {
             const [mRes, pRes] = await Promise.all([
@@ -248,8 +430,21 @@
 
             const select = document.getElementById('modal_mitra_id');
             select.innerHTML = '<option value="">Cari dan pilih mitra...</option>';
+
             mitraCollection.forEach(m => select.insertAdjacentHTML('beforeend',
                 `<option value="${m.id}">${m.nama}</option>`));
+
+            if (!tomSelectMitra) {
+                tomSelectMitra = new TomSelect('#modal_mitra_id', {
+                    create: false,
+                    sortField: {
+                        field: 'text',
+                        direction: 'asc'
+                    }
+                });
+            } else {
+                tomSelectMitra.sync();
+            }
         } catch (e) {
             console.error("Master data fail", e);
         }
@@ -266,7 +461,6 @@
             document.getElementById('edit_invoice_id').value = id;
 
             try {
-                // Use window.financeApp.API_URL if available, else default
                 const baseUrl = (window.financeApp && window.financeApp.API_URL) ? window.financeApp.API_URL :
                     '/api/invoice-api';
                 const res = await fetch(`${baseUrl}/${id}`);
@@ -283,7 +477,6 @@
                     document.getElementById('modal_diskon_tambahan').value = inv.diskon_tambahan_nilai || 0;
                     renderMitraDetail();
 
-                    // Populate Items
                     if (inv.items && inv.items.length > 0) {
                         inv.items.forEach(it => addNewProductRow(it));
                     } else {
@@ -307,30 +500,40 @@
     }
 
     function addNewProductRow(existing = null) {
-        const rowId = existing ? existing.id : Date.now() + Math.floor(Math.random() * 1000);
+        const rowId = existing && existing.id ? existing.id : 'row_' + Math.random().toString(36).substr(2, 9);
+        const selectId = `select_prod_${rowId}`;
+
+        const priceVal = existing ? window.financeHelpers.formatNumber(existing.harga_satuan) : "0";
+        const discVal = existing ? window.financeHelpers.formatNumber(existing.diskon_nilai) : "0";
+
         let optProd = productCollection.map(p =>
             `<option value="${p.id}" data-price="${p.harga_jual}" ${existing && existing.produk_id == p.id ? 'selected' : ''}>${p.nama_produk}</option>`
         ).join('');
 
-
         const html = `
             <tr id="row_${rowId}">
                 <td class="ps-4">
-                    <select class="form-select f-row-input fw-bold prod-select" onchange="autoFillPrice(${rowId})">
+                    <select id="${selectId}" class="form-select f-row-input fw-bold prod-select" onchange="autoFillPrice(${rowId})">
                         <option value="">Cari Produk...</option>${optProd}
                     </select>
-                    <input type="text" class="form-control f-row-input small text-muted prod-desc" value="${existing?.deskripsi_produk || ''}" placeholder="Tambahkan deskripsi (opsional)">
+                    <input type="text" class="form-control f-row-input small text-muted prod-desc mt-2" value="${existing?.deskripsi_produk || ''}" placeholder="Tambahkan deskripsi (opsional)">
                 </td>
                 <td><input type="number" class="form-control f-row-input text-center fw-bold prod-qty" value="${existing ? parseFloat(existing.qty) : 1}" oninput="calculateInvoiceTotal()"></td>
-                <td><input type="number" class="form-control f-row-input text-end prod-price" value="${existing ? parseFloat(existing.harga_satuan) : 0}" oninput="calculateInvoiceTotal()"></td>
-                <td><input type="number" class="form-control f-row-input text-end prod-disc" value="${existing ? parseFloat(existing.diskon_nilai) : 0}" oninput="calculateInvoiceTotal()"></td>
+                <td><input type="number" class="form-control f-row-input text-end prod-price" value="${priceVal}" oninput="calculateInvoiceTotal()"></td>
+                <td><input type="number" class="form-control f-row-input text-end prod-disc" value="${discVal}" oninput="calculateInvoiceTotal()"></td>
                 <td class="text-end pe-4 fw-bold f-mono prod-subtotal">Rp 0</td>
                 <td class="text-center"><button type="button" class="btn btn-link text-danger p-0" onclick="removeRow('${rowId}')"><i class="fa fa-times-circle"></i></button></td>
             </tr>`;
         document.getElementById('itemBodyList').insertAdjacentHTML('beforeend', html);
 
-        // Calculate initial total for this row
-        // Give slight delay or immediate call
+        const ts = new TomSelect(`#${selectId}`, {
+            create: false,
+            placeholder: 'Cari Produk...',
+            onChange: function() {
+                autoFillPrice(rowId);
+            }
+        });
+
         if (existing || true) calculateInvoiceTotal();
     }
 
@@ -346,6 +549,153 @@
         const price = sel.options[sel.selectedIndex].dataset.price || 0;
         row.querySelector('.prod-price').value = price;
         calculateInvoiceTotal();
+    }
+
+    function openStockModal() {
+        const modalElement = document.getElementById('stockModal');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+        const body = document.getElementById('stockBodyList');
+
+        if (stockDataTable) {
+            stockDataTable.destroy();
+            stockDataTable = null;
+        }
+
+        body.innerHTML = '';
+
+        productCollection.forEach(p => {
+            const currentStock = p.qty || 0;
+            const trackLabel = p.track_stock == 0 ? 'Tidak' : 'Ya';
+            const priceFormatted = window.financeHelpers.formatIDR(p.harga_jual);
+
+            body.insertAdjacentHTML('beforeend', `
+            <tr>
+                <td class="ps-3">
+                    <input type="checkbox" class="form-check-input stock-checkbox" value="${p.id}" 
+                        data-name="${p.nama_produk}" data-price="${p.harga_jual}">
+                </td>
+                <td><code class="text-primary fw-bold">${p.sku_kode}</code></td>
+                <td><span class="fw-bold text-dark">${p.nama_produk}</span></td>
+                <td><span class="badge bg-light text-secondary border">${p.category.nama_kategori}</span></td>
+                <td class="text-center">
+                    <span class="badge ${currentStock > 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} border">
+                        ${currentStock}
+                    </span>
+                </td>
+                <td class="text-end fw-bold" data-order="${p.harga_jual}">${priceFormatted}</td>
+                <td class="text-center">${trackLabel}</td>
+                <td class="small text-muted">${p.unit.keterangan || '-'}</td>
+            </tr>
+        `);
+        });
+
+        modal.show();
+
+        modalElement.addEventListener('shown.bs.modal', function() {
+            initStockDataTable();
+        }, {
+            once: true
+        });
+    }
+
+    function initStockDataTable() {
+        $.fn.dataTable.ext.search = [];
+
+        stockDataTable = $('#stockTable').DataTable({
+            paging: true,
+            ordering: true,
+            info: true,
+            autoWidth: false,
+            dom: 'rtip',
+            columnDefs: [{
+                orderable: false,
+                targets: [0, 6, 7]
+            }, {
+                type: 'num',
+                targets: 5
+            }]
+        });
+
+        $('.col-filter').on('keyup change', function() {
+            const colIndex = $(this).data('col');
+            stockDataTable.column(colIndex).search(this.value).draw();
+        });
+    }
+
+    function filterStockTable() {
+        const rawInput = document.getElementById('searchStock').value.toLowerCase();
+        const cleanedInput = rawInput.replace(/\./g, '');
+        const rows = document.querySelectorAll('#stockBodyList tr');
+
+        rows.forEach(row => {
+            const originalText = row.innerText.toLowerCase();
+            const cleanedText = originalText.replace(/\./g, '');
+
+            if (originalText.includes(rawInput) || cleanedText.includes(cleanedInput)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    function resetStockFilter() {
+        document.getElementById('searchStock').value = '';
+        const rows = document.querySelectorAll('#stockBodyList tr');
+        rows.forEach(row => row.style.display = '');
+    }
+
+    function toggleAllStock(source) {
+        const checkboxes = document.querySelectorAll('.stock-checkbox');
+        checkboxes.forEach(cb => cb.checked = source.checked);
+    }
+
+    function addSelectedStockToInvoice() {
+        const selected = document.querySelectorAll('.stock-checkbox:checked');
+
+        if (selected.length === 0) {
+            alert('Silakan pilih minimal satu produk!');
+            return;
+        }
+
+        const currentRows = document.querySelectorAll('#itemBodyList tr');
+        if (currentRows.length === 1) {
+            const firstSelect = currentRows[0].querySelector('.prod-select');
+            if (firstSelect && !firstSelect.value) {
+                currentRows[0].remove();
+            }
+        }
+
+        selected.forEach(cb => {
+            const productId = cb.value;
+            let existingRow = null;
+
+            document.querySelectorAll('#itemBodyList tr').forEach(row => {
+                const selectElement = row.querySelector('.prod-select');
+                if (selectElement && selectElement.value == productId) {
+                    existingRow = row;
+                }
+            });
+
+            if (existingRow) {
+                const qtyInput = existingRow.querySelector('.prod-qty');
+                qtyInput.value = parseFloat(qtyInput.value) + 1;
+            } else {
+                const itemData = {
+                    produk_id: productId,
+                    harga_satuan: cb.getAttribute('data-price'),
+                    qty: 1,
+                    diskon_nilai: 0
+                };
+                addNewProductRow(itemData);
+            }
+        });
+
+        document.getElementById('checkAllStock').checked = false;
+        calculateInvoiceTotal();
+
+        const modalStock = document.getElementById('stockModal');
+        bootstrap.Modal.getInstance(modalStock).hide();
     }
 
     function calculateInvoiceTotal() {
@@ -379,6 +729,15 @@
 
     function resetModalForm() {
         document.getElementById('invoiceForm').reset();
+
+        if (tomSelectMitra) {
+            tomSelectMitra.clear();
+        }
+
+        if (fpJatuhTempo) {
+            fpJatuhTempo.setDate(new Date());
+        }
+
         document.getElementById('itemBodyList').innerHTML = '';
         document.getElementById('mitra_detail_display').innerHTML =
             `<i class="fa fa-info-circle me-2 text-primary"></i>Detail muncul otomatis.`;
@@ -390,7 +749,6 @@
         const mode = document.getElementById('form_mode').value;
         const id = document.getElementById('edit_invoice_id').value;
 
-        // Prepare Payload
         const payload = {
             invoice: {
                 tipe_invoice: 'Sales',
@@ -404,7 +762,6 @@
                 diskon_tambahan_nilai: parseFloat(document.getElementById('modal_diskon_tambahan').value) || 0,
                 total_akhir: parseFloat(document.getElementById('summary_grand_total').innerText.replace(
                     /[^0-9,-]+/g, "").replace(",", ".")) || 0,
-                // Basic Defaults
                 status_dok: 'Approved',
                 status_pembayaran: 'Unpaid',
                 biaya_kirim: 0,
@@ -413,7 +770,6 @@
             items: []
         };
 
-        // Validate basic fields
         if (!payload.invoice.mitra_id) {
             alert('Harap pilih Mitra!');
             return;
@@ -467,7 +823,7 @@
             if (result.success) {
                 alert('Dokumen berhasil disimpan!');
                 bootstrap.Modal.getInstance(document.getElementById('invoiceModal')).hide();
-                if (typeof loadInvoiceData === 'function') loadInvoiceData(); // Reload table
+                if (typeof loadInvoiceData === 'function') loadInvoiceData();
             } else {
                 alert('Gagal menyimpan: ' + (result.message || JSON.stringify(result.errors)));
             }
@@ -477,6 +833,53 @@
         }
     }
 
-    // Load Data on Start
-    document.addEventListener('DOMContentLoaded', initializeInvoiceData);
+    function addDaysToDueDate(days) {
+        const tglTerbit = document.getElementById('modal_tgl_invoice').value;
+
+        if (!tglTerbit) {
+            alert('Isi tanggal terbit terlebih dahulu');
+            return;
+        }
+
+        const date = new Date(tglTerbit);
+        date.setDate(date.getDate() + days);
+
+        fpJatuhTempo.setDate(date);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeInvoiceData();
+
+        fpJatuhTempo = flatpickr('#modal_tgl_jatuh_tempo', {
+            altInput: true,
+            altFormat: 'd/m/Y',
+            dateFormat: 'Y-m-d',
+            defaultDate: 'today',
+            minDate: 'today',
+            allowInput: true,
+            disableMobile: "true",
+            onReady: function(selectedDates, dateStr, instance) {
+                const sidebar = document.createElement('div');
+                sidebar.classList.add('fp-sidebar');
+
+                const dueAddDays = [0, 3, 7, 14, 30, 45, 60];
+
+                dueAddDays.forEach(days => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.classList.add('fp-sidebar-btn');
+                    btn.innerHTML = days === 0 ? 'HARI INI' : `+${days} HARI`;
+
+                    btn.addEventListener('click', () => {
+                        addDaysToDueDate(days);
+                        instance.close();
+                    });
+
+                    sidebar.appendChild(btn);
+                })
+
+                instance.innerContainer.appendChild(sidebar);
+            }
+        });
+    });
 </script>
