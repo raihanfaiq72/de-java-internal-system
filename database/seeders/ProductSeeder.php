@@ -16,9 +16,9 @@ class ProductSeeder extends Seeder
         $faker = Faker::create();
         
         // Ambil atau buat ID yang diperlukan
-        $catId = DB::table('unit_categories')->insertGetId(['nama_kategori' => 'Unit', 'konversi_nilai' => 1]);
-        $unitId = DB::table('units')->insertGetId(['unit_category_id' => $catId, 'nama_unit' => 'Pcs', 'simbol' => 'Pcs']);
-        $prodCatId = DB::table('product_categories')->insertGetId(['nama_kategori' => 'General', 'deskripsi' => 'Testing']);
+        $catId = DB::table('unit_categories')->insertGetId(['nama_kategori' => 'Unit', 'konversi_nilai' => 1, 'office_id' => 1]);
+        $unitId = DB::table('units')->insertGetId(['unit_category_id' => $catId, 'nama_unit' => 'Pcs', 'simbol' => 'Pcs', 'office_id' => 1]);
+        $prodCatId = DB::table('product_categories')->insertGetId(['nama_kategori' => 'General', 'deskripsi' => 'Testing', 'office_id' => 1]);
         $akunId = DB::table('chart_of_accounts')->first()->id ?? 1;
 
         $totalData = 3000;
@@ -28,6 +28,7 @@ class ProductSeeder extends Seeder
         for ($i = 1; $i <= $totalData; $i++) {
             $data[] = [
                 // MENGGUNAKAN PAD UNTUK MENJAMIN KEUNIKAN: PROD-00001, PROD-00002, dst.
+                'office_id' => 1,
                 'sku_kode' => 'PROD-' . str_pad($i, 5, '0', STR_PAD_LEFT), 
                 'nama_produk' => 'Produk Test ' . $i,
                 'product_category_id' => $prodCatId,

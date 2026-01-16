@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('stock_mutations', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
             $table->foreignId('product_id')->constrained('products');
             $table->enum('type', ['IN', 'OUT', 'ADJUSTMENT']);
             $table->decimal('qty', 15, 2);

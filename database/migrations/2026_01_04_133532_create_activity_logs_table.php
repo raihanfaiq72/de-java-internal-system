@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('activity_logs', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
             $table->integer('user_id');
             $table->string('tindakan', 50);
             $table->string('tabel_terkait', 50);

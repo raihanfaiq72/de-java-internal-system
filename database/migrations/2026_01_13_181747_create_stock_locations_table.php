@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('stock_locations', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
             $table->string('name');
             $table->string('type')->default('stock'); // stock, virtual, etc.
             $table->boolean('is_active')->default(true);

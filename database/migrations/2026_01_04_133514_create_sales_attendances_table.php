@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('sales_attendances', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
             $table->integer('user_id');
             $table->date('tgl_presensi');
             $table->time('jam_masuk')->nullable();
