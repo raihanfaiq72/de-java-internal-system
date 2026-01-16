@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('mitras', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
             $table->string('nomor_mitra', 50)->unique()->nullable();
             $table->string('badan_usaha', 20)->nullable();
             $table->string('nama', 150);

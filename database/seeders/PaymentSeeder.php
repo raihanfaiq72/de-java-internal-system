@@ -15,6 +15,7 @@ class PaymentSeeder extends Seeder
         $data = [];
         foreach ($invoices as $inv) {
             $data[] = [
+                'office_id' => 1,
                 'invoice_id' => $inv->id,
                 'nomor_pembayaran' => 'PYM-' . rand(1000, 9999) . $inv->id,
                 'tgl_pembayaran' => now(),

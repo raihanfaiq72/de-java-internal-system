@@ -18,12 +18,14 @@ class AccountingLogSeeder extends Seeder
         
         for ($i = 1; $i <= 3000; $i++) {
             $journals[] = [
+                'office_id' => 1,
                 'tgl_jurnal' => now(),
                 'keterangan' => 'Jurnal Otomatis Sistem ' . $i,
                 'created_at' => now()
             ];
 
             $logs[] = [
+                'office_id' => 1,
                 'user_id' => 1,
                 'tindakan' => 'Create',
                 'tabel_terkait' => 'invoices',

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
             $table->enum('tipe_invoice', ['Sales', 'Purchase']);
             $table->string('logo_img')->nullable();
             $table->string('nomor_invoice', 100)->unique();

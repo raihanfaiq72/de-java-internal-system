@@ -24,6 +24,7 @@ class ChartOfAccountSeeder extends Seeder
         $data = [];
         foreach ($baseAccounts as $acc) {
             $data[] = [
+                'office_id' => 1,
                 'kode_akun' => $acc[0],
                 'nama_akun' => $acc[1],
                 'kelompok_akun' => $acc[2],
@@ -36,6 +37,7 @@ class ChartOfAccountSeeder extends Seeder
         // Tambah 3000 akun dummy untuk test performa
         for ($i = 1; $i <= 3000; $i++) {
             $data[] = [
+                'office_id' => 1,
                 'kode_akun' => '9' . str_pad($i, 4, '0', STR_PAD_LEFT),
                 'nama_akun' => 'Akun Beban Pengujian ' . $i,
                 'kelompok_akun' => 'Beban',

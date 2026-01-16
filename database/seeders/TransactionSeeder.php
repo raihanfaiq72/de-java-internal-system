@@ -19,8 +19,13 @@ class TransactionSeeder extends Seeder
         }
 
         DB::table('taxes')->updateOrInsert(
-            ['nama_pajak' => 'PPN 11%'],
-            ['persentase' => 11, 'tipe_pajak' => 'Exclusive']
+            ['office_id' => 1, 'nama_pajak' => 'PPN 11%'], // Cari berdasarkan kantor dan nama
+            [
+                'persentase' => 11,
+                'tipe_pajak' => 'Exclusive',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]
         );
 
         $totalData = 3000;
@@ -28,6 +33,7 @@ class TransactionSeeder extends Seeder
 
         for ($i = 1; $i <= $totalData; $i++) {
             $invId = DB::table('invoices')->insertGetId([
+                'office_id' => 1,
                 'tipe_invoice' => 'Sales',
                 'nomor_invoice' => 'INV/2026/' . str_pad($i, 5, '0', STR_PAD_LEFT),
                 'tgl_invoice' => now()->subDays(rand(1, 30)),
@@ -55,6 +61,7 @@ class TransactionSeeder extends Seeder
 
             if ($i <= 1000) {
                 DB::table('expenses')->insert([
+                    'office_id' => 1,
                     'akun_keuangan_id' => $akunKas,
                     'nama_biaya' => 'Biaya Operasional ' . $i,
                     'akun_beban_id' => $akunBeban,

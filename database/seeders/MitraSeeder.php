@@ -17,6 +17,7 @@ class MitraSeeder extends Seeder
         $data = [];
         for ($i = 1; $i <= 3000; $i++) {
             $data[] = [
+                'office_id' => 1,
                 'nomor_mitra' => 'MTR-' . str_pad($i, 5, '0', STR_PAD_LEFT),
                 'badan_usaha' => $faker->randomElement(['PT', 'CV', 'UD']),
                 'nama' => $faker->company,

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('units', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
             $table->foreignId('unit_category_id')
                 ->constrained('unit_categories');
             $table->string('nama_unit', 50);

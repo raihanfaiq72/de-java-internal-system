@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
             $table->string('sku_kode', 50)->unique();
             $table->string('nama_produk', 255);
             $table->text('deskripsi_produk')->nullable();

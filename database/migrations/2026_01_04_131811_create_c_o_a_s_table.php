@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('chart_of_accounts', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
             $table->string('kode_akun', 20)->unique();
             $table->string('nama_akun', 100);
             $table->enum('kelompok_akun', [
