@@ -19,7 +19,8 @@
                         <button class="btn btn-white border fw-bold px-3 me-2 shadow-sm text-dark">
                             <i class="fa fa-file-excel me-1 text-success"></i> Export .xls
                         </button>
-                        <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openInvoiceModal()">
+                        <button class="btn btn-primary fw-bold px-4 shadow-sm"
+                            onclick="openInvoiceModal(null, null, 'create')">
                             <i class="fa fa-plus-circle me-1"></i> Buat Invoice Baru
                         </button>
                     </div>
@@ -78,61 +79,91 @@
                             <div class="tab-pane active" id="invoice-active">
 
                                 <!-- Filter Section -->
-                                <div class="row g-2 mb-4 p-3 rounded-3 align-items-end bg-light border">
-                                    <div class="col-lg-3">
-                                        <label class="f-label">Pencarian</label>
-                                        <div class="input-group input-group-finance">
-                                            <span class="input-group-text bg-white border-end-0"><i
-                                                    class="fa fa-search text-muted"></i></span>
-                                            <input type="text" id="filter-search"
-                                                class="form-control border-start-0 ps-0 shadow-none"
-                                                placeholder="No. Invoice / Mitra...">
+                                <div class="mb-4 p-3 rounded-3 bg-light border">
+                                    <div class="row g-2 mb-4 rounded-3 align-items-end bg-light border">
+                                        <div class="col-lg-3">
+                                            <label class="f-label">Pencarian</label>
+                                            <div class="input-group input-group-finance">
+                                                <span class="input-group-text bg-white border-end-0"><i
+                                                        class="fa fa-search text-muted"></i></span>
+                                                <input type="text" id="filter-search"
+                                                    class="form-control border-start-0 ps-0 shadow-none"
+                                                    placeholder="No. Invoice / Mitra...">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-2">
+                                            <label class="f-label">Status Dokumen</label>
+                                            <select id="filter-status-dok" class="tom-select-init">
+                                                @php
+                                                    $documentStatus = [
+                                                        'Draft',
+                                                        'Sent',
+                                                        'Failed',
+                                                        'Approved',
+                                                        'Rejected',
+                                                    ];
+                                                @endphp
+                                                <option value="">Semua</option>
+                                                @foreach ($documentStatus as $doc)
+                                                    <option value="{{ $doc }}">{{ $doc }} </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-lg-2">
+                                            <label class="f-label">Status Pembayaran</label>
+                                            <select id="filter-status-bayar" class="tom-select-init">
+                                                @php
+                                                    $paymentStatus = [
+                                                        'Draft' => 'Draft',
+                                                        'Unpaid' => 'Belum',
+                                                        'Overdue' => 'Lewat Jatuh Tempo',
+                                                        'Paid' => 'Lunas',
+                                                        'Partially Paid' => 'Sebagian',
+                                                    ];
+                                                @endphp
+                                                <option value="">Semua</option>
+                                                @foreach ($paymentStatus as $value => $display)
+                                                    <option value="{{ $value }}">{{ $display }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-lg-5 text-end">
+                                            <div id="bulk-action-area" class="d-none d-inline-block me-2">
+                                                <span class="small text-muted me-2 selected-count">0 terpilih</span>
+                                                <button class="btn btn-outline-danger fw-bold py-2 px-3 shadow-sm btn-sm"
+                                                    onclick="bulkDelete()">
+                                                    <i class="fa fa-trash-can me-1"></i> HAPUS
+                                                </button>
+                                            </div>
+                                            <button onclick="loadInvoiceData()"
+                                                class="btn btn-dark fw-bold py-2 px-4 shadow-sm btn-sm">FILTER</button>
+                                            <button onclick="resetFilter()"
+                                                class="btn btn-light border fw-bold text-dark py-2 btn-sm">RESET</button>
                                         </div>
                                     </div>
-                                    <div class="col-lg-2">
-                                        <label class="f-label">Status Dokumen</label>
-                                        <select id="filter-status-dok" class="tom-select-init">
-                                            @php
-                                                $documentStatus = ['Draft', 'Sent', 'Failed', 'Approved', 'Rejected'];
-                                            @endphp
-                                            <option value="">Semua</option>
-                                            @foreach ($documentStatus as $doc)
-                                                <option value="{{ $doc }}">{{ $doc }} </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-lg-2">
-                                        <label class="f-label">Status Pembayaran</label>
-                                        <select id="filter-status-bayar" class="tom-select-init">
-                                            @php
-                                                $paymentStatus = [
-                                                    'Draft' => 'Draft',
-                                                    'Unpaid' => 'Belum',
-                                                    'Overdue' => 'Lewat Jatuh Tempo',
-                                                    'Paid' => 'Lunas',
-                                                    'Partially Paid' => 'Sebagian',
-                                                ];
-                                            @endphp
-                                            <option value="">Semua</option>
-                                            @foreach ($paymentStatus as $value => $display)
-                                                <option value="{{ $value }}">{{ $display }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-lg-5 text-end">
-                                        <div id="bulk-action-area" class="d-none d-inline-block me-2">
-                                            <span class="small text-muted me-2 selected-count">0 terpilih</span>
-                                            <button class="btn btn-outline-danger fw-bold py-2 px-3 shadow-sm btn-sm"
-                                                onclick="bulkDelete()">
-                                                <i class="fa fa-trash-can me-1"></i> HAPUS
-                                            </button>
+
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-lg-3">
+                                            <label class="f-label">Pemasok / Mitra</label>
+                                            <select id="filter-mitra-id" class="tom-select-init">
+                                                <option value="">Semua Pemasok...</option>
+                                            </select>
                                         </div>
-                                        <button onclick="loadInvoiceData()"
-                                            class="btn btn-dark fw-bold py-2 px-4 shadow-sm btn-sm">FILTER</button>
-                                        <button onclick="resetFilter()"
-                                            class="btn btn-light border fw-bold text-dark py-2 btn-sm">RESET</button>
+                                        <div class="col-lg-2">
+                                            <label class="f-label">Tanggal Invoice</label>
+                                            <input type="date" id="filter-tgl-invoice"
+                                                class="form-control shadow-none"
+                                                style="font-size: 13px; padding: 0.55rem;">
+                                        </div>
+                                        <div class="col-lg-2">
+                                            <label class="f-label">Tanggal Jatuh Tempo</label>
+                                            <input type="date" id="filter-tgl-jatuh-tempo"
+                                                class="form-control shadow-none"
+                                                style="font-size: 13px; padding: 0.55rem;">
+                                        </div>
                                     </div>
                                 </div>
+
 
                                 <!-- Table Structure for Perfect Alignment -->
                                 <div class="table-responsive">
@@ -323,6 +354,32 @@
             };
         }
 
+        let masterMitra = [];
+
+        async function initializeMasterData() {
+            try {
+                const [mitraRes] = await Promise.all([
+                    fetch('/api/mitra-api').then(r => r.json())
+                ]);
+
+                if (mitraRes.success) {
+                    masterMitra = mitraRes.data.data || mitraRes.data;
+                    const selectFilter = document.getElementById('filter-mitra-id');
+
+                    masterMitra.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.id;
+                        opt.textContent = m.nama;
+                        selectFilter.appendChild(opt);
+                    });
+
+                    if (tomSelectMitraIndex) tomSelectMitraIndex.sync();
+                }
+            } catch (error) {
+                alert('Gagal memuat data master:', error);
+            }
+        }
+
         async function loadInvoiceData(url = window.financeApp.API_URL) {
             const tbody = document.getElementById('invoiceTableBody');
             tbody.innerHTML =
@@ -335,7 +392,10 @@
                     tipe_invoice: 'Sales',
                     search: document.getElementById('filter-search').value,
                     status_dok: document.getElementById('filter-status-dok').value,
-                    status_pembayaran: document.getElementById('filter-status-bayar').value
+                    status_pembayaran: document.getElementById('filter-status-bayar').value,
+                    mitra_id: document.getElementById('filter-mitra-id').value,
+                    tgl_invoice: document.getElementById('filter-tgl-invoice').value,
+                    tgl_jatuh_tempo: document.getElementById('filter-tgl-jatuh-tempo').value
                 });
 
                 const response = await fetch(`${finalUrl}${finalUrl.includes('?') ? '&' : '?'}${params.toString()}`);
@@ -402,7 +462,8 @@
                     `Due: ${window.financeApp.formatDate(item.tgl_jatuh_tempo)}`;
 
                 // Aksi
-                row.querySelector('.btn-edit').onclick = () => openInvoiceModal(item.id);
+                row.querySelector('.btn-show').onclick = () => openInvoiceModal(item.id, null, 'show');
+                row.querySelector('.btn-edit').onclick = () => openInvoiceModal(item.id, null, 'edit');
                 row.querySelector('.btn-delete').onclick = () => deleteInvoice(item.id);
                 row.querySelector('.btn-print').href = `{{ url('sales/print') }}/${item.id}`;
 
@@ -493,14 +554,18 @@
 
         function resetFilter() {
             document.getElementById('filter-search').value = '';
+            document.getElementById('filter-tgl-invoice').value = '';
+            document.getElementById('filter-tgl-jatuh-tempo').value = '';
+
             document.querySelectorAll('.tom-select-init').forEach(s => {
                 s.tomselect?.clear();
                 s.tomselect?.setValue('');
             });
+
             loadInvoiceData();
         }
 
-        let tomSelectPaymentStatus, tomSelectDocumentStatus;
+        let tomSelectPaymentStatus, tomSelectDocumentStatus, tomSelectMitraIndex;
 
         function initFilters() {
             tomSelectDocumentStatus = new TomSelect('#filter-status-dok', {
@@ -513,6 +578,12 @@
                 allowEmptyOption: true,
             });
 
+            tomSelectMitraIndex = new TomSelect('#filter-mitra-id', {
+                create: false,
+                allowEmptyOption: true,
+                placeholder: 'Cari Pemasok / Mitra ...'
+            })
+
             const searchInput = document.getElementById('filter-search');
             searchInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
@@ -522,8 +593,9 @@
             });
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             initFilters();
+            await initializeMasterData();
             loadInvoiceData();
         });
     </script>

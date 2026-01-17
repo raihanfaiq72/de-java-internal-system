@@ -416,6 +416,7 @@
         mitraCollection = [];
 
     let tomSelectMitra = null;
+    let tomSelectSales = null;
     let fpJatuhTempo;
     let stockDataTable = null;
 
@@ -427,12 +428,7 @@
             ]);
             mitraCollection = mRes.data.data || mRes.data;
             productCollection = pRes.data.data || pRes.data;
-
-            const select = document.getElementById('modal_mitra_id');
-            select.innerHTML = '<option value="">Cari dan pilih mitra...</option>';
-
-            mitraCollection.forEach(m => select.insertAdjacentHTML('beforeend',
-                `<option value="${m.id}">${m.nama}</option>`));
+            salesCollection = [];
 
             if (!tomSelectMitra) {
                 tomSelectMitra = new TomSelect('#modal_mitra_id', {
@@ -442,29 +438,69 @@
                         direction: 'asc'
                     }
                 });
-            } else {
-                tomSelectMitra.sync();
             }
+
+            if (!tomSelectSales) {
+                tomSelectSales = new TomSelect('#modal_sales_id', {
+                    create: false,
+                    sortField: {
+                        field: 'text',
+                        direction: 'asc'
+                    }
+                });
+            }
+
+            tomSelectMitra.clearOptions();
+            mitraCollection.forEach(m => {
+                tomSelectMitra.addOption({
+                    value: m.id,
+                    text: m.nama
+                });
+            });
+            tomSelectMitra.refreshOptions(false);
+
+            tomSelectSales.clearOptions();
+            tomSelectSales.refreshOptions(false);
         } catch (e) {
             console.error("Master data fail", e);
         }
     }
 
-    async function openInvoiceModal(id = null, event = null) {
+    async function openInvoiceModal(id = null, event = null, mode = 'create') {
         if (event) event.stopPropagation();
-        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('invoiceModal'));
-        resetModalForm();
 
-        if (id) {
-            document.getElementById('modalTitle').innerText = 'Edit Invoice Penjualan';
-            document.getElementById('form_mode').value = 'edit';
-            document.getElementById('edit_invoice_id').value = id;
+        const modalElement = document.getElementById('invoiceModal');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+        const saveBtn = document.querySelector('button[onclick="saveFullInvoice()"]');
+
+        resetModalForm();
+        document.getElementById('form_mode').value = mode;
+        document.getElementById('edit_invoice_id').value = id || '';
+
+        if (mode === 'create') {
+            document.getElementById('modalTitle').innerText = 'Buat Invoice Penjualan';
+            saveBtn.classList.remove('d-none');
+            toggleReadOnly(false);
+
+            document.getElementById('modal_nomor_invoice').value =
+                `INV/${new Date().getFullYear()}/${Date.now().toString().slice(-4)}`;
+            document.getElementById('modal_tgl_invoice').valueAsDate = new Date();
+            addNewProductRow();
+            modal.show();
+        } else {
+            document.getElementById('modalTitle').innerText = (mode === 'show') ?
+                'Rincian Invoice Penjualan' :
+                'Edit Invoice Penjualan';
+
+            (mode === 'show') ? saveBtn.classList.add('d-none'): saveBtn.classList.remove('d-none');
+            toggleReadOnly(mode === 'show');
 
             try {
                 const baseUrl = (window.financeApp && window.financeApp.API_URL) ? window.financeApp.API_URL :
                     '/api/invoice-api';
                 const res = await fetch(`${baseUrl}/${id}`);
                 const result = await res.json();
+
                 if (result.success) {
                     const inv = result.data;
                     document.getElementById('modal_nomor_invoice').value = inv.nomor_invoice;
@@ -475,79 +511,147 @@
                     document.getElementById('modal_keterangan').value = inv.keterangan;
                     document.getElementById('modal_syarat').value = inv.syarat_ketentuan;
                     document.getElementById('modal_diskon_tambahan').value = inv.diskon_tambahan_nilai || 0;
+
+                    if (fpJatuhTempo) fpJatuhTempo.setDate(inv.tgl_jatuh_tempo);
+
+                    if (tomSelectMitra) {
+                        if (mode === 'show' && !inv.mitra_id) {
+                            tomSelectMitra.clear();
+                            tomSelectMitra.addOption({
+                                value: '',
+                                text: 'Belum ada data'
+                            });
+                            tomSelectMitra.setValue('');
+                            console.log(`tomSelectMitra: ${tomSelectMitra}`);
+                        } else {
+                            tomSelectMitra.setValue(inv.mitra_id);
+                        }
+                    }
                     renderMitraDetail();
 
+                    if (tomSelectSales) {
+                        if (mode === 'show' && !inv.sales_id) {
+                            tomSelectSales.clear();
+                            tomSelectSales.addOption({
+                                value: '',
+                                text: 'Belum ada data'
+                            });
+                            tomSelectSales.setValue('');
+                        } else {
+                            tomSelectSales.setValue(inv.sales_id);
+                        }
+                    }
+
                     if (inv.items && inv.items.length > 0) {
-                        inv.items.forEach(it => addNewProductRow(it));
-                    } else {
-                        addNewProductRow();
+                        inv.items.forEach(it => addNewProductRow(it, mode === 'show'));
                     }
                     calculateInvoiceTotal();
+                    modal.show();
                 }
             } catch (e) {
                 console.error("Edit fetch fail", e);
                 alert('Gagal mengambil data invoice.');
             }
-        } else {
-            document.getElementById('modalTitle').innerText = 'Buat Invoice Baru';
-            document.getElementById('form_mode').value = 'create';
-            document.getElementById('modal_nomor_invoice').value =
-                `INV/${new Date().getFullYear()}/${Date.now().toString().slice(-4)}`;
-            document.getElementById('modal_tgl_invoice').valueAsDate = new Date();
-            addNewProductRow();
         }
-        modal.show();
     }
 
-    function addNewProductRow(existing = null) {
+    function toggleReadOnly(isReadOnly) {
+        const form = document.getElementById('invoiceForm');
+        const allInputs = form.querySelectorAll('input, textarea, select');
+
+        allInputs.forEach(input => {
+            if (!['form_mode', 'edit_invoice_id'].includes(input.id)) {
+                input.disabled = isReadOnly;
+                if (isReadOnly) {
+                    if (input.placeholder) input.dataset.oldPlaceholder = input.placeholder;
+                    input.placeholder = '';
+                } else if (input.dataset.oldPlaceholder) {
+                    input.placeholder = input.dataset.oldPlaceholder;
+                }
+            }
+        });
+
+        if (tomSelectMitra) {
+            isReadOnly ? tomSelectMitra.disable() : tomSelectMitra.enable();
+        }
+
+        if (tomSelectSales) {
+            isReadOnly ? tomSelectSales.disable() : tomSelectSales.enable();
+        }
+    }
+
+    const valOrDash = (val, mode) => (mode === 'show' && (val === null || val === '' || val === undefined)) ? '-' : (
+        val ?? '');
+
+    function addNewProductRow(existing = null, isReadOnly = false, mode = 'edit') {
         const rowId = existing && existing.id ? existing.id : 'row_' + Math.random().toString(36).substr(2, 9);
         const selectId = `select_prod_${rowId}`;
 
-        const priceVal = existing ? window.financeHelpers.formatNumber(existing.harga_satuan) : "0";
-        const discVal = existing ? window.financeHelpers.formatNumber(existing.diskon_nilai) : "0";
+        const priceVal = existing ? existing.harga_satuan : 0;
+        const discVal = existing ? existing.diskon_nilai : 0;
+        const qtyVal = existing ? parseInt(existing.qty) : (mode === 'create' ? 1 : 0);
 
         let optProd = productCollection.map(p =>
             `<option value="${p.id}" data-price="${p.harga_jual}" ${existing && existing.produk_id == p.id ? 'selected' : ''}>${p.nama_produk}</option>`
         ).join('');
 
         const html = `
-            <tr id="row_${rowId}">
+            <tr id="${rowId}">
                 <td class="ps-4">
-                    <select id="${selectId}" class="form-select f-row-input fw-bold prod-select" onchange="autoFillPrice(${rowId})">
+                    <select id="${selectId}" class="form-select f-row-input prod-select" ${isReadOnly ? 'disabled' : ''} onchange="autoFillPrice(${rowId})">
                         <option value="">Cari Produk...</option>${optProd}
                     </select>
-                    <input type="text" class="form-control f-row-input small text-muted prod-desc mt-2" value="${existing?.deskripsi_produk || ''}" placeholder="Tambahkan deskripsi (opsional)">
+                    <input type="text" class="form-control f-row-input small text-muted prod-desc mt-2" 
+                        value="${existing?.deskripsi_produk || ''}" placeholder="${isReadOnly ? 'Belum ada data': 'Tambahkan deskripsi...'}" ${isReadOnly ? 'disabled' : ''}>
                 </td>
-                <td><input type="number" class="form-control f-row-input text-center fw-bold prod-qty" value="${existing ? parseFloat(existing.qty) : 1}" oninput="calculateInvoiceTotal()"></td>
-                <td><input type="number" class="form-control f-row-input text-end prod-price" value="${priceVal}" oninput="calculateInvoiceTotal()"></td>
-                <td><input type="number" class="form-control f-row-input text-end prod-disc" value="${discVal}" oninput="calculateInvoiceTotal()"></td>
+                <td><input type="number" class="form-control f-row-input text-center fw-bold prod-qty" 
+                    value="${qtyVal}" oninput="calculateInvoiceTotal()" ${isReadOnly ? 'disabled' : ''}></td>
+                <td><input type="number" class="form-control f-row-input text-end prod-price" 
+                    value="${priceVal}" oninput="calculateInvoiceTotal()" ${isReadOnly ? 'disabled' : ''}></td>
+                <td><input type="number" class="form-control f-row-input text-end prod-disc" 
+                    value="${discVal}" oninput="calculateInvoiceTotal()" ${isReadOnly ? 'disabled' : ''}></td>
                 <td class="text-end pe-4 fw-bold f-mono prod-subtotal">Rp 0</td>
-                <td class="text-center"><button type="button" class="btn btn-link text-danger p-0" onclick="removeRow('${rowId}')"><i class="fa fa-times-circle"></i></button></td>
+                <td class="text-center">
+                    ${!isReadOnly ? `<button type="button" class="btn btn-link text-danger p-0" onclick="removeRow('${rowId}')"><i class="fa fa-times-circle"></i></button>` : ''}
+                </td>
             </tr>`;
         document.getElementById('itemBodyList').insertAdjacentHTML('beforeend', html);
 
         const ts = new TomSelect(`#${selectId}`, {
             create: false,
-            placeholder: 'Cari Produk...',
-            onChange: function() {
-                autoFillPrice(rowId);
+            placeholder: isReadOnly ? '' : 'Cari Produk...',
+            onChange: function(val) {
+                autoFillPrice(rowId, val);
             }
         });
 
-        if (existing || true) calculateInvoiceTotal();
+        if (existing) ts.setValue(existing.produk_id);
+        if (isReadOnly) ts.disable();
+
+        calculateInvoiceTotal();
     }
 
-    function removeRow(id) {
-        const row = document.getElementById(`row_${id}`);
+    function removeRow(rowId) {
+        const row = document.getElementById(rowId);
         if (row) row.remove();
         calculateInvoiceTotal();
     }
 
-    function autoFillPrice(id) {
-        const row = document.getElementById(`row_${id}`);
-        const sel = row.querySelector('.prod-select');
-        const price = sel.options[sel.selectedIndex].dataset.price || 0;
-        row.querySelector('.prod-price').value = price;
+    function autoFillPrice(rowId, productId) {
+        const row = document.getElementById(rowId);
+        if (!row || !productId) return;
+
+        const product = productCollection.find(p => p.id == productId);
+        if (product) {
+            const priceInput = row.querySelector('.prod-price');
+            const qtyInput = row.querySelector('.prod-qty');
+
+            priceInput.value = product.harga_jual;
+
+            if (!qtyInput.value || qtyInput.value == 0) {
+                qtyInput.value = 1;
+            }
+        }
         calculateInvoiceTotal();
     }
 
@@ -728,21 +832,16 @@
     }
 
     function resetModalForm() {
-        document.getElementById('invoiceForm').reset();
-
-        if (tomSelectMitra) {
-            tomSelectMitra.clear();
-        }
-
-        if (fpJatuhTempo) {
-            fpJatuhTempo.setDate(new Date());
-        }
-
+        const form = document.getElementById('invoiceForm');
+        form.reset();
         document.getElementById('itemBodyList').innerHTML = '';
         document.getElementById('mitra_detail_display').innerHTML =
-            `<i class="fa fa-info-circle me-2 text-primary"></i>Detail muncul otomatis.`;
-        document.getElementById('summary_subtotal').innerText = 'Rp 0';
-        document.getElementById('summary_grand_total').innerText = 'Rp 0';
+            '<i class="fa fa-info-circle me-2 text-primary"></i>Detail alamat dan kontak akan muncul otomatis.';
+
+        if (tomSelectMitra) {
+            tomSelectMitra.enable();
+            tomSelectMitra.clear();
+        }
     }
 
     async function saveFullInvoice() {
