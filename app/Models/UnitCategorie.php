@@ -12,6 +12,7 @@ class UnitCategorie extends Model
     protected $table = 'unit_categories';
 
     protected $fillable = [
+        'office_id',
         'nama_kategori',
         'konversi_nilai',
     ];

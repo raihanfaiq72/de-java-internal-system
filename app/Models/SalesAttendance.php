@@ -12,6 +12,7 @@ class SalesAttendance extends Model
     protected $table = 'sales_attendances';
 
     protected $fillable = [
+        'office_id',
         'user_id',
         'tgl_presensi',
         'jam_masuk',

@@ -12,6 +12,7 @@ class ProductCategorie extends Model
     protected $table = 'product_categories';
 
     protected $fillable = [
+        'office_id',
         'nama_kategori',
         'parent_id',
         'deskripsi',

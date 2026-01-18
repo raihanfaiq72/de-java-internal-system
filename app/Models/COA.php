@@ -12,6 +12,7 @@ class COA extends Model
     protected $table = 'chart_of_accounts';
 
     protected $fillable = [
+        'office_id',
         'kode_akun',
         'nama_akun',
         'kelompok_akun',

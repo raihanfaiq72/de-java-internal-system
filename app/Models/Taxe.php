@@ -12,6 +12,7 @@ class Taxe extends Model
     protected $table = 'taxes';
 
     protected $fillable = [
+        'office_id',
         'nama_pajak',
         'persentase',
         'tipe_pajak',

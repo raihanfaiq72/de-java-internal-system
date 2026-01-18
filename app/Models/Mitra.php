@@ -12,6 +12,7 @@ class Mitra extends Model
     protected $table = 'mitras';
 
     protected $fillable = [
+        'office_id',
         'nomor_mitra',
         'badan_usaha',
         'nama',

@@ -12,6 +12,7 @@ class Journal extends Model
     protected $table = 'journals';
 
     protected $fillable = [
+        'office_id',
         'tgl_jurnal',
         'nomor_referensi',
         'keterangan',

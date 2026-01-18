@@ -13,6 +13,7 @@ class StockMutation extends Model
     protected $table = 'stock_mutations';
 
     protected $fillable = [
+        'office_id',
         'product_id',
         'stock_location_id',
         'type',

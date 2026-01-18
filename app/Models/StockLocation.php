@@ -12,6 +12,7 @@ class StockLocation extends Model
     protected $table = 'stock_locations';
 
     protected $fillable = [
+        'office_id',
         'name',
         'type',
         'is_active',

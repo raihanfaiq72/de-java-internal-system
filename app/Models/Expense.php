@@ -12,6 +12,7 @@ class Expense extends Model
     protected $table = 'expenses';
 
     protected $fillable = [
+        'office_id',
         'akun_keuangan_id',
         'nama_biaya',
         'nama_vendor',

@@ -12,6 +12,7 @@ class Unit extends Model
     protected $table = 'units';
 
     protected $fillable = [
+        'office_id',
         'unit_category_id',
         'nama_unit',
         'simbol',

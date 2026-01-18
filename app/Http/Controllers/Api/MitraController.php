@@ -12,10 +12,18 @@ use Throwable;
 
 class MitraController extends Controller
 {
+    protected int $officeId;
+
+    public function __construct()
+    {
+        $this->officeId = session('active_office_id');
+    }
+
     public function index()
     {
         try {
             $data = Mitra::with(['akunHutang', 'akunPiutang'])
+                ->where('office_id', $this->officeId)
                 ->latest()
                 ->paginate(10);
 
@@ -28,7 +36,9 @@ class MitraController extends Controller
     public function show($id)
     {
         try {
-            $mitra = Mitra::with(['akunHutang', 'akunPiutang'])->find($id);
+            $mitra = Mitra::with(['akunHutang', 'akunPiutang'])
+                ->where('office_id', $this->officeId)
+                ->find($id);
 
             if (!$mitra) {
                 return apiResponse(false, 'Mitra tidak ditemukan', null, null, 404);
@@ -55,6 +65,7 @@ class MitraController extends Controller
             }
 
             $data = $request->all();
+            $data['office_id']      = $this->officeId;
             $data['akun_hutang_id']  = 18;
             $data['akun_piutang_id'] = 5;
 
@@ -186,6 +197,7 @@ class MitraController extends Controller
         $dataSesudah = null
     ) {
         ActivityLog::create([
+            'office_id'     => $this->officeId,
             'user_id'       => '1',
             'tindakan'      => $tindakan,
             'tabel_terkait' => $tabel,
