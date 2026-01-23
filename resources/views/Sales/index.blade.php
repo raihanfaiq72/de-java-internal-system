@@ -75,133 +75,122 @@
                     </div>
 
                     <div class="card-body p-4 bg-white">
-                        <div class="tab-content">
-                            <div class="tab-pane active" id="invoice-active">
-
-                                <!-- Filter Section -->
-                                <div class="mb-4 p-3 rounded-3 bg-light border">
-                                    <div class="row g-2 mb-4 rounded-3 align-items-end bg-light border">
-                                        <div class="col-lg-3">
-                                            <label class="f-label">Pencarian</label>
-                                            <div class="input-group input-group-finance">
-                                                <span class="input-group-text bg-white border-end-0"><i
-                                                        class="fa fa-search text-muted"></i></span>
-                                                <input type="text" id="filter-search"
-                                                    class="form-control border-start-0 ps-0 shadow-none"
-                                                    placeholder="No. Invoice / Mitra...">
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-2">
-                                            <label class="f-label">Status Dokumen</label>
-                                            <select id="filter-status-dok" class="tom-select-init">
-                                                @php
-                                                    $documentStatus = [
-                                                        'Draft',
-                                                        'Sent',
-                                                        'Failed',
-                                                        'Approved',
-                                                        'Rejected',
-                                                    ];
-                                                @endphp
-                                                <option value="">Semua</option>
-                                                @foreach ($documentStatus as $doc)
-                                                    <option value="{{ $doc }}">{{ $doc }} </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="col-lg-2">
-                                            <label class="f-label">Status Pembayaran</label>
-                                            <select id="filter-status-bayar" class="tom-select-init">
-                                                @php
-                                                    $paymentStatus = [
-                                                        'Draft' => 'Draft',
-                                                        'Unpaid' => 'Belum',
-                                                        'Overdue' => 'Lewat Jatuh Tempo',
-                                                        'Paid' => 'Lunas',
-                                                        'Partially Paid' => 'Sebagian',
-                                                    ];
-                                                @endphp
-                                                <option value="">Semua</option>
-                                                @foreach ($paymentStatus as $value => $display)
-                                                    <option value="{{ $value }}">{{ $display }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="col-lg-5 text-end">
-                                            <div id="bulk-action-area" class="d-none d-inline-block me-2">
-                                                <span class="small text-muted me-2 selected-count">0 terpilih</span>
-                                                <button class="btn btn-outline-danger fw-bold py-2 px-3 shadow-sm btn-sm"
-                                                    onclick="bulkDelete()">
-                                                    <i class="fa fa-trash-can me-1"></i> HAPUS
-                                                </button>
-                                            </div>
-                                            <button onclick="loadInvoiceData()"
-                                                class="btn btn-dark fw-bold py-2 px-4 shadow-sm btn-sm">FILTER</button>
-                                            <button onclick="resetFilter()"
-                                                class="btn btn-light border fw-bold text-dark py-2 btn-sm">RESET</button>
-                                        </div>
-                                    </div>
-
-                                    <div class="row g-2 align-items-end">
-                                        <div class="col-lg-3">
-                                            <label class="f-label">Pemasok / Mitra</label>
-                                            <select id="filter-mitra-id" class="tom-select-init">
-                                                <option value="">Semua Pemasok...</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-lg-2">
-                                            <label class="f-label">Tanggal Invoice</label>
-                                            <input type="date" id="filter-tgl-invoice"
-                                                class="form-control shadow-none"
-                                                style="font-size: 13px; padding: 0.55rem;">
-                                        </div>
-                                        <div class="col-lg-2">
-                                            <label class="f-label">Tanggal Jatuh Tempo</label>
-                                            <input type="date" id="filter-tgl-jatuh-tempo"
-                                                class="form-control shadow-none"
-                                                style="font-size: 13px; padding: 0.55rem;">
-                                        </div>
+                        <div class="mb-4 p-3 rounded-3 bg-light border">
+                            <div class="row g-2 mb-4 rounded-3 align-items-end bg-light border">
+                                <div class="col-lg-3">
+                                    <label class="f-label">Pencarian</label>
+                                    <div class="input-group input-group-finance">
+                                        <span class="input-group-text bg-white border-end-0"><i
+                                                class="fa fa-search text-muted"></i></span>
+                                        <input type="text" id="filter-search"
+                                            class="form-control border-start-0 ps-0 shadow-none"
+                                            placeholder="No. Invoice / Mitra...">
                                     </div>
                                 </div>
-
-
-                                <!-- Table Structure for Perfect Alignment -->
-                                <div class="table-responsive">
-                                    <table class="table table-hover align-middle mb-0" id="invoiceTable">
-                                        <thead class="bg-light text-uppercase text-secondary fw-bold"
-                                            style="font-size: 11px; letter-spacing: 0.5px;">
-                                            <tr>
-                                                <th class="ps-3" width="40">
-                                                    <input type="checkbox" class="form-check-input" id="master-checkbox"
-                                                        onclick="toggleSelectAll(this)">
-                                                </th>
-                                                <th width="40" class="text-center">#</th>
-                                                <th width="150">Invoice No</th>
-                                                <th width="200">Pemasok</th>
-                                                <th width="120" class="text-center">Status</th>
-                                                <th width="150" class="text-end">Jumlah</th>
-                                                <th width="150" class="text-end">Terhutang</th>
-                                                <th width="120" class="text-center">Tgl. Invoice</th>
-                                                <th width="80" class="text-center">Att</th>
-                                                <th width="80" class="text-end pe-3">Tindakan</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="invoiceTableBody" class="border-top-0">
-                                            <!-- Rows injected by JS -->
-                                        </tbody>
-                                    </table>
+                                <div class="col-lg-2">
+                                    <label class="f-label">Status Dokumen</label>
+                                    <select id="filter-status-dok" class="tom-select-init">
+                                        @php
+                                            $documentStatus = ['Draft', 'Sent', 'Failed', 'Approved', 'Rejected'];
+                                        @endphp
+                                        <option value="">Semua</option>
+                                        @foreach ($documentStatus as $doc)
+                                            <option value="{{ $doc }}">{{ $doc }} </option>
+                                        @endforeach
+                                    </select>
                                 </div>
-
-                                <!-- Pagination -->
-                                <div
-                                    class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top">
-                                    <span id="pagination-info" class="text-muted small fw-medium"></span>
-                                    <nav>
-                                        <ul class="pagination pagination-sm mb-0 shadow-sm" id="pagination-container">
-                                        </ul>
-                                    </nav>
+                                <div class="col-lg-2">
+                                    <label class="f-label">Status Pembayaran</label>
+                                    <select id="filter-status-bayar" class="tom-select-init">
+                                        @php
+                                            $paymentStatus = [
+                                                'Draft' => 'Draft',
+                                                'Unpaid' => 'Belum',
+                                                'Overdue' => 'Lewat Jatuh Tempo',
+                                                'Paid' => 'Lunas',
+                                                'Partially Paid' => 'Sebagian',
+                                            ];
+                                        @endphp
+                                        <option value="">Semua</option>
+                                        @foreach ($paymentStatus as $value => $display)
+                                            <option value="{{ $value }}">{{ $display }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-lg-5 text-end">
+                                    <div id="bulk-action-area" class="d-none d-inline-block me-2">
+                                        <span class="small text-muted me-2 selected-count">0 terpilih</span>
+                                        <button class="btn btn-outline-danger fw-bold py-2 px-3 shadow-sm btn-sm"
+                                            onclick="bulkDelete()">
+                                            <i class="fa fa-trash-can me-1"></i> HAPUS
+                                        </button>
+                                    </div>
+                                    <button onclick="loadInvoiceData()"
+                                        class="btn btn-dark fw-bold py-2 px-4 shadow-sm btn-sm">FILTER</button>
+                                    <button onclick="resetFilter()"
+                                        class="btn btn-light border fw-bold text-dark py-2 btn-sm">RESET</button>
                                 </div>
                             </div>
+
+                            <div class="row g-2 align-items-end">
+                                <div class="col-lg-3">
+                                    <label class="f-label">Pemasok / Mitra</label>
+                                    <select id="filter-mitra-id" class="tom-select-init">
+                                        <option value="">Semua Pemasok...</option>
+                                    </select>
+                                </div>
+                                <div class="col-lg-2">
+                                    <label class="f-label">Tanggal Invoice</label>
+                                    <input type="date" id="filter-tgl-invoice" class="form-control shadow-none"
+                                        style="font-size: 13px; padding: 0.55rem;">
+                                </div>
+                                <div class="col-lg-2">
+                                    <label class="f-label">Tanggal Jatuh Tempo</label>
+                                    <input type="date" id="filter-tgl-jatuh-tempo" class="form-control shadow-none"
+                                        style="font-size: 13px; padding: 0.55rem;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" id="invoiceTable">
+                                <thead class="bg-light text-uppercase text-secondary fw-bold"
+                                    style="font-size: 11px; letter-spacing: 0.5px;">
+                                    <tr>
+                                        <th class="ps-3" width="40">
+                                            <input type="checkbox" class="form-check-input" id="master-checkbox"
+                                                onclick="toggleSelectAll(this)">
+                                        </th>
+                                        <th width="40" class="text-center">#</th>
+                                        <th width="150">Invoice No</th>
+                                        <th width="200">Pemasok</th>
+                                        <th width="120" class="text-center">Status</th>
+                                        <th width="150" class="text-end">Jumlah</th>
+                                        <th width="150" class="text-end">Terhutang</th>
+                                        <th width="120" class="text-center">Tgl. Invoice</th>
+                                        <th width="80" class="text-center">Att</th>
+                                        <th width="80" class="text-end pe-3">Tindakan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoiceTableBody" class="border-top-0">
+                                    <!-- Rows injected by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div
+                            class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <span id="pagination-info" class="text-muted small fw-medium"></span>
+                            <nav>
+                                <ul class="pagination pagination-sm mb-0 shadow-sm" id="pagination-container">
+                                </ul>
+                            </nav>
+                        </div>
+
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="invoice-active"></div>
+                            <div class="tab-pane" id="invoice-archive"></div>
+                            <div class="tab-pane" id="invoice-in-trash"></div>
                         </div>
                     </div>
                 </div>
@@ -354,6 +343,25 @@
             };
         }
 
+        let currentTabStatus = 'active';
+
+        document.querySelectorAll('.nav-tabs-finance .nav-link').forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function(event) {
+                const targetId = event.target.getAttribute('href');
+
+                if (targetId === '#invoice-archive') {
+                    currentTabStatus = 'archive';
+                } else if (targetId === '#invoice-in-trash') {
+                    currentTabStatus = 'trash';
+                } else {
+                    currentTabStatus = 'active';
+                }
+
+                loadInvoiceData();
+            });
+
+        });
+
         let masterMitra = [];
 
         async function initializeMasterData() {
@@ -390,6 +398,7 @@
                 let finalUrl = (typeof url === 'string' && url.includes('/')) ? url : window.financeApp.API_URL;
                 const params = new URLSearchParams({
                     tipe_invoice: 'Sales',
+                    tab_status: currentTabStatus,
                     search: document.getElementById('filter-search').value,
                     status_dok: document.getElementById('filter-status-dok').value,
                     status_pembayaran: document.getElementById('filter-status-bayar').value,
@@ -485,7 +494,6 @@
                     detailBody.appendChild(itemRow);
                 });
 
-                // Masukkan semua ke tabel
                 tbody.appendChild(row);
                 tbody.appendChild(detail);
             });
@@ -540,7 +548,6 @@
         }
 
         function renderPagination(meta) {
-            /* reusing prev logic or simplified */
             const c = document.getElementById('pagination-container');
             c.innerHTML = '';
             document.getElementById('pagination-info').innerText = `${meta.from||0}-${meta.to||0} dari ${meta.total}`;
