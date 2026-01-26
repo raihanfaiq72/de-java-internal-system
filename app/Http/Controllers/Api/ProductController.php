@@ -6,11 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ActivityLog;
 use App\Models\ProductCategorie;
+use App\Services\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
+    protected $stockService;
+
+    public function __construct(StockService $stockService)
+    {
+        $this->stockService = $stockService;
+    }
+
     public function index(Request $request)
     {
         $query = Product::with(['category', 'unit'])
@@ -141,6 +149,17 @@ class ProductController extends Controller
         return apiResponse(true, 'Next SKU', $sku);
     }
 
+    public function recalculateStock($id)
+    {
+        $product = Product::where('office_id', session('active_office_id'))->find($id);
+        if (!$product) {
+            return apiResponse(false, 'Produk tidak ditemukan', null, null, 404);
+        }
+
+        $newQty = $this->stockService->recalculateProductStock($id);
+
+        return apiResponse(true, 'Stok berhasil direkalkulasi', ['qty' => $newQty]);
+    }
 
     private function logActivity($tindakan, $tabel, $dataId, $before, $after)
     {

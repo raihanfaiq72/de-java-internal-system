@@ -331,6 +331,35 @@ class StockController extends Controller
             return apiResponse(false, 'Gagal mencatat stok opname: ' . $e->getMessage(), null, null, 500);
         }
     }
+
+    public function fifo($id)
+    {
+        $product = Product::where('id', $id)->where('office_id', session('active_office_id'))->first();
+        if (!$product) {
+            return apiResponse(false, 'Produk tidak ditemukan', null, null, 404);
+        }
+
+        // Fetch active IN mutations (remaining_qty > 0)
+        // We might want to filter by location if the user is currently filtering by location
+        // But FIFO is generally global or per-location depending on strategy.
+        // Assuming global FIFO for now or we can accept a location_id param.
+        
+        $locationId = request('location_id');
+
+        $query = StockMutation::where('product_id', $id)
+            ->where('type', 'IN')
+            ->where('remaining_qty', '>', 0)
+            ->with('stock_location');
+
+        if ($locationId) {
+            $query->where('stock_location_id', $locationId);
+        }
+
+        $batches = $query->orderBy('created_at', 'asc')->get();
+
+        return apiResponse(true, 'Data FIFO', $batches);
+    }
+
     private function logActivity($tindakan, $tabel, $dataId, $before, $after)
     {
         ActivityLog::create([

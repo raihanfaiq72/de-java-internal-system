@@ -79,6 +79,7 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::get('/{id}', [ProductController::class, 'show'])->name('show');
             Route::put('/{id}', [ProductController::class, 'update'])->name('update');
             Route::delete('/{id}', [ProductController::class, 'destroy'])->name('destroy');
+            Route::post('/{id}/recalculate-stock', [ProductController::class, 'recalculateStock'])->name('recalculate-stock');
             Route::get('/search/{value}', [ProductController::class, 'search'])->name('search');
         });
 
@@ -94,6 +95,7 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::post('/opening-stock', [StockController::class, 'openingStock'])->name('opening-stock');
             Route::post('/stock-opname', [StockController::class, 'stockOpname'])->name('stock-opname');
             Route::put('/{id}', [StockController::class, 'updateStock'])->name('update-stock');
+            Route::get('/{id}/fifo', [StockController::class, 'fifo'])->name('fifo');
         });
 
     Route::prefix('stock-location-api')

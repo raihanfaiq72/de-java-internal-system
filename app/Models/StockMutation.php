@@ -34,4 +34,9 @@ class StockMutation extends Model
     {
         return $this->belongsTo(StockLocation::class, 'stock_location_id');
     }
+
+    public function stock_location()
+    {
+        return $this->belongsTo(StockLocation::class, 'stock_location_id');
+    }
 }

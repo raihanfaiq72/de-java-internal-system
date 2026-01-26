@@ -254,6 +254,12 @@
                                         <i class="fa fa-edit me-2 text-warning"></i> Edit
                                     </a>
                                 </li>
+                                <li>
+                                    <a class="dropdown-item" href="javascript:void(0)"
+                                       onclick="recalculateStock(${item.id})">
+                                        <i class="fa fa-sync me-2 text-info"></i> Rekalkulasi Stok
+                                    </a>
+                                </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <a class="dropdown-item text-danger" href="javascript:void(0)"
@@ -291,6 +297,30 @@
                 </li>
             `);
         });
+    }
+    async function recalculateStock(id) {
+        if (!confirm('Apakah Anda yakin ingin menghitung ulang stok produk ini?')) return;
+
+        try {
+            const res = await fetch(`${API_URL}/${id}/recalculate-stock`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                    // CSRF excluded for API
+                }
+            });
+            const result = await res.json();
+
+            if (result.success) {
+                alert('Stok berhasil direkalkulasi. Stok baru: ' + result.data.qty);
+                loadProductData(); // Reload table
+            } else {
+                alert('Gagal: ' + result.message);
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Terjadi kesalahan saat menghubungi server');
+        }
     }
 </script>
 

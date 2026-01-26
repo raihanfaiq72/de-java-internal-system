@@ -187,7 +187,7 @@
                                         <div class="col-md-3">
                                             <label class="small fw-bold text-muted">Pilih Lokasi</label>
                                             <select id="filter-stock-location" class="form-select form-select-sm" onchange="loadStockData()">
-                                                <option value="">-- Pilih Lokasi Dulu --</option>
+                                                <option value="">Semua Lokasi</option>
                                             </select>
                                         </div>
                                         <div class="col-md-3">
@@ -210,12 +210,12 @@
                                         </div>
                                     </div>
 
-                                    <div id="persediaan-empty-state" class="text-center py-5">
+                                    <div id="persediaan-empty-state" class="text-center py-5 d-none">
                                         <i class="iconoir-info-circle fs-1 text-muted mb-2"></i>
                                         <p class="text-muted">Silahkan pilih lokasi terlebih dahulu untuk melihat stok.</p>
                                     </div>
 
-                                    <div class="table-responsive d-none" id="persediaan-table-wrapper">
+                                    <div class="table-responsive" id="persediaan-table-wrapper">
                                         <table class="table table-sm table-bordered align-middle">
                                             <thead class="table-light">
                                                 <tr>
@@ -235,7 +235,7 @@
                                         </table>
                                     </div>
 
-                                    <div class="d-flex justify-content-between align-items-center px-2 mt-3 d-none" id="persediaan-pagination-wrapper">
+                                    <div class="d-flex justify-content-between align-items-center px-2 mt-3" id="persediaan-pagination-wrapper">
                                         <span id="stock-pagination-info" class="text-muted small"></span>
                                         <nav>
                                             <ul class="pagination pagination-sm mb-0" id="stock-pagination-container"></ul>
@@ -303,6 +303,36 @@
 
 @include('Stock.Modal._AdjustStock')
 @include('Stock.Modal._LocationModals')
+
+<!-- Modal FIFO -->
+<div class="modal fade" id="modalFifo" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Rincian FIFO Stok</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted mb-3">Menampilkan batch stok masuk yang masih memiliki sisa (belum terjual/keluar sepenuhnya). Sistem menggunakan metode First-In-First-Out.</p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tanggal Masuk</th>
+                                <th>Ref</th>
+                                <th>Lokasi</th>
+                                <th class="text-end">Qty Awal</th>
+                                <th class="text-end">Sisa Qty</th>
+                                <th class="text-end">Harga Beli</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fifo-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 @endsection
 
@@ -384,7 +414,7 @@
 
                 // Select in Persediaan Tab
                 const currentVal = selectPersediaan.value;
-                selectPersediaan.innerHTML = '<option value="">-- Pilih Lokasi Dulu --</option>';
+                selectPersediaan.innerHTML = '<option value="">Semua Lokasi</option>';
                 result.data.forEach(item => {
                     selectPersediaan.insertAdjacentHTML('beforeend', `<option value="${item.id}" ${currentVal == item.id ? 'selected' : ''}>${item.name}</option>`);
                 });
@@ -455,6 +485,16 @@
             const warehouse = document.getElementById('filter-warehouse').value;
             const from = document.getElementById('filter-date-from').value;
             const to = document.getElementById('filter-date-to').value;
+
+            // Sync Filter Persediaan (Tab Bawah) dengan Filter Gudang (Header Atas)
+            const stockFilter = document.getElementById('filter-stock-location');
+            if (stockFilter) {
+                // Pastikan opsi tersedia sebelum set value (jika loadLocations belum selesai, ini mungkin gagal, tapi user interaction aman)
+                if (stockFilter.querySelector(`option[value="${warehouse}"]`) || warehouse === "") {
+                    stockFilter.value = warehouse;
+                    loadStockData(); // Refresh tabel persediaan otomatis
+                }
+            }
 
             let url = `/api/stock-api/dashboard?`;
             if (warehouse) url += `warehouse_id=${warehouse}&`;
@@ -687,21 +727,8 @@
 
     async function loadStockData(url = API_STOCK_URL) {
         const locationId = document.getElementById('filter-stock-location').value;
-        const emptyState = document.getElementById('persediaan-empty-state');
-        const tableWrapper = document.getElementById('persediaan-table-wrapper');
-        const paginationWrapper = document.getElementById('persediaan-pagination-wrapper');
-
-        if (!locationId) {
-            emptyState.classList.remove('d-none');
-            tableWrapper.classList.add('d-none');
-            paginationWrapper.classList.add('d-none');
-            return;
-        }
-
-        emptyState.classList.add('d-none');
-        tableWrapper.classList.remove('d-none');
-        paginationWrapper.classList.remove('d-none');
-
+        // Elements are always visible now, no need to toggle empty state
+        
         const tbody = document.getElementById('stock-table-body');
         tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>';
 
@@ -712,7 +739,7 @@
             const fetchUrl = new URL(url, window.location.origin);
             if (search) fetchUrl.searchParams.append('search', search);
             if (kategori) fetchUrl.searchParams.append('category', kategori);
-            fetchUrl.searchParams.append('location_id', locationId);
+            if (locationId) fetchUrl.searchParams.append('location_id', locationId);
 
             const res = await fetch(fetchUrl);
             const result = await res.json();
@@ -729,6 +756,7 @@
     function renderStockTable(data) {
         const tbody = document.getElementById('stock-table-body');
         tbody.innerHTML = '';
+        const locationId = document.getElementById('filter-stock-location').value;
 
         if (!data || data.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Data tidak ditemukan</td></tr>';
@@ -736,7 +764,8 @@
         }
 
         data.forEach(item => {
-            const qty = item.location_qty ?? 0; // Assuming API returns stock per location
+            // Jika filter lokasi aktif, gunakan location_qty. Jika tidak, gunakan total qty global.
+            const qty = locationId ? (item.location_qty ?? 0) : (item.qty ?? 0);
             const stockBadge = qty <= 5 ? 'bg-danger' : 'bg-success';
             tbody.insertAdjacentHTML('beforeend', `
                 <tr>
@@ -785,13 +814,63 @@
         });
     }
 
-    function viewFifo(id) {
-        alert('Fitur rincian FIFO sedang dikembangkan. Kamu bisa melihat mutasi di Tab Dokumen Stok.');
+    async function viewFifo(id) {
+        const locationId = document.getElementById('filter-stock-location').value;
+        let url = `/api/stock-api/${id}/fifo`;
+        if (locationId) url += `?location_id=${locationId}`;
+        
+        const tbody = document.getElementById('fifo-table-body');
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Memuat...</td></tr>';
+        new bootstrap.Modal('#modalFifo').show();
+        
+        try {
+            const res = await fetch(url);
+            const result = await res.json();
+            if(result.success) {
+                tbody.innerHTML = '';
+                if(result.data.length === 0) {
+                     tbody.innerHTML = '<tr><td colspan="6" class="text-center">Tidak ada stok tersisa (Kosong)</td></tr>';
+                     return;
+                }
+                const fmt = new Intl.NumberFormat('id-ID', {style:'currency', currency:'IDR', minimumFractionDigits: 0});
+                result.data.forEach(item => {
+                    tbody.insertAdjacentHTML('beforeend', `
+                        <tr>
+                            <td>${new Date(item.created_at).toLocaleDateString('id-ID')}</td>
+                            <td>${item.reference_type} #${item.reference_id || '-'}</td>
+                            <td>${item.stock_location?.name || '-'}</td>
+                            <td class="text-end">${item.qty}</td>
+                            <td class="text-end fw-bold">${item.remaining_qty}</td>
+                            <td class="text-end">${fmt.format(item.cost_price)}</td>
+                        </tr>
+                    `);
+                });
+            }
+        } catch(e) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Gagal memuat data</td></tr>';
+        }
     }
 
     function quickStockOpname(pid, current) {
-        const locId = document.getElementById('filter-stock-location').value;
-        const locName = document.getElementById('filter-stock-location').options[document.getElementById('filter-stock-location').selectedIndex].text;
+        const select = document.getElementById('filter-stock-location');
+        const locId = select.value;
+
+        // Check if locations exist (more than just the default "Semua Lokasi" option)
+        if (select.options.length <= 1) {
+            alert('Belum ada lokasi stok yang tersedia. Silakan buat lokasi baru terlebih dahulu di Tab "Lokasi".');
+            // Optional: Switch to location tab automatically
+            const tabLokasi = document.querySelector('a[href="#tab-lokasi"]');
+            if(tabLokasi) new bootstrap.Tab(tabLokasi).show();
+            return;
+        }
+
+        if (!locId) {
+            alert('Silakan pilih lokasi spesifik pada dropdown "Pilih Lokasi" (di atas tabel) untuk melakukan Stok Opname.');
+            select.focus();
+            return;
+        }
+
+        const locName = select.options[select.selectedIndex].text;
         
         showStockOpnameModal(locId, locName);
         setTimeout(() => {
@@ -802,6 +881,23 @@
     
     // Update adjustStock to use location
     async function adjustStock(id, current) {
+        const select = document.getElementById('filter-stock-location');
+        const locId = select.value;
+
+        // Check if locations exist
+        if (select.options.length <= 1) {
+            alert('Belum ada lokasi stok yang tersedia. Silakan buat lokasi baru terlebih dahulu di Tab "Lokasi".');
+            const tabLokasi = document.querySelector('a[href="#tab-lokasi"]');
+            if(tabLokasi) new bootstrap.Tab(tabLokasi).show();
+            return;
+        }
+
+        if (!locId) {
+            alert('Silakan pilih lokasi spesifik pada dropdown "Pilih Lokasi" (di atas tabel) untuk melakukan Penyesuaian Stok.');
+            select.focus();
+            return;
+        }
+
         const detailRes = await fetch(`/api/product-api/${id}`);
         const result = await detailRes.json();
 

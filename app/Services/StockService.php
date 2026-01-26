@@ -119,6 +119,16 @@ class StockService
     }
 
     /**
+     * Recalculate and update product total quantity based on mutations
+     */
+    public function recalculateProductStock($productId)
+    {
+        $this->updateProductTotalQty($productId);
+        
+        return Product::find($productId)->qty;
+    }
+
+    /**
      * Sync Product table QTY column with Mutations
      */
     private function updateProductTotalQty($productId)
