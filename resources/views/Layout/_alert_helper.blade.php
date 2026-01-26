@@ -81,11 +81,169 @@
     .mac-toast-error .mac-toast-icon { background: #FFEBEA; color: #FF3B30; }
     .mac-toast-warning .mac-toast-icon { background: #FFF8E1; color: #FFCC00; }
     .mac-toast-info .mac-toast-icon { background: #E3F2FD; color: #007AFF; }
+
+    /* Mac Confirmation Modal */
+    #mac-confirm-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        z-index: 10001;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    #mac-confirm-overlay.show {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .mac-confirm-box {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 16px;
+        padding: 24px;
+        width: 320px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        transform: scale(0.9);
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        text-align: center;
+    }
+
+    #mac-confirm-overlay.show .mac-confirm-box {
+        transform: scale(1);
+    }
+
+    .mac-confirm-icon {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 16px;
+        background: #FFF8E1;
+        color: #FFCC00;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .mac-confirm-icon svg {
+        width: 24px;
+        height: 24px;
+        fill: currentColor;
+    }
+
+    .mac-confirm-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1d1d1f;
+        margin-bottom: 8px;
+    }
+
+    .mac-confirm-message {
+        font-size: 14px;
+        color: #6e6e73;
+        line-height: 1.5;
+        margin-bottom: 24px;
+    }
+
+    .mac-confirm-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .mac-btn {
+        flex: 1;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .mac-btn-cancel {
+        background: rgba(0, 0, 0, 0.05);
+        color: #1d1d1f;
+    }
+
+    .mac-btn-cancel:hover {
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    .mac-btn-confirm {
+        background: #FF3B30;
+        color: white;
+        box-shadow: 0 2px 10px rgba(255, 59, 48, 0.3);
+    }
+
+    .mac-btn-confirm:hover {
+        background: #D70015;
+    }
 </style>
 
 <div id="mac-toast-container"></div>
 
+<!-- Confirmation Modal Container -->
+<div id="mac-confirm-overlay">
+    <div class="mac-confirm-box">
+        <div class="mac-confirm-icon">
+            <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+        </div>
+        <div class="mac-confirm-title" id="mac-confirm-title">Konfirmasi</div>
+        <div class="mac-confirm-message" id="mac-confirm-message">Apakah Anda yakin?</div>
+        <div class="mac-confirm-actions">
+            <button class="mac-btn mac-btn-cancel" id="mac-confirm-cancel">Batal</button>
+            <button class="mac-btn mac-btn-confirm" id="mac-confirm-ok">Hapus</button>
+        </div>
+    </div>
+</div>
+
 <script>
+    /**
+     * Show Apple-style Confirmation Modal
+     * @param {string} title
+     * @param {string} message
+     * @returns {Promise<boolean>}
+     */
+    function macConfirm(title, message) {
+        return new Promise((resolve) => {
+            const overlay = document.getElementById('mac-confirm-overlay');
+            const titleEl = document.getElementById('mac-confirm-title');
+            const msgEl = document.getElementById('mac-confirm-message');
+            const btnCancel = document.getElementById('mac-confirm-cancel');
+            const btnOk = document.getElementById('mac-confirm-ok');
+
+            titleEl.textContent = title;
+            msgEl.textContent = message;
+
+            // Show modal
+            overlay.classList.add('show');
+
+            // Handlers
+            const close = (result) => {
+                overlay.classList.remove('show');
+                resolve(result);
+                // Cleanup listeners to prevent duplicates
+                btnCancel.onclick = null;
+                btnOk.onclick = null;
+            };
+
+            btnCancel.onclick = () => close(false);
+            btnOk.onclick = () => close(true);
+        });
+    }
+
     /**
      * Show Apple-style Notification
      * @param {string} type - 'success', 'error', 'warning', 'info'

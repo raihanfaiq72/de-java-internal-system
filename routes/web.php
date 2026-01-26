@@ -24,6 +24,7 @@ Route::middleware(['auth'])->group(function () {
     
     Route::get('/select-your-outlet', [AuthController::class, 'syo'])->name('syo');
     Route::post('/set-active-outlet', [AuthController::class, 'setOutlet'])->name('set.outlet');
+    Route::delete('/delete-outlet/{id}', [AuthController::class, 'destroyOutlet'])->name('syo.destroy');
 
     Route::middleware(['module.access'])->group(function () {
         

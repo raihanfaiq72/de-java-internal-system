@@ -50,9 +50,50 @@ class AuthController extends Controller
     {
         $user = Auth::user();
     
-        $availableOffices = DB::table('user_office_roles')->join('offices', 'user_office_roles.office_id', '=', 'offices.id')->where('user_id', $user->id)->select('offices.*')->get();
+        $availableOffices = DB::table('user_office_roles')
+            ->join('offices', 'user_office_roles.office_id', '=', 'offices.id')
+            ->join('roles', 'user_office_roles.role_id', '=', 'roles.id')
+            ->where('user_office_roles.user_id', $user->id)
+            ->select('offices.*', 'roles.name as role_name')
+            ->get();
 
         return view('Auth.syo', compact('availableOffices'));
+    }
+
+    public function destroyOutlet($id)
+    {
+        $user = Auth::user();
+
+        // Cek apakah user memiliki role Superadmin atau Owner untuk outlet ini
+        $hasAccess = DB::table('user_office_roles')
+            ->join('roles', 'user_office_roles.role_id', '=', 'roles.id')
+            ->where('user_office_roles.user_id', $user->id)
+            ->where('user_office_roles.office_id', $id)
+            ->whereIn('roles.name', ['Superadmin', 'Owner'])
+            ->exists();
+
+        if (!$hasAccess) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses untuk menghapus outlet ini.'
+            ], 403);
+        }
+
+        try {
+            // Karena cascading delete sudah diatur di migration, 
+            // menghapus office akan menghapus data terkait.
+            \App\Models\Office::findOrFail($id)->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Outlet dan seluruh data terkait berhasil dihapus.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus outlet: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function setOutlet(Request $request)

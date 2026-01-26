@@ -4,163 +4,249 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Pilih Kantor - Premium macOS Style</title>
+    <title>Pilih Outlet - Dejava System</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/icofont/1.0.1/css/icofont.min.css" rel="stylesheet">
+    <link href="{{ url('assets/css/icons.min.css') }}" rel="stylesheet">
 
     <style>
         :root {
-            --mac-blue: #007AFF;
-            --mac-bg: #F5F5F7;
-            --card-shadow: 0 8px 30px rgba(0,0,0,0.04);
-            --card-hover-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--mac-bg);
-            background-image: radial-gradient(circle at top right, #e2e8f0 0%, #F5F5F7 40%);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('{{url('assets/images/auth/bg.jpg')}}') no-repeat center center fixed;
+            background-size: cover;
             min-height: 100vh;
-            color: #1d1d1f;
-            overflow-x: hidden;
-            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            color: #fff;
         }
 
-        body.is-redirecting {
-            transform: scale(0.95);
+        /* Top Bar */
+        .top-bar {
+            padding: 20px 40px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
         }
 
-        .page-header {
-            padding: 80px 0 40px;
-            text-align: center;
+        .profile-dropdown .dropdown-toggle {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 6px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .profile-dropdown .dropdown-toggle:hover {
+            background: rgba(0, 0, 0, 0.6);
+            transform: translateY(-1px);
+        }
+
+        .profile-dropdown .dropdown-toggle::after {
+            display: none;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #007AFF 0%, #0051a8 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .dropdown-menu {
+            background: rgba(30, 30, 30, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            margin-top: 10px;
+            padding: 8px;
+            min-width: 180px;
+        }
+
+        .dropdown-item {
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #fff;
+            transition: all 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .dropdown-item.text-danger:hover {
+            background: rgba(255, 59, 48, 0.2);
+            color: #FF3B30;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding-bottom: 80px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         .page-title {
+            font-size: 42px;
             font-weight: 700;
-            font-size: 2.5rem;
-            letter-spacing: -0.03em;
+            margin-bottom: 60px;
+            color: #fff;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            letter-spacing: -0.5px;
         }
 
-        .cards-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 20px;
-            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        .outlet-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 50px;
+            justify-content: center;
+            max-width: 1200px;
+            padding: 0 20px;
         }
 
-        .office-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 24px;
-            padding: 30px;
-            text-align: left;
+        .outlet-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            group: ;
             position: relative;
-            box-shadow: var(--card-shadow);
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            opacity: 0;
-            transform: translateY(30px);
-            animation: slideIn 0.8s forwards;
         }
 
-        .office-card:hover {
-            transform: translateY(-10px) scale(1.02);
-            box-shadow: var(--card-hover-shadow);
-            background: rgba(255, 255, 255, 0.9);
-        }
-
-        @keyframes slideIn {
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .icon-box {
-            width: 60px;
-            height: 60px;
-            border-radius: 18px;
+        .outlet-icon-wrapper {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
-            font-size: 1.8rem;
-            background: linear-gradient(135deg, #007AFF, #00C6FF);
-            color: white;
-            box-shadow: 0 8px 15px rgba(0, 122, 255, 0.2);
-        }
-
-        .office-status {
-            position: absolute;
-            top: 30px;
-            right: 30px;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-
-        .office-card h5 { font-weight: 700; margin-bottom: 8px; }
-        .office-card p { color: #86868b; font-size: 0.9rem; margin-bottom: 20px; }
-
-        .office-meta {
-            font-size: 0.85rem;
-            color: #515154;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 25px;
-        }
-
-        .office-meta span i { margin-right: 8px; color: var(--mac-blue); }
-
-        .btn-mac-primary {
-            background-color: var(--mac-blue);
-            color: white;
-            border-radius: 14px;
-            padding: 10px 24px;
-            font-weight: 600;
-            border: none;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: block;
-            text-align: center;
-        }
-        
-        .btn-mac-primary:hover {
-            transform: scale(1.02);
-            background-color: #006ce6;
-            color: white;
-        }
-
-        .add-card {
-            border: 2px dashed #c7c7cc;
-            background: transparent;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            font-size: 48px;
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             cursor: pointer;
-            color: #86868b;
-        }
-        
-        .add-card:hover {
-            background: rgba(255, 255, 255, 0.5);
-            border-color: var(--mac-blue);
-            color: var(--mac-blue);
-        }
-        
-        .add-card i {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            position: relative;
         }
 
+        .outlet-item:hover .outlet-icon-wrapper {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .outlet-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            text-align: center;
+            max-width: 140px;
+            line-height: 1.3;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            transition: all 0.3s;
+        }
+
+        .outlet-item:hover .outlet-name {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+            transform: translateY(2px);
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 28px;
+            height: 28px;
+            background: rgba(100, 100, 100, 0.8);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            transition: all 0.2s;
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        .delete-btn:hover {
+            background: #FF3B30;
+            transform: scale(1.1);
+            border-color: #FF3B30;
+        }
+
+        .outlet-item:hover .delete-btn {
+            opacity: 1;
+            top: -5px;
+            left: -5px;
+        }
+
+        .add-outlet-wrapper {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: transparent;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+
+        .add-outlet-wrapper:hover {
+            border-color: #fff;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        /* Loading Overlay */
         .redirect-overlay {
             position: fixed;
             top: 0;
@@ -188,237 +274,239 @@
         .mac-spinner {
             width: 40px;
             height: 40px;
-            border: 4px solid rgba(0, 122, 255, 0.1);
-            border-left-color: var(--mac-blue);
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #007AFF;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .redirect-text { margin-top: 20px; font-weight: 600; color: #1d1d1f; opacity: 0; transition: all 0.5s ease 0.2s; }
-        .redirect-overlay.active .redirect-text { opacity: 1; }
-        
         /* Modal Styles */
-        .modal-backdrop.show {
-            backdrop-filter: blur(5px);
-            background-color: rgba(0, 0, 0, 0.2);
-            opacity: 1;
-        }
-        
         .modal-content {
-            border-radius: 24px;
-            border: none;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            overflow: hidden;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
         }
         
         .modal-header {
             border-bottom: 1px solid rgba(0,0,0,0.05);
-            padding: 20px 30px;
-            background: rgba(255,255,255,0.8);
+            padding: 20px 25px;
         }
-        
-        .modal-body {
-            padding: 30px;
-            background: #fff;
-        }
-        
+
         .form-control-mac {
             border-radius: 12px;
             border: 1px solid #d1d1d6;
-            padding: 12px 16px;
-            font-size: 15px;
-            transition: all 0.2s;
-            background-color: #f5f5f7;
-        }
-        
-        .form-control-mac:focus {
-            background-color: #fff;
-            border-color: var(--mac-blue);
-            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
-        }
-        
-        .f-label {
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: #86868b;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-            display: block;
+            padding: 10px 15px;
+            background: rgba(255,255,255,0.8);
         }
 
-        .delay-1 { animation-delay: 0.1s; }
-        .delay-2 { animation-delay: 0.2s; }
-        .delay-3 { animation-delay: 0.3s; }
+        .form-control-mac:focus {
+            background: #fff;
+            border-color: #007AFF;
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
+        }
+
+        .btn-mac-primary {
+            background-color: #007AFF;
+            color: white;
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-weight: 600;
+            border: none;
+            width: 100%;
+        }
+
+        .btn-mac-primary:hover {
+            background-color: #0062cc;
+        }
     </style>
 </head>
 <body>
 
-<div class="redirect-overlay" id="redirectOverlay">
-    <div class="mac-spinner"></div>
-    <div class="redirect-text" id="redirectText">Menyiapkan Ruang Kerja...</div>
-</div>
-
-<div class="container pb-5" id="mainWrapper">
-    <header class="page-header">
-        <p class="text-primary fw-bold mb-1">Hello, {{ auth()->user()->name }}</p>
-        <h2 class="page-title">Pilih Ruang Kerja</h2>
-    </header>
-
-    <div class="cards-container" id="cardsContainer">
-        @forelse($availableOffices as $index => $office)
-        <div class="office-card delay-{{ $index + 1 }}">
-            <span class="office-status">Aktif</span>
-            <div class="icon-box">
-                <i class="icofont-building"></i>
-            </div>
-            <h5>{{ $office->name }}</h5>
-            <p>{{ $office->description ?? 'Kelola data dan operasional untuk kantor ini.' }}</p>
-            <div class="office-meta">
-                <span><i class="icofont-code"></i> Kode: {{ $office->code }}</span>
-                <span><i class="icofont-location-pin"></i> {{ $office->address ?? 'Lokasi Terdaftar' }}</span>
-            </div>
-            <a href="javascript:void(0)" onclick="selectOffice({{ $office->id }})" class="btn btn-mac-primary w-100">Masuk ke Kantor</a>
-        </div>
-        @empty
-        <div class="alert alert-light border text-center p-5 w-100">
-            <h5 class="fw-bold">Akses Tidak Ditemukan</h5>
-            <p class="text-muted">Anda belum memiliki akses ke kantor manapun. Hubungi Admin.</p>
-        </div>
-        @endforelse
-
-        <div class="office-card add-card delay-3" data-bs-toggle="modal" data-bs-target="#addOfficeModal">
-            <i class="icofont-plus-circle"></i>
-            <h5 class="mt-3">Buka Kantor Baru</h5>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="profile-dropdown dropdown">
+            <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown">
+                <div class="user-avatar">
+                    {{ substr(auth()->user()->name, 0, 1) }}
+                </div>
+                <span class="fw-semibold small">{{ auth()->user()->name }}</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <form action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="dropdown-item text-danger">
+                            <i class="icofont-logout me-2"></i> Logout
+                        </button>
+                    </form>
+                </li>
+            </ul>
         </div>
     </div>
-</div>
 
-<!-- Modal Add Office -->
-<div class="modal fade" id="addOfficeModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">Tambah Kantor Baru</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <!-- Main Content -->
+    <div class="main-content">
+        <h1 class="page-title">Pilih Outlet</h1>
+
+        <div class="outlet-grid" id="outletGrid">
+            @foreach($availableOffices as $office)
+            <div class="outlet-item">
+                <div class="outlet-icon-wrapper" onclick="selectOffice({{ $office->id }})">
+                    🏢
+                    
+                    @if(in_array($office->role_name, ['Superadmin', 'Owner']))
+                    <div class="delete-btn" onclick="event.stopPropagation(); deleteOutlet({{ $office->id }}, '{{ $office->name }}')">
+                        <i class="icofont-close"></i>
+                    </div>
+                    @endif
+                </div>
+                <div class="outlet-name">{{ $office->name }}</div>
             </div>
-            <div class="modal-body pt-4">
-                <form id="addOfficeForm" action="{{ route('offices.store') }}" method="POST">
-                    @csrf
-                    <div class="mb-3">
-                        <label class="f-label">Nama Kantor</label>
-                        <input type="text" name="name" class="form-control form-control-mac" placeholder="Contoh: Kantor Pusat" required>
-                    </div>
-                    <div class="mb-4">
-                        <label class="f-label">Kode Kantor</label>
-                        <input type="text" name="code" class="form-control form-control-mac" placeholder="Contoh: K-001" required>
-                    </div>
-                    <button type="submit" class="btn btn-mac-primary w-100">Simpan Kantor</button>
-                </form>
+            @endforeach
+
+            <!-- Add New Outlet -->
+            <div class="outlet-item">
+                <div class="add-outlet-wrapper" data-bs-toggle="modal" data-bs-target="#addOfficeModal">
+                    ➕
+                </div>
+                <div class="outlet-name" style="color: #ddd; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">Buka Outlet</div>
             </div>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    document.getElementById('addOfficeForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const btn = this.querySelector('button[type="submit"]');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<div class="mac-spinner" style="width:20px;height:20px;border-width:2px;margin:0 auto;"></div>';
-        btn.disabled = true;
+    <!-- Redirect Overlay -->
+    <div class="redirect-overlay" id="redirectOverlay">
+        <div class="mac-spinner"></div>
+        <div class="mt-3 fw-semibold text-secondary">Menyiapkan Ruang Kerja...</div>
+    </div>
 
-        fetch(this.action, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json'
-            },
-            body: new FormData(this)
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(data.success) {
-                // Close modal
-                const modalEl = document.getElementById('addOfficeModal');
-                const modal = bootstrap.Modal.getInstance(modalEl);
-                modal.hide();
-                
-                // Reset form
-                this.reset();
-                
-                // Add card to grid
-                const container = document.getElementById('cardsContainer');
-                const addCard = container.querySelector('.add-card');
-                
-                const newCard = document.createElement('div');
-                newCard.className = 'office-card';
-                newCard.style.animation = 'slideIn 0.8s forwards';
-                newCard.innerHTML = `
-                    <span class="office-status">Aktif</span>
-                    <div class="icon-box">
-                        <i class="icofont-building"></i>
-                    </div>
-                    <h5>${data.data.name}</h5>
-                    <p>Kelola data dan operasional untuk kantor ini.</p>
-                    <div class="office-meta">
-                        <span><i class="icofont-code"></i> Kode: ${data.data.code}</span>
-                        <span><i class="icofont-location-pin"></i> Lokasi Terdaftar</span>
-                    </div>
-                    <a href="javascript:void(0)" onclick="selectOffice(${data.data.id})" class="btn btn-mac-primary w-100">Masuk ke Kantor</a>
-                `;
-                
-                container.insertBefore(newCard, addCard);
-                
-                // Scroll to new card
-                newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            } else {
-                alert('Gagal menambahkan kantor: ' + (data.message || 'Unknown error'));
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            alert('Terjadi kesalahan koneksi.');
-        })
-        .finally(() => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+    <!-- Modal Add Office -->
+    <div class="modal fade" id="addOfficeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title fw-bold">Outlet Baru</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addOfficeForm" action="{{ route('offices.store') }}" method="POST">
+                        @csrf
+                        <div class="mb-3">
+                            <input type="text" name="name" class="form-control form-control-mac" placeholder="Nama Outlet" required>
+                        </div>
+                        <div class="mb-4">
+                            <input type="text" name="code" class="form-control form-control-mac" placeholder="Kode Outlet" required>
+                        </div>
+                        <button type="submit" class="btn btn-mac-primary">Buat Outlet</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @include('Layout._alert_helper')
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function selectOffice(officeId) {
+            const redirectOverlay = document.getElementById('redirectOverlay');
+            redirectOverlay.classList.add('active');
+
+            fetch("{{ route('set.outlet') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ office_id: officeId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 800);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Terjadi kesalahan koneksi.");
+                location.reload();
+            });
+        }
+
+        async function deleteOutlet(id, name) {
+            const confirmed = await macConfirm(
+                'PERINGATAN!', 
+                `Apakah Anda yakin ingin menghapus outlet "${name}"? \n\nSemua data (transaksi, stok, user, dll) yang berhubungan dengan outlet ini akan dihapus permanen.`
+            );
+
+            if (!confirmed) return;
+
+            const redirectOverlay = document.getElementById('redirectOverlay');
+            // Show loading
+            redirectOverlay.classList.add('active');
+            
+            fetch("{{ url('delete-outlet') }}/" + id, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                redirectOverlay.classList.remove('active');
+                if(data.success) {
+                    showNotification('success', 'Outlet berhasil dihapus.');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showNotification('error', 'Gagal: ' + data.message);
+                }
+            })
+            .catch(err => {
+                redirectOverlay.classList.remove('active');
+                console.error(err);
+                showNotification('error', 'Terjadi kesalahan koneksi.');
+            });
+        }
+
+        // Handle Add Office Form
+        document.getElementById('addOfficeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Menyimpan...';
+            btn.disabled = true;
+
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: new FormData(this)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    location.reload();
+                } else {
+                    alert('Gagal: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                alert('Terjadi kesalahan koneksi.');
+            })
+            .finally(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
         });
-    });
-
-    function selectOffice(officeId) {
-        const redirectOverlay = document.getElementById('redirectOverlay');
-        const body = document.body;
-
-        body.classList.add('is-redirecting');
-        redirectOverlay.classList.add('active');
-
-        fetch("{{ route('set.outlet') }}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ office_id: officeId })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(data.success) {
-                setTimeout(() => {
-                    window.location.href = data.redirect_url;
-                }, 1200);
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            alert("Terjadi kesalahan koneksi.");
-            location.reload();
-        });
-    }
-</script>
-
+    </script>
 </body>
 </html>
