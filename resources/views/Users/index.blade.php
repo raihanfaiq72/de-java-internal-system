@@ -52,7 +52,7 @@
                                     <th width="200">Email</th>
                                     <th width="120" class="text-center">Status</th>
                                     <th width="150" class="text-center">Terdaftar</th>
-                                    <th width="100" class="text-end pe-4">Aksi</th>
+                                    <th width="200" class="text-end pe-4">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="userTableBody" class="border-top-0">

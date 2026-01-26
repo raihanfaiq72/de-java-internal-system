@@ -44,8 +44,8 @@
                                 <tr>
                                     <th width="150" class="ps-4">Kode Kantor</th>
                                     <th>Nama Kantor</th>
-                                    <th width="200" class="text-center">Tanggal Dibuat</th>
-                                    <th width="100" class="text-end pe-4">Aksi</th>
+                                    <th width="330" class="text-center">Tanggal Dibuat</th>
+                                    <th width="330" class="text-end pe-4">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>

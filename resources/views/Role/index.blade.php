@@ -45,9 +45,9 @@
                                     <th width="50" class="ps-4 text-center">#</th>
                                     <th width="250">Nama Role</th>
                                     <th>Deskripsi</th>
-                                    <th width="150" class="text-center">Jumlah Izin</th>
-                                    <th width="150" class="text-center">Dibuat Pada</th>
-                                    <th width="120" class="text-end pe-4">Aksi</th>
+                                    <th width="200" class="text-center">Jumlah Izin</th>
+                                    <th width="200" class="text-center">Dibuat Pada</th>
+                                    <th width="200" class="text-end pe-4">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
