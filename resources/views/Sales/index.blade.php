@@ -199,6 +199,7 @@
     </div>
 
     @include('Sales.Modal.modal-fullscreen')
+    @include('Sales.Modal.detail-modal')
     @include('Sales.Partials.invoice-templates')
 @endsection
 
@@ -421,12 +422,69 @@
             }
         }
 
+        function openDetailModal(item) {
+             const modalEl = document.getElementById('detailInvoiceModal');
+             if(!modalEl) return;
+
+            // Populate Modal Data
+            document.getElementById('detailInvoiceNumber').textContent = item.nomor_invoice;
+            document.getElementById('detailInvoiceTitle').textContent = `Detail Invoice ${item.nomor_invoice}`;
+            document.getElementById('detailDate').textContent = window.financeApp.formatDate(item.tgl_invoice);
+            document.getElementById('detailDueDate').textContent = window.financeApp.formatDate(item.tgl_jatuh_tempo);
+            
+            // Mitra Info
+            document.getElementById('detailMitraName').textContent = item.mitra?.nama || '-';
+            document.getElementById('detailMitraAddress').textContent = item.mitra?.alamat || '-';
+            
+            // Payment Status
+            const payBadge = document.getElementById('detailPaymentStatus');
+            const payClass = item.status_pembayaran === 'Paid' ? 'bg-success-subtle text-success' : (item.status_pembayaran === 'Unpaid' ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning');
+            payBadge.className = `badge ${payClass} border`;
+            payBadge.textContent = item.status_pembayaran;
+
+            // Items
+            const tbody = document.getElementById('detailItemsBody');
+            tbody.innerHTML = '';
+            item.items?.forEach(it => {
+                const tr = document.createElement('tr');
+                tr.classList.add('border-bottom', 'border-light');
+                tr.innerHTML = `
+                    <td class="ps-3 py-3">
+                        <div class="fw-bold text-dark">${it.nama_produk_manual || it.product?.nama_produk || '-'}</div>
+                        <div class="small text-muted">${it.product?.kode_produk || '-'}</div>
+                    </td>
+                    <td class="text-center py-3">${parseFloat(it.qty)} ${it.product?.unit?.nama_unit || ''}</td>
+                    <td class="text-end py-3">${window.financeApp.formatIDR(it.harga_satuan)}</td>
+                    <td class="text-end pe-3 py-3">${window.financeApp.formatIDR(it.total_harga_item)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Totals
+            document.getElementById('detailSubtotal').textContent = window.financeApp.formatIDR(item.total_akhir);
+            document.getElementById('detailTotal').textContent = window.financeApp.formatIDR(item.total_akhir);
+
+            // Action Buttons
+            document.getElementById('btnDetailEdit').onclick = () => {
+                bootstrap.Modal.getInstance(document.getElementById('detailInvoiceModal')).hide();
+                openInvoiceModal(item.id, null, 'edit');
+            };
+            document.getElementById('btnDetailDelete').onclick = () => {
+                if(confirm('Hapus invoice ini?')) {
+                    bootstrap.Modal.getInstance(document.getElementById('detailInvoiceModal')).hide();
+                    deleteInvoice(item.id);
+                }
+            };
+            document.getElementById('btnDetailPrint').href = `{{ url('sales/print') }}/${item.id}`;
+
+            // Show Modal
+            new bootstrap.Modal(document.getElementById('detailInvoiceModal')).show();
+        }
+
         function renderInvoiceList(data) {
             const tbody = document.getElementById('invoiceTableBody');
             const rowTpl = document.getElementById('row-template');
-            const detailTpl = document.getElementById('detail-template');
-            const itemTpl = document.getElementById('item-row-template');
-
+            
             tbody.innerHTML = '';
 
             if (!data || data.length === 0) {
@@ -438,8 +496,16 @@
             data.forEach((item, index) => {
                 const row = rowTpl.content.cloneNode(true);
                 const trMain = row.querySelector('.clickable-row');
+                
+                // Click to open detail
+                trMain.removeAttribute('data-bs-target');
+                trMain.removeAttribute('data-bs-toggle');
+                trMain.onclick = (e) => {
+                    // Prevent if clicked on checkbox or actions
+                    if (e.target.closest('.invoice-checkbox') || e.target.closest('.dropdown') || e.target.closest('a') || e.target.closest('button')) return;
+                    openDetailModal(item);
+                };
 
-                trMain.setAttribute('data-bs-target', `#detail-${item.id}`);
                 row.querySelector('.invoice-checkbox').dataset.id = item.id;
                 row.querySelector('.row-index').textContent = index + 1;
                 row.querySelector('.row-nomor').textContent = item.nomor_invoice;
@@ -471,31 +537,24 @@
                     `Due: ${window.financeApp.formatDate(item.tgl_jatuh_tempo)}`;
 
                 // Aksi
-                row.querySelector('.btn-show').onclick = () => openInvoiceModal(item.id, null, 'show');
+                const btnShow = row.querySelector('.btn-show');
+                if (btnShow) {
+                    btnShow.onclick = (e) => {
+                        e.preventDefault();
+                        openDetailModal(item);
+                    };
+                    btnShow.removeAttribute('href');
+                }
+                
                 row.querySelector('.btn-edit').onclick = () => openInvoiceModal(item.id, null, 'edit');
                 row.querySelector('.btn-delete').onclick = () => deleteInvoice(item.id);
                 row.querySelector('.btn-print').href = `{{ url('sales/print') }}/${item.id}`;
 
-                // --- PROSES BARIS DETAIL ---
-                const detail = detailTpl.content.cloneNode(true);
-                detail.querySelector('.collapse').id = `detail-${item.id}`;
-                const detailBody = detail.querySelector('.detail-body-list');
-
-                item.items?.forEach((it, idx) => {
-                    const itemRow = itemTpl.content.cloneNode(true);
-                    itemRow.querySelector('.item-index').textContent = idx + 1;
-                    itemRow.querySelector('.item-nama').textContent = it.nama_produk_manual || it.product
-                        ?.nama_produk || '-';
-                    itemRow.querySelector('.item-qty').textContent = parseFloat(it.qty);
-                    itemRow.querySelector('.item-harga').textContent = window.financeApp.formatIDR(it
-                        .harga_satuan);
-                    itemRow.querySelector('.item-total').textContent = window.financeApp.formatIDR(it
-                        .total_harga_item);
-                    detailBody.appendChild(itemRow);
-                });
+                // Remove chevron
+                const chevron = row.querySelector('.chevron-icon');
+                if(chevron) chevron.remove();
 
                 tbody.appendChild(row);
-                tbody.appendChild(detail);
             });
         }
 

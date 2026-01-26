@@ -33,6 +33,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('dashboard-sales/detail/{id}', [DashboardSalesController::class, 'detail'])->name('dashboard.sales.detail');
         
         Route::get('sales', [SalesController::class, 'index'])->name('sales');
+        Route::get('sales/{id}', [SalesController::class, 'show'])->name('sales.show');
         Route::get('sales/print/{id}', [SalesController::class, 'printInvoice'])->name('sales.print');
         Route::get('sales-receipt',[SalesController::class,'receipt'])->name('sales.receipt');
         Route::get('sales-receipt/print/{id}', [SalesController::class, 'printReceipt'])->name('sales.receipt.print');

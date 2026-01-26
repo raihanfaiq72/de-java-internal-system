@@ -920,9 +920,10 @@
             const result = await response.json();
 
             if (result.success) {
-                alert('Dokumen berhasil disimpan!');
+                // alert('Dokumen berhasil disimpan!');
                 bootstrap.Modal.getInstance(document.getElementById('invoiceModal')).hide();
-                if (typeof loadInvoiceData === 'function') loadInvoiceData();
+                // Redirect to detail page
+                window.location.href = `{{ url('sales') }}/${result.data.id}`;
             } else {
                 alert('Gagal menyimpan: ' + (result.message || JSON.stringify(result.errors)));
             }

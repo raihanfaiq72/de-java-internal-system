@@ -1,10 +1,9 @@
 <template id="row-template">
-    <tr class="clickable-row" data-bs-toggle="collapse" aria-expanded="false">
+    <tr class="clickable-row">
         <td class="ps-3" onclick="event.stopPropagation()">
             <input type="checkbox" class="form-check-input invoice-checkbox">
         </td>
         <td class="text-center small text-muted">
-            <span class="chevron-icon"><i class="fa fa-chevron-right"></i></span>
             <span class="row-index"></span>
         </td>
         <td>
@@ -63,31 +62,6 @@
                                 class="fa fa-trash me-2"></i> Hapus</a>
                     </li>
                 </ul>
-            </div>
-        </td>
-    </tr>
-</template>
-
-<template id="detail-template">
-    <tr class="detail-row">
-        <td colspan="10" class="p-0">
-            <div class="collapse detail-wrapper">
-                <div class="p-4">
-                    <h6 class="fw-bold text-uppercase text-secondary small mb-3"><i class="fa fa-list me-2"></i>Rincian
-                        Produk</h6>
-                    <table class="table table-sm bg-white border rounded overflow-hidden mb-0">
-                        <thead class="bg-light text-secondary small">
-                            <tr>
-                                <th class="text-center">#</th>
-                                <th>Item Produk</th>
-                                <th class="text-center">Qty</th>
-                                <th class="text-end">Harga</th>
-                                <th class="text-end">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody class="detail-body-list"></tbody>
-                    </table>
-                </div>
             </div>
         </td>
     </tr>

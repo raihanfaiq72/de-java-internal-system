@@ -15,6 +15,18 @@ class SalesController extends Controller
         return view($this->views.'index');
     }
 
+    public function show($id)
+    {
+        $invoice = Invoice::with(['mitra', 'items.product.unit', 'payment'])->find($id);
+        if (!$invoice) abort(404);
+
+        if ($invoice->office_id != session('active_office_id')) {
+            abort(404);
+        }
+
+        return view($this->views . 'detail', compact('invoice'));
+    }
+
     public function receipt()
     {
         // Ambil Mitra untuk pilihan pelanggan

@@ -25,9 +25,15 @@ class InvoiceController extends Controller
     }
     public function index(Request $request)
     {
-        $query = Invoice::with(['mitra', 'items.product', 'items.taxes', 'payment'])
+        $query = Invoice::with(['mitra', 'items.product.unit', 'items.taxes', 'payment'])
             ->where('office_id', session('active_office_id'))
             ->withSum('payment', 'jumlah_bayar');
+
+        if ($request->tab_status === 'trash') {
+            $query->onlyTrashed();
+        } elseif ($request->tab_status === 'archive') {
+            $query->where('status_dok', 'Archived');
+        }
 
         if ($request->tipe_invoice) {
             $query->where('tipe_invoice', $request->tipe_invoice);
