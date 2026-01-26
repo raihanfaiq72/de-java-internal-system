@@ -8,6 +8,7 @@ use App\Models\ActivityLog;
 use App\Models\InvoiceItem;
 use App\Models\InvoiceItemTaxe;
 use App\Services\StockService;
+use App\Services\JournalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -15,10 +16,12 @@ use Illuminate\Support\Facades\Validator;
 class InvoiceController extends Controller
 {
     protected $stockService;
+    protected $journalService;
 
-    public function __construct(StockService $stockService)
+    public function __construct(StockService $stockService, JournalService $journalService)
     {
         $this->stockService = $stockService;
+        $this->journalService = $journalService;
     }
     public function index(Request $request)
     {
@@ -285,6 +288,13 @@ class InvoiceController extends Controller
                         }
                     }
                 }
+            }
+
+            // Automatic Journal Entry
+            if ($invoice->tipe_invoice === 'Purchase') {
+                $this->journalService->recordPurchaseInvoice($invoice->fresh(['items.product']));
+            } elseif ($invoice->tipe_invoice === 'Sales') {
+                $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
             }
 
             return apiResponse(true, 'Invoice berhasil dibuat lengkap', [

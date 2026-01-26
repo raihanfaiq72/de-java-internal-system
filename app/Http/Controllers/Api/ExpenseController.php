@@ -5,11 +5,19 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Expense;
 use App\Models\ActivityLog;
+use App\Services\JournalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class ExpenseController extends Controller
 {
+    protected $journalService;
+
+    public function __construct(JournalService $journalService)
+    {
+        $this->journalService = $journalService;
+    }
+
     public function index(Request $request)
     {
         $query = Expense::query()->where('office_id', session('active_office_id'));
@@ -55,6 +63,9 @@ class ExpenseController extends Controller
         $data = Expense::create($input);
 
         $this->logActivity('Create', 'expenses', $data->id, null, $data);
+
+        // Automatic Journal Entry
+        $this->journalService->recordExpense($data);
 
         return apiResponse(true, 'Biaya berhasil dicatat', $data, null, 201);
     }

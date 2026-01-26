@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\ActivityLog;
 use App\Models\Invoice;
+use App\Services\JournalService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,13 @@ use Illuminate\Support\Facades\Validator;
 
 class PaymentController extends Controller
 {
+    protected $journalService;
+
+    public function __construct(JournalService $journalService)
+    {
+        $this->journalService = $journalService;
+    }
+
     public function index(Request $request)
     {
         $query = Payment::with(['invoice.items.product', 'invoice.mitra', 'akun_keuangan'])
@@ -120,6 +128,9 @@ class PaymentController extends Controller
                 null,
                 $payment
             );
+
+            // Automatic Journal Entry
+            $this->journalService->recordPayment($payment);
 
             return apiResponse(true, 'Pembayaran berhasil dicatat', [
                 'payment' => $payment,
