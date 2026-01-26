@@ -46,7 +46,7 @@
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item btn-send-invoice" href="javascript:void(0)">
+                        <a class="dropdown-item btn-create-receipt" href="javascript:void(0)">
                             <i class="fa fa-receipt text-dark me-2"></i> Buat Kuitansi
                         </a>
                     </li>

@@ -76,7 +76,7 @@
 
                     <div class="card-body p-4 bg-white">
                         <div class="mb-4 p-3 rounded-3 bg-light border">
-                            <div class="row g-2 mb-4 rounded-3 align-items-end bg-light border">
+                            <div class="row g-2 mb-4 rounded-3 align-items-end bg-light border p-3">
                                 <div class="col-lg-3">
                                     <label class="f-label">Pencarian</label>
                                     <div class="input-group input-group-finance">
@@ -117,27 +117,17 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-lg-5 text-end">
-                                    <div id="bulk-action-area" class="d-none d-inline-block me-2">
-                                        <span class="small text-muted me-2 selected-count">0 terpilih</span>
-                                        <button class="btn btn-outline-danger fw-bold py-2 px-3 shadow-sm btn-sm"
-                                            onclick="bulkDelete()">
-                                            <i class="fa fa-trash-can me-1"></i> HAPUS
-                                        </button>
-                                    </div>
-                                    <button onclick="loadInvoiceData()"
-                                        class="btn btn-dark fw-bold py-2 px-4 shadow-sm btn-sm">FILTER</button>
-                                    <button onclick="resetFilter()"
-                                        class="btn btn-light border fw-bold text-dark py-2 btn-sm">RESET</button>
-                                </div>
-                            </div>
-
-                            <div class="row g-2 align-items-end">
                                 <div class="col-lg-3">
                                     <label class="f-label">Pemasok / Mitra</label>
                                     <select id="filter-mitra-id" class="tom-select-init">
                                         <option value="">Semua Pemasok...</option>
                                     </select>
+                                </div>
+                                <div class="col-lg-2 text-end">
+                                     <button onclick="loadInvoiceData()"
+                                        class="btn btn-dark fw-bold py-2 w-100 shadow-sm btn-sm">
+                                        <i class="fa fa-filter me-1"></i> FILTER
+                                    </button>
                                 </div>
                                 <div class="col-lg-2">
                                     <label class="f-label">Tanggal Invoice</label>
@@ -145,9 +135,22 @@
                                         style="font-size: 13px; padding: 0.55rem;">
                                 </div>
                                 <div class="col-lg-2">
-                                    <label class="f-label">Tanggal Jatuh Tempo</label>
+                                    <label class="f-label">Jatuh Tempo</label>
                                     <input type="date" id="filter-tgl-jatuh-tempo" class="form-control shadow-none"
                                         style="font-size: 13px; padding: 0.55rem;">
+                                </div>
+                                <div class="col-lg-8 text-end">
+                                    <div id="bulk-action-area" class="d-none d-inline-block me-2">
+                                        <span class="small text-muted me-2 selected-count">0 terpilih</span>
+                                        <button class="btn btn-outline-danger fw-bold py-2 px-3 shadow-sm btn-sm"
+                                            onclick="bulkDelete()">
+                                            <i class="fa fa-trash-can me-1"></i> HAPUS
+                                        </button>
+                                    </div>
+                                    <button onclick="resetFilter()"
+                                        class="btn btn-light border fw-bold text-dark py-2 btn-sm px-4">
+                                        <i class="fa fa-sync me-1"></i> RESET
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -322,6 +325,7 @@
 @endpush
 
 @push('js')
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <script>
         if (!window.financeApp) {
             window.financeApp = {
@@ -345,6 +349,19 @@
         }
 
         let currentTabStatus = 'active';
+
+        // Safe TomSelect wrapper
+        const safeTomSelect = (selector, options) => {
+            if (typeof TomSelect !== 'undefined') {
+                try {
+                    return new TomSelect(selector, options);
+                } catch (e) {
+                    console.warn('TomSelect init failed for', selector, e);
+                    return null;
+                }
+            }
+            return null;
+        };
 
         document.querySelectorAll('.nav-tabs-finance .nav-link').forEach(tab => {
             tab.addEventListener('shown.bs.tab', function(event) {
@@ -503,7 +520,7 @@
                 trMain.onclick = (e) => {
                     // Prevent if clicked on checkbox or actions
                     if (e.target.closest('.invoice-checkbox') || e.target.closest('.dropdown') || e.target.closest('a') || e.target.closest('button')) return;
-                    openDetailModal(item);
+                    window.location.href = `{{ url('sales') }}/${item.id}`;
                 };
 
                 row.querySelector('.invoice-checkbox').dataset.id = item.id;
@@ -546,6 +563,15 @@
                     btnShow.removeAttribute('href');
                 }
                 
+                const btnReceipt = row.querySelector('.btn-create-receipt');
+                if (btnReceipt) {
+                    btnReceipt.onclick = (e) => {
+                        e.preventDefault();
+                        // Redirect to receipt page with params
+                        window.location.href = `{{ route('sales.receipt') }}?open_create=true&invoice_id=${item.id}&mitra_id=${item.mitra_id}`;
+                    };
+                }
+
                 row.querySelector('.btn-edit').onclick = () => openInvoiceModal(item.id, null, 'edit');
                 row.querySelector('.btn-delete').onclick = () => deleteInvoice(item.id);
                 row.querySelector('.btn-print').href = `{{ url('sales/print') }}/${item.id}`;
@@ -634,34 +660,50 @@
         let tomSelectPaymentStatus, tomSelectDocumentStatus, tomSelectMitraIndex;
 
         function initFilters() {
-            tomSelectDocumentStatus = new TomSelect('#filter-status-dok', {
+            if (typeof TomSelect === 'undefined') {
+                console.warn('TomSelect is not loaded. Filters will use default select behavior.');
+            }
+
+            tomSelectDocumentStatus = safeTomSelect('#filter-status-dok', {
                 create: false,
                 allowEmptyOption: true,
             });
 
-            tomSelectPaymentStatus = new TomSelect('#filter-status-bayar', {
+            tomSelectPaymentStatus = safeTomSelect('#filter-status-bayar', {
                 create: false,
                 allowEmptyOption: true,
             });
 
-            tomSelectMitraIndex = new TomSelect('#filter-mitra-id', {
+            tomSelectMitraIndex = safeTomSelect('#filter-mitra-id', {
                 create: false,
                 allowEmptyOption: true,
                 placeholder: 'Cari Pemasok / Mitra ...'
             })
 
             const searchInput = document.getElementById('filter-search');
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    loadInvoiceData();
-                }
-            });
+            if(searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        loadInvoiceData();
+                    }
+                });
+            }
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            initFilters();
-            await initializeMasterData();
+            try {
+                initFilters();
+            } catch(e) {
+                console.error('Filter init error:', e);
+            }
+            
+            try {
+                await initializeMasterData();
+            } catch(e) {
+                console.error('Master data error:', e);
+            }
+            
             loadInvoiceData();
         });
     </script>

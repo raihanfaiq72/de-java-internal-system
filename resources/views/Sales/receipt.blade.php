@@ -283,11 +283,13 @@
         let tomMitra;
         let selectedInvoices = [];
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             tomMitra = new TomSelect("#mitra_id", {
                 onChange: () => {
-                    selectedInvoices = [];
-                    renderSelectedTable();
+                    if (!tomMitra.skipClear) {
+                        selectedInvoices = [];
+                        renderSelectedTable();
+                    }
                 }
             });
 
@@ -305,6 +307,47 @@
             });
 
             loadReceiptData();
+
+            // Check URL Params for Direct Create
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('open_create') === 'true') {
+                openCreateModal();
+                
+                const mitraId = urlParams.get('mitra_id');
+                const invoiceId = urlParams.get('invoice_id');
+
+                if (mitraId) {
+                    tomMitra.skipClear = true; 
+                    tomMitra.setValue(mitraId);
+                    tomMitra.skipClear = false;
+                }
+
+                if (invoiceId) {
+                    try {
+                        const res = await fetch(`${API_INVOICE}/${invoiceId}`);
+                        const json = await res.json();
+                        if (json.success) {
+                            const data = json.data;
+                            if (!selectedInvoices.find(s => s.id == data.id)) {
+                                const tertagih = data.total_akhir - (data.payment_sum_jumlah_bayar || 0);
+                                selectedInvoices.push({
+                                    id: data.id,
+                                    nomor_invoice: data.nomor_invoice,
+                                    pelanggan: data.mitra?.nama || '-',
+                                    tgl: data.tgl_invoice,
+                                    jatuh_tempo: data.tgl_jatuh_tempo || '-',
+                                    total: data.total_akhir,
+                                    tertagih: tertagih,
+                                    bayar: tertagih // Auto-fill full amount
+                                });
+                                renderSelectedTable();
+                            }
+                        }
+                    } catch(e) {
+                        console.error('Failed to load invoice for receipt', e);
+                    }
+                }
+            }
         });
 
         function formatIDR(val) {
