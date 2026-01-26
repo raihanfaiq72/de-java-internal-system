@@ -13,7 +13,7 @@ class UnitCategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = UnitCategorie::query();
+        $query = UnitCategorie::where('office_id', session('active_office_id'));
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -32,6 +32,12 @@ class UnitCategoryController extends Controller
             'nama_kategori' => 'required|string|max:100',
             'konversi_nilai' => 'numeric'
         ]);
+
+        if (!session()->has('active_office_id')) {
+            return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
+        }
+
+        $data['office_id'] = session('active_office_id');
 
         $unitCategory = UnitCategorie::create($data);
 
@@ -53,7 +59,7 @@ class UnitCategoryController extends Controller
 
     public function update(Request $request, $id)
     {
-        $data = UnitCategorie::find($id);
+        $data = UnitCategorie::where('office_id', session('active_office_id'))->find($id);
 
         if (!$data) {
             return apiResponse(false, 'Data tidak ditemukan', null, null, 404);
@@ -70,7 +76,9 @@ class UnitCategoryController extends Controller
 
     public function destroy($id)
     {
-        $data = UnitCategorie::find($id);
+        $data = UnitCategorie::where('id', $id)
+            ->where('office_id', session('active_office_id'))
+            ->first();
 
         if (!$data) {
             return apiResponse(false, 'Data tidak ditemukan', null, null, 404);
@@ -86,7 +94,8 @@ class UnitCategoryController extends Controller
 
     public function search($value)
     {
-        $data = UnitCategorie::where('nama_kategori', 'LIKE', "%$value%")
+        $data = UnitCategorie::where('office_id', session('active_office_id'))
+            ->where('nama_kategori', 'LIKE', "%$value%")
             ->paginate(10);
 
         return apiResponse(true, 'Hasil pencarian', $data);
@@ -101,7 +110,8 @@ class UnitCategoryController extends Controller
             'data_id' => $dataId,
             'data_sebelum' => $sebelum,
             'data_sesudah' => $sesudah,
-            'ip_address' => request()->ip()
+            'ip_address' => request()->ip(),
+            'office_id' => session('active_office_id')
         ]);
     }
 }

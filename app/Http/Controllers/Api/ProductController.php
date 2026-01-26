@@ -13,7 +13,8 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'unit']);
+        $query = Product::with(['category', 'unit'])
+            ->where('office_id', session('active_office_id'));
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -33,7 +34,9 @@ class ProductController extends Controller
 
     public function show($id)
     {
-        $data = Product::with(['category', 'unit'])->find($id);
+        $data = Product::with(['category', 'unit'])
+            ->where('office_id', session('active_office_id'))
+            ->find($id);
         if (!$data) {
             return apiResponse(false, 'Produk tidak ditemukan', null, null, 404);
         }
@@ -52,7 +55,14 @@ class ProductController extends Controller
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
-        $data = Product::create($request->all());
+        if (!session()->has('active_office_id')) {
+            return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
+        }
+
+        $input = $request->all();
+        $input['office_id'] = session('active_office_id');
+
+        $data = Product::create($input);
 
         $this->logActivity('Create', 'products', $data->id, null, $data);
 
@@ -61,9 +71,22 @@ class ProductController extends Controller
 
     public function update(Request $request, $id)
     {
-        $data = Product::find($id);
+        $data = Product::where('office_id', session('active_office_id'))->find($id);
         if (!$data) {
             return apiResponse(false, 'Produk tidak ditemukan', null, null, 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'sku_kode' => 'required|unique:products,sku_kode,' . $id,
+            'nama_produk' => 'required',
+            'unit_id' => 'exists:units,id',
+            'unit_category_id' => 'nullable|exists:unit_categories,id',
+            'harga_beli' => 'nullable|numeric|min:0',
+            'harga_jual' => 'nullable|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
         $before = $data->toArray();
@@ -76,7 +99,7 @@ class ProductController extends Controller
 
     public function destroy($id)
     {
-        $data = Product::find($id);
+        $data = Product::where('office_id', session('active_office_id'))->find($id);
         if (!$data) {
             return apiResponse(false, 'Produk tidak ditemukan', null, null, 404);
         }
@@ -91,8 +114,11 @@ class ProductController extends Controller
 
     public function search($value)
     {
-        $data = Product::where('nama_produk', 'LIKE', "%$value%")
-            ->orWhere('sku_kode', 'LIKE', "%$value%")
+        $data = Product::where('office_id', session('active_office_id'))
+            ->where(function($q) use ($value) {
+                $q->where('nama_produk', 'LIKE', "%$value%")
+                  ->orWhere('sku_kode', 'LIKE', "%$value%");
+            })
             ->paginate(10);
 
         return apiResponse(true, 'Hasil pencarian produk', $data);
@@ -100,7 +126,8 @@ class ProductController extends Controller
 
     public function nextSku()
     {
-        $last = Product::orderBy('id', 'desc')->first();
+        $last = Product::where('office_id', session('active_office_id'))
+            ->orderBy('id', 'desc')->first();
 
         if (!$last || !$last->sku_kode) {
             return apiResponse(true, 'Next SKU', 'PROD-00001');
@@ -118,6 +145,7 @@ class ProductController extends Controller
     private function logActivity($tindakan, $tabel, $dataId, $before, $after)
     {
         ActivityLog::create([
+            'office_id' => session('active_office_id'),
             'user_id' => 1,
             'tindakan' => $tindakan,
             'tabel_terkait' => $tabel,

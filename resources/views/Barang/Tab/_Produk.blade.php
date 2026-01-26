@@ -67,6 +67,7 @@
     const CATEGORY_API_URL = 'http://localhost:8000/api/product-categories-api';
     const UNIT_CATEGORY_API = 'http://localhost:8000/api/unit-categories-api';
     const UNIT_API = 'http://localhost:8000/api/unit-api';
+    const NEXT_SKU_API = 'http://localhost:8000/api/product-next-sku-api';
 
     document.addEventListener('DOMContentLoaded', () => {
         loadKategoriProduk();
@@ -296,6 +297,42 @@
 <script>
 let deleteProdukId = null;
 
+function toggleTrackStock() {
+    const isChecked = document.getElementById('produk-track-stock').checked;
+    const stockFields = document.querySelectorAll('.stock-field');
+    
+    stockFields.forEach(el => {
+        el.style.display = isChecked ? 'block' : 'none';
+    });
+
+    if (!isChecked) {
+        document.getElementById('produk-qty').value = '';
+    }
+}
+
+async function generateSku() {
+    const skuInput = document.getElementById('produk-sku');
+    skuInput.value = 'Loading...';
+    skuInput.disabled = true;
+
+    try {
+        const res = await fetch(NEXT_SKU_API);
+        const result = await res.json();
+        
+        if (result.success) {
+            skuInput.value = result.data;
+        } else {
+            skuInput.value = '';
+            alert('Gagal generate SKU');
+        }
+    } catch (e) {
+        console.error(e);
+        skuInput.value = '';
+    } finally {
+        skuInput.disabled = false;
+    }
+}
+
 async function tambahProduk() {
     document.getElementById('modalProdukTitle').innerText = 'Tambah Produk';
     document.getElementById('btn-simpan-produk').style.display = 'block';
@@ -308,6 +345,13 @@ async function tambahProduk() {
     document.getElementById('produk-harga-jual').value = '';
     document.getElementById('produk-qty').value = '';
     document.getElementById('produk-deskripsi').value = '';
+    
+    // Reset track stock
+    document.getElementById('produk-track-stock').checked = false;
+    toggleTrackStock();
+
+    // Auto generate SKU
+    await generateSku();
 
     await loadKategoriProdukModal();
     await loadUnitCategoryModal();
@@ -391,7 +435,8 @@ function setModalFieldsDisabled(disabled) {
     const fields = [
         'produk-sku', 'produk-nama', 'produk-kategori',
         'produk-unit-category', 'produk-unit', 'produk-harga-beli',
-        'produk-harga-jual', 'produk-qty', 'produk-deskripsi'
+        'produk-harga-jual', 'produk-qty', 'produk-deskripsi',
+        'produk-track-stock'
     ];
     fields.forEach(id => {
         const el = document.getElementById(id);
@@ -432,6 +477,7 @@ async function submitProduk() {
         harga_jual: document.getElementById('produk-harga-jual').value,
         qty: document.getElementById('produk-qty').value,
         deskripsi_produk: document.getElementById('produk-deskripsi').value,
+        track_stock: document.getElementById('produk-track-stock').checked ? 1 : 0,
         akun_penjualan_id: 1,
         akun_pembelian_id: 1,
         akun_diskon_penjualan_id: 1,

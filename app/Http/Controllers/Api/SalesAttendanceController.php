@@ -10,7 +10,8 @@ class SalesAttendanceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = SalesAttendance::with('user');
+        $query = SalesAttendance::with('user')
+            ->where('office_id', session('active_office_id'));
 
         if ($request->user_id) {
             $query->where('user_id', $request->user_id);
@@ -27,7 +28,12 @@ class SalesAttendanceController extends Controller
 
     public function store(Request $request)
     {
+        if (!session()->has('active_office_id')) {
+            return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
+        }
+
         $data = SalesAttendance::create([
+            'office_id' => session('active_office_id'),
             'user_id' => 1,
             'tgl_presensi' => now()->toDateString(),
             'jam_masuk' => now()->toTimeString(),
@@ -40,7 +46,7 @@ class SalesAttendanceController extends Controller
 
     public function update(Request $request, $id)
     {
-        $data = SalesAttendance::find($id);
+        $data = SalesAttendance::where('office_id', session('active_office_id'))->find($id);
         if (!$data) {
             return apiResponse(false, 'Data presensi tidak ditemukan', null, null, 404);
         }

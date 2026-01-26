@@ -57,10 +57,22 @@
                                class="form-control form-control-sm">
                     </div>
 
-                    <div class="col-md-4">
-                        <label class="small fw-bold">Qty</label>
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="produk-track-stock" onchange="toggleTrackStock()">
+                            <label class="form-check-label small fw-bold" for="produk-track-stock">Lacak Stok Barang (Track Stock)</label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 stock-field" style="display:none;">
+                        <label class="small fw-bold">Stok Awal (Qty)</label>
                         <input type="number" id="produk-qty"
                                class="form-control form-control-sm">
+                    </div>
+                    <div class="col-md-8 stock-field" style="display:none;">
+                        <span class="text-muted small d-block mt-4">
+                            * Stok awal akan dicatat sebagai "Initial Balance" dengan HPP sesuai Harga Beli.
+                        </span>
                     </div>
 
                     <div class="col-12">

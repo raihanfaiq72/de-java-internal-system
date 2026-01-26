@@ -12,7 +12,8 @@ class ProductCategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = ProductCategorie::with('parent');
+        $query = ProductCategorie::with('parent')
+            ->where('office_id', session('active_office_id'));
 
         if ($request->search) {
             $query->where('nama_kategori', 'LIKE', "%{$request->search}%");
@@ -25,7 +26,9 @@ class ProductCategoryController extends Controller
 
     public function show($id)
     {
-        $data = ProductCategorie::with('parent')->find($id);
+        $data = ProductCategorie::with('parent')
+            ->where('office_id', session('active_office_id'))
+            ->find($id);
         if (!$data) {
             return apiResponse(false, 'Data tidak ditemukan', null, null, 404);
         }
@@ -43,7 +46,14 @@ class ProductCategoryController extends Controller
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
-        $data = ProductCategorie::create($request->all());
+        if (!session()->has('active_office_id')) {
+            return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
+        }
+
+        $input = $request->all();
+        $input['office_id'] = session('active_office_id');
+
+        $data = ProductCategorie::create($input);
 
         $this->logActivity('Create', 'product_categories', $data->id, null, $data);
 
@@ -52,7 +62,7 @@ class ProductCategoryController extends Controller
 
     public function update(Request $request, $id)
     {
-        $data = ProductCategorie::find($id);
+        $data = ProductCategorie::where('office_id', session('active_office_id'))->find($id);
         if (!$data) {
             return apiResponse(false, 'Data tidak ditemukan', null, null, 404);
         }
@@ -67,7 +77,10 @@ class ProductCategoryController extends Controller
 
     public function destroy($id)
     {
-        $data = ProductCategorie::find($id);
+        $data = ProductCategorie::where('id', $id)
+            ->where('office_id', session('active_office_id'))
+            ->first();
+
         if (!$data) {
             return apiResponse(false, 'Data tidak ditemukan', null, null, 404);
         }
@@ -82,7 +95,8 @@ class ProductCategoryController extends Controller
 
     public function search($value)
     {
-        $data = ProductCategorie::where('nama_kategori', 'LIKE', "%$value%")
+        $data = ProductCategorie::where('office_id', session('active_office_id'))
+            ->where('nama_kategori', 'LIKE', "%$value%")
             ->paginate(10);
 
         return apiResponse(true, 'Hasil pencarian kategori produk', $data);
@@ -91,6 +105,7 @@ class ProductCategoryController extends Controller
     private function logActivity($tindakan, $tabel, $dataId, $before, $after)
     {
         ActivityLog::create([
+            'office_id' => session('active_office_id'),
             'user_id' => 1,
             'tindakan' => $tindakan,
             'tabel_terkait' => $tabel,

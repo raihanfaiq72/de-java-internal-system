@@ -13,7 +13,8 @@ class UnitController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Unit::with('category');
+        $query = Unit::with('category')
+            ->where('office_id', session('active_office_id'));
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -31,7 +32,9 @@ class UnitController extends Controller
 
     public function show($id)
     {
-        $data = Unit::with('category')->find($id);
+        $data = Unit::with('category')
+            ->where('office_id', session('active_office_id'))
+            ->find($id);
         if (!$data) {
             return apiResponse(false, 'Data tidak ditemukan', null, null, 404);
         }
@@ -50,7 +53,14 @@ class UnitController extends Controller
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
-        $data = Unit::create($request->all());
+        if (!session()->has('active_office_id')) {
+            return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
+        }
+
+        $input = $request->all();
+        $input['office_id'] = session('active_office_id');
+
+        $data = Unit::create($input);
 
         $this->logActivity('Create', 'units', $data->id, null, $data);
 
@@ -59,7 +69,7 @@ class UnitController extends Controller
 
     public function update(Request $request, $id)
     {
-        $data = Unit::find($id);
+        $data = Unit::where('office_id', session('active_office_id'))->find($id);
         if (!$data) {
             return apiResponse(false, 'Data tidak ditemukan', null, null, 404);
         }
@@ -74,7 +84,7 @@ class UnitController extends Controller
 
     public function destroy($id)
     {
-        $data = Unit::find($id);
+        $data = Unit::where('office_id', session('active_office_id'))->find($id);
         if (!$data) {
             return apiResponse(false, 'Data tidak ditemukan', null, null, 404);
         }
@@ -89,8 +99,11 @@ class UnitController extends Controller
 
     public function search($value)
     {
-        $data = Unit::where('nama_unit', 'LIKE', "%$value%")
-            ->orWhere('simbol', 'LIKE', "%$value%")
+        $data = Unit::where('office_id', session('active_office_id'))
+            ->where(function($q) use ($value) {
+                $q->where('nama_unit', 'LIKE', "%$value%")
+                  ->orWhere('simbol', 'LIKE', "%$value%");
+            })
             ->paginate(10);
 
         return apiResponse(true, 'Hasil pencarian unit', $data);
@@ -99,6 +112,7 @@ class UnitController extends Controller
     private function logActivity($tindakan, $tabel, $dataId, $before, $after)
     {
         ActivityLog::create([
+            'office_id' => session('active_office_id'),
             'user_id' => 1,
             'tindakan' => $tindakan,
             'tabel_terkait' => $tabel,

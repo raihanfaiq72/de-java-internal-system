@@ -22,7 +22,8 @@ class StockController extends Controller
 
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'unit']);
+        $query = Product::with(['category', 'unit'])
+            ->where('office_id', session('active_office_id'));
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -59,25 +60,29 @@ class StockController extends Controller
 
     public function dashboard(Request $request)
     {
+        $officeId = session('active_office_id');
         $locationId = $request->location_id ?: $request->warehouse_id;
         $dateFrom = $request->date_from;
         $dateTo = $request->date_to;
 
         // Base product query
-        $productQuery = Product::where('track_stock', true);
+        $productQuery = Product::where('track_stock', true)
+            ->where('office_id', $officeId);
         
         // Base Invoice query for pending orders (These might be office-based, not location-based)
         $pendingReceiveQuery = \App\Models\Invoice::where('tipe_invoice', 'Purchase')
+            ->where('office_id', $officeId)
             ->where('status_perjalanan', '!=', 'Diterima');
             
         $pendingShipQuery = \App\Models\Invoice::where('tipe_invoice', 'Sales')
+            ->where('office_id', $officeId)
             ->where('status_perjalanan', '!=', 'Terkirim')
             ->where('status_perjalanan', '!=', 'Diterima');
 
         if ($locationId) {
-            // If locationId corresponds to Office ID, we can filter invoices
-            $pendingReceiveQuery->where('office_id', $locationId);
-            $pendingShipQuery->where('office_id', $locationId);
+             // If location specific logic is needed, add here. 
+             // But invoices are usually office-level until allocated? 
+             // Assuming locationId is within the office.
         }
 
         if ($dateFrom) {
@@ -95,12 +100,14 @@ class StockController extends Controller
         
         if ($locationId) {
             $totalQty = StockMutation::where('stock_location_id', $locationId)
+                ->where('office_id', $officeId)
                 ->selectRaw('SUM(CASE WHEN type = "IN" THEN qty ELSE -qty END) as total')
                 ->first()->total ?? 0;
             
             // Valuation is harder per location if not tracking remaining cost per location batch
             // For now, use global product cost
             $inventoryValue = Product::where('track_stock', true)
+                ->where('office_id', $officeId)
                 ->selectRaw('SUM((SELECT SUM(CASE WHEN type = "IN" THEN qty ELSE -qty END) FROM stock_mutations WHERE product_id = products.id AND stock_location_id = ?) * harga_beli) as total_value', [$locationId])
                 ->first()->total_value ?? 0;
         } else {
@@ -123,8 +130,12 @@ class StockController extends Controller
             $start = $date->startOfMonth()->toDateTimeString();
             $end = $date->endOfMonth()->toDateTimeString();
 
-            $incomingQuery = StockMutation::where('type', 'IN')->whereBetween('created_at', [$start, $end]);
-            $outgoingQuery = StockMutation::where('type', 'OUT')->whereBetween('created_at', [$start, $end]);
+            $incomingQuery = StockMutation::where('type', 'IN')
+                ->where('office_id', $officeId)
+                ->whereBetween('created_at', [$start, $end]);
+            $outgoingQuery = StockMutation::where('type', 'OUT')
+                ->where('office_id', $officeId)
+                ->whereBetween('created_at', [$start, $end]);
 
             if ($locationId) {
                 $incomingQuery->where('stock_location_id', $locationId);
@@ -142,8 +153,9 @@ class StockController extends Controller
 
         // Top & Bottom Products (based on OUT mutations)
         $topProducts = Product::where('track_stock', true)
-            ->withSum(['stock_mutations as sent_qty' => function($q) use ($locationId) {
-                $q->where('type', 'OUT');
+            ->where('office_id', $officeId)
+            ->withSum(['stock_mutations as sent_qty' => function($q) use ($locationId, $officeId) {
+                $q->where('type', 'OUT')->where('office_id', $officeId);
                 if ($locationId) $q->where('stock_location_id', $locationId);
             }], 'qty')
             ->orderByDesc('sent_qty')
@@ -151,8 +163,9 @@ class StockController extends Controller
             ->get();
 
         $bottomProducts = Product::where('track_stock', true)
-            ->withSum(['stock_mutations as sent_qty' => function($q) use ($locationId) {
-                $q->where('type', 'OUT');
+            ->where('office_id', $officeId)
+            ->withSum(['stock_mutations as sent_qty' => function($q) use ($locationId, $officeId) {
+                $q->where('type', 'OUT')->where('office_id', $officeId);
                 if ($locationId) $q->where('stock_location_id', $locationId);
             }], 'qty')
             ->orderBy('sent_qty', 'asc')
@@ -184,7 +197,8 @@ class StockController extends Controller
 
     public function mutations(Request $request)
     {
-        $query = StockMutation::with('product');
+        $query = StockMutation::with('product')
+            ->where('office_id', session('active_office_id'));
 
         if ($request->product_id) {
             $query->where('product_id', $request->product_id);
@@ -211,6 +225,22 @@ class StockController extends Controller
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
+        // Validate Product ownership
+        $product = Product::where('id', $id)->where('office_id', session('active_office_id'))->first();
+        if (!$product) {
+            return apiResponse(false, 'Produk tidak ditemukan', null, null, 404);
+        }
+
+        // Validate Location ownership if provided
+        if ($request->stock_location_id) {
+            $location = \App\Models\StockLocation::where('id', $request->stock_location_id)
+                ->where('office_id', session('active_office_id'))
+                ->first();
+            if (!$location) {
+                return apiResponse(false, 'Lokasi stok tidak valid', null, null, 422);
+            }
+        }
+
         try {
             $this->stockService->adjustStock($id, $request->qty, $request->stock_location_id, $request->notes);
             return apiResponse(true, 'Stok berhasil diperbarui');
@@ -230,6 +260,20 @@ class StockController extends Controller
 
         if ($validator->fails()) {
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
+        }
+
+        // Validate Product ownership
+        $product = Product::where('id', $request->product_id)->where('office_id', session('active_office_id'))->first();
+        if (!$product) {
+            return apiResponse(false, 'Produk tidak ditemukan', null, null, 404);
+        }
+
+        // Validate Location ownership
+        $location = \App\Models\StockLocation::where('id', $request->stock_location_id)
+            ->where('office_id', session('active_office_id'))
+            ->first();
+        if (!$location) {
+            return apiResponse(false, 'Lokasi stok tidak valid', null, null, 422);
         }
 
         try {
@@ -261,6 +305,20 @@ class StockController extends Controller
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
+        // Validate Product ownership
+        $product = Product::where('id', $request->product_id)->where('office_id', session('active_office_id'))->first();
+        if (!$product) {
+            return apiResponse(false, 'Produk tidak ditemukan', null, null, 404);
+        }
+
+        // Validate Location ownership
+        $location = \App\Models\StockLocation::where('id', $request->stock_location_id)
+            ->where('office_id', session('active_office_id'))
+            ->first();
+        if (!$location) {
+            return apiResponse(false, 'Lokasi stok tidak valid', null, null, 422);
+        }
+
         try {
             $this->stockService->adjustStock(
                 $request->product_id,
@@ -276,6 +334,7 @@ class StockController extends Controller
     private function logActivity($tindakan, $tabel, $dataId, $before, $after)
     {
         ActivityLog::create([
+            'office_id' => session('active_office_id'),
             'user_id' => 1, // Default user
             'tindakan' => $tindakan,
             'tabel_terkait' => $tabel,

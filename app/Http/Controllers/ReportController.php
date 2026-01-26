@@ -13,10 +13,12 @@ class ReportController extends Controller
     public function salesReport()
     {
         $year = date('Y');
+        $officeId = session('active_office_id');
         
         // Stats
         $stats = DB::table('invoices')
             ->where('tipe_invoice', 'Sales')
+            ->where('office_id', $officeId)
             ->whereNull('deleted_at')
             ->select(
                 DB::raw('SUM(total_akhir) as total_revenue'),
@@ -30,6 +32,7 @@ class ReportController extends Controller
         for ($m = 1; $m <= 12; $m++) {
             $monthlyData[] = DB::table('invoices')
                 ->where('tipe_invoice', 'Sales')
+                ->where('office_id', $officeId)
                 ->whereYear('tgl_invoice', $year)
                 ->whereMonth('tgl_invoice', $m)
                 ->whereNull('deleted_at')
@@ -40,6 +43,7 @@ class ReportController extends Controller
         $topClients = DB::table('invoices')
             ->join('mitras', 'invoices.mitra_id', '=', 'mitras.id')
             ->where('invoices.tipe_invoice', 'Sales')
+            ->where('invoices.office_id', $officeId)
             ->whereNull('invoices.deleted_at')
             ->select('mitras.nama', DB::raw('SUM(total_akhir) as value'))
             ->groupBy('mitras.id', 'mitras.nama')
@@ -53,10 +57,12 @@ class ReportController extends Controller
     public function purchaseReport()
     {
         $year = date('Y');
+        $officeId = session('active_office_id');
         
         // Stats
         $stats = DB::table('invoices')
             ->where('tipe_invoice', 'Purchase')
+            ->where('office_id', $officeId)
             ->whereNull('deleted_at')
             ->select(
                 DB::raw('SUM(total_akhir) as total_spending'),
@@ -70,6 +76,7 @@ class ReportController extends Controller
         for ($m = 1; $m <= 12; $m++) {
             $monthlyData[] = DB::table('invoices')
                 ->where('tipe_invoice', 'Purchase')
+                ->where('office_id', $officeId)
                 ->whereYear('tgl_invoice', $year)
                 ->whereMonth('tgl_invoice', $m)
                 ->whereNull('deleted_at')
@@ -80,6 +87,7 @@ class ReportController extends Controller
         $topSuppliers = DB::table('invoices')
             ->join('mitras', 'invoices.mitra_id', '=', 'mitras.id')
             ->where('invoices.tipe_invoice', 'Purchase')
+            ->where('invoices.office_id', $officeId)
             ->whereNull('invoices.deleted_at')
             ->select('mitras.nama', DB::raw('SUM(total_akhir) as value'))
             ->groupBy('mitras.id', 'mitras.nama')
@@ -92,9 +100,11 @@ class ReportController extends Controller
 
     public function stockReport()
     {
+        $officeId = session('active_office_id');
         $products = DB::table('products')
             ->leftJoin('units', 'products.unit_id', '=', 'units.id')
             ->leftJoin('product_categories', 'products.product_category_id', '=', 'product_categories.id')
+            ->where('products.office_id', $officeId)
             ->whereNull('products.deleted_at')
             ->select(
                 'products.id',
@@ -118,9 +128,11 @@ class ReportController extends Controller
 
     public function arAging()
     {
+        $officeId = session('active_office_id');
         $invoices = DB::table('invoices')
             ->join('mitras', 'invoices.mitra_id', '=', 'mitras.id')
             ->where('tipe_invoice', 'Sales')
+            ->where('invoices.office_id', $officeId)
             ->where('status_pembayaran', '!=', 'Paid')
             ->whereNull('invoices.deleted_at')
             ->select(
@@ -149,15 +161,17 @@ class ReportController extends Controller
     public function balanceSheet()
     {
         $date = date('Y-m-d');
+        $officeId = session('active_office_id');
         
         $accounts = DB::table('chart_of_accounts')
             ->select('id', 'kode_akun', 'nama_akun', 'is_kas_bank')
             ->get()
-            ->map(function($acc) {
+            ->map(function($acc) use ($officeId) {
                 // Calculation of balance from journal entries
                 $balance = DB::table('journal_details')
                     ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
                     ->where('journal_details.akun_id', $acc->id)
+                    ->where('journals.office_id', $officeId)
                     ->whereNull('journal_details.deleted_at')
                     ->whereNull('journals.deleted_at')
                     ->select(DB::raw('SUM(debit) - SUM(kredit) as bal'))
@@ -175,17 +189,20 @@ class ReportController extends Controller
         // Calculate current year profit
         $revenue = DB::table('invoices')
             ->where('tipe_invoice', 'Sales')
+            ->where('office_id', $officeId)
             ->whereYear('tgl_invoice', date('Y'))
             ->whereNull('deleted_at')
             ->sum('total_akhir');
 
         $cogs = DB::table('invoices')
             ->where('tipe_invoice', 'Purchase')
+            ->where('office_id', $officeId)
             ->whereYear('tgl_invoice', date('Y'))
             ->whereNull('deleted_at')
             ->sum('total_akhir');
 
         $expenses = DB::table('expenses')
+            ->where('office_id', $officeId)
             ->whereYear('tgl_biaya', date('Y'))
             ->whereNull('deleted_at')
             ->sum('jumlah');
@@ -198,20 +215,24 @@ class ReportController extends Controller
     public function profitAndLoss()
     {
         $year = date('Y');
+        $officeId = session('active_office_id');
         
         $revenue = DB::table('invoices')
             ->where('tipe_invoice', 'Sales')
+            ->where('office_id', $officeId)
             ->whereYear('tgl_invoice', $year)
             ->whereNull('deleted_at')
             ->sum('total_akhir');
 
         $cogs = DB::table('invoices')
             ->where('tipe_invoice', 'Purchase')
+            ->where('office_id', $officeId)
             ->whereYear('tgl_invoice', $year)
             ->whereNull('deleted_at')
             ->sum('total_akhir');
 
         $expenses = DB::table('expenses')
+            ->where('office_id', $officeId)
             ->whereYear('tgl_biaya', $year)
             ->whereNull('deleted_at')
             ->select('nama_biaya', DB::raw('SUM(jumlah) as total'))

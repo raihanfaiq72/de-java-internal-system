@@ -23,6 +23,7 @@ class InvoiceController extends Controller
     public function index(Request $request)
     {
         $query = Invoice::with(['mitra', 'items.product', 'items.taxes', 'payment'])
+            ->where('office_id', session('active_office_id'))
             ->withSum('payment', 'jumlah_bayar');
 
         if ($request->tipe_invoice) {
@@ -55,6 +56,7 @@ class InvoiceController extends Controller
     public function show($id)
     {
         $data = Invoice::with(['mitra', 'items.product', 'items.taxes', 'payment'])
+            ->where('office_id', session('active_office_id'))
             ->find($id);
 
         if (!$data) {
@@ -77,7 +79,22 @@ class InvoiceController extends Controller
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
-        $invoice = Invoice::create($request->all());
+        if (!session()->has('active_office_id')) {
+            return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
+        }
+
+        // Validate Mitra ownership
+        $mitra = \App\Models\Mitra::where('id', $request->mitra_id)
+            ->where('office_id', session('active_office_id'))
+            ->first();
+        if (!$mitra) {
+            return apiResponse(false, 'Mitra tidak valid untuk outlet ini', null, null, 422);
+        }
+
+        $input = $request->all();
+        $input['office_id'] = session('active_office_id');
+
+        $invoice = Invoice::create($input);
 
         $this->logActivity('Create', 'invoices', $invoice->id, null, $invoice);
 
@@ -87,7 +104,7 @@ class InvoiceController extends Controller
     public function update(Request $request, $id)
     {
         return DB::transaction(function () use ($request, $id) {
-            $invoice = Invoice::find($id);
+            $invoice = Invoice::where('office_id', session('active_office_id'))->find($id);
             if (!$invoice) {
                 return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
             }
@@ -128,7 +145,7 @@ class InvoiceController extends Controller
 
     public function destroy($id)
     {
-        $invoice = Invoice::find($id);
+        $invoice = Invoice::where('office_id', session('active_office_id'))->find($id);
         if (!$invoice) {
             return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
         }
@@ -145,6 +162,7 @@ class InvoiceController extends Controller
     {
         $query = Invoice::with(['mitra', 'items.product', 'items.taxes', 'payment'])
             ->withSum('payment', 'jumlah_bayar')
+            ->where('office_id', session('active_office_id'))
             ->where(function($q) use ($value) {
                 $q->where('nomor_invoice', 'LIKE', "%$value%")
                   ->orWhere('ref_no', 'LIKE', "%$value%")
@@ -180,9 +198,35 @@ class InvoiceController extends Controller
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
+        if (!session()->has('active_office_id')) {
+            return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
+        }
+
+        // Validate Mitra ownership
+        $mitraId = $request->input('invoice.mitra_id');
+        $mitra = \App\Models\Mitra::where('id', $mitraId)
+            ->where('office_id', session('active_office_id'))
+            ->first();
+        if (!$mitra) {
+            return apiResponse(false, 'Mitra tidak valid untuk outlet ini', null, null, 422);
+        }
+
+        // Validate Stock Location if provided
+        if (!empty($request->invoice['stock_location_id'])) {
+            $location = \App\Models\StockLocation::where('id', $request->invoice['stock_location_id'])
+                ->where('office_id', session('active_office_id'))
+                ->first();
+            
+            if (!$location) {
+                return apiResponse(false, 'Lokasi stok tidak valid untuk outlet ini', null, null, 422);
+            }
+        }
+
         return DB::transaction(function () use ($request) {
 
-            $invoice = Invoice::create($request->invoice);
+            $invoiceData = $request->invoice;
+            $invoiceData['office_id'] = session('active_office_id');
+            $invoice = Invoice::create($invoiceData);
 
             $this->logActivity(
                 'Create',
@@ -252,6 +296,7 @@ class InvoiceController extends Controller
     private function logActivity($tindakan, $tabel, $dataId, $before, $after)
     {
         ActivityLog::create([
+            'office_id' => session('active_office_id'),
             'user_id' => 1,
             'tindakan' => $tindakan,
             'tabel_terkait' => $tabel,

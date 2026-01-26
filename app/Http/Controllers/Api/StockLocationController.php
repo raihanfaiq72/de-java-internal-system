@@ -11,7 +11,9 @@ class StockLocationController extends Controller
 {
     public function index()
     {
-        $locations = StockLocation::latest()->get();
+        $locations = StockLocation::where('office_id', session('active_office_id'))
+            ->latest()
+            ->get();
         return apiResponse(true, 'Data lokasi stok', $locations);
     }
 
@@ -26,13 +28,20 @@ class StockLocationController extends Controller
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
-        $location = StockLocation::create($request->all());
+        if (!session()->has('active_office_id')) {
+            return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
+        }
+
+        $input = $request->all();
+        $input['office_id'] = session('active_office_id');
+
+        $location = StockLocation::create($input);
         return apiResponse(true, 'Lokasi stok berhasil dibuat', $location);
     }
 
     public function show($id)
     {
-        $location = StockLocation::find($id);
+        $location = StockLocation::where('office_id', session('active_office_id'))->find($id);
         if (!$location) {
             return apiResponse(false, 'Lokasi tidak ditemukan', null, null, 404);
         }
@@ -61,7 +70,10 @@ class StockLocationController extends Controller
 
     public function destroy($id)
     {
-        $location = StockLocation::find($id);
+        $location = StockLocation::where('id', $id)
+            ->where('office_id', session('active_office_id'))
+            ->first();
+
         if (!$location) {
             return apiResponse(false, 'Lokasi tidak ditemukan', null, null, 404);
         }

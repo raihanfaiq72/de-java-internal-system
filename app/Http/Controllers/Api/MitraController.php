@@ -16,6 +16,7 @@ class MitraController extends Controller
     {
         try {
             $data = Mitra::with(['akunHutang', 'akunPiutang'])
+                ->where('office_id', session('active_office_id'))
                 ->latest()
                 ->paginate(10);
 
@@ -28,7 +29,9 @@ class MitraController extends Controller
     public function show($id)
     {
         try {
-            $mitra = Mitra::with(['akunHutang', 'akunPiutang'])->find($id);
+            $mitra = Mitra::with(['akunHutang', 'akunPiutang'])
+                ->where('office_id', session('active_office_id'))
+                ->find($id);
 
             if (!$mitra) {
                 return apiResponse(false, 'Mitra tidak ditemukan', null, null, 404);
@@ -54,7 +57,12 @@ class MitraController extends Controller
                 return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
             }
 
+            if (!session()->has('active_office_id')) {
+                return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
+            }
+
             $data = $request->all();
+            $data['office_id'] = session('active_office_id');
             $data['akun_hutang_id']  = 18;
             $data['akun_piutang_id'] = 5;
 
@@ -117,7 +125,7 @@ class MitraController extends Controller
     public function destroy($id)
     {
         try {
-            $mitra = Mitra::find($id);
+            $mitra = Mitra::where('office_id', session('active_office_id'))->find($id);
 
             if (!$mitra) {
                 return apiResponse(false, 'Mitra tidak ditemukan', null, null, 404);
@@ -145,6 +153,7 @@ class MitraController extends Controller
     {
         try {
             $data = Mitra::with(['akunHutang', 'akunPiutang'])
+                ->where('office_id', session('active_office_id'))
                 ->where(function ($q) use ($value) {
                     $q->where('nama', 'LIKE', "%{$value}%")
                     ->orWhere('nomor_mitra', 'LIKE', "%{$value}%")
@@ -186,6 +195,7 @@ class MitraController extends Controller
         $dataSesudah = null
     ) {
         ActivityLog::create([
+            'office_id'     => session('active_office_id'),
             'user_id'       => '1',
             'tindakan'      => $tindakan,
             'tabel_terkait' => $tabel,

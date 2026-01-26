@@ -14,7 +14,13 @@ class StockService
     public function recordIn($productId, $qty, $costPrice, $stockLocationId = null, $referenceType = null, $referenceId = null, $notes = null)
     {
         return DB::transaction(function () use ($productId, $qty, $costPrice, $stockLocationId, $referenceType, $referenceId, $notes) {
+            $product = Product::find($productId);
+            if (!$product) {
+                throw new \Exception("Product not found");
+            }
+
             $mutation = StockMutation::create([
+                'office_id' => $product->office_id,
                 'product_id' => $productId,
                 'stock_location_id' => $stockLocationId,
                 'type' => 'IN',
@@ -38,6 +44,11 @@ class StockService
     public function recordOut($productId, $qty, $stockLocationId = null, $referenceType = null, $referenceId = null, $notes = null)
     {
         return DB::transaction(function () use ($productId, $qty, $stockLocationId, $referenceType, $referenceId, $notes) {
+            $product = Product::find($productId);
+            if (!$product) {
+                throw new \Exception("Product not found");
+            }
+
             $remainingToDeduct = $qty;
 
             // Find oldest IN mutations with remaining stock IN THE SAME LOCATION
@@ -66,6 +77,7 @@ class StockService
 
             // Record the OUT mutation
             $mutation = StockMutation::create([
+                'office_id' => $product->office_id,
                 'product_id' => $productId,
                 'stock_location_id' => $stockLocationId,
                 'type' => 'OUT',

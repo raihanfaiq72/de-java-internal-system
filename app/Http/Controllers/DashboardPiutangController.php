@@ -12,19 +12,24 @@ class DashboardPiutangController extends Controller
 
     public function index()
     {
-        $year = 2026;
+        $year = date('Y');
+        $officeId = session('active_office_id');
 
         // 1. Total Saldo Aktif (Dari COA yang merupakan Kas/Bank)
         // Menghitung selisih debit dan kredit di journal_details
         $totalSaldo = DB::table('journal_details')
             ->join('chart_of_accounts', 'journal_details.akun_id', '=', 'chart_of_accounts.id')
+            ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
             ->where('chart_of_accounts.is_kas_bank', true)
-            ->select(DB::raw('SUM(debit) - SUM(kredit) as balance'))
+            ->where('journals.office_id', $officeId)
+            ->whereNull('journals.deleted_at')
+            ->select(DB::raw('SUM(journal_details.debit) - SUM(journal_details.kredit) as balance'))
             ->first()->balance ?? 0;
 
         // 2. Piutang Usaha (Invoice Penjualan)
         $piutangData = DB::table('invoices')
             ->where('tipe_invoice', 'Sales')
+            ->where('office_id', $officeId)
             ->whereNull('deleted_at')
             ->select(
                 DB::raw('SUM(total_akhir) as total_nilai'),
@@ -36,6 +41,7 @@ class DashboardPiutangController extends Controller
         // 3. Utang Usaha (Invoice Pembelian)
         $utangData = DB::table('invoices')
             ->where('tipe_invoice', 'Purchase')
+            ->where('office_id', $officeId)
             ->whereNull('deleted_at')
             ->select(
                 DB::raw('SUM(total_akhir) as total_nilai'),
@@ -52,18 +58,21 @@ class DashboardPiutangController extends Controller
             // Pendapatan dari Sales Invoice
             $income = DB::table('invoices')
                 ->where('tipe_invoice', 'Sales')
+                ->where('office_id', $officeId)
                 ->whereYear('tgl_invoice', $year)
                 ->whereMonth('tgl_invoice', $m)
                 ->sum('total_akhir');
             
             // Pengeluaran dari Expense + Purchase Invoice
             $expenseTable = DB::table('expenses')
+                ->where('office_id', $officeId)
                 ->whereYear('tgl_biaya', $year)
                 ->whereMonth('tgl_biaya', $m)
                 ->sum('jumlah');
                 
             $purchaseInvoice = DB::table('invoices')
                 ->where('tipe_invoice', 'Purchase')
+                ->where('office_id', $officeId)
                 ->whereYear('tgl_invoice', $year)
                 ->whereMonth('tgl_invoice', $m)
                 ->sum('total_akhir');

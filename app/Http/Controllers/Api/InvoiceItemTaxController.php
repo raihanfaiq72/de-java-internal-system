@@ -11,7 +11,10 @@ class InvoiceItemTaxController extends Controller
 {
     public function index(Request $request)
     {
-        $query = InvoiceItemTaxe::with(['invoiceItem']);
+        $query = InvoiceItemTaxe::with(['invoiceItem'])
+            ->whereHas('invoiceItem.invoice', function ($q) {
+                $q->where('office_id', session('active_office_id'));
+            });
 
         if ($request->invoice_item_id) {
             $query->where('invoice_item_id', $request->invoice_item_id);
@@ -24,6 +27,10 @@ class InvoiceItemTaxController extends Controller
 
     public function store(Request $request)
     {
+        if (!session()->has('active_office_id')) {
+            return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
+        }
+
         $data = InvoiceItemTaxe::create($request->all());
 
         $this->logActivity('Create', 'invoice_item_taxes', $data->id, null, $data);
@@ -33,7 +40,11 @@ class InvoiceItemTaxController extends Controller
 
     public function destroy($id)
     {
-        $data = InvoiceItemTaxe::find($id);
+        $data = InvoiceItemTaxe::whereHas('invoiceItem.invoice', function ($q) {
+                $q->where('office_id', session('active_office_id'));
+            })
+            ->find($id);
+            
         if (!$data) {
             return apiResponse(false, 'Data tidak ditemukan', null, null, 404);
         }
@@ -49,6 +60,7 @@ class InvoiceItemTaxController extends Controller
     private function logActivity($tindakan, $tabel, $dataId, $before, $after)
     {
         ActivityLog::create([
+            'office_id' => session('active_office_id'),
             'user_id' => 1,
             'tindakan' => $tindakan,
             'tabel_terkait' => $tabel,

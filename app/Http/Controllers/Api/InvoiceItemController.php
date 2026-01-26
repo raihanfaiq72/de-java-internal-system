@@ -12,7 +12,10 @@ class InvoiceItemController extends Controller
 {
     public function index(Request $request)
     {
-        $query = InvoiceItem::with(['product', 'taxes.tax']);
+        $query = InvoiceItem::with(['product', 'taxes.tax'])
+            ->whereHas('invoice', function ($q) {
+                $q->where('office_id', session('active_office_id'));
+            });
 
         if ($request->invoice_id) {
             $query->where('invoice_id', $request->invoice_id);
@@ -35,6 +38,19 @@ class InvoiceItemController extends Controller
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
+        if (!session()->has('active_office_id')) {
+            return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
+        }
+
+        // Validate Invoice ownership
+        $invoice = \App\Models\Invoice::where('id', $request->invoice_id)
+            ->where('office_id', session('active_office_id'))
+            ->first();
+
+        if (!$invoice) {
+            return apiResponse(false, 'Invoice tidak valid untuk outlet ini', null, null, 422);
+        }
+
         $item = InvoiceItem::create($request->all());
 
         $this->logActivity('Create', 'invoice_items', $item->id, null, $item);
@@ -44,7 +60,11 @@ class InvoiceItemController extends Controller
 
     public function show($id)
     {
-        $item = InvoiceItem::with(['product', 'taxes.tax'])->find($id);
+        $item = InvoiceItem::with(['product', 'taxes.tax'])
+            ->whereHas('invoice', function ($q) {
+                $q->where('office_id', session('active_office_id'));
+            })
+            ->find($id);
 
         if (!$item) {
             return apiResponse(false, 'Item invoice tidak ditemukan', null, null, 404);
@@ -55,7 +75,11 @@ class InvoiceItemController extends Controller
 
     public function update(Request $request, $id)
     {
-        $item = InvoiceItem::find($id);
+        $item = InvoiceItem::whereHas('invoice', function ($q) {
+                $q->where('office_id', session('active_office_id'));
+            })
+            ->find($id);
+
         if (!$item) {
             return apiResponse(false, 'Item invoice tidak ditemukan', null, null, 404);
         }
@@ -70,7 +94,11 @@ class InvoiceItemController extends Controller
 
     public function destroy($id)
     {
-        $item = InvoiceItem::find($id);
+        $item = InvoiceItem::whereHas('invoice', function ($q) {
+                $q->where('office_id', session('active_office_id'));
+            })
+            ->find($id);
+
         if (!$item) {
             return apiResponse(false, 'Item invoice tidak ditemukan', null, null, 404);
         }
@@ -86,6 +114,7 @@ class InvoiceItemController extends Controller
     private function logActivity($tindakan, $tabel, $dataId, $before, $after)
     {
         ActivityLog::create([
+            'office_id' => session('active_office_id'),
             'user_id' => 1,
             'tindakan' => $tindakan,
             'tabel_terkait' => $tabel,

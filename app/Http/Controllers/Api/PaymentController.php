@@ -15,7 +15,8 @@ class PaymentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Payment::with(['invoice.items.product', 'invoice.mitra', 'akun_keuangan']);
+        $query = Payment::with(['invoice.items.product', 'invoice.mitra', 'akun_keuangan'])
+            ->where('office_id', session('active_office_id'));
 
         if ($request->invoice_id) {
             $query->where('invoice_id', $request->invoice_id);
@@ -27,7 +28,9 @@ class PaymentController extends Controller
 
     public function show($id)
     {
-        $data = Payment::with('invoice.items.product')->find($id);
+        $data = Payment::with('invoice.items.product')
+            ->where('office_id', session('active_office_id'))
+            ->find($id);
         if (!$data) {
             return apiResponse(false, 'Pembayaran tidak ditemukan', null, null, 404);
         }
@@ -51,7 +54,13 @@ class PaymentController extends Controller
 
         return DB::transaction(function () use ($request) {
 
-            $invoice = Invoice::lockForUpdate()->find($request->invoice_id);
+            if (!session()->has('active_office_id')) {
+                return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
+            }
+
+            $invoice = Invoice::where('office_id', session('active_office_id'))
+                ->lockForUpdate()
+                ->find($request->invoice_id);
 
             if (!$invoice) {
                 return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
@@ -73,7 +82,14 @@ class PaymentController extends Controller
                 );
             }
 
-            $payment = Payment::create($request->all());
+            if (!session()->has('active_office_id')) {
+                return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
+            }
+
+            $paymentData = $request->all();
+            $paymentData['office_id'] = session('active_office_id');
+
+            $payment = Payment::create($paymentData);
 
             $totalSetelahBayar = round($totalSudahDibayar + $request->jumlah_bayar, 2);
             $totalInvoice      = round($invoice->total_akhir, 2);
@@ -122,7 +138,9 @@ class PaymentController extends Controller
     {
         return DB::transaction(function () use ($id) {
 
-            $payment = Payment::lockForUpdate()->find($id);
+            $payment = Payment::where('office_id', session('active_office_id'))
+                ->lockForUpdate()
+                ->find($id);
 
             if (!$payment) {
                 return apiResponse(false, 'Pembayaran tidak ditemukan', null, null, 404);
@@ -194,6 +212,7 @@ class PaymentController extends Controller
     private function logActivity($tindakan, $tabel, $dataId, $before, $after)
     {
         ActivityLog::create([
+            'office_id' => session('active_office_id'),
             'user_id' => 1,
             'tindakan' => $tindakan,
             'tabel_terkait' => $tabel,

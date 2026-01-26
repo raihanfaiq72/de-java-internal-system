@@ -14,6 +14,7 @@ class DashboardSalesController extends Controller
     {
         // Gunakan hari ini secara dinamis
         $today = now()->format('Y-m-d');
+        $officeId = session('active_office_id');
         
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
@@ -23,6 +24,7 @@ class DashboardSalesController extends Controller
         $query = DB::table('invoices')
             ->join('mitras', 'invoices.mitra_id', '=', 'mitras.id')
             ->where('invoices.tipe_invoice', 'Sales')
+            ->where('invoices.office_id', $officeId)
             ->whereBetween('invoices.tgl_invoice', [$startDate, $endDate])
             ->whereNull('invoices.deleted_at');
 
@@ -61,6 +63,7 @@ class DashboardSalesController extends Controller
         // Ambil SEMUA Mitra (Client & Both) agar PT Lazuardi muncul
         $listMitra = DB::table('mitras')
             ->whereIn('tipe_mitra', ['Client', 'Both'])
+            ->where('office_id', $officeId)
             ->orderBy('nama', 'asc')
             ->get();
 
@@ -69,6 +72,16 @@ class DashboardSalesController extends Controller
 
     public function detail($id)
     {
+        // Verify Invoice belongs to active office
+        $invoice = DB::table('invoices')
+            ->where('id', $id)
+            ->where('office_id', session('active_office_id'))
+            ->first();
+
+        if (!$invoice) {
+            return response()->json(['error' => 'Invoice not found or access denied'], 404);
+        }
+
         $items = DB::table('invoice_items')
             ->leftJoin('products', 'invoice_items.produk_id', '=', 'products.id')
             ->where('invoice_id', $id)

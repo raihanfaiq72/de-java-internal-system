@@ -20,7 +20,9 @@ class PurchaseController extends Controller
     public function receipt()
     {
         // Ambil Mitra untuk pilihan vendor/supplier
-        $mitras = \App\Models\Mitra::whereIn('tipe_mitra', ['Supplier', 'Both'])->get();
+        $mitras = \App\Models\Mitra::whereIn('tipe_mitra', ['Supplier', 'Both'])
+            ->where('office_id', session('active_office_id'))
+            ->get();
         
         // Ambil Akun Kas & Bank
         $accounts = \Illuminate\Support\Facades\DB::table('chart_of_accounts')
@@ -35,6 +37,10 @@ class PurchaseController extends Controller
         $invoice = Invoice::with(['mitra', 'items.product'])->find($id);
         if (!$invoice) abort(404);
 
+        if ($invoice->office_id != session('active_office_id')) {
+            abort(404);
+        }
+
         return view($this->views . 'Nota.PurchaseNota', compact('invoice'));
     }
 
@@ -42,6 +48,10 @@ class PurchaseController extends Controller
     {
         $payment = Payment::with(['invoice.mitra', 'invoice.items.product', 'akun_keuangan'])->find($id);
         if (!$payment) abort(404);
+
+        if ($payment->invoice->office_id != session('active_office_id')) {
+            abort(404);
+        }
 
         return view($this->views . 'Nota.ReceiptNota', compact('payment'));
     }

@@ -14,13 +14,15 @@ class TaxController extends Controller
 {
     public function index()
     {
-        $data = Taxe::latest()->paginate(10);
+        $data = Taxe::where('office_id', session('active_office_id'))
+            ->latest()
+            ->paginate(10);
         return apiResponse(true, 'Data pajak', $data);
     }
 
     public function show($id)
     {
-        $data = Taxe::find($id);
+        $data = Taxe::where('office_id', session('active_office_id'))->find($id);
         if (!$data) {
             return apiResponse(false, 'Pajak tidak ditemukan', null, null, 404);
         }
@@ -39,7 +41,14 @@ class TaxController extends Controller
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
-        $data = Taxe::create($request->all());
+        if (!session()->has('active_office_id')) {
+            return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
+        }
+
+        $input = $request->all();
+        $input['office_id'] = session('active_office_id');
+
+        $data = Taxe::create($input);
 
         $this->logActivity('Create', 'taxes', $data->id, null, $data);
 
@@ -48,7 +57,7 @@ class TaxController extends Controller
 
     public function update(Request $request, $id)
     {
-        $data = Taxe::find($id);
+        $data = Taxe::where('office_id', session('active_office_id'))->find($id);
         if (!$data) {
             return apiResponse(false, 'Pajak tidak ditemukan', null, null, 404);
         }
@@ -63,7 +72,7 @@ class TaxController extends Controller
 
     public function destroy($id)
     {
-        $data = Taxe::find($id);
+        $data = Taxe::where('office_id', session('active_office_id'))->find($id);
         if (!$data) {
             return apiResponse(false, 'Pajak tidak ditemukan', null, null, 404);
         }
@@ -78,7 +87,8 @@ class TaxController extends Controller
 
     public function search($value)
     {
-        $data = Taxe::where('nama_pajak', 'LIKE', "%$value%")
+        $data = Taxe::where('office_id', session('active_office_id'))
+            ->where('nama_pajak', 'LIKE', "%$value%")
             ->paginate(10);
 
         return apiResponse(true, 'Hasil pencarian pajak', $data);
@@ -87,6 +97,7 @@ class TaxController extends Controller
     private function logActivity($tindakan, $tabel, $dataId, $before, $after)
     {
         ActivityLog::create([
+            'office_id' => session('active_office_id'),
             'user_id' => 1,
             'tindakan' => $tindakan,
             'tabel_terkait' => $tabel,

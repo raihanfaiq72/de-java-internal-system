@@ -12,7 +12,7 @@ class ExpenseController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Expense::query();
+        $query = Expense::query()->where('office_id', session('active_office_id'));
 
         if ($request->tgl_mulai && $request->tgl_selesai) {
             $query->whereBetween('tgl_biaya', [$request->tgl_mulai, $request->tgl_selesai]);
@@ -24,7 +24,7 @@ class ExpenseController extends Controller
 
     public function show($id)
     {
-        $data = Expense::find($id);
+        $data = Expense::where('office_id', session('active_office_id'))->find($id);
         if (!$data) {
             return apiResponse(false, 'Biaya tidak ditemukan', null, null, 404);
         }
@@ -45,7 +45,14 @@ class ExpenseController extends Controller
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
-        $data = Expense::create($request->all());
+        if (!session()->has('active_office_id')) {
+            return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
+        }
+
+        $input = $request->all();
+        $input['office_id'] = session('active_office_id');
+
+        $data = Expense::create($input);
 
         $this->logActivity('Create', 'expenses', $data->id, null, $data);
 
@@ -54,7 +61,7 @@ class ExpenseController extends Controller
 
     public function update(Request $request, $id)
     {
-        $data = Expense::find($id);
+        $data = Expense::where('office_id', session('active_office_id'))->find($id);
         if (!$data) {
             return apiResponse(false, 'Biaya tidak ditemukan', null, null, 404);
         }
@@ -69,7 +76,7 @@ class ExpenseController extends Controller
 
     public function destroy($id)
     {
-        $data = Expense::find($id);
+        $data = Expense::where('office_id', session('active_office_id'))->find($id);
         if (!$data) {
             return apiResponse(false, 'Biaya tidak ditemukan', null, null, 404);
         }
@@ -85,6 +92,7 @@ class ExpenseController extends Controller
     private function logActivity($tindakan, $tabel, $dataId, $before, $after)
     {
         ActivityLog::create([
+            'office_id' => session('active_office_id'),
             'user_id' => 1,
             'tindakan' => $tindakan,
             'tabel_terkait' => $tabel,
