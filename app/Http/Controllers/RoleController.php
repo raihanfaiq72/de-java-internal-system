@@ -38,7 +38,7 @@ class RoleController extends Controller
             $role->permissions()->sync($request->permissions);
         });
 
-        return redirect()->route('role.index')->with('success', 'Role berhasil dibuat');
+        return redirect()->route('roles.index')->with('success', 'Role berhasil dibuat');
     }
 
     public function show($id)
@@ -53,7 +53,7 @@ class RoleController extends Controller
             ]);
         }
         
-        return view('Role.show', compact('role'));
+        return redirect()->route('roles.index');
     }
 
     public function update(Request $request, $id)
@@ -73,7 +73,7 @@ class RoleController extends Controller
             $role->permissions()->sync($request->permissions);
         });
 
-        return redirect()->route('role.index')->with('success', 'Role berhasil diperbarui');
+        return redirect()->route('roles.index')->with('success', 'Role berhasil diperbarui');
     }
 
     public function destroy($id)

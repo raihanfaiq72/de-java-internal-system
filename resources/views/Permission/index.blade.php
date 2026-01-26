@@ -42,14 +42,20 @@
                 @foreach($prefixes as $prefix)
                 <div class="col-12">
                     <div class="card permission-card shadow-sm rounded-3">
-                        <div class="card-header bg-white py-3 px-4 border-bottom d-flex align-items-center justify-content-between">
+                        <div class="card-header bg-white py-3 px-4 border-bottom d-flex align-items-center justify-content-between" 
+                             style="cursor: pointer;" 
+                             data-bs-toggle="collapse" 
+                             data-bs-target="#collapse-{{ $prefix->id }}" 
+                             aria-expanded="true">
                             <div class="d-flex align-items-center">
                                 <span class="badge-module me-3 text-uppercase">MODUL: {{ $prefix->name }}</span>
                                 <span class="text-muted small">Mengatur {{ count($prefix->permissions) }} rute akses.</span>
                             </div>
+                            <i class="fa fa-chevron-down text-muted small"></i>
                         </div>
-                        <div class="table-responsive">
-                            <table class="table table-custom mb-0">
+                        <div id="collapse-{{ $prefix->id }}" class="collapse show">
+                            <div class="table-responsive">
+                                <table class="table table-custom mb-0">
                                 <thead>
                                     <tr>
                                         <th width="40%">System Route Name</th>
@@ -82,6 +88,7 @@
                                 </tbody>
                             </table>
                         </div>
+                        </div>
                     </div>
                 </div>
                 @endforeach
@@ -102,11 +109,12 @@
         btn.disabled = true;
         btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
 
-        fetch(`/permissions/${id}`, { // Using Route::put('/permissions/{id}')
+        fetch(`/admin/permissions/${id}`, { // Using Route::put('/permissions/{id}')
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({ description: description })
         })

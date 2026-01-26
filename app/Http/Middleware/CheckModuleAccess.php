@@ -19,7 +19,7 @@ class CheckModuleAccess
         $routeName = $request->route()->getName();
         $officeId = session('active_office_id');
 
-        $alwaysAllowed = ['dashboard', 'syo', 'set.outlet', 'login', 'logout'];
+        $alwaysAllowed = ['dashboard', 'syo', 'set.outlet', 'login', 'logout', 'offices.store'];
 
         if (in_array($routeName, $alwaysAllowed)) {
             return $next($request);

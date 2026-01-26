@@ -136,7 +136,12 @@
             methodInput.value = 'PUT'; 
 
             try {
-                 const res = await fetch(`/admin/offices/${id}`); 
+                 const res = await fetch(`/admin/offices/${id}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                 }); 
                  const json = await res.json();
                  if(json.success) {
                      nameInput.value = json.data.name;

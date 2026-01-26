@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Office;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class OfficeController extends Controller
 {
@@ -20,7 +22,31 @@ class OfficeController extends Controller
             'code' => 'required|unique:offices,code'
         ]);
 
-        Office::create($request->all());
+        $office = null;
+        DB::transaction(function() use ($request, &$office) {
+            $office = Office::create($request->all());
+            
+            // Assign creator as superadmin for this office
+            $role = DB::table('roles')->where('name', 'superadmin')->first();
+            if ($role) {
+                DB::table('user_office_roles')->insert([
+                    'user_id' => Auth::id(),
+                    'office_id' => $office->id,
+                    'role_id' => $role->id,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+        });
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Kantor berhasil ditambahkan',
+                'data' => $office
+            ]);
+        }
+
         return back()->with('success', 'Kantor berhasil ditambahkan');
     }
 

@@ -156,11 +156,17 @@
                                     @endphp
                                     @foreach($prefixes as $prefix)
                                     <div class="col-md-6 permission-group">
-                                        <h6>{{ $prefix->name }}</h6>
+                                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                                            <h6 class="mb-0 text-primary">{{ $prefix->name }}</h6>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="check-all-{{ $prefix->id }}" onchange="toggleGroup('{{ $prefix->id }}', this)">
+                                                <label class="form-check-label small text-muted" for="check-all-{{ $prefix->id }}">All</label>
+                                            </div>
+                                        </div>
                                         <div class="d-flex flex-wrap gap-2">
                                             @foreach($prefix->permissions as $perm)
                                             <div class="form-check me-2 mb-1">
-                                                <input class="form-check-input permission-checkbox" type="checkbox" name="permissions[]" value="{{ $perm->id }}" id="perm-{{ $perm->id }}">
+                                                <input class="form-check-input permission-checkbox group-{{ $prefix->id }}" type="checkbox" name="permissions[]" value="{{ $perm->id }}" id="perm-{{ $perm->id }}">
                                                 <label class="form-check-label small" for="perm-{{ $perm->id }}">
                                                     {{ $perm->description ?: $perm->name }}
                                                 </label>
@@ -196,7 +202,12 @@
 
             // Fetch data
             try {
-                const res = await fetch(`/admin/roles/${id}`); 
+                const res = await fetch(`/admin/roles/${id}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                }); 
                 const json = await res.json();
                 if(json.success) {
                     document.getElementById('roleName').value = json.data.name;
@@ -224,6 +235,16 @@
         const checkboxes = document.querySelectorAll('.permission-checkbox');
         const allChecked = Array.from(checkboxes).every(c => c.checked);
         checkboxes.forEach(c => c.checked = !allChecked);
+        
+        // Update group toggles
+        document.querySelectorAll('input[id^="check-all-"]').forEach(chk => {
+            chk.checked = !allChecked;
+        });
+    }
+
+    function toggleGroup(prefixId, toggle) {
+        const checkboxes = document.querySelectorAll(`.group-${prefixId}`);
+        checkboxes.forEach(c => c.checked = toggle.checked);
     }
 </script>
 @endpush

@@ -132,6 +132,12 @@
             display: block;
             text-align: center;
         }
+        
+        .btn-mac-primary:hover {
+            transform: scale(1.02);
+            background-color: #006ce6;
+            color: white;
+        }
 
         .add-card {
             border: 2px dashed #c7c7cc;
@@ -141,6 +147,18 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            color: #86868b;
+        }
+        
+        .add-card:hover {
+            background: rgba(255, 255, 255, 0.5);
+            border-color: var(--mac-blue);
+            color: var(--mac-blue);
+        }
+        
+        .add-card i {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
         }
 
         .redirect-overlay {
@@ -180,6 +198,56 @@
 
         .redirect-text { margin-top: 20px; font-weight: 600; color: #1d1d1f; opacity: 0; transition: all 0.5s ease 0.2s; }
         .redirect-overlay.active .redirect-text { opacity: 1; }
+        
+        /* Modal Styles */
+        .modal-backdrop.show {
+            backdrop-filter: blur(5px);
+            background-color: rgba(0, 0, 0, 0.2);
+            opacity: 1;
+        }
+        
+        .modal-content {
+            border-radius: 24px;
+            border: none;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 20px 30px;
+            background: rgba(255,255,255,0.8);
+        }
+        
+        .modal-body {
+            padding: 30px;
+            background: #fff;
+        }
+        
+        .form-control-mac {
+            border-radius: 12px;
+            border: 1px solid #d1d1d6;
+            padding: 12px 16px;
+            font-size: 15px;
+            transition: all 0.2s;
+            background-color: #f5f5f7;
+        }
+        
+        .form-control-mac:focus {
+            background-color: #fff;
+            border-color: var(--mac-blue);
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
+        }
+        
+        .f-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #86868b;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: block;
+        }
 
         .delay-1 { animation-delay: 0.1s; }
         .delay-2 { animation-delay: 0.2s; }
@@ -221,14 +289,106 @@
         </div>
         @endforelse
 
-        <div class="office-card add-card delay-3">
+        <div class="office-card add-card delay-3" data-bs-toggle="modal" data-bs-target="#addOfficeModal">
             <i class="icofont-plus-circle"></i>
             <h5 class="mt-3">Buka Kantor Baru</h5>
         </div>
     </div>
 </div>
 
+<!-- Modal Add Office -->
+<div class="modal fade" id="addOfficeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Tambah Kantor Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-4">
+                <form id="addOfficeForm" action="{{ route('offices.store') }}" method="POST">
+                    @csrf
+                    <div class="mb-3">
+                        <label class="f-label">Nama Kantor</label>
+                        <input type="text" name="name" class="form-control form-control-mac" placeholder="Contoh: Kantor Pusat" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="f-label">Kode Kantor</label>
+                        <input type="text" name="code" class="form-control form-control-mac" placeholder="Contoh: K-001" required>
+                    </div>
+                    <button type="submit" class="btn btn-mac-primary w-100">Simpan Kantor</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    document.getElementById('addOfficeForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = this.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<div class="mac-spinner" style="width:20px;height:20px;border-width:2px;margin:0 auto;"></div>';
+        btn.disabled = true;
+
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            },
+            body: new FormData(this)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                // Close modal
+                const modalEl = document.getElementById('addOfficeModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+                
+                // Reset form
+                this.reset();
+                
+                // Add card to grid
+                const container = document.getElementById('cardsContainer');
+                const addCard = container.querySelector('.add-card');
+                
+                const newCard = document.createElement('div');
+                newCard.className = 'office-card';
+                newCard.style.animation = 'slideIn 0.8s forwards';
+                newCard.innerHTML = `
+                    <span class="office-status">Aktif</span>
+                    <div class="icon-box">
+                        <i class="icofont-building"></i>
+                    </div>
+                    <h5>${data.data.name}</h5>
+                    <p>Kelola data dan operasional untuk kantor ini.</p>
+                    <div class="office-meta">
+                        <span><i class="icofont-code"></i> Kode: ${data.data.code}</span>
+                        <span><i class="icofont-location-pin"></i> Lokasi Terdaftar</span>
+                    </div>
+                    <a href="javascript:void(0)" onclick="selectOffice(${data.data.id})" class="btn btn-mac-primary w-100">Masuk ke Kantor</a>
+                `;
+                
+                container.insertBefore(newCard, addCard);
+                
+                // Scroll to new card
+                newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                alert('Gagal menambahkan kantor: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Terjadi kesalahan koneksi.');
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    });
+
     function selectOffice(officeId) {
         const redirectOverlay = document.getElementById('redirectOverlay');
         const body = document.body;
