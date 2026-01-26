@@ -6,139 +6,185 @@
 <div class="page-wrapper" style="background-color: #f4f7fa; min-height: 100vh; font-family: 'Inter', sans-serif;">
     <div class="page-content py-4">
         <div class="container-fluid">
-            <!-- Header -->
-            <div class="text-center mb-5">
-                <h3 class="fw-bold text-dark">Neraca Keuangan</h3>
-                <h5 class="text-muted">Dejava Internal System</h5>
-                <p class="text-secondary small">Per Tanggal: {{ date('d F Y', strtotime($date)) }}</p>
+            <!-- Header & Filter -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="fw-bold text-dark mb-1">Neraca Keuangan</h3>
+                    <p class="text-muted mb-0">Laporan posisi keuangan per tanggal tertentu</p>
+                </div>
+                <div>
+                    <!-- Export Buttons -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa fa-download me-1"></i> Unduh
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="window.print()"><i class="fa fa-file-pdf me-2"></i>PDF / Cetak</a></li>
+                            <li><a class="dropdown-item" href="{{ route('report.balance-sheet.export.csv') }}?date={{ $date }}"><i class="fa fa-file-csv me-2"></i>CSV</a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
 
-            <div class="row g-4">
-                <!-- Aktiva Side -->
-                <div class="col-lg-6">
-                    <div class="card border-0 shadow-sm rounded-3">
-                        <div class="card-header bg-primary py-3">
-                            <h6 class="mb-0 text-white fw-bold">AKTIVA (ASET)</h6>
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <form method="GET" action="{{ route('report.balance-sheet') }}" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Tanggal Laporan</label>
+                            <input type="date" name="date" class="form-control" value="{{ $date }}">
                         </div>
-                        <div class="card-body p-0">
-                            <table class="table table-hover mb-0">
-                                <tbody>
-                                    @php $totalAktiva = 0; @endphp
-                                    @foreach($aktiva as $item)
-                                    <tr>
-                                        <td class="ps-4 py-3">
-                                            <div class="fw-semibold text-dark">{{ $item->nama_akun }}</div>
-                                            <small class="text-muted f-mono">{{ $item->kode_akun }}</small>
-                                        </td>
-                                        <td class="text-end pe-4 py-3 fw-bold">
-                                            Rp {{ number_format($item->balance) }}
-                                        </td>
-                                    </tr>
-                                    @php $totalAktiva += $item->balance; @endphp
-                                    @endforeach
-                                    
-                                    @if($aktiva->isEmpty())
-                                        <tr><td colspan="2" class="text-center p-4 text-muted">Belum ada data Aktiva.</td></tr>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fa fa-filter me-1"></i> Tampilkan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mb-4">
+                <h5 class="fw-bold text-dark">Dejava Internal System</h5>
+                <p class="text-secondary">Per Tanggal: {{ date('d F Y', strtotime($date)) }}</p>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-white border-bottom">
+                                <tr>
+                                    <th class="ps-4 py-3 fw-bold text-dark" style="width: 70%;">Tipe Akun</th>
+                                    <th class="text-end pe-4 py-3 fw-bold text-dark" style="width: 30%;">Saldo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{-- AKTIVA SECTION --}}
+                                <tr style="background-color: #e3f2fd;">
+                                    <td colspan="2" class="ps-4 py-2 fw-bold text-dark">Aktiva - 1000</td>
+                                </tr>
+                                
+                                @php $totalAktiva = 0; @endphp
+                                @foreach($aktivaGroups as $groupName => $accounts)
+                                    @if($accounts->isNotEmpty())
+                                        <!-- Group Header -->
+                                        <tr>
+                                            <td colspan="2" class="ps-4 py-2 fw-semibold text-secondary">
+                                                <i class="fa fa-chevron-down me-2" style="font-size: 0.8rem;"></i> {{ $groupName }}
+                                            </td>
+                                        </tr>
+                                        <!-- Accounts -->
+                                        @foreach($accounts as $item)
+                                        <tr>
+                                            <td class="ps-5 py-2" style="padding-left: 3rem !important;">
+                                                <span class="text-dark">{{ $item->nama_akun }} - {{ $item->kode_akun }}</span>
+                                            </td>
+                                            <td class="text-end pe-4 py-2 text-dark">
+                                                Rp {{ number_format($item->balance) }}
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                        @php $totalAktiva += $accounts->sum('balance'); @endphp
                                     @endif
-                                </tbody>
-                                <tfoot class="bg-light border-top">
-                                    <tr class="fs-5">
-                                        <td class="ps-4 py-3 fw-bold text-primary">TOTAL AKTIVA</td>
-                                        <td class="text-end pe-4 py-3 fw-bold text-primary">Rp {{ number_format($totalAktiva) }}</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+                                @endforeach
 
-                <!-- Kewajiban & Modal Side -->
-                <div class="col-lg-6">
-                    <!-- Kewajiban -->
-                    <div class="card border-0 shadow-sm rounded-3 mb-4">
-                        <div class="card-header bg-dark py-3">
-                            <h6 class="mb-0 text-white fw-bold">KEWAJIBAN (HUTANG)</h6>
-                        </div>
-                        <div class="card-body p-0">
-                            <table class="table table-hover mb-0">
-                                <tbody>
-                                    @php $totalKewajiban = 0; @endphp
-                                    @foreach($kewajiban as $item)
-                                    <tr>
-                                        <td class="ps-4 py-3">
-                                            <div class="fw-semibold text-dark">{{ $item->nama_akun }}</div>
-                                            <small class="text-muted f-mono">{{ $item->kode_akun }}</small>
-                                        </td>
-                                        <td class="text-end pe-4 py-3 fw-bold">
-                                            Rp {{ number_format($item->balance) }}
-                                        </td>
-                                    </tr>
-                                    @php $totalKewajiban += $item->balance; @endphp
-                                    @endforeach
-                                </tbody>
-                                <tfoot class="bg-light border-top">
-                                    <tr>
-                                        <td class="ps-4 py-3 fw-bold">Total Kewajiban</td>
-                                        <td class="text-end pe-4 py-3 fw-bold">Rp {{ number_format($totalKewajiban) }}</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
+                                <!-- Total Aktiva -->
+                                <tr class="bg-white">
+                                    <td class="ps-4 py-3 fw-bold text-dark">Total Aktiva</td>
+                                    <td class="text-end pe-4 py-3 fw-bold text-dark">Rp {{ number_format($totalAktiva) }}</td>
+                                </tr>
 
-                    <!-- Modal -->
-                    <div class="card border-0 shadow-sm rounded-3">
-                        <div class="card-header bg-secondary py-3">
-                            <h6 class="mb-0 text-white fw-bold">MODAL (EKUITAS)</h6>
-                        </div>
-                        <div class="card-body p-0">
-                            <table class="table table-hover mb-0">
-                                <tbody>
-                                    @php $totalModal = 0; @endphp
-                                    @foreach($modal as $item)
-                                    <tr>
-                                        <td class="ps-4 py-3">
-                                            <div class="fw-semibold text-dark">{{ $item->nama_akun }}</div>
-                                            <small class="text-muted f-mono">{{ $item->kode_akun }}</small>
-                                        </td>
-                                        <td class="text-end pe-4 py-3 fw-bold">
-                                            Rp {{ number_format($item->balance) }}
-                                        </td>
-                                    </tr>
-                                    @php $totalModal += $item->balance; @endphp
-                                    @endforeach
-                                    {{-- Laba Berjalan --}}
-                                    <tr>
-                                        <td class="ps-4 py-3">
-                                            <div class="fw-semibold text-success">Laba Tahun Berjalan</div>
-                                            <small class="text-muted f-mono">3-LABA</small>
-                                        </td>
-                                        <td class="text-end pe-4 py-3 fw-bold text-success">
-                                            Rp {{ number_format($netProfit) }}
-                                        </td>
-                                    </tr>
-                                    @php $totalModal += $netProfit; @endphp
-                                </tbody>
-                                <tfoot class="bg-light border-top">
-                                    <tr class="fs-5">
-                                        <td class="ps-4 py-3 fw-bold text-dark">TOTAL KEWAJIBAN & MODAL</td>
-                                        <td class="text-end pe-4 py-3 fw-bold text-dark">Rp {{ number_format($totalKewajiban + $totalModal) }}</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
+                                {{-- KEWAJIBAN SECTION --}}
+                                <tr style="background-color: #e3f2fd;">
+                                    <td colspan="2" class="ps-4 py-2 fw-bold text-dark">Kewajiban - 2000</td>
+                                </tr>
+
+                                @php $totalKewajiban = 0; @endphp
+                                @foreach($kewajibanGroups as $groupName => $accounts)
+                                    @if($accounts->isNotEmpty())
+                                        <tr>
+                                            <td colspan="2" class="ps-4 py-2 fw-semibold text-secondary">
+                                                <i class="fa fa-chevron-down me-2" style="font-size: 0.8rem;"></i> {{ $groupName }}
+                                            </td>
+                                        </tr>
+                                        @foreach($accounts as $item)
+                                        <tr>
+                                            <td class="ps-5 py-2" style="padding-left: 3rem !important;">
+                                                <span class="text-dark">{{ $item->nama_akun }} - {{ $item->kode_akun }}</span>
+                                            </td>
+                                            <td class="text-end pe-4 py-2 text-dark">
+                                                Rp {{ number_format($item->balance) }}
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                        @php $totalKewajiban += $accounts->sum('balance'); @endphp
+                                    @endif
+                                @endforeach
+
+                                <tr class="bg-white">
+                                    <td class="ps-4 py-3 fw-bold text-dark">Total Kewajiban</td>
+                                    <td class="text-end pe-4 py-3 fw-bold text-dark">Rp {{ number_format($totalKewajiban) }}</td>
+                                </tr>
+
+                                {{-- MODAL SECTION --}}
+                                <tr style="background-color: #e3f2fd;">
+                                    <td colspan="2" class="ps-4 py-2 fw-bold text-dark">Modal - 3000</td>
+                                </tr>
+
+                                @php $totalModal = 0; @endphp
+                                @foreach($modalGroups as $groupName => $accounts)
+                                    @if($accounts->isNotEmpty())
+                                        <tr>
+                                            <td colspan="2" class="ps-4 py-2 fw-semibold text-secondary">
+                                                <i class="fa fa-chevron-down me-2" style="font-size: 0.8rem;"></i> {{ $groupName }}
+                                            </td>
+                                        </tr>
+                                        @foreach($accounts as $item)
+                                        <tr>
+                                            <td class="ps-5 py-2" style="padding-left: 3rem !important;">
+                                                <span class="text-dark">{{ $item->nama_akun }} - {{ $item->kode_akun }}</span>
+                                            </td>
+                                            <td class="text-end pe-4 py-2 text-dark">
+                                                Rp {{ number_format($item->balance) }}
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                        @php $totalModal += $accounts->sum('balance'); @endphp
+                                    @endif
+                                @endforeach
+
+                                <tr class="bg-white">
+                                    <td class="ps-4 py-3 fw-bold text-dark">Total Modal</td>
+                                    <td class="text-end pe-4 py-3 fw-bold text-dark">Rp {{ number_format($totalModal) }}</td>
+                                </tr>
+
+                                {{-- SUMMARY --}}
+                                <tr class="bg-light">
+                                    <td class="ps-4 py-3 fw-bold text-dark">Total Kewajiban dan Modal</td>
+                                    <td class="text-end pe-4 py-3 fw-bold text-dark">Rp {{ number_format($totalKewajiban + $totalModal) }}</td>
+                                </tr>
+
+                                @php $checkBalance = $totalAktiva - ($totalKewajiban + $totalModal); @endphp
+                                <tr class="bg-white">
+                                    <td class="ps-4 py-3 fw-bold text-dark">Rugi yang Dilaporkan</td>
+                                    <td class="text-end pe-4 py-3 fw-bold text-dark">Rp {{ number_format($checkBalance) }}</td>
+                                </tr>
+
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-
-            <!-- Validation Check -->
-            @php $diff = abs($totalAktiva - ($totalKewajiban + $totalModal)); @endphp
-            @if($diff > 1)
-            <div class="alert alert-warning mt-4 shadow-sm border-0">
-                <i class="fa fa-exclamation-triangle me-2"></i> PERINGATAN: Neraca belum seimbang! Selisih: <strong>Rp {{ number_format($diff) }}</strong>
-            </div>
-            @endif
         </div>
     </div>
 </div>
+
+<style>
+    @media print {
+        .d-print-none { display: none !important; }
+        .page-wrapper { background-color: white !important; }
+        .card { box-shadow: none !important; border: none !important; }
+        .btn, form { display: none !important; }
+        thead th { color: #000 !important; }
+    }
+</style>
 @endsection

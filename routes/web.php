@@ -54,6 +54,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('report/ar-aging', [ReportController::class, 'arAging'])->name('report.ar-aging');
         Route::get('report/general-ledger', [ReportController::class, 'generalLedger'])->name('report.general-ledger');
         Route::get('report/balance-sheet', [ReportController::class, 'balanceSheet'])->name('report.balance-sheet');
+        Route::get('report/balance-sheet/export/csv', [ReportController::class, 'balanceSheetExportCSV'])->name('report.balance-sheet.export.csv');
         Route::get('report/profit-loss', [ReportController::class, 'profitAndLoss'])->name('report.profit-loss');
 
         Route::prefix('admin')->group(function () {

@@ -369,59 +369,176 @@ class ReportController extends Controller
         return view($this->views . 'general-ledger');
     }
 
-    public function balanceSheet()
+    private function getBalanceSheetData($date)
     {
-        $date = date('Y-m-d');
         $officeId = session('active_office_id');
+
+        // Helper to calculate balance as of date
+        $getBalance = function ($accountId) use ($officeId, $date) {
+            $balance = DB::table('journal_details')
+                ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
+                ->where('journal_details.akun_id', $accountId)
+                ->where('journals.office_id', $officeId)
+                ->where('journals.tgl_jurnal', '<=', $date)
+                ->whereNull('journal_details.deleted_at')
+                ->whereNull('journals.deleted_at')
+                ->select(DB::raw('SUM(debit) - SUM(kredit) as bal'))
+                ->first()->bal ?? 0;
+            return $balance;
+        };
         
         $accounts = DB::table('chart_of_accounts')
-            ->select('id', 'kode_akun', 'nama_akun', 'is_kas_bank')
+            ->select('id', 'kode_akun', 'nama_akun')
             ->get()
-            ->map(function($acc) use ($officeId) {
-                // Calculation of balance from journal entries
-                $balance = DB::table('journal_details')
-                    ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-                    ->where('journal_details.akun_id', $acc->id)
-                    ->where('journals.office_id', $officeId)
-                    ->whereNull('journal_details.deleted_at')
-                    ->whereNull('journals.deleted_at')
-                    ->select(DB::raw('SUM(debit) - SUM(kredit) as bal'))
-                    ->first()->bal ?? 0;
-                
-                $acc->balance = $balance;
+            ->map(function($acc) use ($getBalance) {
+                $acc->balance = $getBalance($acc->id);
                 $acc->type = substr($acc->kode_akun, 0, 1);
                 return $acc;
             });
 
-        $aktiva = $accounts->filter(fn($a) => $a->type == '1');
-        $kewajiban = $accounts->filter(fn($a) => ($a->type == '2'))->map(fn($a) => (object)['nama_akun' => $a->nama_akun, 'kode_akun' => $a->kode_akun, 'balance' => abs($a->balance)]);
-        $modal = $accounts->filter(fn($a) => ($a->type == '3'))->map(fn($a) => (object)['nama_akun' => $a->nama_akun, 'kode_akun' => $a->kode_akun, 'balance' => abs($a->balance)]);
+        $aktivaAccounts = $accounts->filter(fn($a) => $a->type == '1');
+        
+        $aktivaGroups = [
+            'Kas' => $aktivaAccounts->filter(fn($a) => substr($a->kode_akun, 0, 2) == '11')->values(),
+            'Bank' => $aktivaAccounts->filter(fn($a) => substr($a->kode_akun, 0, 2) == '12')->values(),
+            'Piutang Usaha' => $aktivaAccounts->filter(fn($a) => substr($a->kode_akun, 0, 2) == '13')->values(),
+            'Persediaan' => $aktivaAccounts->filter(fn($a) => in_array(substr($a->kode_akun, 0, 2), ['14', '15']))->values(),
+            'Pajak Dibayar Di Muka' => $aktivaAccounts->filter(fn($a) => substr($a->kode_akun, 0, 2) == '17')->values(),
+            'Aktiva Tetap' => $aktivaAccounts->filter(fn($a) => substr($a->kode_akun, 0, 2) == '18' && substr($a->kode_akun, 0, 3) != '185')->values(),
+            'Akumulasi Penyusutan' => $aktivaAccounts->filter(fn($a) => substr($a->kode_akun, 0, 3) == '185')->values(),
+        ];
 
-        // Calculate current year profit
+        $kewajibanAccounts = $accounts->filter(fn($a) => $a->type == '2')->map(function($a) {
+            $a->balance = $a->balance * -1;
+            return $a;
+        });
+        
+        $kewajibanGroups = [
+            'Hutang Usaha' => $kewajibanAccounts->filter(fn($a) => substr($a->kode_akun, 0, 2) == '21')->values(),
+            'Hutang Non-Usaha' => $kewajibanAccounts->filter(fn($a) => substr($a->kode_akun, 0, 2) == '22')->values(),
+            'Hutang Pajak' => $kewajibanAccounts->filter(fn($a) => substr($a->kode_akun, 0, 2) == '23')->values(),
+            'Kewajiban Jangka Panjang' => $kewajibanAccounts->filter(fn($a) => substr($a->kode_akun, 0, 2) == '24')->values(),
+        ];
+        
+        $modalAccountsList = $accounts->filter(fn($a) => $a->type == '3' && $a->kode_akun != '3202')->map(function($a) {
+            $a->balance = $a->balance * -1;
+            return $a;
+        });
+
+        // Calculate Current Year Profit (Laba Tahun Berjalan)
+        $startOfYear = date('Y-01-01', strtotime($date));
+        
         $revenue = DB::table('invoices')
             ->where('tipe_invoice', 'Sales')
             ->where('office_id', $officeId)
-            ->whereYear('tgl_invoice', date('Y'))
+            ->whereBetween('tgl_invoice', [$startOfYear, $date])
             ->whereNull('deleted_at')
             ->sum('total_akhir');
 
         $cogs = DB::table('invoices')
             ->where('tipe_invoice', 'Purchase')
             ->where('office_id', $officeId)
-            ->whereYear('tgl_invoice', date('Y'))
+            ->whereBetween('tgl_invoice', [$startOfYear, $date])
             ->whereNull('deleted_at')
             ->sum('total_akhir');
 
         $expenses = DB::table('expenses')
             ->where('office_id', $officeId)
-            ->whereYear('tgl_biaya', date('Y'))
+            ->whereBetween('tgl_biaya', [$startOfYear, $date])
             ->whereNull('deleted_at')
             ->sum('jumlah');
 
-        $netProfit = $revenue - ($cogs + $expenses);
+        $currentYearEarnings = $revenue - ($cogs + $expenses);
+        
+        $labaTahunBerjalan = (object)[
+            'kode_akun' => '3202',
+            'nama_akun' => 'Laba Tahun Berjalan',
+            'balance' => $currentYearEarnings,
+            'type' => '3'
+        ];
 
-        return view($this->views . 'balance-sheet', compact('aktiva', 'kewajiban', 'modal', 'netProfit', 'date'));
+        $modalGroups = [
+            'Modal' => $modalAccountsList->filter(fn($a) => in_array(substr($a->kode_akun, 0, 2), ['31', '33', '39']))->values(),
+            'Laba' => $modalAccountsList->filter(fn($a) => substr($a->kode_akun, 0, 2) == '32')->push($labaTahunBerjalan)->values(),
+        ];
+
+        return compact('aktivaGroups', 'kewajibanGroups', 'modalGroups', 'currentYearEarnings');
     }
+
+    public function balanceSheet(Request $request)
+    {
+        $date = $request->input('date', date('Y-m-d'));
+        $data = $this->getBalanceSheetData($date);
+        
+        return view($this->views . 'balance-sheet', array_merge($data, ['date' => $date]));
+    }
+
+    public function balanceSheetExportCSV(Request $request)
+    {
+        $date = $request->input('date', date('Y-m-d'));
+        $data = $this->getBalanceSheetData($date);
+        
+        $fileName = 'neraca-keuangan-' . date('Y-m-d-His') . '.csv';
+        $headers = [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
+
+        $callback = function() use ($data, $date) {
+            $file = fopen('php://output', 'w');
+            
+            fputcsv($file, ['Neraca Keuangan']);
+            fputcsv($file, ['Per Tanggal', $date]);
+            fputcsv($file, []);
+            
+            // Aktiva
+            fputcsv($file, ['AKTIVA']);
+            foreach ($data['aktivaGroups'] as $groupName => $accounts) {
+                if ($accounts->isNotEmpty()) {
+                    fputcsv($file, [$groupName]);
+                    foreach ($accounts as $acc) {
+                        fputcsv($file, [$acc->kode_akun, $acc->nama_akun, $acc->balance]);
+                    }
+                    fputcsv($file, ['Total ' . $groupName, '', $accounts->sum('balance')]);
+                    fputcsv($file, []);
+                }
+            }
+            
+            // Kewajiban
+            fputcsv($file, ['KEWAJIBAN']);
+            foreach ($data['kewajibanGroups'] as $groupName => $accounts) {
+                if ($accounts->isNotEmpty()) {
+                    fputcsv($file, [$groupName]);
+                    foreach ($accounts as $acc) {
+                        fputcsv($file, [$acc->kode_akun, $acc->nama_akun, $acc->balance]);
+                    }
+                    fputcsv($file, ['Total ' . $groupName, '', $accounts->sum('balance')]);
+                    fputcsv($file, []);
+                }
+            }
+            
+            // Modal
+            fputcsv($file, ['MODAL']);
+            foreach ($data['modalGroups'] as $groupName => $accounts) {
+                if ($accounts->isNotEmpty()) {
+                    fputcsv($file, [$groupName]);
+                    foreach ($accounts as $acc) {
+                        fputcsv($file, [$acc->kode_akun, $acc->nama_akun, $acc->balance]);
+                    }
+                    fputcsv($file, ['Total ' . $groupName, '', $accounts->sum('balance')]);
+                    fputcsv($file, []);
+                }
+            }
+            
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
 
     public function profitAndLoss()
     {
