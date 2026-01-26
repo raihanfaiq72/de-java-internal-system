@@ -211,7 +211,9 @@
         /* Collapse Menu Fix & Styling */
         .collapse .nav-link {
             padding-left: 44px !important;
-            font-size: 13px !important;
+            font-size: 12.5px !important;
+            padding-top: 6px !important;
+            padding-bottom: 6px !important;
             color: #6e6e73 !important;
             position: relative;
         }

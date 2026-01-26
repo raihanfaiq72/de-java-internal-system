@@ -36,7 +36,8 @@
 
                         {{-- Content --}}
                         <div class="card-body text-center">
-                            <img src="{{ asset('assets/images/extra/error.svg') }}" height="170">
+                            <img src="{{ asset('assets/images/' . trim($__env->yieldContent('image', 'default.png'))) }}" height="270">
+
 
                             <h1 class="my-2">@yield('code')</h1>
                             <h5 class="text-muted mb-3">@yield('message')</h5>
