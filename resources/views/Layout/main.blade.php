@@ -84,6 +84,8 @@
     @endunless
     @yield('main')
 
+    @include('Layout._alert_helper')
+
     <script src="{{url('')}}/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="{{url('')}}/assets/libs/simplebar/simplebar.min.js"></script>
     @stack('js')

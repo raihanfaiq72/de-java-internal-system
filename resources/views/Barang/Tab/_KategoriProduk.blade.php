@@ -288,6 +288,7 @@
 
         deleteKategoriId = null;
         loadKategoriProduk();
+        alert('Data berhasil dihapus');
     });
 
 </script>

@@ -214,6 +214,7 @@
         ).hide();
 
         loadUnit();
+        alert('Data berhasil disimpan');
     }
 
     function hapusUnit(id) {
@@ -247,6 +248,7 @@
 
         deleteUnitId = null;
         loadUnit();
+        alert('Data berhasil dihapus');
     });
 </script>
 @endpush

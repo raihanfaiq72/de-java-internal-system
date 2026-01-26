@@ -214,6 +214,7 @@ document.getElementById('btnSaveKategoriUnit')
         ).hide();
 
         loadKategoriUnit();
+        alert('Data berhasil disimpan');
 
     } catch {
         alert('Gagal menyimpan data');

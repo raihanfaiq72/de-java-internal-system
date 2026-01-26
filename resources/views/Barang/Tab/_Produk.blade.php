@@ -550,6 +550,7 @@ function hapusProduk(id) {
             return;
         }
         loadProductData();
+        alert('Produk berhasil dihapus');
     });
 }
 </script>
