@@ -1,5 +1,5 @@
 <div class="startbar-menu">
-    <div class="startbar-collapse" id="startbarCollapse" data-simplebar>
+    <div class="startbar-collapse" id="startbarCollapse" style="flex: 1; overflow-y: auto; padding: 15px;">
         <div class="d-flex align-items-start flex-column w-100">
             <ul class="navbar-nav mb-auto w-100">
                 <li class="menu-label mt-2">
@@ -88,7 +88,7 @@
                     </div>
                 </li>
 
-                <li class="menu-label mt-2">
+                <li class="menu-label">
                     <span>Transaksi</span>
                 </li>
 
@@ -132,9 +132,6 @@
                     <span>Report</span>
                 </li>
 
-                <li class="menu-label mt-2">
-                    <small class="text-uppercase text-muted fw-bold" style="font-size: 10px; letter-spacing: 0.5px;">Laporan Operasional</small>
-                </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('report.sales') }}">
                         <i class="iconoir-graph-up menu-icon"></i>

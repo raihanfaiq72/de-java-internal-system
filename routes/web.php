@@ -26,6 +26,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/set-active-outlet', [AuthController::class, 'setOutlet'])->name('set.outlet');
     Route::delete('/delete-outlet/{id}', [AuthController::class, 'destroyOutlet'])->name('syo.destroy');
 
+    // User Profile
+    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+
     Route::middleware(['module.access'])->group(function () {
         
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
