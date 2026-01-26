@@ -9,89 +9,140 @@
             <!-- Header -->
             <div class="row align-items-center mb-4">
                 <div class="col-md-7">
-                    <h4 class="fw-bold text-dark mb-1">Laporan Umur Piutang (AR Aging)</h4>
-                    <p class="text-muted small mb-0">Analisis keterlambatan pembayaran invoice berdasarkan rentang waktu.</p>
+                    <h4 class="fw-bold text-dark mb-1">Laporan Umur Piutang</h4>
+                    <p class="text-muted small mb-0">Pantau invoice yang akan jatuh tempo atau sudah lewat jatuh tempo.</p>
                 </div>
-                <div class="col-md-5 text-md-end">
-                    <button class="btn btn-white border fw-bold shadow-sm me-2"><i class="fa fa-download me-1"></i> PDF</button>
-                    <button class="btn btn-primary fw-bold shadow-sm">Cetak Laporan</button>
+                <div class="col-md-5 text-md-end mt-3 mt-md-0">
+                    <button class="btn btn-white border fw-bold px-3 shadow-sm text-dark me-2">
+                        <i class="iconoir-download me-1"></i> Unduh
+                    </button>
                 </div>
             </div>
 
-            <!-- Aging Buckets -->
-            <div class="row g-3 mb-4">
-                @php
-                    $buckets = [
-                        ['label' => 'Belum Jatuh Tempo', 'value' => $agingBuckets['current'], 'color' => 'success'],
-                        ['label' => '1 - 30 Hari', 'value' => $agingBuckets['1_30'], 'color' => 'info'],
-                        ['label' => '31 - 60 Hari', 'value' => $agingBuckets['31_60'], 'color' => 'warning'],
-                        ['label' => '61 - 90 Hari', 'value' => $agingBuckets['61_90'], 'color' => 'orange'],
-                        ['label' => '> 90 Hari', 'value' => $agingBuckets['90_plus'], 'color' => 'danger'],
-                    ];
-                @endphp
-                @foreach($buckets as $bucket)
-                <div class="col">
-                    <div class="card border-0 shadow-sm rounded-3">
-                        <div class="card-body p-3 text-center border-bottom border-4 border-{{ $bucket['color'] }}">
-                            <small class="text-muted fw-bold text-uppercase" style="font-size: 10px;">{{ $bucket['label'] }}</small>
-                            <h5 class="fw-bold mb-0 mt-1">Rp {{ number_format($bucket['value']) }}</h5>
+            <!-- Filters -->
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <form action="{{ route('report.ar-aging') }}" method="GET" class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Pelanggan</label>
+                            <select name="mitra_id" class="form-select">
+                                <option value="">Semua Mitra</option>
+                                @foreach($mitras as $mitra)
+                                    <option value="{{ $mitra->id }}" {{ request('mitra_id') == $mitra->id ? 'selected' : '' }}>
+                                        {{ $mitra->nama }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
-                    </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Dari Tanggal</label>
+                            <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Sampai Tanggal</label>
+                            <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary fw-bold w-100">
+                                Hasilkan Laporan
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                @endforeach
             </div>
 
-            <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+            <!-- Summary Section -->
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
                 <div class="card-header bg-white border-bottom p-4">
-                    <h6 class="fw-bold mb-0">Rincian Piutang Per Pelanggan</h6>
+                    <h6 class="fw-bold mb-0 text-uppercase text-muted" style="letter-spacing: 0.5px;">Ringkasan</h6>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light text-uppercase text-muted" style="font-size: 11px; letter-spacing: 0.5px;">
+                        <table class="table table-borderless mb-0 align-middle">
+                            <thead class="bg-light text-muted small text-uppercase">
                                 <tr>
-                                    <th class="ps-4">No. Invoice</th>
-                                    <th>Pelanggan</th>
-                                    <th>Tgl. Invoice</th>
-                                    <th>Jatuh Tempo</th>
-                                    <th class="text-center">Keterlambatan</th>
-                                    <th class="text-end pe-4">Sisa Piutang</th>
+                                    <th class="px-4 py-3">Total Customers</th>
+                                    <th class="py-3">Avg. Day Past Due</th>
+                                    <th class="py-3">Total Invoices</th>
+                                    <th class="py-3 text-end">Total Amount</th>
+                                    <th class="py-3 text-end"><= 0 Hari</th>
+                                    <th class="py-3 text-end">1-15 Hari</th>
+                                    <th class="py-3 text-end">16-30 Hari</th>
+                                    <th class="py-3 text-end">31-45 Hari</th>
+                                    <th class="py-3 text-end">46-60 Hari</th>
+                                    <th class="py-3 text-end px-4">61+ Hari</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($invoices as $inv)
-                                <tr>
-                                    <td class="ps-4"><span class="fw-bold text-primary">{{ $inv->nomor_invoice }}</span></td>
-                                    <td><div class="fw-semibold">{{ $inv->client_name }}</div></td>
-                                    <td>{{ date('d M Y', strtotime($inv->tgl_invoice)) }}</td>
-                                    <td>{{ date('d M Y', strtotime($inv->tgl_jatuh_tempo)) }}</td>
-                                    <td class="text-center">
-                                        @if($inv->days_overdue > 0)
-                                            <span class="badge bg-soft-danger text-danger fw-bold">{{ $inv->days_overdue }} Hari</span>
-                                        @else
-                                            <span class="badge bg-soft-success text-success">Lancar</span>
-                                        @endif
-                                    </td>
-                                    <td class="text-end pe-4">
-                                        <h6 class="mb-0 fw-bold">Rp {{ number_format($inv->balance) }}</h6>
-                                    </td>
+                                <tr class="fw-bold fs-5">
+                                    <td class="px-4 py-3">{{ $summary['total_customers'] }}</td>
+                                    <td class="py-3">{{ number_format($summary['avg_days_past_due'], 2) }}</td>
+                                    <td class="py-3">{{ $summary['total_invoices'] }}</td>
+                                    <td class="py-3 text-end text-primary">{{ number_format($summary['total_amount']) }}</td>
+                                    <td class="py-3 text-end text-success">{{ number_format($summary['buckets']['current']) }}</td>
+                                    <td class="py-3 text-end">{{ number_format($summary['buckets']['1-15']) }}</td>
+                                    <td class="py-3 text-end">{{ number_format($summary['buckets']['16-30']) }}</td>
+                                    <td class="py-3 text-end">{{ number_format($summary['buckets']['31-45']) }}</td>
+                                    <td class="py-3 text-end">{{ number_format($summary['buckets']['46-60']) }}</td>
+                                    <td class="py-3 text-end px-4 text-danger">{{ number_format($summary['buckets']['61+']) }}</td>
                                 </tr>
-                                @endforeach
-                                @if($invoices->isEmpty())
-                                    <tr><td colspan="6" class="text-center p-5 text-muted fst-italic">Tidak ada piutang outstanding saat ini.</td></tr>
-                                @endif
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
+
+            <!-- Detailed Table -->
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header bg-white border-bottom p-4">
+                    <h6 class="fw-bold mb-0 text-uppercase text-muted" style="letter-spacing: 0.5px;">Rincian Per Pelanggan</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="bg-light text-muted small text-uppercase">
+                                <tr>
+                                    <th class="px-4 py-3">Pelanggan</th>
+                                    <th class="py-3">Avg. Day Past Due</th>
+                                    <th class="py-3">Total Invoices</th>
+                                    <th class="py-3 text-end">Total</th>
+                                    <th class="py-3 text-end"><= 0 Hari</th>
+                                    <th class="py-3 text-end">1-15 Hari</th>
+                                    <th class="py-3 text-end">16-30 Hari</th>
+                                    <th class="py-3 text-end">31-45 Hari</th>
+                                    <th class="py-3 text-end">46-60 Hari</th>
+                                    <th class="py-3 text-end px-4">61+ Hari</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($agingData as $data)
+                                <tr>
+                                    <td class="px-4 py-3 fw-bold text-dark">{{ $data['mitra_name'] }}</td>
+                                    <td class="py-3">{{ number_format($data['avg_days'], 2) }}</td>
+                                    <td class="py-3">{{ $data['count'] }}</td>
+                                    <td class="py-3 text-end fw-bold">{{ number_format($data['total']) }}</td>
+                                    <td class="py-3 text-end text-muted">{{ number_format($data['buckets']['current']) }}</td>
+                                    <td class="py-3 text-end text-muted">{{ number_format($data['buckets']['1-15']) }}</td>
+                                    <td class="py-3 text-end text-muted">{{ number_format($data['buckets']['16-30']) }}</td>
+                                    <td class="py-3 text-end text-muted">{{ number_format($data['buckets']['31-45']) }}</td>
+                                    <td class="py-3 text-end text-muted">{{ number_format($data['buckets']['46-60']) }}</td>
+                                    <td class="py-3 text-end px-4 text-danger">{{ number_format($data['buckets']['61+']) }}</td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="10" class="text-center py-5 text-muted">
+                                        <i class="iconoir-file-not-found fs-1 d-block mb-2"></i>
+                                        Tidak ada data piutang untuk periode ini.
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
-<style>
-    .bg-soft-danger { background-color: rgba(220, 53, 69, 0.1); }
-    .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
-    .bg-soft-info { background-color: rgba(13, 202, 240, 0.1); }
-    .border-orange { border-color: #fd7e14 !important; }
-</style>
 @endsection

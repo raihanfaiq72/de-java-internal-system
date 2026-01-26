@@ -175,6 +175,18 @@
                         <span>Umur Piutang (AR Aging)</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('report.general-ledger') }}">
+                        <i class="iconoir-book menu-icon"></i>
+                        <span>Buku Besar</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="iconoir-info-circle menu-icon"></i>
+                        <span>Simulasi Harga Average</span>
+                    </a>
+                </li>
 
                 <li class="menu-label mt-2">
                     <span>Setting</span>

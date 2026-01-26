@@ -9,121 +9,218 @@
             <!-- Header -->
             <div class="row align-items-center mb-4">
                 <div class="col-md-7">
-                    <h4 class="fw-bold text-dark mb-1">Laporan Stok & Inventori</h4>
-                    <p class="text-muted small mb-0">Pantau ketersediaan barang dan nilai aset persediaan secara real-time.</p>
+                    <h4 class="fw-bold text-dark mb-1">Laporan Stok</h4>
+                    <p class="text-muted small mb-0">Pergerakan stok dan inventori periode tertentu.</p>
                 </div>
                 <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                    <button class="btn btn-white border fw-bold px-3 shadow-sm text-dark me-2">
-                        <i class="fa fa-download me-1"></i> Export Excel
-                    </button>
-                    <button class="btn btn-primary fw-bold px-4 shadow-sm">
-                        <i class="fa fa-sync me-1"></i> Refresh Data
-                    </button>
+                    <a href="{{ route('report.stock.export', request()->query()) }}" class="btn btn-white border fw-bold px-3 shadow-sm text-dark me-2">
+                        <i class="iconoir-download me-1"></i> Unduh
+                    </a>
                 </div>
             </div>
 
-            <!-- Stats Cards -->
-            <div class="row mb-4 g-3">
-                <div class="col-lg-4">
-                    <div class="card border-0 shadow-sm rounded-3">
+            <!-- Filters -->
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <form action="{{ route('report.stock') }}" method="GET" class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Tanggal Dari</label>
+                            <input type="date" name="start_date" class="form-control" value="{{ request('start_date', date('Y-m-01')) }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Tanggal Sampai</label>
+                            <input type="date" name="end_date" class="form-control" value="{{ request('end_date', date('Y-m-t')) }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Kategori</label>
+                            <select name="category_id" class="form-select">
+                                <option value="">Semua</option>
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
+                                        {{ $cat->nama_kategori }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Produk</label>
+                            <select name="product_id" class="form-select">
+                                <option value="">Semua</option>
+                                @foreach($allProducts as $prod)
+                                    <option value="{{ $prod->id }}" {{ request('product_id') == $prod->id ? 'selected' : '' }}>
+                                        {{ $prod->nama_produk }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <!-- Location Filter (Optional) -->
+                        <div class="col-md-2">
+                             <label class="form-label fw-bold text-muted small text-uppercase">Lokasi</label>
+                             <select name="location_id" class="form-select">
+                                 <option value="">Semua</option>
+                                 @foreach($locations as $loc)
+                                     <option value="{{ $loc->id }}" {{ request('location_id') == $loc->id ? 'selected' : '' }}>
+                                         {{ $loc->name }}
+                                     </option>
+                                 @endforeach
+                             </select>
+                        </div>
+
+                        <div class="col-12 mt-3 text-end">
+                            <button type="submit" class="btn btn-primary fw-bold px-4">
+                                Hasilkan Laporan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="row g-3 mb-4">
+                <!-- Quantity Row -->
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4 border-start border-4 border-secondary">
+                            <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Opening Quantity</label>
+                            <h5 class="fw-bold mb-0 text-dark">{{ number_format($stats['opening_qty'], 2) }}</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4 border-start border-4 border-info">
+                            <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Quantity In</label>
+                            <h5 class="fw-bold mb-0 text-info">{{ number_format($stats['qty_in'], 2) }}</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4 border-start border-4 border-warning">
+                            <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Quantity Out</label>
+                            <h5 class="fw-bold mb-0 text-warning">{{ number_format($stats['qty_out'], 2) }}</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
                         <div class="card-body p-4 border-start border-4 border-primary">
-                            <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px; letter-spacing: 1px;">Total Varian Produk</label>
-                            <h4 class="fw-bold mb-0 text-dark">{{ $stats->total_items }} SKU</h4>
-                            <small class="text-muted mt-2 d-block">Tersebar di berbagai kategori</small>
+                            <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Closing Quantity</label>
+                            <h5 class="fw-bold mb-0 text-primary">{{ number_format($stats['closing_qty'], 2) }}</h5>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-4">
-                    <div class="card border-0 shadow-sm rounded-3">
-                        <div class="card-body p-4 border-start border-4 border-danger">
-                            <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px; letter-spacing: 1px;">Stok Menipis (Alert)</label>
-                            <h4 class="fw-bold mb-0 text-danger">{{ $stats->low_stock }} Produk</h4>
-                            <small class="text-danger fw-semibold mt-2 d-block"><i class="fa fa-exclamation-circle me-1"></i> Segera lakukan Re-order</small>
+
+                <!-- Value Row -->
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4 border-start border-4 border-secondary">
+                            <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Opening Value</label>
+                            <h5 class="fw-bold mb-0 text-dark">Rp {{ number_format($stats['opening_value']) }}</h5>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-4">
-                    <div class="card border-0 shadow-sm rounded-3">
-                        <div class="card-body p-4 border-start border-4 border-success">
-                            <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px; letter-spacing: 1px;">Estimasi Nilai Stok</label>
-                            <h4 class="fw-bold mb-0 text-success">Rp {{ number_format($stats->total_valuation) }}</h4>
-                            <small class="text-muted mt-2 d-block">Berdasarkan Harga Beli Terakhir</small>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4 border-start border-4 border-info">
+                            <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Value In</label>
+                            <h5 class="fw-bold mb-0 text-info">Rp {{ number_format($stats['value_in']) }}</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4 border-start border-4 border-warning">
+                            <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Value Out</label>
+                            <h5 class="fw-bold mb-0 text-warning">Rp {{ number_format($stats['value_out']) }}</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4 border-start border-4 border-primary">
+                            <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Closing Value</label>
+                            <h5 class="fw-bold mb-0 text-primary">Rp {{ number_format($stats['closing_value']) }}</h5>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Stock Table -->
+            <!-- Detailed Table -->
             <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-                <div class="card-header bg-white border-bottom p-4">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <h6 class="fw-bold mb-0">Status Inventori Real-time</h6>
-                        </div>
-                        <div class="col-auto">
-                            <div class="d-flex gap-2">
-                                <select class="form-select form-select-sm" style="width: 150px;">
-                                    <option value="">Semua Kategori</option>
-                                </select>
-                                <div class="input-group input-group-sm" style="width: 200px;">
-                                    <input type="text" class="form-control border-end-0" placeholder="Cari Produk...">
-                                    <span class="input-group-text bg-white border-start-0 text-muted"><i class="fa fa-search"></i></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body p-0">
+                <div class="card-body p-4">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light text-uppercase text-muted" style="font-size: 11px; letter-spacing: 0.5px;">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 13px;" id="stockTable">
+                            <thead class="bg-light text-uppercase text-muted fw-bold" style="font-size: 11px;">
                                 <tr>
                                     <th class="ps-4 py-3">Kode Produk</th>
                                     <th>Nama Produk</th>
                                     <th>Kategori</th>
-                                    <th class="text-center">Satuan</th>
-                                    <th class="text-end">Stok Tersedia</th>
-                                    <th class="text-center">Status Stok</th>
+                                    <th>Satuan</th>
+                                    <th class="text-end">Opening Qty</th>
+                                    <th class="text-end">Qty In</th>
+                                    <th class="text-end">Qty Out</th>
+                                    <th class="text-end fw-bold">Closing Qty</th>
+                                    <th class="text-end ps-4">Opening Value</th>
+                                    <th class="text-end">Value In</th>
+                                    <th class="text-end">Value Out</th>
+                                    <th class="text-end fw-bold pe-4">Closing Value</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($products as $product)
+                                @forelse($products as $product)
                                 <tr>
-                                    <td class="ps-4"><span class="f-mono text-dark fw-bold">{{ $product->sku_kode }}</span></td>
-                                    <td><div class="fw-semibold text-dark">{{ $product->nama_produk }}</div></td>
-                                    <td><span class="badge bg-soft-secondary text-secondary">{{ $product->nama_kategori ?? 'N/A' }}</span></td>
-                                    <td class="text-center text-muted">{{ $product->nama_unit ?? '-' }}</td>
-                                    <td class="text-end pe-3">
-                                        <h6 class="mb-0 fw-bold {{ $product->current_stock <= 10 ? 'text-danger' : 'text-dark' }}">
-                                            {{ number_format($product->current_stock ?? 0) }}
-                                        </h6>
-                                    </td>
-                                    <td class="text-center">
-                                        @if($product->current_stock <= 0)
-                                            <span class="badge bg-danger">OUT OF STOCK</span>
-                                        @elseif($product->current_stock <= 10)
-                                            <span class="badge bg-warning text-dark">LOW STOCK</span>
-                                        @else
-                                            <span class="badge bg-success">HEALTHY</span>
-                                        @endif
+                                    <td class="ps-4 fw-bold text-dark">{{ $product->sku_kode }}</td>
+                                    <td class="fw-bold">{{ $product->nama_produk }}</td>
+                                    <td>{{ $product->nama_kategori }}</td>
+                                    <td>{{ $product->nama_unit }}</td>
+                                    
+                                    <td class="text-end">{{ number_format($product->opening_qty, 2) }}</td>
+                                    <td class="text-end text-success">{{ number_format($product->qty_in, 2) }}</td>
+                                    <td class="text-end text-danger">{{ number_format($product->qty_out, 2) }}</td>
+                                    <td class="text-end fw-bold">{{ number_format($product->closing_qty, 2) }}</td>
+                                    
+                                    <td class="text-end ps-4">{{ number_format($product->opening_value) }}</td>
+                                    <td class="text-end text-success">{{ number_format($product->value_in) }}</td>
+                                    <td class="text-end text-danger">{{ number_format($product->value_out) }}</td>
+                                    <td class="text-end fw-bold pe-4">{{ number_format($product->closing_value) }}</td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="12" class="text-center py-5 text-muted">
+                                        <i class="iconoir-file-not-found fs-1 d-block mb-2"></i>
+                                        Tidak ada data stok untuk periode ini.
                                     </td>
                                 </tr>
-                                @endforeach
-                                @if($products->isEmpty())
-                                    <tr><td colspan="6" class="text-center p-4 text-muted fst-italic">Belum ada data produk terdaftar.</td></tr>
-                                @endif
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
                 </div>
-                <div class="card-footer bg-white border-top p-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-muted">Menampilkan {{ $products->count() }} produk</small>
-                        {{-- Pagination could be here --}}
-                    </div>
-                </div>
             </div>
+
         </div>
     </div>
 </div>
 @endsection
+
+@push('css')
+<link href="{{url('')}}/assets/libs/simple-datatables/style.css" rel="stylesheet" type="text/css" />
+@endpush
+
+@push('js')
+<script src="{{url('')}}/assets/libs/simple-datatables/umd/simple-datatables.js"></script>
+<script>
+    const stockTable = new simpleDatatables.DataTable("#stockTable", {
+        searchable: true,
+        fixedHeight: false,
+        perPage: 10,
+        labels: {
+            placeholder: "Cari...",
+            perPage: "item per halaman",
+            noRows: "Tidak ada data ditemukan",
+            info: "Menampilkan {start} sampai {end} dari {rows} entri",
+        }
+    });
+</script>
+@endpush

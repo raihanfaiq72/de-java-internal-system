@@ -5,10 +5,129 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Models\Invoice;
+use App\Models\Mitra;
 
 class ReportController extends Controller
 {
     private $views = 'Report.';
+
+    public function arAging(Request $request)
+    {
+        $officeId = session('active_office_id');
+        $mitras = Mitra::where('office_id', $officeId)->where('tipe_mitra', '!=', 'Vendor')->get();
+        
+        $query = Invoice::where('tipe_invoice', 'Sales')
+            ->where('office_id', $officeId)
+            ->where('status_pembayaran', '!=', 'Paid')
+            ->whereNull('deleted_at')
+            ->with(['mitra', 'payment']);
+
+        if ($request->mitra_id) {
+            $query->where('mitra_id', $request->mitra_id);
+        }
+
+        if ($request->start_date && $request->end_date) {
+            $query->whereBetween('tgl_invoice', [$request->start_date, $request->end_date]);
+        }
+
+        $invoices = $query->get();
+
+        $agingData = [];
+        $summary = [
+            'total_customers' => 0,
+            'avg_days_past_due' => 0,
+            'total_invoices' => 0,
+            'total_amount' => 0,
+            'buckets' => [
+                'current' => 0, 
+                '1-15' => 0,
+                '16-30' => 0,
+                '31-45' => 0,
+                '46-60' => 0,
+                '61+' => 0,
+            ]
+        ];
+
+        $grouped = $invoices->groupBy('mitra_id');
+        $sumAvgDays = 0;
+
+        foreach ($grouped as $mid => $invs) {
+            $mitraName = $invs->first()->mitra->nama ?? 'Unknown';
+            $mitraTotal = 0;
+            $mitraInvoicesCount = 0;
+            $mitraTotalDaysOverdue = 0; 
+            $mitraOverdueCount = 0; 
+            
+            $buckets = [
+                'current' => 0,
+                '1-15' => 0,
+                '16-30' => 0,
+                '31-45' => 0,
+                '46-60' => 0,
+                '61+' => 0,
+            ];
+
+            foreach ($invs as $inv) {
+                $paid = $inv->payment->sum('jumlah_bayar');
+                $remaining = $inv->total_akhir - $paid;
+                
+                if ($remaining <= 100) continue; // Ignore very small amounts (rounding errors)
+                
+                $dueDate = Carbon::parse($inv->tgl_jatuh_tempo);
+                $daysOverdue = floor($dueDate->diffInDays(Carbon::now(), false));
+
+                if ($daysOverdue <= 0) {
+                    $buckets['current'] += $remaining;
+                } elseif ($daysOverdue <= 15) {
+                    $buckets['1-15'] += $remaining;
+                } elseif ($daysOverdue <= 30) {
+                    $buckets['16-30'] += $remaining;
+                } elseif ($daysOverdue <= 45) {
+                    $buckets['31-45'] += $remaining;
+                } elseif ($daysOverdue <= 60) {
+                    $buckets['46-60'] += $remaining;
+                } else {
+                    $buckets['61+'] += $remaining;
+                }
+
+                $mitraTotal += $remaining;
+                $mitraInvoicesCount++;
+                
+                if ($daysOverdue > 0) {
+                    $mitraTotalDaysOverdue += $daysOverdue;
+                    $mitraOverdueCount++;
+                }
+            }
+            
+            if ($mitraTotal > 0) {
+                $avgDays = $mitraOverdueCount > 0 ? $mitraTotalDaysOverdue / $mitraOverdueCount : 0;
+                
+                $agingData[] = [
+                    'mitra_name' => $mitraName,
+                    'avg_days' => $avgDays,
+                    'count' => $mitraInvoicesCount,
+                    'total' => $mitraTotal,
+                    'buckets' => $buckets
+                ];
+
+                $summary['total_customers']++;
+                $summary['total_invoices'] += $mitraInvoicesCount;
+                $summary['total_amount'] += $mitraTotal;
+                $sumAvgDays += $avgDays;
+                
+                foreach ($buckets as $key => $val) {
+                    $summary['buckets'][$key] += $val;
+                }
+            }
+        }
+
+        if ($summary['total_customers'] > 0) {
+            $summary['avg_days_past_due'] = $sumAvgDays / $summary['total_customers'];
+        }
+
+        return view($this->views . 'ar-aging', compact('agingData', 'summary', 'mitras'));
+    }
 
     public function salesReport()
     {
@@ -98,64 +217,156 @@ class ReportController extends Controller
         return view($this->views . 'purchase', compact('stats', 'monthlyData', 'topSuppliers'));
     }
 
-    public function stockReport()
+    private function getStockData(Request $request)
     {
         $officeId = session('active_office_id');
-        $products = DB::table('products')
+
+        $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfMonth();
+        $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfMonth();
+
+        $query = DB::table('products')
             ->leftJoin('units', 'products.unit_id', '=', 'units.id')
             ->leftJoin('product_categories', 'products.product_category_id', '=', 'product_categories.id')
+            ->leftJoin('stock_mutations', function ($join) use ($officeId, $request) {
+                $join->on('products.id', '=', 'stock_mutations.product_id')
+                    ->where('stock_mutations.office_id', '=', $officeId)
+                    ->whereNull('stock_mutations.deleted_at');
+
+                if ($request->location_id) {
+                    $join->where('stock_mutations.stock_location_id', $request->location_id);
+                }
+            })
             ->where('products.office_id', $officeId)
             ->whereNull('products.deleted_at')
             ->select(
                 'products.id',
                 'products.nama_produk',
                 'products.sku_kode',
-                'products.harga_beli',
                 'units.nama_unit',
                 'product_categories.nama_kategori',
-                DB::raw('(SELECT SUM(qty) FROM stock_mutations WHERE product_id = products.id) as current_stock')
+                DB::raw("SUM(CASE 
+                    WHEN stock_mutations.created_at < '$startDate' AND stock_mutations.type = 'IN' THEN stock_mutations.qty 
+                    WHEN stock_mutations.created_at < '$startDate' AND stock_mutations.type = 'OUT' THEN -stock_mutations.qty 
+                    ELSE 0 END) as opening_qty"),
+                DB::raw("SUM(CASE 
+                    WHEN stock_mutations.created_at BETWEEN '$startDate' AND '$endDate' AND stock_mutations.type = 'IN' THEN stock_mutations.qty 
+                    ELSE 0 END) as qty_in"),
+                DB::raw("SUM(CASE 
+                    WHEN stock_mutations.created_at BETWEEN '$startDate' AND '$endDate' AND stock_mutations.type = 'OUT' THEN stock_mutations.qty 
+                    ELSE 0 END) as qty_out"),
+                DB::raw("SUM(CASE 
+                    WHEN stock_mutations.created_at < '$startDate' AND stock_mutations.type = 'IN' THEN stock_mutations.qty * stock_mutations.cost_price
+                    WHEN stock_mutations.created_at < '$startDate' AND stock_mutations.type = 'OUT' THEN -stock_mutations.qty * stock_mutations.cost_price
+                    ELSE 0 END) as opening_value"),
+                DB::raw("SUM(CASE 
+                    WHEN stock_mutations.created_at BETWEEN '$startDate' AND '$endDate' AND stock_mutations.type = 'IN' THEN stock_mutations.qty * stock_mutations.cost_price
+                    ELSE 0 END) as value_in"),
+                DB::raw("SUM(CASE 
+                    WHEN stock_mutations.created_at BETWEEN '$startDate' AND '$endDate' AND stock_mutations.type = 'OUT' THEN stock_mutations.qty * stock_mutations.cost_price
+                    ELSE 0 END) as value_out")
             )
-            ->get();
+            ->groupBy('products.id', 'products.nama_produk', 'products.sku_kode', 'units.nama_unit', 'product_categories.nama_kategori');
 
-        $stats = (object)[
-            'total_items' => $products->count(),
-            'low_stock' => $products->where('current_stock', '<=', 10)->count(),
-            'total_valuation' => $products->sum(fn($p) => ($p->current_stock ?? 0) * $p->harga_beli)
-        ];
+        if ($request->category_id) {
+            $query->where('products.product_category_id', $request->category_id);
+        }
 
-        return view($this->views . 'stock', compact('products', 'stats'));
+        if ($request->product_id) {
+            $query->where('products.id', $request->product_id);
+        }
+
+        $products = $query->get();
+
+        $products->transform(function ($p) {
+            $p->closing_qty = $p->opening_qty + $p->qty_in - $p->qty_out;
+            $p->closing_value = $p->opening_value + $p->value_in - $p->value_out;
+            return $p;
+        });
+
+        return $products;
     }
 
-    public function arAging()
+    public function stockReport(Request $request)
     {
         $officeId = session('active_office_id');
-        $invoices = DB::table('invoices')
-            ->join('mitras', 'invoices.mitra_id', '=', 'mitras.id')
-            ->where('tipe_invoice', 'Sales')
-            ->where('invoices.office_id', $officeId)
-            ->where('status_pembayaran', '!=', 'Paid')
-            ->whereNull('invoices.deleted_at')
-            ->select(
-                'invoices.id',
-                'invoices.nomor_invoice',
-                'mitras.nama as client_name',
-                'invoices.tgl_invoice',
-                'invoices.tgl_jatuh_tempo',
-                'invoices.total_akhir',
-                DB::raw('(invoices.total_akhir - COALESCE((SELECT SUM(jumlah_bayar) FROM payments WHERE payments.invoice_id = invoices.id AND payments.deleted_at IS NULL), 0)) as balance'),
-                DB::raw('DATEDIFF(CURDATE(), invoices.tgl_jatuh_tempo) as days_overdue')
-            )
-            ->get();
 
-        $agingBuckets = [
-            'current' => $invoices->where('days_overdue', '<=', 0)->sum('balance'),
-            '1_30' => $invoices->whereBetween('days_overdue', [1, 30])->sum('balance'),
-            '31_60' => $invoices->whereBetween('days_overdue', [31, 60])->sum('balance'),
-            '61_90' => $invoices->whereBetween('days_overdue', [61, 90])->sum('balance'),
-            '90_plus' => $invoices->where('days_overdue', '>', 90)->sum('balance'),
+        $categories = DB::table('product_categories')->where('office_id', $officeId)->get();
+        $locations = DB::table('stock_locations')->where('office_id', $officeId)->get();
+        $allProducts = DB::table('products')->where('office_id', $officeId)->select('id', 'nama_produk')->get();
+
+        $products = $this->getStockData($request);
+
+        $stats = [
+            'opening_qty' => $products->sum('opening_qty'),
+            'qty_in' => $products->sum('qty_in'),
+            'qty_out' => $products->sum('qty_out'),
+            'closing_qty' => $products->sum('closing_qty'),
+            'opening_value' => $products->sum('opening_value'),
+            'value_in' => $products->sum('value_in'),
+            'value_out' => $products->sum('value_out'),
+            'closing_value' => $products->sum('closing_value'),
         ];
 
-        return view($this->views . 'ar-aging', compact('invoices', 'agingBuckets'));
+        return view($this->views . 'stock', compact('products', 'stats', 'categories', 'locations', 'allProducts'));
+    }
+
+    public function stockReportExport(Request $request)
+    {
+        $products = $this->getStockData($request);
+
+        $fileName = 'laporan-stok-' . date('Y-m-d-His') . '.csv';
+
+        $headers = array(
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        );
+
+        $columns = array('Produk', 'Kategori', 'Unit', 'Qty Awal', 'Qty Masuk', 'Qty Keluar', 'Qty Akhir', 'Nilai Awal', 'Nilai Masuk', 'Nilai Keluar', 'Nilai Akhir');
+
+        $callback = function () use ($products, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($products as $product) {
+                $row['Produk'] = $product->nama_produk . ($product->sku_kode ? ' (' . $product->sku_kode . ')' : '');
+                $row['Kategori'] = $product->nama_kategori;
+                $row['Unit'] = $product->nama_unit;
+                $row['Qty Awal'] = $product->opening_qty;
+                $row['Qty Masuk'] = $product->qty_in;
+                $row['Qty Keluar'] = $product->qty_out;
+                $row['Qty Akhir'] = $product->closing_qty;
+                $row['Nilai Awal'] = $product->opening_value;
+                $row['Nilai Masuk'] = $product->value_in;
+                $row['Nilai Keluar'] = $product->value_out;
+                $row['Nilai Akhir'] = $product->closing_value;
+
+                fputcsv($file, array(
+                    $row['Produk'],
+                    $row['Kategori'],
+                    $row['Unit'],
+                    $row['Qty Awal'],
+                    $row['Qty Masuk'],
+                    $row['Qty Keluar'],
+                    $row['Qty Akhir'],
+                    $row['Nilai Awal'],
+                    $row['Nilai Masuk'],
+                    $row['Nilai Keluar'],
+                    $row['Nilai Akhir']
+                ));
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function generalLedger()
+    {
+        return view($this->views . 'general-ledger');
     }
 
     public function balanceSheet()

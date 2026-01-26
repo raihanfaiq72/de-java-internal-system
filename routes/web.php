@@ -50,7 +50,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('report/sales', [ReportController::class, 'salesReport'])->name('report.sales');
         Route::get('report/purchase', [ReportController::class, 'purchaseReport'])->name('report.purchase');
         Route::get('report/stock', [ReportController::class, 'stockReport'])->name('report.stock');
+        Route::get('report/stock/export', [ReportController::class, 'stockReportExport'])->name('report.stock.export');
         Route::get('report/ar-aging', [ReportController::class, 'arAging'])->name('report.ar-aging');
+        Route::get('report/general-ledger', [ReportController::class, 'generalLedger'])->name('report.general-ledger');
         Route::get('report/balance-sheet', [ReportController::class, 'balanceSheet'])->name('report.balance-sheet');
         Route::get('report/profit-loss', [ReportController::class, 'profitAndLoss'])->name('report.profit-loss');
 
