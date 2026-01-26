@@ -83,38 +83,45 @@
             display: inline-block;
             margin-top: 10px;
         }
+        #loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div id="loading">Memuat data kuitansi...</div>
+
+<div class="container" id="receipt-content" style="display: none;">
     <div class="header">
         <div>
             <div class="title">Kuitansi Pembayaran</div>
-            <div style="margin-top: 5px;">No. Kuitansi: <strong>{{ $payment->nomor_pembayaran }}</strong></div>
+            <div style="margin-top: 5px;">No. Kuitansi: <strong id="nomor_pembayaran"></strong></div>
         </div>
         <div style="text-align: right">
-            <div>Tanggal: <strong>{{ \Carbon\Carbon::parse($payment->tgl_pembayaran)->format('d/m/Y') }}</strong></div>
+            <div>Tanggal: <strong id="tgl_pembayaran"></strong></div>
             <div style="margin-top: 5px;">Status: <strong>SETTLED</strong></div>
         </div>
     </div>
 
     <table class="info-table">
         <tr>
-            <td class="label">Diterima @if($payment->invoice->tipe_invoice == 'Purchase') Dari @else Untuk @endif</td>
-            <td>: {{ $payment->invoice->mitra->nama ?? '-' }}</td>
+            <td class="label" id="label-from-to">Diterima Dari</td>
+            <td id="mitra_nama">: </td>
         </tr>
         <tr>
             <td class="label">Metode Pembayaran</td>
-            <td>: {{ $payment->metode_pembayaran }} ({{ $payment->akun_keuangan->nama_akun ?? '-' }})</td>
+            <td id="metode_pembayaran">: </td>
         </tr>
         <tr>
             <td class="label">Catatan</td>
-            <td>: {{ $payment->catatan ?? '-' }}</td>
+            <td id="catatan">: </td>
         </tr>
         <tr>
             <td class="label">No. Referensi</td>
-            <td>: {{ $payment->ref_no ?? '-' }}</td>
+            <td id="ref_no">: </td>
         </tr>
     </table>
 
@@ -128,30 +135,24 @@
                 <th style="text-align: right">Jumlah Terbayar</th>
             </tr>
         </thead>
-        <tbody>
-            <tr>
-                <td>{{ $payment->invoice->nomor_invoice }}</td>
-                <td>{{ \Carbon\Carbon::parse($payment->invoice->tgl_invoice)->format('d/m/Y') }}</td>
-                <td style="text-align: right">{{ number_format($payment->invoice->total_akhir, 2) }}</td>
-                <td style="text-align: right; font-weight: bold;">{{ number_format($payment->jumlah_bayar, 2) }}</td>
-            </tr>
+        <tbody id="details-body">
+            <!-- Data injected here -->
         </tbody>
     </table>
 
     <div style="margin-top: 20px;">
-        <div class="amount-box">
-            TOTAL: IDR {{ number_format($payment->jumlah_bayar, 2) }}
+        <div class="amount-box" id="amount-box">
+            TOTAL: IDR 0.00
         </div>
-        @php $sgd_rate = 13128.53; $sgd = $payment->jumlah_bayar / $sgd_rate; @endphp
-        <div style="margin-left: 20px; display: inline-block; color: #666;">
-            (Equivalent to SGD {{ number_format($sgd, 2) }})
+        <div style="margin-left: 20px; display: inline-block; color: #666;" id="sgd-box">
+            (Equivalent to SGD 0.00)
         </div>
     </div>
 
     <div class="footer">
         <div class="signature-box">
             Penerima / Pembayar<br><br><br>
-            <div class="signature-line">( {{ $payment->invoice->mitra->nama ?? '................' }} )</div>
+            <div class="signature-line" id="signature-mitra">( ................................ )</div>
         </div>
         <div class="signature-box">
             Admin Keuangan<br><br><br>
@@ -161,9 +162,75 @@
 </div>
 
 <script>
-    window.onload = function() {
-        // window.print();
+    const PAYMENT_ID = '{{ $id }}';
+    const API_URL = '{{ url('api/payment-api') }}/' + PAYMENT_ID;
+    const SGD_RATE = 13128.53;
+
+    function formatNumber(num) {
+        return new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
     }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const response = await fetch(API_URL);
+            const result = await response.json();
+            
+            if (result.success) {
+                const data = result.data;
+                const invoice = data.invoice || {};
+                const mitra = invoice.mitra || {};
+                const account = data.akun_keuangan || {};
+
+                // Header
+                document.getElementById('nomor_pembayaran').innerText = data.nomor_pembayaran;
+                document.getElementById('tgl_pembayaran').innerText = formatDate(data.tgl_pembayaran);
+
+                // Info
+                const labelFromTo = invoice.tipe_invoice === 'Purchase' ? 'Diterima Dari' : 'Diterima Untuk';
+                document.getElementById('label-from-to').innerText = labelFromTo;
+                document.getElementById('mitra_nama').innerText = ': ' + (mitra.nama || '-');
+                document.getElementById('metode_pembayaran').innerText = `: ${data.metode_pembayaran} (${account.nama_akun || '-'})`;
+                document.getElementById('catatan').innerText = ': ' + (data.catatan || '-');
+                document.getElementById('ref_no').innerText = ': ' + (data.ref_no || '-');
+
+                // Details
+                const tbody = document.getElementById('details-body');
+                tbody.innerHTML = `
+                    <tr>
+                        <td>${invoice.nomor_invoice || '-'}</td>
+                        <td>${invoice.tgl_invoice ? formatDate(invoice.tgl_invoice) : '-'}</td>
+                        <td style="text-align: right">${formatNumber(invoice.total_akhir || 0)}</td>
+                        <td style="text-align: right; font-weight: bold;">${formatNumber(data.jumlah_bayar || 0)}</td>
+                    </tr>
+                `;
+
+                // Totals
+                document.getElementById('amount-box').innerText = `TOTAL: IDR ${formatNumber(data.jumlah_bayar)}`;
+                const sgd = (parseFloat(data.jumlah_bayar) / SGD_RATE);
+                document.getElementById('sgd-box').innerText = `(Equivalent to SGD ${formatNumber(sgd)})`;
+
+                // Signature
+                document.getElementById('signature-mitra').innerText = `( ${mitra.nama || '................'} )`;
+
+                // Show Content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('receipt-content').style.display = 'block';
+
+                // Auto Print
+                // setTimeout(() => window.print(), 1000);
+            } else {
+                document.getElementById('loading').innerText = 'Gagal memuat data kuitansi.';
+            }
+        } catch (error) {
+            console.error(error);
+            document.getElementById('loading').innerText = 'Terjadi kesalahan koneksi.';
+        }
+    });
 </script>
 
 </body>

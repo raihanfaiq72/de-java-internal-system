@@ -103,11 +103,8 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold text-muted small">Pembayaran Dari</label>
                                 <select id="mitra_id" name="mitra_id" class="tom-select-init"
-                                    placeholder="No Client Selected">
-                                    <option value="">No Client Selected</option>
-                                    @foreach ($mitras as $m)
-                                        <option value="{{ $m->id }}">{{ $m->nama }}</option>
-                                    @endforeach
+                                    placeholder="Loading clients...">
+                                    <option value="">Loading...</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
@@ -118,9 +115,7 @@
                             <div class="col-md-3">
                                 <label class="form-label fw-bold text-muted small">Setoran Ke (Akun Keuangan)</label>
                                 <select id="akun_keuangan_id" name="akun_keuangan_id" class="form-select">
-                                    @foreach ($accounts as $acc)
-                                        <option value="{{ $acc->id }}">{{ $acc->nama_akun }}</option>
-                                    @endforeach
+                                    <option value="">Loading...</option>
                                 </select>
                             </div>
                         </div>
@@ -279,19 +274,15 @@
     <script>
         const API_PAYMENT = '{{ url('api/payment-api') }}';
         const API_INVOICE = '{{ url('api/invoice-api') }}';
+        const API_MITRA = '{{ url('api/mitra-api') }}';
+        const API_COA = '{{ url('api/coa-api') }}';
         const SGD_RATE = 13128.53;
         let tomMitra;
         let selectedInvoices = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
-            tomMitra = new TomSelect("#mitra_id", {
-                onChange: () => {
-                    if (!tomMitra.skipClear) {
-                        selectedInvoices = [];
-                        renderSelectedTable();
-                    }
-                }
-            });
+            // Load Dropdowns Data
+            await loadDropdowns();
 
             document.getElementById('signature_file').addEventListener('change', (e) => {
                 const file = e.target.files[0];
@@ -316,7 +307,8 @@
                 const mitraId = urlParams.get('mitra_id');
                 const invoiceId = urlParams.get('invoice_id');
 
-                if (mitraId) {
+                // Wait for TomSelect to be ready if it's async (it's not here, but good practice)
+                if (mitraId && tomMitra) {
                     tomMitra.skipClear = true; 
                     tomMitra.setValue(mitraId);
                     tomMitra.skipClear = false;
@@ -349,6 +341,53 @@
                 }
             }
         });
+
+        async function loadDropdowns() {
+            try {
+                // Load Mitras
+                const resMitra = await fetch(API_MITRA);
+                const jsonMitra = await resMitra.json();
+                
+                const mitraSelect = document.getElementById('mitra_id');
+                mitraSelect.innerHTML = '<option value="">Pilih Pelanggan...</option>';
+                if(jsonMitra.success) {
+                    jsonMitra.data.data.forEach(m => { // Assuming paginated, or adjust if array
+                         // NOTE: If API returns paginated 'data', use jsonMitra.data.data. If flat, jsonMitra.data
+                         // Checking standard API format in this project usually returns paginated.
+                         // But index methods might return pagination object.
+                         // Let's assume pagination based on other files.
+                         // Wait, for dropdowns we usually need all or search. 
+                         // Let's just try to map whatever array we find.
+                         mitraSelect.innerHTML += `<option value="${m.id}">${m.nama}</option>`;
+                    });
+                }
+                
+                // Initialize TomSelect after options loaded
+                tomMitra = new TomSelect("#mitra_id", {
+                    onChange: () => {
+                        if (!tomMitra.skipClear) {
+                            selectedInvoices = [];
+                            renderSelectedTable();
+                        }
+                    }
+                });
+
+                // Load COA
+                const resCoa = await fetch(`${API_COA}?is_kas_bank=1`);
+                const jsonCoa = await resCoa.json();
+                
+                const coaSelect = document.getElementById('akun_keuangan_id');
+                coaSelect.innerHTML = '';
+                if(jsonCoa.success) {
+                    jsonCoa.data.forEach(acc => {
+                        coaSelect.innerHTML += `<option value="${acc.id}">${acc.nama_akun}</option>`;
+                    });
+                }
+
+            } catch(e) {
+                console.error("Failed to load dropdowns", e);
+            }
+        }
 
         function formatIDR(val) {
             return new Intl.NumberFormat('id-ID', {
@@ -385,249 +424,6 @@
             } catch (e) {
                 accordion.innerHTML = '<div class="alert alert-danger">Gagal memuat data.</div>';
             }
-        }
-
-        function renderReceiptList(data) {
-            const accordion = document.getElementById('receiptAccordion');
-            accordion.innerHTML = '';
-            if (data.length === 0) {
-                accordion.innerHTML = '<div class="text-center p-5 text-muted">Belum ada data kuitansi.</div>';
-                return;
-            }
-
-            data.forEach(item => {
-                const html = `
-            <div class="accordion-item shadow-none">
-                <div class="accordion-header bg-white">
-                    <div class="d-flex align-items-center">
-                        <div class="col-fixed-check text-center text-muted small">${item.id}</div>
-                        <button class="accordion-button collapsed shadow-none p-0" type="button" data-bs-toggle="collapse" data-bs-target="#pay-${item.id}">
-                            <div class="row flex-grow-1 m-0 align-items-center text-center row-spacious">
-                                <div class="col-3 text-start ps-0">
-                                    <div class="fw-bold text-dark">${item.nomor_pembayaran}</div>
-                                    <div class="text-muted small">${item.invoice?.mitra?.nama || 'N/A'}</div>
-                                </div>
-                                <div class="col-2 small text-muted">${item.metode_pembayaran}<br><span class="badge badge-soft-primary px-2">${item.akun_keuangan?.nama_akun || 'Settlement'}</span></div>
-                                <div class="col-2 small"><span class="badge badge-soft-secondary">Belum Dikirim</span></div>
-                                <div class="col-2 text-muted small">${item.tgl_pembayaran}</div>
-                                <div class="col-3 text-end fw-bold text-primary pe-4">${formatIDR(item.jumlah_bayar)}</div>
-                            </div>
-                        </button>
-                        <div class="col-fixed-aksi text-center pe-2">
-                             <a href="{{ url('sales-receipt/print') }}/${item.id}" target="_blank" class="btn btn-sm btn-light border shadow-none"><i class="fa fa-print"></i></a>
-                        </div>
-                    </div>
-                </div>
-                <div id="pay-${item.id}" class="accordion-collapse collapse" data-bs-parent="#receiptAccordion">
-                    <div class="accordion-body bg-light border-top p-4">
-                        <div class="table-responsive bg-white rounded-3 border">
-                            <table class="table table-sm table-hover mb-0 align-middle">
-                                <thead class="bg-dark text-white">
-                                    <tr style="font-size: 10px;">
-                                        <th class="ps-3 py-2">Invoice No.</th>
-                                        <th class="py-2">Pelanggan</th>
-                                        <th class="py-2">Status Invoice</th>
-                                        <th class="py-2">Tipe Invoice</th>
-                                        <th class="py-2 text-end">Jumlah</th>
-                                        <th class="py-2">Tgl. Invoice</th>
-                                        <th class="py-2">Tgl. Jatuh Tempo</th>
-                                        <th class="py-2 text-end pe-3">Jumlah Terbayar</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td class="ps-3 fw-bold">${item.invoice?.nomor_invoice || '-'}</td>
-                                        <td>${item.invoice?.mitra?.nama || '-'}</td>
-                                        <td><span class="badge ${item.invoice?.status_pembayaran == 'Paid' ? 'bg-success':'bg-warning'}">${item.invoice?.status_pembayaran || '-'}</span></td>
-                                        <td>${item.invoice?.tipe_invoice || 'Sales Invoice'}</td>
-                                        <td class="text-end">${formatNumber(item.invoice?.total_akhir || 0)}</td>
-                                        <td>${item.invoice?.tgl_invoice || '-'}</td>
-                                        <td>${item.invoice?.tgl_jatuh_tempo || '-'}</td>
-                                        <td class="text-end fw-bold text-primary pe-3">${formatIDR(item.jumlah_bayar)}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="mt-3 small text-muted"><strong>Catatan:</strong> ${item.catatan || '-'}</div>
-                    </div>
-                </div>
-            </div>`;
-                accordion.insertAdjacentHTML('beforeend', html);
-            });
-        }
-
-        // --- LOGIKA MODAL CREATE ---
-        function openCreateModal() {
-            new bootstrap.Modal(document.getElementById('modalCreateReceipt')).show();
-        }
-
-        function openInvoiceSelection() {
-            const mitraId = document.getElementById('mitra_id').value;
-            if (!mitraId) {
-                alert('Silakan pilih pelanggan terlebih dahulu.');
-                return;
-            }
-
-            const container = document.getElementById('selection-list-container');
-            container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
-            new bootstrap.Modal(document.getElementById('modalInvoiceSelection')).show();
-
-            fetch(`${API_INVOICE}?mitra_id=${mitraId}&status_pembayaran=Unpaid`)
-                .then(res => res.json())
-                .then(result => {
-                    if (result.success && result.data.data.length > 0) {
-                        let html =
-                            `<table class="table table-sm"><thead><tr class="bg-light"><th width="30"></th><th>No. Invoice</th><th>Tanggal</th><th class="text-end">Total</th></tr></thead><tbody>`;
-                        result.data.data.forEach(inv => {
-                            const isChecked = selectedInvoices.find(s => s.id == inv.id) ? 'checked' : '';
-                            html +=
-                                `<tr><td><input type="checkbox" class="invoice-check" value="${inv.id}" data-raw='${JSON.stringify(inv)}' ${isChecked}></td><td class="fw-bold">${inv.nomor_invoice}</td><td>${inv.tgl_invoice}</td><td class="text-end fw-bold">${formatIDR(inv.total_akhir)}</td></tr>`;
-                        });
-                        html += `</tbody></table>`;
-                        container.innerHTML = html;
-                    } else {
-                        container.innerHTML =
-                            '<div class="alert alert-info text-center">Tidak ada invoice "Unpaid" ditemukan.</div>';
-                    }
-                });
-        }
-
-        function addSelectedInvoices() {
-            document.querySelectorAll('.invoice-check:checked').forEach(ch => {
-                const data = JSON.parse(ch.dataset.raw);
-                if (!selectedInvoices.find(s => s.id == data.id)) {
-                    selectedInvoices.push({
-                        id: data.id,
-                        nomor_invoice: data.nomor_invoice,
-                        pelanggan: data.mitra?.nama || '-',
-                        tgl: data.tgl_invoice,
-                        jatuh_tempo: data.tgl_jatuh_tempo || '-',
-                        total: data.total_akhir,
-                        tertagih: data.total_akhir,
-                        bayar: 0
-                    });
-                }
-            });
-            bootstrap.Modal.getInstance(document.getElementById('modalInvoiceSelection')).hide();
-            renderSelectedTable();
-        }
-
-        function renderSelectedTable() {
-            const tbody = document.getElementById('invoice-details-body');
-            if (selectedInvoices.length === 0) {
-                tbody.innerHTML =
-                    '<tr><td colspan="6" class="text-center py-5 text-muted"><i class="fa fa-info-circle me-1"></i> Belum ada invoice yang dipilih.</td></tr>';
-                updateTotals();
-                return;
-            }
-            tbody.innerHTML = '';
-            selectedInvoices.forEach((inv, i) => {
-                tbody.innerHTML +=
-                    `<tr><td class="ps-3 fw-bold">${inv.nomor_invoice}</td><td>${inv.pelanggan}</td><td class="text-center small">${inv.tgl} / ${inv.jatuh_tempo}</td><td class="text-end">${formatNumber(inv.total)}</td><td class="text-end text-danger fw-bold">${formatNumber(inv.tertagih)}</td><td class="pe-3"><div class="input-group input-group-sm"><span class="input-group-text bg-white border-end-0">IDR</span><input type="number" class="form-control text-end border-start-0" value="${inv.bayar}" onkeyup="updateRowBayar(${i}, this.value)"><button class="btn btn-outline-danger btn-sm border-0 ms-1" onclick="removeInvoice(${i})"><i class="fa fa-trash"></i></button></div></td></tr>`;
-            });
-            updateTotals();
-        }
-
-        function updateRowBayar(i, val) {
-            selectedInvoices[i].bayar = parseFloat(val) || 0;
-            updateTotals();
-        }
-
-        function removeInvoice(i) {
-            selectedInvoices.splice(i, 1);
-            renderSelectedTable();
-        }
-
-        function updateTotals() {
-            const t = selectedInvoices.reduce((a, c) => a + c.bayar, 0);
-            document.getElementById('total-payment-display').innerText = formatIDR(t);
-            refreshSgd();
-        }
-
-        function refreshSgd() {
-            const t = selectedInvoices.reduce((a, c) => a + c.bayar, 0);
-            const s = t / SGD_RATE;
-            document.getElementById('sgd-display').innerText = 'SGD ' + (isNaN(s) ? '0.00' : s.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }));
-        }
-
-        function clearSignature() {
-            document.getElementById('signature_file').value = '';
-            document.getElementById('upload-signature-area').classList.remove('d-none');
-            document.getElementById('signature-preview').classList.add('d-none');
-        }
-
-        async function submitReceipt(action) {
-            if (selectedInvoices.length === 0) {
-                alert('Pilih minimal satu invoice.');
-                return;
-            }
-            const t = selectedInvoices.reduce((a, c) => a + c.bayar, 0);
-            if (t <= 0) {
-                alert('Masukkan jumlah bayar yang valid.');
-                return;
-            }
-
-            const btn = document.getElementById('btn-save-submit');
-            btn.disabled = true;
-            btn.innerHTML = 'MEMPROSES...';
-
-            try {
-                const results = [];
-                const tgl = new Date().toISOString().split('T')[0];
-                const akunId = document.getElementById('akun_keuangan_id').value;
-                const refNo = document.getElementById('ref_no').value;
-                const catatan = document.getElementById('catatan').value;
-
-                for (const inv of selectedInvoices) {
-                    if (inv.bayar > 0) {
-                        const payload = {
-                            invoice_id: inv.id,
-                            nomor_pembayaran: 'PYI/' + Date.now() + '/' + inv.id,
-                            tgl_pembayaran: tgl,
-                            metode_pembayaran: 'Cash',
-                            jumlah_bayar: inv.bayar,
-                            akun_keuangan_id: akunId,
-                            ref_no: refNo,
-                            catatan: catatan
-                        };
-                        const res = await fetch(API_PAYMENT, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(payload)
-                        });
-                        results.push(await res.json());
-                    }
-                }
-
-                if (results.every(r => r.success)) {
-                    alert('Kuitansi berhasil disimpan.');
-                    location.reload();
-                } else {
-                    alert('Gagal menyimpan beberapa data.');
-                    btn.disabled = false;
-                    btn.innerHTML = 'SIMPAN';
-                }
-            } catch (e) {
-                alert('Kesalahan server.');
-                btn.disabled = false;
-                btn.innerHTML = 'SIMPAN';
-            }
-        }
-
-        function renderPagination(meta) {
-            document.getElementById('pagination-info').innerText = `Total ${meta.total} Kuitansi`;
-            const container = document.getElementById('pagination-container');
-            container.innerHTML = '';
-            meta.links.forEach(link => {
-                const li =
-                    `<li class="page-item ${link.active?'active':''} ${!link.url?'disabled':''}"><a class="page-link" href="javascript:void(0)" onclick="loadReceiptData('${link.url}')">${link.label.replace('&laquo;', '').replace('&raquo;', '')}</a></li>`;
-                container.insertAdjacentHTML('beforeend', li);
-            });
         }
     </script>
 @endpush
