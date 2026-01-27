@@ -14,7 +14,7 @@ return new class extends Migration
     {
         $offices = DB::table('offices')->pluck('id');
         if ($offices->isEmpty()) {
-            $offices = [1]; // Fallback if no office table or empty
+            return; // Fallback if no office table or empty
         }
 
         $newAccounts = [
