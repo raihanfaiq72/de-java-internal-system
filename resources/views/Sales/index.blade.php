@@ -1,212 +1,11 @@
 @extends('Layout.main')
 
-@section('main')
+@push('css')
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
         rel="stylesheet">
 
-    <div class="page-wrapper" style="background-color: #f8fafc; min-height: 100vh; font-family: 'Inter', sans-serif;">
-        <div class="page-content">
-            <div class="container-fluid">
-
-                <div class="row align-items-center mb-4">
-                    <div class="col-md-7">
-                        <h4 class="fw-bold text-dark mb-1">Manajemen Invoice Penjualan</h4>
-                        <p class="text-muted small mb-0">Otorisasi transaksi dan pantau piutang secara real-time.</p>
-                    </div>
-                    <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                        <button class="btn btn-white border fw-bold px-3 me-2 shadow-sm text-dark">
-                            <i class="fa fa-file-excel me-1 text-success"></i> Export .xls
-                        </button>
-                        <button class="btn btn-primary fw-bold px-4 shadow-sm"
-                            onclick="openInvoiceModal(null, null, 'create')">
-                            <i class="fa fa-plus-circle me-1"></i> Buat Invoice Baru
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Stats Cards -->
-                <div class="row mb-4 g-3">
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card border-0 shadow-sm rounded-3">
-                            <div class="card-body p-3 border-start border-4 border-primary">
-                                <label class="f-label">Total Outstanding</label>
-                                <h5 class="fw-bold mb-0 text-dark">Rp 450.000.000</h5>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card border-0 shadow-sm rounded-3">
-                            <div class="card-body p-3 border-start border-4 border-danger">
-                                <label class="f-label">Melewati Tempo</label>
-                                <h5 class="fw-bold mb-0 text-danger">12 Dokumen</h5>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card border-0 shadow-sm rounded-3">
-                            <div class="card-body p-3 border-start border-4 border-success">
-                                <label class="f-label">Lunas Bulan Ini</label>
-                                <h5 class="fw-bold mb-0 text-success">Rp 125.000.000</h5>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card border-0 shadow-sm rounded-3">
-                            <div class="card-body p-3 border-start border-4 border-secondary">
-                                <label class="f-label">Total Volume</label>
-                                <h5 class="fw-bold mb-0 text-dark">1.240 Unit</h5>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
-                    <div class="card-header bg-white border-bottom py-0 px-4">
-                        <ul class="nav nav-tabs nav-tabs-finance" role="tablist">
-                            <li class="nav-item"><a class="nav-link active fw-bold py-3" data-bs-toggle="tab"
-                                    href="#invoice-active">Invoice Aktif</a></li>
-                            <li class="nav-item"><a class="nav-link fw-bold py-3" data-bs-toggle="tab"
-                                    href="#invoice-archive">Arsip</a></li>
-                            <li class="nav-item"><a class="nav-link fw-bold py-3" data-bs-toggle="tab"
-                                    href="#invoice-in-trash">Invoice Terhapus</a></li>
-                        </ul>
-                    </div>
-
-                    <div class="card-body p-4 bg-white">
-                        <div class="mb-4 p-3 rounded-3 bg-light border">
-                            <div class="row g-2 mb-4 rounded-3 align-items-end bg-light border p-3">
-                                <div class="col-lg-3">
-                                    <label class="f-label">Pencarian</label>
-                                    <div class="input-group input-group-finance">
-                                        <span class="input-group-text bg-white border-end-0"><i
-                                                class="fa fa-search text-muted"></i></span>
-                                        <input type="text" id="filter-search"
-                                            class="form-control border-start-0 ps-0 shadow-none"
-                                            placeholder="No. Invoice / Mitra...">
-                                    </div>
-                                </div>
-                                <div class="col-lg-2">
-                                    <label class="f-label">Status Dokumen</label>
-                                    <select id="filter-status-dok" class="tom-select-init">
-                                        @php
-                                            $documentStatus = ['Draft', 'Sent', 'Failed', 'Approved', 'Rejected'];
-                                        @endphp
-                                        <option value="">Semua</option>
-                                        @foreach ($documentStatus as $doc)
-                                            <option value="{{ $doc }}">{{ $doc }} </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-lg-2">
-                                    <label class="f-label">Status Pembayaran</label>
-                                    <select id="filter-status-bayar" class="tom-select-init">
-                                        @php
-                                            $paymentStatus = [
-                                                'Draft' => 'Draft',
-                                                'Unpaid' => 'Belum',
-                                                'Overdue' => 'Lewat Jatuh Tempo',
-                                                'Paid' => 'Lunas',
-                                                'Partially Paid' => 'Sebagian',
-                                            ];
-                                        @endphp
-                                        <option value="">Semua</option>
-                                        @foreach ($paymentStatus as $value => $display)
-                                            <option value="{{ $value }}">{{ $display }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-lg-3">
-                                    <label class="f-label">Pemasok / Mitra</label>
-                                    <select id="filter-mitra-id" class="tom-select-init">
-                                        <option value="">Semua Pemasok...</option>
-                                    </select>
-                                </div>
-                                <div class="col-lg-2 text-end">
-                                     <button onclick="loadInvoiceData()"
-                                        class="btn btn-dark fw-bold py-2 w-100 shadow-sm btn-sm">
-                                        <i class="fa fa-filter me-1"></i> FILTER
-                                    </button>
-                                </div>
-                                <div class="col-lg-2">
-                                    <label class="f-label">Tanggal Invoice</label>
-                                    <input type="date" id="filter-tgl-invoice" class="form-control shadow-none"
-                                        style="font-size: 13px; padding: 0.55rem;">
-                                </div>
-                                <div class="col-lg-2">
-                                    <label class="f-label">Jatuh Tempo</label>
-                                    <input type="date" id="filter-tgl-jatuh-tempo" class="form-control shadow-none"
-                                        style="font-size: 13px; padding: 0.55rem;">
-                                </div>
-                                <div class="col-lg-8 text-end">
-                                    <div id="bulk-action-area" class="d-none d-inline-block me-2">
-                                        <span class="small text-muted me-2 selected-count">0 terpilih</span>
-                                        <button class="btn btn-outline-danger fw-bold py-2 px-3 shadow-sm btn-sm"
-                                            onclick="bulkDelete()">
-                                            <i class="fa fa-trash-can me-1"></i> HAPUS
-                                        </button>
-                                    </div>
-                                    <button onclick="resetFilter()"
-                                        class="btn btn-light border fw-bold text-dark py-2 btn-sm px-4">
-                                        <i class="fa fa-sync me-1"></i> RESET
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="invoiceTable">
-                                <thead class="bg-light text-uppercase text-secondary fw-bold"
-                                    style="font-size: 11px; letter-spacing: 0.5px;">
-                                    <tr>
-                                        <th class="ps-3" width="40">
-                                            <input type="checkbox" class="form-check-input" id="master-checkbox"
-                                                onclick="toggleSelectAll(this)">
-                                        </th>
-                                        <th width="40" class="text-center">#</th>
-                                        <th width="150">Invoice No</th>
-                                        <th width="200">Pemasok</th>
-                                        <th width="120" class="text-center">Status</th>
-                                        <th width="150" class="text-end">Jumlah</th>
-                                        <th width="150" class="text-end">Terhutang</th>
-                                        <th width="120" class="text-center">Tgl. Invoice</th>
-                                        <th width="80" class="text-center">Att</th>
-                                        <th width="80" class="text-end pe-3">Tindakan</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="invoiceTableBody" class="border-top-0">
-                                    <!-- Rows injected by JS -->
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div
-                            class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top">
-                            <span id="pagination-info" class="text-muted small fw-medium"></span>
-                            <nav>
-                                <ul class="pagination pagination-sm mb-0 shadow-sm" id="pagination-container">
-                                </ul>
-                            </nav>
-                        </div>
-
-                        <div class="tab-content">
-                            <div class="tab-pane active" id="invoice-active"></div>
-                            <div class="tab-pane" id="invoice-archive"></div>
-                            <div class="tab-pane" id="invoice-in-trash"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    @include('Sales.Modal.modal-fullscreen')
-    @include('Sales.Modal.detail-modal')
-    @include('Sales.Partials.invoice-templates')
-@endsection
-
-@push('css')
     <style>
         .f-label {
             font-size: 10px;
@@ -322,7 +121,231 @@
             color: #3b82f6;
         }
     </style>
+
+    <style>
+        .ts-dropdown {
+            z-index: 2000 !important;
+        }
+
+        .ts-wrapper.form-control {
+            overflow: visible !important;
+        }
+
+        .ts-dropdown-content {
+            z-index: 2001 !important;
+        }
+    </style>
 @endpush
+
+@section('main')
+    <div class="page-wrapper" style="background-color: #f8fafc; min-height: 100vh; font-family: 'Inter', sans-serif;">
+        <div class="page-content">
+            <div class="container-fluid">
+
+                <div class="row align-items-center mb-4">
+                    <div class="col-md-7">
+                        <h4 class="fw-bold text-dark mb-1">Manajemen Invoice Penjualan</h4>
+                        <p class="text-muted small mb-0">Otorisasi transaksi dan pantau piutang secara real-time.</p>
+                    </div>
+                    <div class="col-md-5 text-md-end mt-3 mt-md-0">
+                        <button class="btn btn-white border fw-bold px-3 me-2 shadow-sm text-dark">
+                            <i class="fa fa-file-excel me-1 text-success"></i> Export .xls
+                        </button>
+                        <button class="btn btn-primary fw-bold px-4 shadow-sm"
+                            onclick="openInvoiceModal(null, null, 'create')">
+                            <i class="fa fa-plus-circle me-1"></i> Buat Invoice Baru
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="row mb-4 g-3">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card border-0 shadow-sm rounded-3">
+                            <div class="card-body p-3 border-start border-4 border-primary">
+                                <label class="f-label">Total Outstanding</label>
+                                <h5 class="fw-bold mb-0 text-dark">Rp 450.000.000</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card border-0 shadow-sm rounded-3">
+                            <div class="card-body p-3 border-start border-4 border-danger">
+                                <label class="f-label">Melewati Tempo</label>
+                                <h5 class="fw-bold mb-0 text-danger">12 Dokumen</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card border-0 shadow-sm rounded-3">
+                            <div class="card-body p-3 border-start border-4 border-success">
+                                <label class="f-label">Lunas Bulan Ini</label>
+                                <h5 class="fw-bold mb-0 text-success">Rp 125.000.000</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card border-0 shadow-sm rounded-3">
+                            <div class="card-body p-3 border-start border-4 border-secondary">
+                                <label class="f-label">Total Volume</label>
+                                <h5 class="fw-bold mb-0 text-dark">1.240 Unit</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+                    <div class="card-header bg-white border-bottom py-0 px-4">
+                        <ul class="nav nav-tabs nav-tabs-finance" role="tablist">
+                            <li class="nav-item"><a class="nav-link active fw-bold py-3" data-bs-toggle="tab"
+                                    href="#invoice-active">Invoice Aktif</a></li>
+                            <li class="nav-item"><a class="nav-link fw-bold py-3" data-bs-toggle="tab"
+                                    href="#invoice-archive">Arsip</a></li>
+                            <li class="nav-item"><a class="nav-link fw-bold py-3" data-bs-toggle="tab"
+                                    href="#invoice-in-trash">Invoice Terhapus</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="card-body p-4 bg-white">
+                        <div class="mb-4 p-3 rounded-3 bg-light border shadow-sm">
+                            <div class="d-flex flex-nowrap align-items-end gap-2 overflow-auto pb-1"
+                                style="scrollbar-width: thin;">
+
+                                <div style="min-width: 0; flex: 1.2;">
+                                    <label class="f-label mb-1 fw-bold text-muted"
+                                        style="font-size: 11px;">Pencarian</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-white border-end-0"><i
+                                                class="fa fa-search text-muted"></i></span>
+                                        <input type="text" id="filter-search"
+                                            class="form-control border-start-0 ps-0 shadow-none"
+                                            placeholder="No. Invoice / Mitra...">
+                                    </div>
+                                </div>
+
+                                <div style="min-width: 0; flex: 1;">
+                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Status
+                                        Dok</label>
+                                    <select id="filter-status-dok" class="tom-select-init">
+                                        @php $documentStatus = ['Draft', 'Sent', 'Failed', 'Approved', 'Rejected']; @endphp
+                                        <option value="">Semua</option>
+                                        @foreach ($documentStatus as $doc)
+                                            <option value="{{ $doc }}">{{ $doc }} </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div style="min-width: 0; flex: 1;">
+                                    <label class="f-label mb-1 fw-bold text-muted"
+                                        style="font-size: 11px;">Pembayaran</label>
+                                    <select id="filter-status-bayar" class="tom-select-init">
+                                        @php
+                                            $paymentStatus = [
+                                                'Draft' => 'Draft',
+                                                'Unpaid' => 'Belum',
+                                                'Overdue' => 'Telat',
+                                                'Paid' => 'Lunas',
+                                                'Partially Paid' => 'Sebagian',
+                                            ];
+                                        @endphp
+                                        <option value="">Semua</option>
+                                        @foreach ($paymentStatus as $value => $display)
+                                            <option value="{{ $value }}">{{ $display }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div style="min-width: 0; flex: 1;">
+                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Mitra</label>
+                                    <select id="filter-mitra-id" class="tom-select-init">
+                                        <option value="">Semua Pemasok...</option>
+                                    </select>
+                                </div>
+
+                                <div style="min-width: 0; flex: 1;">
+                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Tgl.
+                                        Invoice</label>
+                                    <input type="date" id="filter-tgl-invoice"
+                                        class="form-control form-control-sm shadow-none">
+                                </div>
+
+                                <div style="min-width: 0; flex: 1;">
+                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Jatuh
+                                        Tempo</label>
+                                    <input type="date" id="filter-tgl-jatuh-tempo"
+                                        class="form-control form-control-sm shadow-none">
+                                </div>
+
+                                <div class="d-flex gap-1" style="flex: 1; min-width: 0;">
+                                    <button onclick="loadInvoiceData()"
+                                        class="btn btn-dark fw-bold btn-sm flex-fill shadow-sm" title="Filter">
+                                        <i class="fa fa-filter"></i>
+                                    </button>
+                                    <button onclick="resetFilter()"
+                                        class="btn btn-light border border-danger fw-bold text-danger btn-sm flex-fill"
+                                        title="Reset">
+                                        <i class="fa fa-sync"></i>
+                                    </button>
+                                </div>
+
+                                <div id="bulk-action-area" class="d-none flex-shrink-0 ms-2 border-start ps-2">
+                                    <button class="btn btn-outline-danger fw-bold btn-sm px-3" onclick="bulkDelete()">
+                                        <i class="fa fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" id="invoiceTable">
+                                <thead class="bg-light text-uppercase text-secondary fw-bold"
+                                    style="font-size: 11px; letter-spacing: 0.5px;">
+                                    <tr>
+                                        <th class="ps-3" width="40">
+                                            <input type="checkbox" class="form-check-input" id="master-checkbox"
+                                                onclick="toggleSelectAll(this)">
+                                        </th>
+                                        <th width="40" class="text-center">#</th>
+                                        <th width="150">Invoice No</th>
+                                        <th width="200">Pemasok</th>
+                                        <th width="120" class="text-center">Status</th>
+                                        <th width="150" class="text-end">Jumlah</th>
+                                        <th width="150" class="text-end">Terhutang</th>
+                                        <th width="120" class="text-center">Tgl. Invoice</th>
+                                        <th width="80" class="text-center">Att</th>
+                                        <th width="80" class="text-end pe-3">Tindakan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoiceTableBody" class="border-top-0">
+                                    <!-- Rows injected by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div
+                            class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <span id="pagination-info" class="text-muted small fw-medium"></span>
+                            <nav>
+                                <ul class="pagination pagination-sm mb-0 shadow-sm" id="pagination-container">
+                                </ul>
+                            </nav>
+                        </div>
+
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="invoice-active"></div>
+                            <div class="tab-pane" id="invoice-archive"></div>
+                            <div class="tab-pane" id="invoice-in-trash"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @include('Sales.Modal.modal-fullscreen')
+    @include('Sales.Modal.detail-modal')
+    @include('Sales.Partials.invoice-templates')
+@endsection
 
 @push('js')
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
@@ -440,22 +463,23 @@
         }
 
         function openDetailModal(item) {
-             const modalEl = document.getElementById('detailInvoiceModal');
-             if(!modalEl) return;
+            const modalEl = document.getElementById('detailInvoiceModal');
+            if (!modalEl) return;
 
             // Populate Modal Data
             document.getElementById('detailInvoiceNumber').textContent = item.nomor_invoice;
             document.getElementById('detailInvoiceTitle').textContent = `Detail Invoice ${item.nomor_invoice}`;
             document.getElementById('detailDate').textContent = window.financeApp.formatDate(item.tgl_invoice);
             document.getElementById('detailDueDate').textContent = window.financeApp.formatDate(item.tgl_jatuh_tempo);
-            
+
             // Mitra Info
             document.getElementById('detailMitraName').textContent = item.mitra?.nama || '-';
             document.getElementById('detailMitraAddress').textContent = item.mitra?.alamat || '-';
-            
+
             // Payment Status
             const payBadge = document.getElementById('detailPaymentStatus');
-            const payClass = item.status_pembayaran === 'Paid' ? 'bg-success-subtle text-success' : (item.status_pembayaran === 'Unpaid' ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning');
+            const payClass = item.status_pembayaran === 'Paid' ? 'bg-success-subtle text-success' : (item
+                .status_pembayaran === 'Unpaid' ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning');
             payBadge.className = `badge ${payClass} border`;
             payBadge.textContent = item.status_pembayaran;
 
@@ -487,7 +511,7 @@
                 openInvoiceModal(item.id, null, 'edit');
             };
             document.getElementById('btnDetailDelete').onclick = () => {
-                if(confirm('Hapus invoice ini?')) {
+                if (confirm('Hapus invoice ini?')) {
                     bootstrap.Modal.getInstance(document.getElementById('detailInvoiceModal')).hide();
                     deleteInvoice(item.id);
                 }
@@ -501,7 +525,7 @@
         function renderInvoiceList(data) {
             const tbody = document.getElementById('invoiceTableBody');
             const rowTpl = document.getElementById('row-template');
-            
+
             tbody.innerHTML = '';
 
             if (!data || data.length === 0) {
@@ -513,13 +537,14 @@
             data.forEach((item, index) => {
                 const row = rowTpl.content.cloneNode(true);
                 const trMain = row.querySelector('.clickable-row');
-                
+
                 // Click to open detail
                 trMain.removeAttribute('data-bs-target');
                 trMain.removeAttribute('data-bs-toggle');
                 trMain.onclick = (e) => {
                     // Prevent if clicked on checkbox or actions
-                    if (e.target.closest('.invoice-checkbox') || e.target.closest('.dropdown') || e.target.closest('a') || e.target.closest('button')) return;
+                    if (e.target.closest('.invoice-checkbox') || e.target.closest('.dropdown') || e.target
+                        .closest('a') || e.target.closest('button')) return;
                     window.location.href = `{{ url('sales') }}/${item.id}`;
                 };
 
@@ -562,13 +587,14 @@
                     };
                     btnShow.removeAttribute('href');
                 }
-                
+
                 const btnReceipt = row.querySelector('.btn-create-receipt');
                 if (btnReceipt) {
                     btnReceipt.onclick = (e) => {
                         e.preventDefault();
                         // Redirect to receipt page with params
-                        window.location.href = `{{ route('sales.receipt') }}?open_create=true&invoice_id=${item.id}&mitra_id=${item.mitra_id}`;
+                        window.location.href =
+                            `{{ route('sales.receipt') }}?open_create=true&invoice_id=${item.id}&mitra_id=${item.mitra_id}`;
                     };
                 }
 
@@ -578,7 +604,7 @@
 
                 // Remove chevron
                 const chevron = row.querySelector('.chevron-icon');
-                if(chevron) chevron.remove();
+                if (chevron) chevron.remove();
 
                 tbody.appendChild(row);
             });
@@ -667,21 +693,24 @@
             tomSelectDocumentStatus = safeTomSelect('#filter-status-dok', {
                 create: false,
                 allowEmptyOption: true,
+                dropdownParent: 'body'
             });
 
             tomSelectPaymentStatus = safeTomSelect('#filter-status-bayar', {
                 create: false,
                 allowEmptyOption: true,
+                dropdownParent: 'body'
             });
 
             tomSelectMitraIndex = safeTomSelect('#filter-mitra-id', {
                 create: false,
                 allowEmptyOption: true,
-                placeholder: 'Cari Pemasok / Mitra ...'
+                placeholder: 'Cari Pemasok / Mitra ...',
+                dropdownParent: 'body'
             })
 
             const searchInput = document.getElementById('filter-search');
-            if(searchInput) {
+            if (searchInput) {
                 searchInput.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') {
                         e.preventDefault();
@@ -694,16 +723,16 @@
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 initFilters();
-            } catch(e) {
+            } catch (e) {
                 console.error('Filter init error:', e);
             }
-            
+
             try {
                 await initializeMasterData();
-            } catch(e) {
+            } catch (e) {
                 console.error('Master data error:', e);
             }
-            
+
             loadInvoiceData();
         });
     </script>

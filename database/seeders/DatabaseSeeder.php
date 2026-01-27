@@ -36,11 +36,11 @@ class DatabaseSeeder extends Seeder
         $this->call(ChartOfAccountSeeder::class);
         // $this->call(PermissionSeeder::class);
         // $this->call(SuperAdminSeeder::class);
-        $this->call(AccountingLogSeeder::class);
-        $this->call(MitraSeeder::class);
-        $this->call(ProductSeeder::class);
-        $this->call(TransactionSeeder::class);
-        $this->call(PaymentSeeder::class);
-        $this->call(InvoiceItemTaxSeeder::class);
+        // $this->call(AccountingLogSeeder::class);
+        // $this->call(MitraSeeder::class);
+        // $this->call(ProductSeeder::class);
+        // $this->call(TransactionSeeder::class);
+        // $this->call(PaymentSeeder::class);
+        // $this->call(InvoiceItemTaxSeeder::class);
     }
 }
