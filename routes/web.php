@@ -16,6 +16,7 @@ use App\Http\Controllers\UserPlotController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ExpenseController;
 
 Route::get('/', [AuthController::class, 'login'])->name('login');
 Route::post('/login-proses', [AuthController::class, 'loginProses'])->name('login.proses');
@@ -51,6 +52,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('mitra', [MitraController::class, 'index'])->name('mitra');
         Route::get('barang', [BarangController::class, 'index'])->name('barang');
         Route::get('stok', [StockController::class, 'index'])->name('stok');
+        Route::get('expenses', [ExpenseController::class, 'index'])->name('expenses.index');
         Route::get('users', fn() => view('Users.index'))->name('users.index');
 
         // Reports

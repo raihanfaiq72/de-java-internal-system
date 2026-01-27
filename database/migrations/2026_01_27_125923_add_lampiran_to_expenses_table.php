@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -12,7 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        return; // Skip this migration to avoid unique constraint violation
+        Schema::table('expenses', function (Blueprint $table) {
+            $table->string('lampiran')->nullable()->after('keterangan');
+        });
     }
 
     /**
@@ -20,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Optional: delete added accounts
+        Schema::table('expenses', function (Blueprint $table) {
+            $table->dropColumn('lampiran');
+        });
     }
 };

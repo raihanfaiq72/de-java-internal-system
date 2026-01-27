@@ -169,6 +169,8 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::prefix('expense-api')
         ->name('expense-api.')
         ->group(function () {
+            Route::get('/analytics-summary', [ExpenseController::class, 'analyticsSummary'])->name('analytics-summary');
+            Route::get('/analytics-trend', [ExpenseController::class, 'analyticsTrend'])->name('analytics-trend');
             Route::get('/', [ExpenseController::class, 'index'])->name('index');
             Route::post('/', [ExpenseController::class, 'store'])->name('store');
             Route::get('/{id}', [ExpenseController::class, 'show'])->name('show');
