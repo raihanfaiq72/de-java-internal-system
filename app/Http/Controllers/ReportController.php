@@ -477,29 +477,37 @@ class ReportController extends Controller
     {
         $date = $request->input('date', date('Y-m-d'));
         $data = $this->getBalanceSheetData($date);
-        
-        // Build dynamic top-level groups by first digit to support up to 9
-        $officeId = session('active_office_id');
-        $accounts = \DB::table('chart_of_accounts')
-            ->select('id', 'kode_akun', 'nama_akun')
-            ->where('office_id', $officeId)
-            ->get()
-            ->map(function($acc) {
-                $acc->top = substr($acc->kode_akun, 0, 1);
-                return $acc;
-            });
 
-        $topGroups = [];
-        foreach (range(1,9) as $d) {
-            $group = $accounts->filter(fn($a) => $a->top == (string)$d)->values();
-            if ($group->isNotEmpty()) {
-                $topGroups[(string)$d] = $group;
-            }
-        }
+        $officeId = session('active_office_id');
+
+        $groups = \DB::table('coa_group as g')
+            ->join('coa_type as t', 't.kelompok_id', '=', 'g.id')
+            ->join('chart_of_accounts as c', 'c.tipe_id', '=', 't.id')
+            ->where('g.office_id', $officeId)
+            ->select(
+                'g.id as kelompok_id',
+                'g.kode_kelompok',
+                'g.nama_kelompok',
+
+                't.id as tipe_id',
+                't.nama_tipe',
+
+                'c.id as coa_id',
+                'c.kode_akun',
+                'c.nama_akun'
+            )
+            ->orderBy('g.kode_kelompok')
+            ->orderBy('t.nama_tipe')
+            ->orderBy('c.kode_akun')
+            ->get()
+            ->groupBy('nama_kelompok') // LEVEL 1
+            ->map(function ($items) {
+                return $items->groupBy('nama_tipe'); // LEVEL 2
+            });
 
         return view($this->views . 'coa-management', array_merge($data, [
             'date' => $date,
-            'topGroups' => $topGroups
+            'groupedAccounts' => $groups
         ]));
     }
 

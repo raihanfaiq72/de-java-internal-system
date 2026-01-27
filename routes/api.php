@@ -203,6 +203,10 @@ Route::middleware(['web', 'auth'])->group(function () {
         ->name('coa-api.')
         ->group(function () {
             Route::get('/', [ChartOfAccountController::class, 'index'])->name('index');
+            Route::post('/', [ChartOfAccountController::class, 'store'])->name('store');
+            Route::get('/{id}', [ChartOfAccountController::class, 'show'])->name('show');
+            Route::put('/{id}', [ChartOfAccountController::class, 'update'])->name('update');
+            Route::delete('/{id}', [ChartOfAccountController::class, 'destroy'])->name('destroy');
         });
 });
 
