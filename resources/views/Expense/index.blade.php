@@ -20,14 +20,12 @@
 
                 <ul class="nav nav-tabs nav-tabs-custom mb-4" id="expenseTab" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active fw-bold" id="biaya-tab" data-bs-toggle="tab"
-                            data-bs-target="#biaya" type="button" role="tab" aria-controls="biaya"
-                            aria-selected="true">Biaya</button>
+                        <button class="nav-link active fw-bold" id="biaya-tab" data-bs-toggle="tab" data-bs-target="#biaya"
+                            type="button" role="tab" aria-controls="biaya" aria-selected="true">Biaya</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link fw-bold" id="analitik-tab" data-bs-toggle="tab"
-                            data-bs-target="#analitik" type="button" role="tab" aria-controls="analitik"
-                            aria-selected="false">Analitik</button>
+                        <button class="nav-link fw-bold" id="analitik-tab" data-bs-toggle="tab" data-bs-target="#analitik"
+                            type="button" role="tab" aria-controls="analitik" aria-selected="false">Analitik</button>
                     </li>
                 </ul>
 
@@ -71,25 +69,35 @@
                             <!-- Rincian Biaya (Donut) -->
                             <div class="col-lg-6 mb-4">
                                 <div class="card border-0 shadow-sm rounded-3 h-100">
-                                    <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                                    <div
+                                        class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                                         <h5 class="fw-bold mb-0">Rincian Biaya</h5>
-                                        <button class="btn btn-sm btn-link text-muted text-decoration-none" onclick="resetFilters('pie')">Hapus Filter</button>
+                                        <button class="btn btn-sm btn-link text-muted text-decoration-none"
+                                            onclick="resetFilters('pie')">Hapus Filter</button>
                                     </div>
                                     <div class="card-body p-4">
                                         <div class="row g-2 mb-3">
                                             <div class="col-6">
-                                                <label class="small fw-bold text-muted">Tanggal Mulai <span class="text-danger">*</span></label>
-                                                <input type="date" class="form-control form-control-sm filter-pie" id="filter_start_date_pie" value="{{ date('Y-m-01') }}">
+                                                <label class="small fw-bold text-muted">Tanggal Mulai <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="date" class="form-control form-control-sm filter-pie"
+                                                    id="filter_start_date_pie" value="{{ date('Y-m-01') }}">
                                             </div>
                                             <div class="col-6">
-                                                <label class="small fw-bold text-muted">Tanggal Berakhir <span class="text-danger">*</span></label>
-                                                <input type="date" class="form-control form-control-sm filter-pie" id="filter_end_date_pie" value="{{ date('Y-m-t') }}">
+                                                <label class="small fw-bold text-muted">Tanggal Berakhir <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="date" class="form-control form-control-sm filter-pie"
+                                                    id="filter_end_date_pie" value="{{ date('Y-m-t') }}">
                                             </div>
                                             <div class="col-12">
-                                                <label class="small fw-bold text-muted">Kategori <span class="text-danger">*</span></label>
-                                                <select class="form-select form-select-sm filter-pie" id="filter_category_pie">
+                                                <label class="small fw-bold text-muted">Kategori <span
+                                                        class="text-danger">*</span></label>
+                                                <select class="form-select form-select-sm filter-pie"
+                                                    id="filter_category_pie">
                                                     <option value="">Semua Kategori</option>
-                                                    @foreach ($categories as $cat) <option value="{{ $cat->name }}">{{ $cat->name }}</option> @endforeach
+                                                    @foreach ($categories as $cat)
+                                                        <option value="{{ $cat->name }}">{{ $cat->name }}</option>
+                                                    @endforeach
                                                 </select>
                                             </div>
                                         </div>
@@ -101,25 +109,35 @@
                             <!-- Jumlah Biaya (Bar) -->
                             <div class="col-lg-6 mb-4">
                                 <div class="card border-0 shadow-sm rounded-3 h-100">
-                                    <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                                    <div
+                                        class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                                         <h5 class="fw-bold mb-0">Jumlah Biaya</h5>
-                                        <button class="btn btn-sm btn-link text-muted text-decoration-none" onclick="resetFilters('bar')">Hapus Filter</button>
+                                        <button class="btn btn-sm btn-link text-muted text-decoration-none"
+                                            onclick="resetFilters('bar')">Hapus Filter</button>
                                     </div>
                                     <div class="card-body p-4">
                                         <div class="row g-2 mb-3">
                                             <div class="col-6">
-                                                <label class="small fw-bold text-muted">Tanggal Mulai <span class="text-danger">*</span></label>
-                                                <input type="date" class="form-control form-control-sm filter-bar" id="filter_start_date_bar" value="{{ date('Y-m-01') }}">
+                                                <label class="small fw-bold text-muted">Tanggal Mulai <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="date" class="form-control form-control-sm filter-bar"
+                                                    id="filter_start_date_bar" value="{{ date('Y-m-01') }}">
                                             </div>
                                             <div class="col-6">
-                                                <label class="small fw-bold text-muted">Tanggal Berakhir <span class="text-danger">*</span></label>
-                                                <input type="date" class="form-control form-control-sm filter-bar" id="filter_end_date_bar" value="{{ date('Y-m-t') }}">
+                                                <label class="small fw-bold text-muted">Tanggal Berakhir <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="date" class="form-control form-control-sm filter-bar"
+                                                    id="filter_end_date_bar" value="{{ date('Y-m-t') }}">
                                             </div>
                                             <div class="col-12">
-                                                <label class="small fw-bold text-muted">Kategori <span class="text-danger">*</span></label>
-                                                <select class="form-select form-select-sm filter-bar" id="filter_category_bar">
+                                                <label class="small fw-bold text-muted">Kategori <span
+                                                        class="text-danger">*</span></label>
+                                                <select class="form-select form-select-sm filter-bar"
+                                                    id="filter_category_bar">
                                                     <option value="">Semua Kategori</option>
-                                                    @foreach ($categories as $cat) <option value="{{ $cat->name }}">{{ $cat->name }}</option> @endforeach
+                                                    @foreach ($categories as $cat)
+                                                        <option value="{{ $cat->name }}">{{ $cat->name }}</option>
+                                                    @endforeach
                                                 </select>
                                             </div>
                                         </div>
@@ -131,16 +149,19 @@
                             <!-- Tren Biaya (Line) -->
                             <div class="col-12">
                                 <div class="card border-0 shadow-sm rounded-3">
-                                    <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                                    <div
+                                        class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                                         <h5 class="fw-bold mb-0">Tren Biaya</h5>
-                                        <button class="btn btn-sm btn-link text-muted text-decoration-none" onclick="resetFilters('trend')">Hapus Filter</button>
+                                        <button class="btn btn-sm btn-link text-muted text-decoration-none"
+                                            onclick="resetFilters('trend')">Hapus Filter</button>
                                     </div>
                                     <div class="card-body p-4">
                                         <div class="row justify-content-end mb-3">
                                             <div class="col-auto">
-                                                <label class="small fw-bold text-muted">Tahun <span class="text-danger">*</span></label>
+                                                <label class="small fw-bold text-muted">Tahun <span
+                                                        class="text-danger">*</span></label>
                                                 <select class="form-select form-select-sm filter-trend" id="filter_year">
-                                                    @for($y = date('Y'); $y >= 2020; $y--)
+                                                    @for ($y = date('Y'); $y >= 2020; $y--)
                                                         <option value="{{ $y }}">{{ $y }}</option>
                                                     @endfor
                                                 </select>
@@ -178,7 +199,7 @@
                                 <select class="form-select" name="akun_keuangan_id" required>
                                     <option value="">-- Pilih Kas / Bank --</option>
                                     @foreach ($financialAccounts as $acc)
-                                        <option value="{{ $acc->id }}">{{ $acc->kode_akun }} -
+                                        <option value="{{ $acc->id }}">{{ $acc->code }} -
                                             {{ $acc->name }}</option>
                                     @endforeach
                                 </select>
@@ -186,10 +207,9 @@
 
                             <!-- Tanggal (Mandatory) -->
                             <div class="col-md-6">
-                                <label class="form-label fw-bold small">Tanggal <span
-                                        class="text-danger">*</span></label>
-                                <input type="date" class="form-control" name="tgl_biaya"
-                                    value="{{ date('Y-m-d') }}" required>
+                                <label class="form-label fw-bold small">Tanggal <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" name="tgl_biaya" value="{{ date('Y-m-d') }}"
+                                    required>
                             </div>
 
                             <!-- Nama Biaya (Mandatory) -->
@@ -217,7 +237,8 @@
                                         <option value="{{ $cat->name }}">
                                     @endforeach
                                 </datalist>
-                                <small class="text-muted" style="font-size: 0.75rem;">Ketik baru untuk menambahkan ke master otomatis.</small>
+                                <small class="text-muted" style="font-size: 0.75rem;">Ketik baru untuk menambahkan ke
+                                    master otomatis.</small>
                             </div>
 
                             <!-- Akun Beban (All COA) -->
@@ -237,8 +258,8 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small">Jumlah (Rp) <span
                                         class="text-danger">*</span></label>
-                                <input type="number" class="form-control" name="jumlah" step="0.01"
-                                    min="0" placeholder="0" required>
+                                <input type="number" class="form-control" name="jumlah" step="0.01" min="0"
+                                    placeholder="0" required>
                             </div>
 
                             <!-- Keterangan -->
@@ -251,7 +272,8 @@
                             <div class="col-12">
                                 <label class="form-label fw-bold small">Lampiran</label>
                                 <input type="file" class="form-control" name="lampiran">
-                                <small class="text-muted" style="font-size: 0.75rem;">Maksimal 10MB (Gambar/Dokumen)</small>
+                                <small class="text-muted" style="font-size: 0.75rem;">Maksimal 10MB
+                                    (Gambar/Dokumen)</small>
                             </div>
                         </div>
                     </form>
@@ -272,14 +294,15 @@
                     <h5 class="modal-title fw-bold">
                         <i class="fa fa-receipt me-2"></i> Detail Biaya
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="row g-4">
                         <!-- Left Column: Main Info -->
                         <div class="col-md-7">
                             <h6 class="text-uppercase text-muted fw-bold small mb-3">Informasi Utama</h6>
-                            
+
                             <div class="mb-3">
                                 <label class="small text-muted d-block">Nama Biaya</label>
                                 <span class="fw-bold fs-5 text-dark" id="show_nama_biaya"></span>
@@ -358,9 +381,9 @@
                 console.log("Expense script loaded");
                 loadExpenses();
                 initCharts();
-                
+
                 // Reset Modal on Close
-                $('#modalExpense').on('hidden.bs.modal', function () {
+                $('#modalExpense').on('hidden.bs.modal', function() {
                     $('#formExpense')[0].reset();
                     $('#expense_id').val('');
                     $('#modalExpenseLabel').text('Catat Biaya Baru');
@@ -378,11 +401,18 @@
                 // Pie/Donut Options
                 var optionsPie = {
                     series: [],
-                    chart: { type: 'donut', height: 320 },
+                    chart: {
+                        type: 'donut',
+                        height: 320
+                    },
                     labels: [],
                     colors: ['#0d6efd', '#20c997', '#ffc107', '#dc3545', '#6c757d'],
-                    legend: { position: 'bottom' },
-                    noData: { text: 'Loading...' }
+                    legend: {
+                        position: 'bottom'
+                    },
+                    noData: {
+                        text: 'Loading...'
+                    }
                 };
                 chartPie = new ApexCharts(document.querySelector("#chartRincian"), optionsPie);
                 chartPie.render();
@@ -390,12 +420,29 @@
                 // Bar Options
                 var optionsBar = {
                     series: [],
-                    chart: { type: 'bar', height: 320, toolbar: { show: false } },
-                    plotOptions: { bar: { borderRadius: 4, horizontal: true, } },
-                    dataLabels: { enabled: false },
-                    xaxis: { categories: [] },
+                    chart: {
+                        type: 'bar',
+                        height: 320,
+                        toolbar: {
+                            show: false
+                        }
+                    },
+                    plotOptions: {
+                        bar: {
+                            borderRadius: 4,
+                            horizontal: true,
+                        }
+                    },
+                    dataLabels: {
+                        enabled: false
+                    },
+                    xaxis: {
+                        categories: []
+                    },
                     colors: ['#0d6efd'],
-                    noData: { text: 'Loading...' }
+                    noData: {
+                        text: 'Loading...'
+                    }
                 };
                 chartBar = new ApexCharts(document.querySelector("#chartJumlah"), optionsBar);
                 chartBar.render();
@@ -403,13 +450,31 @@
                 // Trend Options
                 var optionsTrend = {
                     series: [],
-                    chart: { type: 'area', height: 320, toolbar: { show: false } },
-                    dataLabels: { enabled: false },
-                    stroke: { curve: 'smooth' },
-                    xaxis: { categories: [] },
-                    tooltip: { x: { format: 'dd/MM/yy HH:mm' }, },
+                    chart: {
+                        type: 'area',
+                        height: 320,
+                        toolbar: {
+                            show: false
+                        }
+                    },
+                    dataLabels: {
+                        enabled: false
+                    },
+                    stroke: {
+                        curve: 'smooth'
+                    },
+                    xaxis: {
+                        categories: []
+                    },
+                    tooltip: {
+                        x: {
+                            format: 'dd/MM/yy HH:mm'
+                        },
+                    },
                     colors: ['#0d6efd'],
-                    noData: { text: 'Loading...' }
+                    noData: {
+                        text: 'Loading...'
+                    }
                 };
                 chartTrend = new ApexCharts(document.querySelector("#chartTren"), optionsTrend);
                 chartTrend.render();
@@ -427,7 +492,7 @@
                     kategori_biaya: $('#filter_category_pie').val()
                 };
                 $.get("{{ route('expense-api.analytics-summary') }}", params, function(res) {
-                    if(res.success) {
+                    if (res.success) {
                         chartPie.updateOptions({
                             labels: res.data.labels
                         });
@@ -443,11 +508,16 @@
                     kategori_biaya: $('#filter_category_bar').val()
                 };
                 $.get("{{ route('expense-api.analytics-summary') }}", params, function(res) {
-                    if(res.success) {
+                    if (res.success) {
                         chartBar.updateOptions({
-                            xaxis: { categories: res.data.labels }
+                            xaxis: {
+                                categories: res.data.labels
+                            }
                         });
-                        chartBar.updateSeries([{ name: 'Total', data: res.data.series }]);
+                        chartBar.updateSeries([{
+                            name: 'Total',
+                            data: res.data.series
+                        }]);
                     }
                 });
             }
@@ -457,9 +527,11 @@
                     year: $('#filter_year').val()
                 };
                 $.get("{{ route('expense-api.analytics-trend') }}", params, function(res) {
-                    if(res.success) {
+                    if (res.success) {
                         chartTrend.updateOptions({
-                            xaxis: { categories: res.data.categories }
+                            xaxis: {
+                                categories: res.data.categories
+                            }
                         });
                         chartTrend.updateSeries(res.data.series);
                     }
@@ -471,17 +543,17 @@
                 let firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
                 let lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
 
-                if(type === 'pie') {
+                if (type === 'pie') {
                     $('#filter_start_date_pie').val(firstDay);
                     $('#filter_end_date_pie').val(lastDay);
                     $('#filter_category_pie').val('');
                     loadPieChart();
-                } else if(type === 'bar') {
+                } else if (type === 'bar') {
                     $('#filter_start_date_bar').val(firstDay);
                     $('#filter_end_date_bar').val(lastDay);
                     $('#filter_category_bar').val('');
                     loadBarChart();
-                } else if(type === 'trend') {
+                } else if (type === 'trend') {
                     $('#filter_year').val(today.getFullYear());
                     loadTrendChart();
                 }
@@ -494,7 +566,9 @@
                     method: 'GET',
                     success: function(response) {
                         if (typeof response === 'string') {
-                             $('#expenseList').html('<tr><td colspan="8" class="text-center text-danger">Sesi mungkin telah berakhir.</td></tr>');
+                            $('#expenseList').html(
+                                '<tr><td colspan="8" class="text-center text-danger">Sesi mungkin telah berakhir.</td></tr>'
+                                );
                             return;
                         }
 
@@ -529,7 +603,8 @@
                                 });
 
                                 if (response.data.data.length === 0) {
-                                    rows = '<tr><td colspan="8" class="text-center py-4 text-muted">Belum ada data biaya.</td></tr>';
+                                    rows =
+                                        '<tr><td colspan="8" class="text-center py-4 text-muted">Belum ada data biaya.</td></tr>';
                                 }
 
                                 $('#expenseList').html(rows);
@@ -539,7 +614,8 @@
                     },
                     error: function(xhr) {
                         console.error("AJAX Error:", xhr);
-                        $('#expenseList').html('<tr><td colspan="8" class="text-center text-danger">Gagal memuat data.</td></tr>');
+                        $('#expenseList').html(
+                            '<tr><td colspan="8" class="text-center text-danger">Gagal memuat data.</td></tr>');
                     }
                 });
             }
@@ -550,11 +626,11 @@
                 let formData = new FormData(form);
                 let id = $('#expense_id').val();
                 let url = "{{ route('expense-api.store') }}";
-                
+
                 // For Update, Laravel method spoofing is needed if using FormData with POST
-                if(id) {
+                if (id) {
                     url = "{{ url('api/expense-api') }}/" + id;
-                    formData.append('_method', 'PUT'); 
+                    formData.append('_method', 'PUT');
                 }
 
                 $.ajax({
@@ -591,7 +667,7 @@
 
             function editExpense(id) {
                 $.get("{{ url('api/expense-api') }}/" + id, function(res) {
-                    if(res.success) {
+                    if (res.success) {
                         let d = res.data;
                         $('#expense_id').val(d.id);
                         $('input[name="tgl_biaya"]').val(d.tgl_biaya);
@@ -603,7 +679,7 @@
                         $('input[name="jumlah"]').val(d.jumlah);
                         $('textarea[name="keterangan"]').val(d.keterangan);
                         $('input[name="lampiran"]').val(''); // Reset file input
-                        
+
                         $('#modalExpenseLabel').text('Edit Biaya');
                         var modal = new bootstrap.Modal(document.getElementById('modalExpense'));
                         modal.show();
@@ -613,17 +689,19 @@
 
             function showExpense(id) {
                 $.get("{{ url('api/expense-api') }}/" + id, function(res) {
-                    if(res.success) {
+                    if (res.success) {
                         let d = res.data;
                         $('#show_tgl_biaya').text(d.tgl_biaya);
                         $('#show_nama_biaya').text(d.nama_biaya);
                         $('#show_kategori_biaya').text(d.kategori_biaya || '-');
                         $('#show_nama_vendor').text(d.nama_vendor || '-');
-                        
+
                         // Use relationship data if available, otherwise fallback to ID
-                        let akunKeuangan = d.akun_keuangan ? (d.akun_keuangan.kode_akun + ' - ' + d.akun_keuangan.nama_akun) : (d.akun_keuangan_id || '-');
-                        let akunBeban = d.akun_beban ? (d.akun_beban.kode_akun + ' - ' + d.akun_beban.nama_akun) : (d.akun_beban_id || '-');
-                        
+                        let akunKeuangan = d.akun_keuangan ? (d.akun_keuangan.kode_akun + ' - ' + d.akun_keuangan
+                            .nama_akun) : (d.akun_keuangan_id || '-');
+                        let akunBeban = d.akun_beban ? (d.akun_beban.kode_akun + ' - ' + d.akun_beban.nama_akun) : (d
+                            .akun_beban_id || '-');
+
                         $('#show_akun_keuangan').text(akunKeuangan);
                         $('#show_akun_beban').text(akunBeban);
                         $('#show_jumlah').text('Rp ' + parseFloat(d.jumlah).toLocaleString('id-ID'));
@@ -657,7 +735,7 @@
 
             function deleteExpense(id) {
                 if (!confirm('Hapus biaya ini?')) return;
-                
+
                 $.ajax({
                     url: "{{ url('api/expense-api') }}/" + id,
                     method: 'DELETE',
@@ -676,11 +754,13 @@
             function renderPagination(data) {
                 let html = '';
                 if (data.prev_page_url) {
-                    html += `<button class="btn btn-sm btn-light border" onclick="loadExpenses(${data.current_page - 1})">Prev</button>`;
+                    html +=
+                        `<button class="btn btn-sm btn-light border" onclick="loadExpenses(${data.current_page - 1})">Prev</button>`;
                 }
                 html += `<span class="mx-2 small text-muted">Halaman ${data.current_page} dari ${data.last_page}</span>`;
                 if (data.next_page_url) {
-                    html += `<button class="btn btn-sm btn-light border" onclick="loadExpenses(${data.current_page + 1})">Next</button>`;
+                    html +=
+                        `<button class="btn btn-sm btn-light border" onclick="loadExpenses(${data.current_page + 1})">Next</button>`;
                 }
                 $('#pagination').html(html);
             }
