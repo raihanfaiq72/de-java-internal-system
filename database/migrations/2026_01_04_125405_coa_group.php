@@ -11,21 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('chart_of_accounts', function (Blueprint $table) {
+        Schema::create('coa_group', function (Blueprint $table) {
             $table->id();
             $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
-            $table->foreignId('tipe_id')->constrained('coa_type')->onDelete('cascade');
-
-            $table->string('kode_akun', 20);
-            $table->string('nama_akun', 150);
-            $table->boolean('is_kas_bank')->default(false);
-
+            $table->string('kode_kelompok', 10);
+            $table->string('nama_kelompok', 100);
             $table->timestamps();
             $table->softDeletes();
 
-            $table->unique(['office_id', 'kode_akun']);
+            $table->unique(['office_id', 'kode_kelompok']);
         });
-
     }
 
     /**
@@ -33,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('chart_of_accounts');
+        Schema::dropIfExists('coa_group');
     }
 };

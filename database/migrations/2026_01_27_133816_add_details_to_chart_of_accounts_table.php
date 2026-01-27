@@ -12,9 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('chart_of_accounts', function (Blueprint $table) {
-            $table->foreignId('parent_id')->nullable()->after('office_id')->constrained('chart_of_accounts')->nullOnDelete();
-            $table->string('tipe_akun')->nullable()->after('is_kas_bank'); // Cash, Bank, Corporate Card
-            $table->string('bank_name')->nullable()->after('tipe_akun');
+            $table->string('bank_name')->nullable()->after('is_kas_bank');
             $table->string('bank_account_number')->nullable()->after('bank_name');
             $table->string('bank_account_name')->nullable()->after('bank_account_number');
             $table->string('bank_branch')->nullable()->after('bank_account_name');
@@ -31,8 +29,6 @@ return new class extends Migration
         Schema::table('chart_of_accounts', function (Blueprint $table) {
             $table->dropForeign(['parent_id']);
             $table->dropColumn([
-                'parent_id',
-                'tipe_akun',
                 'bank_name',
                 'bank_account_number',
                 'bank_account_name',

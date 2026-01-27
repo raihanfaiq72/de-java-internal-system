@@ -10,30 +10,16 @@ class COA extends Model
     use SoftDeletes;
 
     protected $table = 'chart_of_accounts';
-
-    protected $fillable = [
-        'office_id',
-        'parent_id',
-        'kode_akun',
-        'nama_akun',
-        'kelompok_akun',
-        'is_kas_bank',
-        'tipe_akun',
-        'bank_name',
+    
+    protected $fillable = ['office_id', 'tipe_id', 'kode_akun', 'nama_akun', 'is_kas_bank', 'bank_name',
         'bank_account_number',
         'bank_account_name',
         'bank_branch',
         'bank_city',
-        'currency',
-    ];
+        'currency',];
 
-    public function parent()
+    public function type()
     {
-        return $this->belongsTo(COA::class, 'parent_id');
-    }
-
-    public function children()
-    {
-        return $this->hasMany(COA::class, 'parent_id');
+        return $this->belongsTo(COAType::class, 'tipe_id');
     }
 }
