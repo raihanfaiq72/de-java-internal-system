@@ -17,8 +17,9 @@ return new class extends Migration
             $table->string('kode_akun', 20)->unique();
             $table->string('nama_akun', 100);
             $table->enum('kelompok_akun', [
-                'Aktiva', 'Kewajiban', 'Modal', 'Pendapatan', 'Beban'
+                'Aktiva', 'Kewajiban', 'Modal', 'Pendapatan', 'Beban Pokok', 'Beban', 'Beban Penyusutan', 'Pendapatan Lain', 'Beban Lain', 'Beban Pajak'
             ]);
+            $table->string('tipe_akun', 100);
             $table->boolean('is_kas_bank')->default(false);
             $table->timestamps();
             $table->softDeletes();
