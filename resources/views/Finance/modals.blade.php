@@ -3,7 +3,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Buat Akun Keuangan Baru</h5>
+                <h5 class="modal-title" id="modalAccountTitle">Buat Akun Keuangan Baru</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="formCreateAccount" onsubmit="submitAccount(event)">
@@ -38,7 +38,7 @@
                                 <div id="fields-cash" class="d-none">
                                     <div class="mb-3">
                                         <label class="form-label">Nama Kas *</label>
-                                        <input type="text" class="form-control" name="nama_akun_cash" placeholder="Contoh: Kas Kecil">
+                                        <input type="text" class="form-control" name="nama_akun_cash" id="nama_akun_cash" placeholder="Contoh: Kas Kecil">
                                     </div>
                                 </div>
 
@@ -46,26 +46,26 @@
                                 <div id="fields-bank" class="d-none">
                                     <div class="mb-3">
                                         <label class="form-label">Nama Bank *</label>
-                                        <input type="text" class="form-control" name="bank_name" placeholder="cth. BRI, BCA, Mandiri, dll.">
+                                        <input type="text" class="form-control" name="bank_name" id="bank_name" placeholder="cth. BRI, BCA, Mandiri, dll.">
                                     </div>
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">No. Rekening Bank *</label>
-                                            <input type="text" class="form-control" name="bank_account_number">
+                                            <input type="text" class="form-control" name="bank_account_number" id="bank_account_number">
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Nama pada Rekening *</label>
-                                            <input type="text" class="form-control" name="bank_account_name">
+                                            <input type="text" class="form-control" name="bank_account_name" id="bank_account_name">
                                         </div>
                                     </div>
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Nama Cabang Bank</label>
-                                            <input type="text" class="form-control" name="bank_branch">
+                                            <input type="text" class="form-control" name="bank_branch" id="bank_branch">
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Kota Cabang</label>
-                                            <input type="text" class="form-control" name="bank_city">
+                                            <input type="text" class="form-control" name="bank_city" id="bank_city">
                                         </div>
                                     </div>
                                 </div>
@@ -73,7 +73,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Mata Uang * <i class="iconoir-info-circle" title="Mata uang default"></i></label>
-                                <select class="form-select" name="currency" readonly>
+                                <select class="form-select" name="currency" id="currency" readonly>
                                     <option value="IDR" selected>Rupiah</option>
                                 </select>
                             </div>
@@ -88,39 +88,26 @@
                                 <div class="accordion-item">
                                     <h2 class="accordion-header">
                                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#mode-new" aria-expanded="true" onclick="setMode('new')">
-                                            Buat Akun Baru
+                                            Detail Akun
                                         </button>
                                     </h2>
                                     <div id="mode-new" class="accordion-collapse collapse show" data-bs-parent="#accountModeAccordion">
                                         <div class="accordion-body">
                                             <div class="alert alert-light border">
-                                                <h6 class="alert-heading">Akan Terbuat Akun</h6>
+                                                <h6 class="alert-heading">Info Akun</h6>
                                                 <p class="mb-1">Kode Akun: <span id="preview-code" class="fw-bold text-primary">...</span></p>
                                                 <p class="mb-0">Akun Keuangan: <span id="preview-type" class="fw-bold">...</span></p>
-                                            </div>
-
-                                            <div class="mb-3 d-none">
-                                                <label class="form-label">Pilih Akun yang ada</label>
-                                                <p class="text-muted small mb-1">Akun Penyimpanan Saldo</p>
-                                                <select class="form-select" name="parent_id" id="parent_id" onchange="generateCode()">
-                                                    <option value="" selected disabled>Pilih Akun Induk</option>
-                                                    @foreach($parent_accounts as $parent)
-                                                        <option value="{{ $parent->id }}" data-code="{{ $parent->kode_akun }}">{{ $parent->kode_akun }} - {{ $parent->nama_akun }}</option>
-                                                    @endforeach
-                                                </select>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- Use Existing - REMOVED since we are using standalone table now, can't easily link to existing COA unless migrated -->
-                                <!-- Or maybe user wants to link to existing Financial Account? -->
-                                <!-- For now, let's hide "Existing" or adapt it to FinancialAccount -->
                                 
                                 <input type="hidden" name="mode" id="account_mode" value="new">
-                            <input type="hidden" name="kode_akun" id="generated_code">
-                            <input type="hidden" name="nama_akun" id="final_nama_akun">
+                                <input type="hidden" name="existing_coa_id" id="existing_coa_id">
+                                <input type="hidden" name="kode_akun" id="generated_code">
+                                <input type="hidden" name="nama_akun" id="final_nama_akun">
 
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -151,7 +138,7 @@
                             <select class="form-select" name="from_account_id" id="from_account_id" required>
                                 <option value="">Pilih Akun</option>
                                 @foreach($all_accounts as $acc)
-                                    <option value="{{ $acc->id }}">{{ $acc->nama_akun }}</option>
+                                    <option value="{{ $acc->id }}">{{ $acc->code }} - {{ $acc->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -160,7 +147,7 @@
                             <select class="form-select" name="to_account_id" id="to_account_id" required>
                                 <option value="">Pilih Akun</option>
                                 @foreach($all_accounts as $acc)
-                                    <option value="{{ $acc->id }}">{{ $acc->nama_akun }}</option>
+                                    <option value="{{ $acc->id }}">{{ $acc->code }} - {{ $acc->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -188,7 +175,9 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batalkan</button>
-                    <button type="submit" class="btn btn-success">Simpan</button>
+                    <button type="submit" onclick="this.form.status.value='draft'" class="btn btn-warning">Simpan Draft</button>
+                    <button type="submit" onclick="this.form.status.value='posted'" class="btn btn-success">Simpan Posted</button>
+                    <input type="hidden" name="status" value="posted">
                 </div>
             </form>
         </div>
@@ -239,7 +228,9 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batalkan</button>
-                    <button type="submit" class="btn btn-success">Simpan</button>
+                    <button type="submit" onclick="this.form.status.value='draft'" class="btn btn-warning">Simpan Draft</button>
+                    <button type="submit" onclick="this.form.status.value='posted'" class="btn btn-success">Simpan Posted</button>
+                    <input type="hidden" name="status" value="posted">
                 </div>
             </form>
         </div>
@@ -263,7 +254,7 @@
                         <select class="form-select" name="from_account_id" id="expense_from_account_id" required>
                             <option value="">Pilih Akun</option>
                             @foreach($all_accounts as $acc)
-                                <option value="{{ $acc->id }}">{{ $acc->nama_akun }}</option>
+                                <option value="{{ $acc->id }}">{{ $acc->code }} - {{ $acc->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -290,7 +281,9 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batalkan</button>
-                    <button type="submit" class="btn btn-success">Simpan</button>
+                    <button type="submit" onclick="this.form.status.value='draft'" class="btn btn-warning">Simpan Draft</button>
+                    <button type="submit" onclick="this.form.status.value='posted'" class="btn btn-success">Simpan Posted</button>
+                    <input type="hidden" name="status" value="posted">
                 </div>
             </form>
         </div>
@@ -374,22 +367,35 @@
 
     function submitAccount(e) {
         e.preventDefault();
+        
+        // Handle disabled fields for FormData
+        let typeSelect = document.getElementById('tipe_akun');
+        let wasDisabled = typeSelect.disabled;
+        if (wasDisabled) {
+            typeSelect.disabled = false;
+        }
+        
         let formData = new FormData(e.target);
+        
+        if (wasDisabled) {
+            typeSelect.disabled = true;
+        }
         
         // Populate Hidden Name field based on Type
         let type = formData.get('tipe_akun');
         if (type === 'Cash') {
             formData.set('nama_akun', formData.get('nama_akun_cash'));
         } else {
-            // For Bank, use "Bank Name - Account Name" or just Bank Name?
-            // User example: "Nama Bank: BRI", "Nama Kas: Kas Kecil"
-            // Let's use Bank Name + Account Number for uniqueness?
-            // Or just Bank Name. Let's use the field `bank_name` directly in backend?
-            // But COA needs `nama_akun`.
-            // Let's combine: "BRI - 123456"
+            // For Bank, combine Name + Account Name? Or just use Bank Name?
+            // Let's use Bank Name + Account Name for clarity
             let bankName = formData.get('bank_name');
-            let accName = formData.get('bank_account_name');
-            formData.set('nama_akun', bankName + (accName ? ' - ' + accName : ''));
+            // let accName = formData.get('bank_account_name');
+            // formData.set('nama_akun', bankName + (accName ? ' - ' + accName : ''));
+            // Actually, let's just use the Bank Name provided by user or a composite if they want.
+            // But wait, the controller uses 'nama_akun' for 'name' column.
+            // In the UI cards, we show {{ $account->name }}.
+            // If we use just "BCA", it's fine.
+            formData.set('nama_akun', bankName);
         }
 
         $.ajax({

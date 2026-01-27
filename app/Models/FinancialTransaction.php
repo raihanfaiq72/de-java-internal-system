@@ -18,6 +18,7 @@ class FinancialTransaction extends Model
         'from_account_id',
         'to_account_id',
         'amount',
+        'status',
         'description',
         'reference_number',
         'lampiran',

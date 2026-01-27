@@ -58,6 +58,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('finance', [App\Http\Controllers\FinanceController::class, 'index'])->name('finance.index');
         Route::post('finance/transaction', [App\Http\Controllers\FinanceController::class, 'storeTransaction'])->name('finance.transaction.store');
         Route::post('finance/account', [App\Http\Controllers\FinanceController::class, 'storeAccount'])->name('finance.account.store');
+        Route::delete('finance/account/{id}', [App\Http\Controllers\FinanceController::class, 'destroyAccount'])->name('finance.account.destroy');
         Route::get('finance/next-code', [App\Http\Controllers\FinanceController::class, 'getNextCode'])->name('finance.account.next-code');
 
         Route::get('users', fn() => view('Users.index'))->name('users.index');

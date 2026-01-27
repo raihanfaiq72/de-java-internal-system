@@ -37,7 +37,13 @@ class FinanceController extends Controller
             ->orderBy('kode_akun')
             ->get();
 
-        return view('Finance.index', compact('accounts', 'all_accounts', 'parent_accounts'));
+        // Fetch Transactions for the Transaksi tab
+        $transactions = FinancialTransaction::with(['fromAccount', 'toAccount'])
+            ->where('office_id', $office_id)
+            ->latest()
+            ->paginate(10);
+
+        return view('Finance.index', compact('accounts', 'all_accounts', 'parent_accounts', 'transactions'));
     }
 
     private function calculateBalance($accountId, $officeId)
@@ -56,24 +62,28 @@ class FinanceController extends Controller
         $transferIn = FinancialTransaction::where('office_id', $officeId)
             ->where('to_account_id', $accountId)
             ->where('type', 'transfer')
+            ->where('status', 'posted')
             ->sum('amount');
 
         // 4. Transfers Out (Credit)
         $transferOut = FinancialTransaction::where('office_id', $officeId)
             ->where('from_account_id', $accountId)
             ->where('type', 'transfer')
+            ->where('status', 'posted')
             ->sum('amount');
 
         // 5. Other Income (Debit)
         $otherIncome = FinancialTransaction::where('office_id', $officeId)
             ->where('to_account_id', $accountId)
             ->where('type', 'income')
+            ->where('status', 'posted')
             ->sum('amount');
 
         // 6. Other Expense (Credit)
         $otherExpense = FinancialTransaction::where('office_id', $officeId)
             ->where('from_account_id', $accountId)
             ->where('type', 'expense')
+            ->where('status', 'posted')
             ->sum('amount');
 
         return ($income + $transferIn + $otherIncome) - ($expense + $transferOut + $otherExpense);
@@ -84,6 +94,7 @@ class FinanceController extends Controller
         return FinancialTransaction::where('office_id', $officeId)
             ->where('to_account_id', $accountId)
             ->where('type', 'income')
+            ->where('status', 'posted')
             ->sum('amount');
     }
 
@@ -92,6 +103,7 @@ class FinanceController extends Controller
         return FinancialTransaction::where('office_id', $officeId)
             ->where('from_account_id', $accountId)
             ->where('type', 'expense')
+            ->where('status', 'posted')
             ->sum('amount');
     }
 
@@ -102,6 +114,7 @@ class FinanceController extends Controller
             'type' => 'required|in:transfer,income,expense',
             'amount' => 'required|numeric|min:0',
             'description' => 'nullable|string',
+            'status' => 'required|in:posted,draft',
             'from_account_id' => 'required_if:type,transfer,expense|exists:financial_accounts,id',
             'to_account_id' => 'required_if:type,transfer,income|exists:financial_accounts,id',
         ]);
@@ -254,5 +267,48 @@ class FinanceController extends Controller
         if ($type == 'Corporate Card') return response()->json(['code' => '1251']);
         
         return response()->json(['code' => '']);
+    }
+
+    public function destroyAccount($id)
+    {
+        try {
+            $account = FinancialAccount::findOrFail($id);
+            
+            // Check if there are transactions
+            $exists = FinancialTransaction::where('from_account_id', $id)
+                        ->orWhere('to_account_id', $id)
+                        ->exists();
+            
+            if ($exists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak dapat menghapus akun yang memiliki transaksi.'
+                ], 400);
+            }
+
+            $account->delete();
+
+            // Log Activity
+            ActivityLog::create([
+                'office_id' => session('active_office_id'),
+                'user_id' => Auth::id(),
+                'tindakan' => 'delete',
+                'tabel_terkait' => 'financial_accounts',
+                'data_id' => $id,
+                'data_sesudah' => null,
+                'ip_address' => request()->ip(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Akun berhasil dihapus'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
