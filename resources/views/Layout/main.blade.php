@@ -411,20 +411,6 @@
 
     @include('Layout._alert_helper')
 
-    <div class="modal fade" id="modalCOA" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content border-0">
-                <div class="modal-header bg-dark text-white">
-                    <h6 class="modal-title">Manajemen Chart of Accounts</h6>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-0" id="modalCOABody">
-                    <div class="p-4 text-center text-muted">Memuat data COA...</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="{{url('')}}/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="{{url('')}}/assets/libs/simplebar/simplebar.min.js"></script>
     @stack('js')
@@ -459,21 +445,6 @@
             });
 
             observer.observe(document.body, { attributes: true });
-        });
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const modalCOA = document.getElementById('modalCOA');
-            if (modalCOA) {
-                modalCOA.addEventListener('show.bs.modal', function () {
-                    const body = document.getElementById('modalCOABody');
-                    body.innerHTML = '<div class="p-4 text-center text-muted">Memuat data COA...</div>';
-                    fetch('{{ route('report.coa-management') }}')
-                        .then(res => res.text())
-                        .then(html => { body.innerHTML = html; })
-                        .catch(() => { body.innerHTML = '<div class="p-4 text-center text-danger">Gagal memuat data.</div>'; });
-                });
-            }
         });
     </script>
 </body>

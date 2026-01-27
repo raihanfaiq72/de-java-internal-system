@@ -497,7 +497,7 @@ class ReportController extends Controller
             }
         }
 
-        return view('Report.partials.coa-management', array_merge($data, [
+        return view($this->views . 'coa-management', array_merge($data, [
             'date' => $date,
             'topGroups' => $topGroups
         ]));
