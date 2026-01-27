@@ -298,6 +298,7 @@
             // Set default due date (e.g. +30 days)
             const d = new Date(); d.setDate(d.getDate() + 30);
             document.getElementById('modal_tgl_jatuh_tempo').value = d.toISOString().split('T')[0];
+            document.getElementById('modal_nomor_invoice').value = `INV/${new Date().getFullYear()}/${Date.now().toString().slice(-4)}`;
             
             addNewProductRow(); // Add 1 empty row
         }
@@ -401,35 +402,52 @@
     async function saveFullInvoice() {
         const mode = document.getElementById('form_mode').value;
         const id = document.getElementById('edit_invoice_id').value;
-        const url = mode === 'edit' ? `${window.financeApp.API_URL}/${id}` : window.financeApp.API_URL;
+        const url = mode === 'edit' ? `/api/invoice-api/${id}` : '/api/invoice-create-api';
         const method = mode === 'edit' ? 'PUT' : 'POST';
 
         // Build Payload
         const items = [];
         document.querySelectorAll('#itemBodyList tr').forEach(row => {
+            const qty = parseFloat(row.querySelector('.prod-qty').value) || 0;
+            const price = parseFloat(row.querySelector('.prod-price').value) || 0;
+            const disc = parseFloat(row.querySelector('.prod-disc').value) || 0;
+            const subtotal = Math.max(0, (qty * price) - disc);
             items.push({
-                product_id: row.querySelector('.prod-id').value || null,
+                produk_id: row.querySelector('.prod-id').value || null,
                 nama_produk_manual: row.querySelector('.prod-name').value,
-                deskripsi_item: row.querySelector('.prod-desc').value,
-                qty: row.querySelector('.prod-qty').value,
-                harga_satuan: row.querySelector('.prod-price').value,
-                diskon_item: row.querySelector('.prod-disc').value
+                deskripsi_produk: row.querySelector('.prod-desc').value,
+                qty: qty,
+                harga_satuan: price,
+                diskon_nilai: disc,
+                total_harga_item: subtotal
             });
         });
 
         const payload = {
             invoice: {
-                mitra_id: document.getElementById('modal_mitra_id').value,
+                tipe_invoice: 'Sales',
+                nomor_invoice: document.getElementById('modal_nomor_invoice').value,
                 tgl_invoice: document.getElementById('modal_tgl_invoice').value,
                 tgl_jatuh_tempo: document.getElementById('modal_tgl_jatuh_tempo').value,
+                mitra_id: document.getElementById('modal_mitra_id').value,
                 ref_no: document.getElementById('modal_ref_no').value,
                 keterangan: document.getElementById('modal_keterangan').value,
                 syarat_ketentuan: document.getElementById('modal_syarat').value,
-                diskon_tambahan_nilai: document.getElementById('modal_diskon_tambahan').value,
-                tipe_invoice: 'Sales'
+                diskon_tambahan_nilai: parseFloat(document.getElementById('modal_diskon_tambahan').value) || 0,
+                total_akhir: parseFloat(document.getElementById('summary_grand_total').innerText.replace(/[^0-9,-]+/g, '').replace(',', '.')) || 0,
+                status_dok: 'Approved',
+                status_pembayaran: 'Unpaid',
+                biaya_kirim: 0,
+                uang_muka: 0
             },
             items: items
         };
+
+        // Basic Validation
+        if (!payload.invoice.mitra_id) { alert('Harap pilih Pelanggan/Mitra!'); return; }
+        if (!payload.invoice.tgl_invoice) { alert('Harap isi Tanggal Invoice!'); return; }
+        if (!payload.invoice.nomor_invoice) { alert('Nomor invoice belum diisi.'); return; }
+        if (items.length === 0) { alert('Harap tambahkan minimal satu item.'); return; }
 
         try {
             const res = await fetch(url, {

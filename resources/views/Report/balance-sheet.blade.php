@@ -66,15 +66,13 @@
                                 @php $totalAktiva = 0; @endphp
                                 @foreach($aktivaGroups as $groupName => $accounts)
                                     @if($accounts->isNotEmpty())
-                                        <!-- Group Header -->
-                                        <tr>
-                                            <td colspan="2" class="ps-4 py-2 fw-semibold text-secondary">
-                                                <i class="fa fa-chevron-down me-2" style="font-size: 0.8rem;"></i> {{ $groupName }}
+                                        <tr class="group-header" data-group="aktiva-{{ Str::slug($groupName) }}">
+                                            <td colspan="2" class="ps-4 py-2 fw-semibold text-secondary" style="cursor: pointer;">
+                                                <i class="fa fa-chevron-right me-2 chevron" style="font-size: 0.8rem; transition: transform 0.2s;"></i> {{ $groupName }}
                                             </td>
                                         </tr>
-                                        <!-- Accounts -->
                                         @foreach($accounts as $item)
-                                        <tr>
+                                        <tr class="group-row" data-group="aktiva-{{ Str::slug($groupName) }}" style="display: none;">
                                             <td class="ps-5 py-2" style="padding-left: 3rem !important;">
                                                 <span class="text-dark">{{ $item->nama_akun }} - {{ $item->kode_akun }}</span>
                                             </td>
@@ -101,13 +99,13 @@
                                 @php $totalKewajiban = 0; @endphp
                                 @foreach($kewajibanGroups as $groupName => $accounts)
                                     @if($accounts->isNotEmpty())
-                                        <tr>
-                                            <td colspan="2" class="ps-4 py-2 fw-semibold text-secondary">
-                                                <i class="fa fa-chevron-down me-2" style="font-size: 0.8rem;"></i> {{ $groupName }}
+                                        <tr class="group-header" data-group="kewajiban-{{ Str::slug($groupName) }}">
+                                            <td colspan="2" class="ps-4 py-2 fw-semibold text-secondary" style="cursor: pointer;">
+                                                <i class="fa fa-chevron-right me-2 chevron" style="font-size: 0.8rem; transition: transform 0.2s;"></i> {{ $groupName }}
                                             </td>
                                         </tr>
                                         @foreach($accounts as $item)
-                                        <tr>
+                                        <tr class="group-row" data-group="kewajiban-{{ Str::slug($groupName) }}" style="display: none;">
                                             <td class="ps-5 py-2" style="padding-left: 3rem !important;">
                                                 <span class="text-dark">{{ $item->nama_akun }} - {{ $item->kode_akun }}</span>
                                             </td>
@@ -133,13 +131,13 @@
                                 @php $totalModal = 0; @endphp
                                 @foreach($modalGroups as $groupName => $accounts)
                                     @if($accounts->isNotEmpty())
-                                        <tr>
-                                            <td colspan="2" class="ps-4 py-2 fw-semibold text-secondary">
-                                                <i class="fa fa-chevron-down me-2" style="font-size: 0.8rem;"></i> {{ $groupName }}
+                                        <tr class="group-header" data-group="modal-{{ Str::slug($groupName) }}">
+                                            <td colspan="2" class="ps-4 py-2 fw-semibold text-secondary" style="cursor: pointer;">
+                                                <i class="fa fa-chevron-right me-2 chevron" style="font-size: 0.8rem; transition: transform 0.2s;"></i> {{ $groupName }}
                                             </td>
                                         </tr>
                                         @foreach($accounts as $item)
-                                        <tr>
+                                        <tr class="group-row" data-group="modal-{{ Str::slug($groupName) }}" style="display: none;">
                                             <td class="ps-5 py-2" style="padding-left: 3rem !important;">
                                                 <span class="text-dark">{{ $item->nama_akun }} - {{ $item->kode_akun }}</span>
                                             </td>
@@ -187,4 +185,22 @@
         thead th { color: #000 !important; }
     }
 </style>
+@push('js')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('tr.group-header').forEach(function(header) {
+        header.addEventListener('click', function() {
+            const group = header.getAttribute('data-group');
+            const rows = document.querySelectorAll('tr.group-row[data-group="' + group + '"]');
+            const chevron = header.querySelector('.chevron');
+            const isHidden = rows.length ? rows[0].style.display === 'none' : true;
+            rows.forEach(function(r) { r.style.display = isHidden ? '' : 'none'; });
+            if (chevron) {
+                chevron.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+            }
+        });
+    });
+});
+</script>
+@endpush
 @endsection

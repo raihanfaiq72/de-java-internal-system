@@ -161,6 +161,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#modalCOA">
+                        <i class="iconoir-list-select menu-icon"></i>
+                        <span>Manajemen COA</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" href="{{ route('report.profit-loss') }}">
                         <i class="iconoir-calculator menu-icon"></i>
                         <span>Laba Rugi</span>

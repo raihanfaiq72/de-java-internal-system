@@ -27,6 +27,9 @@
                     <p class="text-muted small mb-0">Atur hierarki jabatan dan batasan akses modul sistem.</p>
                 </div>
                 <div class="col-md-5 text-md-end mt-3 mt-md-0">
+                    <button onclick="location.reload()" class="btn btn-white border fw-bold px-3 shadow-sm text-dark me-2">
+                        <i class="fa fa-sync me-1 text-primary"></i> Refresh
+                    </button>
                     <button onclick="openRoleModal()" class="btn btn-primary fw-bold px-4 shadow-sm">
                         <i class="fa fa-plus-circle me-1"></i> Buat Role Baru
                     </button>

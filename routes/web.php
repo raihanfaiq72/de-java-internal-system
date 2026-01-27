@@ -63,6 +63,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('report/balance-sheet', [ReportController::class, 'balanceSheet'])->name('report.balance-sheet');
         Route::get('report/balance-sheet/export/csv', [ReportController::class, 'balanceSheetExportCSV'])->name('report.balance-sheet.export.csv');
         Route::get('report/profit-loss', [ReportController::class, 'profitAndLoss'])->name('report.profit-loss');
+        Route::get('report/coa-management', [ReportController::class, 'coaManagement'])->name('report.coa-management');
 
         Route::prefix('admin')->group(function () {
             Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');

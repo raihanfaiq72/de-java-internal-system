@@ -473,6 +473,36 @@ class ReportController extends Controller
         return view($this->views . 'balance-sheet', array_merge($data, ['date' => $date]));
     }
 
+    public function coaManagement(Request $request)
+    {
+        $date = $request->input('date', date('Y-m-d'));
+        $data = $this->getBalanceSheetData($date);
+        
+        // Build dynamic top-level groups by first digit to support up to 9
+        $officeId = session('active_office_id');
+        $accounts = \DB::table('chart_of_accounts')
+            ->select('id', 'kode_akun', 'nama_akun')
+            ->where('office_id', $officeId)
+            ->get()
+            ->map(function($acc) {
+                $acc->top = substr($acc->kode_akun, 0, 1);
+                return $acc;
+            });
+
+        $topGroups = [];
+        foreach (range(1,9) as $d) {
+            $group = $accounts->filter(fn($a) => $a->top == (string)$d)->values();
+            if ($group->isNotEmpty()) {
+                $topGroups[(string)$d] = $group;
+            }
+        }
+
+        return view('Report.partials.coa-management', array_merge($data, [
+            'date' => $date,
+            'topGroups' => $topGroups
+        ]));
+    }
+
     public function balanceSheetExportCSV(Request $request)
     {
         $date = $request->input('date', date('Y-m-d'));
