@@ -30,6 +30,6 @@ class Payment extends Model
 
     public function akun_keuangan()
     {
-        return $this->belongsTo(COA::class, 'akun_keuangan_id');
+        return $this->belongsTo(FinancialAccount::class, 'akun_keuangan_id');
     }
 }

@@ -53,7 +53,7 @@ class PaymentController extends Controller
             'tgl_pembayaran' => 'required|date',
             'metode_pembayaran' => 'required|in:Cash,Transfer,Lainnya',
             'jumlah_bayar' => 'required|numeric|min:0.01',
-            'akun_keuangan_id' => 'required|exists:chart_of_accounts,id'
+            'akun_keuangan_id' => 'required|exists:financial_accounts,id'
         ]);
 
         if ($validator->fails()) {

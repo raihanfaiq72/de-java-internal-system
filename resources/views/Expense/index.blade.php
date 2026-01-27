@@ -179,7 +179,7 @@
                                     <option value="">-- Pilih Kas / Bank --</option>
                                     @foreach ($financialAccounts as $acc)
                                         <option value="{{ $acc->id }}">{{ $acc->kode_akun }} -
-                                            {{ $acc->nama_akun }}</option>
+                                            {{ $acc->name }}</option>
                                     @endforeach
                                 </select>
                             </div>

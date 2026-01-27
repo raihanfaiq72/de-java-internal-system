@@ -50,7 +50,7 @@ class ExpenseController extends Controller
             'nama_biaya' => 'required',
             'tgl_biaya' => 'required|date',
             'jumlah' => 'required|numeric|min:0.01',
-            'akun_keuangan_id' => 'required|exists:chart_of_accounts,id',
+            'akun_keuangan_id' => 'required|exists:financial_accounts,id',
             'akun_beban_id' => 'required|exists:chart_of_accounts,id',
             'lampiran' => 'nullable|file|max:10240', // Max 10MB
         ]);

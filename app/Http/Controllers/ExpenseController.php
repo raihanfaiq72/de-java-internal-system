@@ -12,10 +12,9 @@ class ExpenseController extends Controller
     {
         $officeId = session('active_office_id');
         
-        // Akun Keuangan: Kas / Bank (is_kas_bank = true)
-        $financialAccounts = COA::where('office_id', $officeId)
-            ->where('is_kas_bank', true)
-            ->orderBy('kode_akun')
+        // Akun Keuangan: Kas / Bank (Standalone FinancialAccount)
+        $financialAccounts = \App\Models\FinancialAccount::where('office_id', $officeId)
+            ->orderBy('code')
             ->get();
 
         // Akun Beban: Semua COA (User request: sementara tampilkan semua COA nya)

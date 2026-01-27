@@ -57,19 +57,32 @@ class JournalService
         ];
 
         // Credit Payment Account (Cash/Bank)
-        $details[] = [
-            'akun_id' => $expense->akun_keuangan_id,
-            'debit' => 0,
-            'kredit' => $expense->jumlah
-        ];
+        // Resolve COA from FinancialAccount
+        $finAccount = \App\Models\FinancialAccount::find($expense->akun_keuangan_id);
+        $creditCoaId = null;
+        if ($finAccount) {
+            $code = ($finAccount->type == 'Cash') ? '1101' : '1201'; // Default Cash or Bank
+            if ($finAccount->type == 'Corporate Card') $code = '1251';
+            
+            $coa = $this->findAccount($officeId, $code);
+            if ($coa) $creditCoaId = $coa->id;
+        }
 
-        $this->createJournal(
-            $officeId,
-            $expense->tgl_biaya,
-            "EXP-{$expense->id}",
-            "Expense: {$expense->nama_biaya}",
-            $details
-        );
+        if ($creditCoaId) {
+            $details[] = [
+                'akun_id' => $creditCoaId,
+                'debit' => 0,
+                'kredit' => $expense->jumlah
+            ];
+
+            $this->createJournal(
+                $officeId,
+                $expense->tgl_biaya,
+                "EXP-{$expense->id}",
+                "Expense: {$expense->nama_biaya}",
+                $details
+            );
+        }
     }
 
     /**
@@ -219,7 +232,15 @@ class JournalService
         $officeId = $payment->office_id;
         $invoice = $payment->invoice;
 
-        $accCashBank = COA::find($payment->akun_keuangan_id);
+        // Resolve COA from FinancialAccount
+        $finAccount = \App\Models\FinancialAccount::find($payment->akun_keuangan_id);
+        $accCashBank = null;
+        if ($finAccount) {
+            $code = ($finAccount->type == 'Cash') ? '1101' : '1201';
+            if ($finAccount->type == 'Corporate Card') $code = '1251';
+            $accCashBank = $this->findAccount($officeId, $code);
+        }
+
         if (!$accCashBank) return;
 
         $details = [];

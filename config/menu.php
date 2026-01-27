@@ -106,7 +106,25 @@ return [
     ],
     [
         'type' => 'item',
-        'title' => 'Finance',
+        'title' => 'Keuangan',
+        'icon' => 'iconoir-coins',
+        'id' => 'sidebarKeuangan',
+        'submenu' => [
+            [
+                'title' => 'Dashboard',
+                'route' => 'finance.index',
+                'icon' => 'iconoir-dashboard',
+            ],
+            [
+                'title' => 'Transaksi',
+                'route' => 'finance.index',
+                'icon' => 'iconoir-list',
+            ],
+        ],
+    ],
+    [
+        'type' => 'item',
+        'title' => 'Finance (Kuitansi)',
         'icon' => 'iconoir-shop-window',
         'id' => 'sidePO',
         'submenu' => [
