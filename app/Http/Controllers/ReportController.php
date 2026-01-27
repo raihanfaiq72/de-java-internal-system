@@ -387,43 +387,37 @@ class ReportController extends Controller
             return $balance;
         };
         
-        $accounts = DB::table('chart_of_accounts')
-            ->select('id', 'kode_akun', 'nama_akun')
-            ->get()
-            ->map(function($acc) use ($getBalance) {
-                $acc->balance = $getBalance($acc->id);
-                $acc->type = substr($acc->kode_akun, 0, 1);
-                return $acc;
+        // Fetch structure with eager loading
+        // Note: COAGroup relationship is named 'type', not 'types'
+        $groups = \App\Models\COAGroup::where('office_id', $officeId)
+            ->with(['type' => function($q) {
+                $q->orderBy('nama_tipe');
+            }, 'type.coas' => function($q) {
+                $q->orderBy('kode_akun');
+            }])
+            ->orderBy('kode_kelompok')
+            ->get();
+
+        // Process Balances
+        $groups->each(function($group) use ($getBalance) {
+            $group->type->each(function($type) use ($getBalance, $group) {
+                $type->coas->each(function($coa) use ($getBalance, $group) {
+                    $rawBalance = $getBalance($coa->id);
+                    // Adjust sign: Assets (1) = Normal Debit (+), Liability (2)/Equity (3) = Normal Credit (-)
+                    // If group starts with 2 or 3, we flip the sign so credit balances appear positive
+                    $isCreditNormal = in_array(substr($group->kode_kelompok, 0, 1), ['2', '3']);
+                    $coa->balance = $isCreditNormal ? ($rawBalance * -1) : $rawBalance;
+                });
+                // Remove COAs with 0 balance if desired, but usually we keep them or filter in view
+                // For now, let's keep them but maybe calculate type totals
+                $type->total_balance = $type->coas->sum('balance');
             });
-
-        $aktivaAccounts = $accounts->filter(fn($a) => $a->type == '1');
-        
-        $aktivaGroups = [
-            'Kas' => $aktivaAccounts->filter(fn($a) => substr($a->kode_akun, 0, 2) == '11')->values(),
-            'Bank' => $aktivaAccounts->filter(fn($a) => substr($a->kode_akun, 0, 2) == '12')->values(),
-            'Piutang Usaha' => $aktivaAccounts->filter(fn($a) => substr($a->kode_akun, 0, 2) == '13')->values(),
-            'Persediaan' => $aktivaAccounts->filter(fn($a) => in_array(substr($a->kode_akun, 0, 2), ['14', '15']))->values(),
-            'Pajak Dibayar Di Muka' => $aktivaAccounts->filter(fn($a) => substr($a->kode_akun, 0, 2) == '17')->values(),
-            'Aktiva Tetap' => $aktivaAccounts->filter(fn($a) => substr($a->kode_akun, 0, 2) == '18' && substr($a->kode_akun, 0, 3) != '185')->values(),
-            'Akumulasi Penyusutan' => $aktivaAccounts->filter(fn($a) => substr($a->kode_akun, 0, 3) == '185')->values(),
-        ];
-
-        $kewajibanAccounts = $accounts->filter(fn($a) => $a->type == '2')->map(function($a) {
-            $a->balance = $a->balance * -1;
-            return $a;
+            $group->total_balance = $group->type->sum('total_balance');
         });
-        
-        $kewajibanGroups = [
-            'Hutang Usaha' => $kewajibanAccounts->filter(fn($a) => substr($a->kode_akun, 0, 2) == '21')->values(),
-            'Hutang Non-Usaha' => $kewajibanAccounts->filter(fn($a) => substr($a->kode_akun, 0, 2) == '22')->values(),
-            'Hutang Pajak' => $kewajibanAccounts->filter(fn($a) => substr($a->kode_akun, 0, 2) == '23')->values(),
-            'Kewajiban Jangka Panjang' => $kewajibanAccounts->filter(fn($a) => substr($a->kode_akun, 0, 2) == '24')->values(),
-        ];
-        
-        $modalAccountsList = $accounts->filter(fn($a) => $a->type == '3' && $a->kode_akun != '3202')->map(function($a) {
-            $a->balance = $a->balance * -1;
-            return $a;
-        });
+
+        $aktivaGroups = $groups->filter(fn($g) => substr($g->kode_kelompok, 0, 1) == '1');
+        $kewajibanGroups = $groups->filter(fn($g) => substr($g->kode_kelompok, 0, 1) == '2');
+        $modalGroups = $groups->filter(fn($g) => substr($g->kode_kelompok, 0, 1) == '3');
 
         // Calculate Current Year Profit (Laba Tahun Berjalan)
         $startOfYear = date('Y-01-01', strtotime($date));
@@ -450,18 +444,6 @@ class ReportController extends Controller
 
         $currentYearEarnings = $revenue - ($cogs + $expenses);
         
-        $labaTahunBerjalan = (object)[
-            'kode_akun' => '3202',
-            'nama_akun' => 'Laba Tahun Berjalan',
-            'balance' => $currentYearEarnings,
-            'type' => '3'
-        ];
-
-        $modalGroups = [
-            'Modal' => $modalAccountsList->filter(fn($a) => in_array(substr($a->kode_akun, 0, 2), ['31', '33', '39']))->values(),
-            'Laba' => $modalAccountsList->filter(fn($a) => substr($a->kode_akun, 0, 2) == '32')->push($labaTahunBerjalan)->values(),
-        ];
-
         return compact('aktivaGroups', 'kewajibanGroups', 'modalGroups', 'currentYearEarnings');
     }
 
@@ -545,46 +527,68 @@ class ReportController extends Controller
             
             // Aktiva
             fputcsv($file, ['AKTIVA']);
-            foreach ($data['aktivaGroups'] as $groupName => $accounts) {
-                if ($accounts->isNotEmpty()) {
-                    fputcsv($file, [$groupName]);
-                    foreach ($accounts as $acc) {
-                        fputcsv($file, [$acc->kode_akun, $acc->nama_akun, $acc->balance]);
+            foreach ($data['aktivaGroups'] as $group) {
+                // Check if group has any types/accounts or balance
+                if ($group->type->isNotEmpty()) {
+                    fputcsv($file, [$group->nama_kelompok]);
+                    foreach($group->type as $type) {
+                        if($type->coas->isNotEmpty()) {
+                             // Indent Type
+                             fputcsv($file, ['', $type->nama_tipe]);
+                             foreach ($type->coas as $acc) {
+                                fputcsv($file, [$acc->kode_akun, $acc->nama_akun, $acc->balance]);
+                             }
+                        }
                     }
-                    fputcsv($file, ['Total ' . $groupName, '', $accounts->sum('balance')]);
+                    fputcsv($file, ['Total ' . $group->nama_kelompok, '', $group->total_balance]);
                     fputcsv($file, []);
                 }
             }
             
             // Kewajiban
             fputcsv($file, ['KEWAJIBAN']);
-            foreach ($data['kewajibanGroups'] as $groupName => $accounts) {
-                if ($accounts->isNotEmpty()) {
-                    fputcsv($file, [$groupName]);
-                    foreach ($accounts as $acc) {
-                        fputcsv($file, [$acc->kode_akun, $acc->nama_akun, $acc->balance]);
+            foreach ($data['kewajibanGroups'] as $group) {
+                if ($group->type->isNotEmpty()) {
+                    fputcsv($file, [$group->nama_kelompok]);
+                    foreach($group->type as $type) {
+                        if($type->coas->isNotEmpty()) {
+                             fputcsv($file, ['', $type->nama_tipe]);
+                             foreach ($type->coas as $acc) {
+                                fputcsv($file, [$acc->kode_akun, $acc->nama_akun, $acc->balance]);
+                             }
+                        }
                     }
-                    fputcsv($file, ['Total ' . $groupName, '', $accounts->sum('balance')]);
+                    fputcsv($file, ['Total ' . $group->nama_kelompok, '', $group->total_balance]);
                     fputcsv($file, []);
                 }
             }
             
             // Modal
             fputcsv($file, ['MODAL']);
-            foreach ($data['modalGroups'] as $groupName => $accounts) {
-                if ($accounts->isNotEmpty()) {
-                    fputcsv($file, [$groupName]);
-                    foreach ($accounts as $acc) {
-                        fputcsv($file, [$acc->kode_akun, $acc->nama_akun, $acc->balance]);
+            foreach ($data['modalGroups'] as $group) {
+                if ($group->type->isNotEmpty()) {
+                    fputcsv($file, [$group->nama_kelompok]);
+                    foreach($group->type as $type) {
+                        if($type->coas->isNotEmpty()) {
+                             fputcsv($file, ['', $type->nama_tipe]);
+                             foreach ($type->coas as $acc) {
+                                fputcsv($file, [$acc->kode_akun, $acc->nama_akun, $acc->balance]);
+                             }
+                        }
                     }
-                    fputcsv($file, ['Total ' . $groupName, '', $accounts->sum('balance')]);
+                    fputcsv($file, ['Total ' . $group->nama_kelompok, '', $group->total_balance]);
                     fputcsv($file, []);
                 }
             }
-            
+
+            // Laba Tahun Berjalan
+            fputcsv($file, ['Laba Tahun Berjalan']);
+            fputcsv($file, ['3202', 'Laba Tahun Berjalan', $data['currentYearEarnings']]);
+            fputcsv($file, []);
+
             fclose($file);
         };
-
+        
         return response()->stream($callback, 200, $headers);
     }
 

@@ -64,25 +64,42 @@
                                 </tr>
                                 
                                 @php $totalAktiva = 0; @endphp
-                                @foreach($aktivaGroups as $groupName => $accounts)
-                                    @if($accounts->isNotEmpty())
-                                        <tr class="group-header" data-group="aktiva-{{ Str::slug($groupName) }}">
-                                            <td colspan="2" class="ps-4 py-2 fw-semibold text-secondary" style="cursor: pointer;">
-                                                <i class="fa fa-chevron-right me-2 chevron" style="font-size: 0.8rem; transition: transform 0.2s;"></i> {{ $groupName }}
-                                            </td>
-                                        </tr>
-                                        @foreach($accounts as $item)
-                                        <tr class="group-row" data-group="aktiva-{{ Str::slug($groupName) }}" style="display: none;">
-                                            <td class="ps-5 py-2" style="padding-left: 3rem !important;">
-                                                <span class="text-dark">{{ $item->nama_akun }} - {{ $item->kode_akun }}</span>
-                                            </td>
-                                            <td class="text-end pe-4 py-2 text-dark">
-                                                Rp {{ number_format($item->balance) }}
-                                            </td>
-                                        </tr>
-                                        @endforeach
-                                        @php $totalAktiva += $accounts->sum('balance'); @endphp
-                                    @endif
+                                @foreach($aktivaGroups as $group)
+                                    @php 
+                                        $groupTotal = $group->total_balance;
+                                        $totalAktiva += $groupTotal;
+                                    @endphp
+                                    <tr class="group-header" data-group="aktiva-{{ $group->id }}">
+                                        <td colspan="2" class="ps-4 py-2 fw-semibold text-secondary" style="cursor: pointer;">
+                                            <div class="d-flex justify-content-between">
+                                                <span>
+                                                    <i class="fa fa-chevron-right me-2 chevron" style="font-size: 0.8rem; transition: transform 0.2s;"></i> 
+                                                    {{ $group->nama_kelompok }}
+                                                </span>
+                                                <span class="me-4 text-muted" style="font-size: 0.9em;">Rp {{ number_format($groupTotal) }}</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    @foreach($group->type as $type)
+                                        @if($type->coas->isNotEmpty())
+                                            <tr class="group-row" data-group="aktiva-{{ $group->id }}" style="display: none; background-color: #fcfcfc;">
+                                                <td colspan="2" class="ps-5 py-2 fw-bold text-secondary" style="padding-left: 3rem !important; font-size: 0.9em;">
+                                                    {{ $type->nama_tipe }}
+                                                </td>
+                                            </tr>
+                                            @foreach($type->coas as $item)
+                                            <tr class="group-row" data-group="aktiva-{{ $group->id }}" style="display: none;">
+                                                <td class="ps-5 py-2" style="padding-left: 4rem !important;">
+                                                    <span class="text-dark">{{ $item->nama_akun }} - {{ $item->kode_akun }}</span>
+                                                </td>
+                                                <td class="text-end pe-4 py-2 text-dark">
+                                                    Rp {{ number_format($item->balance) }}
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                        @endif
+                                    @endforeach
                                 @endforeach
 
                                 <!-- Total Aktiva -->
@@ -97,25 +114,42 @@
                                 </tr>
 
                                 @php $totalKewajiban = 0; @endphp
-                                @foreach($kewajibanGroups as $groupName => $accounts)
-                                    @if($accounts->isNotEmpty())
-                                        <tr class="group-header" data-group="kewajiban-{{ Str::slug($groupName) }}">
-                                            <td colspan="2" class="ps-4 py-2 fw-semibold text-secondary" style="cursor: pointer;">
-                                                <i class="fa fa-chevron-right me-2 chevron" style="font-size: 0.8rem; transition: transform 0.2s;"></i> {{ $groupName }}
-                                            </td>
-                                        </tr>
-                                        @foreach($accounts as $item)
-                                        <tr class="group-row" data-group="kewajiban-{{ Str::slug($groupName) }}" style="display: none;">
-                                            <td class="ps-5 py-2" style="padding-left: 3rem !important;">
-                                                <span class="text-dark">{{ $item->nama_akun }} - {{ $item->kode_akun }}</span>
-                                            </td>
-                                            <td class="text-end pe-4 py-2 text-dark">
-                                                Rp {{ number_format($item->balance) }}
-                                            </td>
-                                        </tr>
-                                        @endforeach
-                                        @php $totalKewajiban += $accounts->sum('balance'); @endphp
-                                    @endif
+                                @foreach($kewajibanGroups as $group)
+                                    @php 
+                                        $groupTotal = $group->total_balance;
+                                        $totalKewajiban += $groupTotal;
+                                    @endphp
+                                    <tr class="group-header" data-group="kewajiban-{{ $group->id }}">
+                                        <td colspan="2" class="ps-4 py-2 fw-semibold text-secondary" style="cursor: pointer;">
+                                            <div class="d-flex justify-content-between">
+                                                <span>
+                                                    <i class="fa fa-chevron-right me-2 chevron" style="font-size: 0.8rem; transition: transform 0.2s;"></i> 
+                                                    {{ $group->nama_kelompok }}
+                                                </span>
+                                                <span class="me-4 text-muted" style="font-size: 0.9em;">Rp {{ number_format($groupTotal) }}</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    @foreach($group->type as $type)
+                                        @if($type->coas->isNotEmpty())
+                                            <tr class="group-row" data-group="kewajiban-{{ $group->id }}" style="display: none; background-color: #fcfcfc;">
+                                                <td colspan="2" class="ps-5 py-2 fw-bold text-secondary" style="padding-left: 3rem !important; font-size: 0.9em;">
+                                                    {{ $type->nama_tipe }}
+                                                </td>
+                                            </tr>
+                                            @foreach($type->coas as $item)
+                                            <tr class="group-row" data-group="kewajiban-{{ $group->id }}" style="display: none;">
+                                                <td class="ps-5 py-2" style="padding-left: 4rem !important;">
+                                                    <span class="text-dark">{{ $item->nama_akun }} - {{ $item->kode_akun }}</span>
+                                                </td>
+                                                <td class="text-end pe-4 py-2 text-dark">
+                                                    Rp {{ number_format($item->balance) }}
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                        @endif
+                                    @endforeach
                                 @endforeach
 
                                 <tr class="bg-white">
@@ -129,26 +163,50 @@
                                 </tr>
 
                                 @php $totalModal = 0; @endphp
-                                @foreach($modalGroups as $groupName => $accounts)
-                                    @if($accounts->isNotEmpty())
-                                        <tr class="group-header" data-group="modal-{{ Str::slug($groupName) }}">
-                                            <td colspan="2" class="ps-4 py-2 fw-semibold text-secondary" style="cursor: pointer;">
-                                                <i class="fa fa-chevron-right me-2 chevron" style="font-size: 0.8rem; transition: transform 0.2s;"></i> {{ $groupName }}
-                                            </td>
-                                        </tr>
-                                        @foreach($accounts as $item)
-                                        <tr class="group-row" data-group="modal-{{ Str::slug($groupName) }}" style="display: none;">
-                                            <td class="ps-5 py-2" style="padding-left: 3rem !important;">
-                                                <span class="text-dark">{{ $item->nama_akun }} - {{ $item->kode_akun }}</span>
-                                            </td>
-                                            <td class="text-end pe-4 py-2 text-dark">
-                                                Rp {{ number_format($item->balance) }}
-                                            </td>
-                                        </tr>
-                                        @endforeach
-                                        @php $totalModal += $accounts->sum('balance'); @endphp
-                                    @endif
+                                @foreach($modalGroups as $group)
+                                    @php 
+                                        $groupTotal = $group->total_balance;
+                                        $totalModal += $groupTotal;
+                                    @endphp
+                                    <tr class="group-header" data-group="modal-{{ $group->id }}">
+                                        <td colspan="2" class="ps-4 py-2 fw-semibold text-secondary" style="cursor: pointer;">
+                                            <div class="d-flex justify-content-between">
+                                                <span>
+                                                    <i class="fa fa-chevron-right me-2 chevron" style="font-size: 0.8rem; transition: transform 0.2s;"></i> 
+                                                    {{ $group->nama_kelompok }}
+                                                </span>
+                                                <span class="me-4 text-muted" style="font-size: 0.9em;">Rp {{ number_format($groupTotal) }}</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    @foreach($group->type as $type)
+                                        @if($type->coas->isNotEmpty())
+                                            <tr class="group-row" data-group="modal-{{ $group->id }}" style="display: none; background-color: #fcfcfc;">
+                                                <td colspan="2" class="ps-5 py-2 fw-bold text-secondary" style="padding-left: 3rem !important; font-size: 0.9em;">
+                                                    {{ $type->nama_tipe }}
+                                                </td>
+                                            </tr>
+                                            @foreach($type->coas as $item)
+                                            <tr class="group-row" data-group="modal-{{ $group->id }}" style="display: none;">
+                                                <td class="ps-5 py-2" style="padding-left: 4rem !important;">
+                                                    <span class="text-dark">{{ $item->nama_akun }} - {{ $item->kode_akun }}</span>
+                                                </td>
+                                                <td class="text-end pe-4 py-2 text-dark">
+                                                    Rp {{ number_format($item->balance) }}
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                        @endif
+                                    @endforeach
                                 @endforeach
+
+                                {{-- Laba Tahun Berjalan (Separated) --}}
+                                <tr class="bg-white">
+                                    <td class="ps-4 py-3 fw-semibold text-dark">Laba Tahun Berjalan</td>
+                                    <td class="text-end pe-4 py-3 text-dark">Rp {{ number_format($currentYearEarnings) }}</td>
+                                </tr>
+                                @php $totalModal += $currentYearEarnings; @endphp
 
                                 <tr class="bg-white">
                                     <td class="ps-4 py-3 fw-bold text-dark">Total Modal</td>
