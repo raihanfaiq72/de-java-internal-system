@@ -221,7 +221,7 @@
                         <select class="form-select" name="to_account_id" id="income_to_account_id" required>
                             <option value="">Pilih Akun</option>
                             @foreach ($all_accounts as $acc)
-                                <option value="{{ $acc->id }}">{{ $acc->nama_akun }}</option>
+                                <option value="{{ $acc->id }}">{{ $acc->code }} - {{ $acc->name }}</option>
                             @endforeach
                         </select>
                     </div>
