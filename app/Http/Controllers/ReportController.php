@@ -499,15 +499,26 @@ class ReportController extends Controller
             ->orderBy('g.kode_kelompok')
             ->orderBy('t.nama_tipe')
             ->orderBy('c.kode_akun')
-            ->get()
-            ->groupBy('nama_kelompok') // LEVEL 1
+            ->get();
+
+        // Prepare dropdown data
+        $dropdownGroups = \App\Models\COAGroup::where('office_id', $officeId)->get();
+        // Types depend on Group, but for simplicity let's pass all types and filter in JS or just pass all. 
+        // Actually, better to fetch types via AJAX when group changes, OR pass all types with group_id attribute.
+        $dropdownTypes = \App\Models\COAType::whereHas('group', function($q) use ($officeId) {
+            $q->where('office_id', $officeId);
+        })->get();
+
+        $groupedAccounts = $groups->groupBy('nama_kelompok') // LEVEL 1
             ->map(function ($items) {
                 return $items->groupBy('nama_tipe'); // LEVEL 2
             });
 
         return view($this->views . 'coa-management', array_merge($data, [
             'date' => $date,
-            'groupedAccounts' => $groups
+            'groupedAccounts' => $groupedAccounts,
+            'dropdownGroups' => $dropdownGroups,
+            'dropdownTypes' => $dropdownTypes
         ]));
     }
 

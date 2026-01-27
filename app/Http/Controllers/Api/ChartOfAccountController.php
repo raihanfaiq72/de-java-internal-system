@@ -32,17 +32,16 @@ class ChartOfAccountController extends Controller
         $request->validate([
             'kode_akun' => 'required|unique:chart_of_accounts,kode_akun',
             'nama_akun' => 'required',
-            'kelompok_akun_id' => 'required|exists:kelompok_akuns,id',
-            'tipe_akun_id' => 'required|exists:tipe_akuns,id',
+            'kelompok_akun_id' => 'required|exists:coa_group,id',
+            'tipe_akun_id' => 'required|exists:coa_type,id',
             'is_kas_bank' => 'boolean'
         ]);
 
         $coa = COA::create([
-            'office_id' => 1,
+            'office_id' => session('active_office_id') ?? 1,
             'kode_akun' => $request->kode_akun,
             'nama_akun' => $request->nama_akun,
-            'kelompok_akun_id' => $request->kelompok_akun_id,
-            'tipe_akun_id' => $request->tipe_akun_id,
+            'tipe_id' => $request->tipe_akun_id,
             'is_kas_bank' => $request->is_kas_bank ?? 0
         ]);
 
@@ -56,19 +55,50 @@ class ChartOfAccountController extends Controller
         $request->validate([
             'kode_akun' => 'required|unique:chart_of_accounts,kode_akun,' . $id,
             'nama_akun' => 'required',
-            'kelompok_akun_id' => 'required|exists:kelompok_akuns,id',
-            'tipe_akun_id' => 'required|exists:tipe_akuns,id',
+            'kelompok_akun_id' => 'required|exists:coa_group,id',
+            'tipe_akun_id' => 'required|exists:coa_type,id',
             'is_kas_bank' => 'boolean'
         ]);
 
-        $coa->update($request->all());
+        // Check if modifying critical fields when data exists
+        $hasData = \App\Models\JournalDetail::where('akun_id', $id)->exists();
+        
+        if ($hasData) {
+             if ($coa->kode_akun != $request->kode_akun) {
+                 return response()->json(['message' => 'Tidak bisa mengubah Kode Akun karena sudah ada transaksi.'], 422);
+             }
+             if ($coa->tipe_id != $request->tipe_akun_id) {
+                 return response()->json(['message' => 'Tidak bisa mengubah Tipe Akun karena sudah ada transaksi.'], 422);
+             }
+        }
+
+        $coa->update([
+            'kode_akun' => $request->kode_akun,
+            'nama_akun' => $request->nama_akun,
+            'tipe_id' => $request->tipe_akun_id,
+            'is_kas_bank' => $request->is_kas_bank ?? 0
+        ]);
 
         return response()->json(['message' => 'COA berhasil diupdate']);
     }
 
     public function destroy($id)
     {
-        COA::findOrFail($id)->delete();
+        $coa = COA::findOrFail($id);
+        
+        // Validation: Check if account has transactions
+        $hasTransactions = \App\Models\JournalDetail::where('akun_id', $id)->exists();
+        if ($hasTransactions) {
+            return response()->json(['message' => 'Gagal menghapus: Akun ini memiliki riwayat transaksi.'], 422);
+        }
+
+        // Check expenses just in case (though they should have journal entries)
+        $hasExpenses = \DB::table('expenses')->where('akun_beban_id', $id)->exists();
+        if ($hasExpenses) {
+            return response()->json(['message' => 'Gagal menghapus: Akun ini digunakan dalam data pengeluaran.'], 422);
+        }
+
+        $coa->delete();
         return response()->json(['message' => 'COA berhasil dihapus']);
     }
 }
