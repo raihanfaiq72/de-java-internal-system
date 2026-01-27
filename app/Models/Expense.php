@@ -21,5 +21,16 @@ class Expense extends Model
         'kategori_biaya',
         'jumlah',
         'keterangan',
+        'lampiran',
     ];
+
+    public function akunKeuangan()
+    {
+        return $this->belongsTo(COA::class, 'akun_keuangan_id');
+    }
+
+    public function akunBeban()
+    {
+        return $this->belongsTo(COA::class, 'akun_beban_id');
+    }
 }

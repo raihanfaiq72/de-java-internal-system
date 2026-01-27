@@ -100,6 +100,12 @@ return [
     ],
     [
         'type' => 'item',
+        'title' => 'Biaya Operasional',
+        'route' => 'expenses.index',
+        'icon' => 'iconoir-wallet',
+    ],
+    [
+        'type' => 'item',
         'title' => 'Finance',
         'icon' => 'iconoir-shop-window',
         'id' => 'sidePO',
