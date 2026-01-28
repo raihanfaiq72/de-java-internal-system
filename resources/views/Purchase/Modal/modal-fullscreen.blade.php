@@ -1,153 +1,171 @@
-<div class="modal fade" id="invoiceModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="invoiceModal" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen">
         <div class="modal-content border-0" style="background-color: #f8fafc;">
+
             <div class="modal-header bg-white border-bottom px-4 py-3 sticky-top shadow-sm">
                 <div class="d-flex align-items-center">
                     <div class="bg-dark text-white p-2 rounded-2 me-3">
                         <i class="fa fa-shopping-cart fa-lg"></i>
                     </div>
                     <div>
-                        <h5 class="modal-title fw-bold text-dark mb-0" id="modalTitle">Formulir Invoice Pembelian</h5>
+                        <h5 class="modal-title fw-bold text-dark mb-0" id="modalTitle">Invoice Pembelian</h5>
                         <p class="text-muted small mb-0">Input data tagihan dari supplier/vendor.</p>
                     </div>
                 </div>
                 <div class="ms-auto d-flex align-items-center gap-3">
-                    <button type="button" class="btn btn-link text-secondary text-decoration-none fw-semibold"
-                        data-bs-dismiss="modal">Batalkan</button>
+                    <button type="button" class="btn btn-light border text-secondary fw-semibold px-4"
+                        data-bs-dismiss="modal">Tutup</button>
                     <button type="button" class="btn btn-primary px-4 fw-bold shadow-sm" onclick="saveFullInvoice()">
-                        <i class="fa fa-save me-2"></i>Simpan Dokumen
+                        <i class="fa fa-save me-2"></i>Simpan
                     </button>
                 </div>
             </div>
 
-            <div class="modal-body p-4">
-                <form id="invoiceForm">
+            <div class="modal-body p-0">
+                <form id="invoiceForm" class="h-100">
                     <input type="hidden" id="form_mode" value="create">
                     <input type="hidden" id="edit_invoice_id" value="">
 
-                    <div class="row g-4 mb-4">
-                        <div class="col-lg-8">
+                    <div class="row g-0 h-100">
+                        <div class="col-lg-9 h-100 overflow-auto custom-scrollbar p-4">
+                            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                                <div class="card-body p-4">
+                                    <div class="row g-4">
+                                        <div class="col-lg-6 border-end">
+                                            <label class="f-label mb-2">Supplier / Vendor <span
+                                                    class="text-danger">*</span></label>
+                                            <select id="modal_mitra_id" class="form-select f-input-lg mb-3"
+                                                onchange="renderMitraDetail()">
+                                                <option value="">Cari Supplier...</option>
+                                            </select>
+                                            <div id="mitra_detail_display" class="d-none bg-light p-3 rounded border">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <div class="fw-bold text-dark" id="disp_mitra_nama">-</div>
+                                                    <span class="badge bg-primary ms-auto" id="disp_mitra_tipe">-</span>
+                                                </div>
+                                                <div class="small text-muted mb-1"><i
+                                                        class="fa fa-map-marker-alt me-2 text-secondary"></i><span
+                                                        id="disp_mitra_alamat">-</span></div>
+                                                <div class="small text-muted"><i
+                                                        class="fa fa-phone me-2 text-secondary"></i><span
+                                                        id="disp_mitra_telp">-</span></div>
+                                            </div>
+                                            <div id="mitra_empty_state"
+                                                class="text-center py-4 text-muted border border-dashed rounded bg-light">
+                                                <i class="fa fa-user-plus mb-2 fs-4 text-secondary"></i>
+                                                <div class="small">Pilih supplier untuk melihat detail</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-lg-6">
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <label class="f-label">Nomor Invoice</label>
+                                                    <input type="text" id="modal_nomor_invoice"
+                                                        class="form-control f-input fw-bold bg-light text-primary"
+                                                        readonly>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="f-label">Referensi / PO</label>
+                                                    <input type="text" id="modal_ref_no" class="form-control f-input"
+                                                        placeholder="PO-SUP-001">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="f-label">Tanggal Invoice</label>
+                                                    <input type="text" id="modal_tgl_invoice"
+                                                        class="form-control f-input">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="f-label">Jatuh Tempo</label>
+                                                    <input type="text" id="modal_tgl_jatuh_tempo"
+                                                        class="form-control f-input">
+                                                </div>
+                                                <div class="col-12">
+                                                    <label class="f-label">Purchasing Staff</label>
+                                                    <select id="modal_sales_id" class="form-select f-input">
+                                                        <option value="">Pilih Staff...</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+                                <div
+                                    class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0 fw-bold text-dark text-uppercase small">Rincian Barang & Jasa</h6>
+                                    <button type="button" class="btn btn-primary btn-sm fw-bold px-3 rounded-pill"
+                                        onclick="addNewProductRow()">
+                                        <i class="fa fa-plus me-1"></i> Tambah Baris
+                                    </button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table align-middle mb-0 table-hover" id="mainItemTable"
+                                        style="table-layout: fixed;">
+                                        <thead class="bg-light text-secondary small fw-bold text-uppercase">
+                                            <tr>
+                                                <th class="ps-4 py-3" width="35%">Produk / Deskripsi</th>
+                                                <th class="text-center" width="10%">Qty</th>
+                                                <th class="text-center" width="10%">Satuan</th>
+                                                <th class="text-end" width="15%">Harga Beli</th>
+                                                <th class="text-end" width="10%">Disc (Rp)</th>
+                                                <th class="text-end pe-4" width="15%">Total</th>
+                                                <th width="5%"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="itemBodyList" class="border-top-0"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
                             <div class="card border-0 shadow-sm rounded-3">
                                 <div class="card-body p-4">
                                     <div class="row g-4">
-                                        <div class="col-md-7">
-                                            <label class="f-label">Supplier / Vendor *</label>
-                                            <select id="modal_mitra_id" class="form-select f-input-lg"
-                                                onchange="renderMitraDetail()">
-                                                <option value="">Cari dan pilih supplier...</option>
-                                            </select>
-                                            <div id="mitra_detail_display"
-                                                class="mt-3 p-3 rounded bg-light border-start border-3 border-primary small text-secondary">
-                                                <i class="fa fa-info-circle me-2 text-primary"></i>Detail alamat dan
-                                                kontak akan muncul otomatis.
-                                            </div>
+                                        <div class="col-md-6">
+                                            <label class="f-label mb-2">Catatan Internal</label>
+                                            <textarea id="modal_keterangan" class="form-control f-text bg-light border-0" rows="3"
+                                                placeholder="Catatan untuk tim internal..."></textarea>
                                         </div>
-                                        <div class="col-md-5">
-                                            <div class="row g-3">
-                                                <div class="col-12">
-                                                    <label class="f-label">Nomor Invoice</label>
-                                                    <input type="text" id="modal_nomor_invoice"
-                                                        class="form-control f-input fw-bold bg-light" readonly>
-                                                </div>
-                                                <div class="col-6">
-                                                    <label class="f-label">Tanggal Invoice</label>
-                                                    <input type="date" id="modal_tgl_invoice"
-                                                        class="form-control f-input">
-                                                </div>
-                                                <div class="col-6">
-                                                    <label class="f-label">Jatuh Tempo</label>
-                                                    <input type="date" id="modal_tgl_jatuh_tempo"
-                                                        class="form-control f-input">
-                                                </div>
-                                            </div>
+                                        <div class="col-md-6">
+                                            <label class="f-label mb-2">Syarat & Ketentuan</label>
+                                            <textarea id="modal_syarat" class="form-control f-text bg-light border-0" rows="3">1. Pembayaran ditujukan ke rekening perusahaan.&#10;2. Barang yang dibeli tidak dapat dikembalikan.</textarea>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-4">
-                            <div class="card border-0 shadow-sm rounded-3 bg-white h-100">
-                                <div class="card-body p-4">
-                                    <div class="mb-3">
-                                        <label class="f-label">Referensi / No. PO</label>
-                                        <input type="text" id="modal_ref_no" class="form-control f-input"
-                                            placeholder="Misal: PO-SUP-001">
+
+                        <div class="col-lg-3 bg-white border-start h-100 d-flex flex-column shadow-sm z-1">
+                            <div class="p-4 border-bottom bg-light">
+                                <h6 class="fw-bold text-dark mb-0">Ringkasan Pembayaran</h6>
+                            </div>
+                            <div class="p-4 flex-grow-1 overflow-auto">
+                                <div class="mb-4">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Subtotal</span>
+                                        <span class="fw-bold text-dark" id="summary_subtotal">Rp 0</span>
                                     </div>
-                                    <div>
-                                        <label class="f-label">Purchasing Staff</label>
-                                        <select id="modal_sales_id" class="form-select f-input">
-                                            <option value="">Pilih Staff...</option>
-                                        </select>
+                                    <div class="d-flex justify-content-between mb-2 align-items-center">
+                                        <span class="text-muted">Potongan Lumpsum</span>
+                                        <div style="width: 120px;">
+                                            <input type="number" id="modal_diskon_tambahan"
+                                                class="form-control form-control-sm text-end fw-bold" value="0"
+                                                oninput="if(this.value<0)this.value=0; calculateInvoiceTotal()">
+                                        </div>
                                     </div>
+                                </div>
+                                <div class="p-3 rounded bg-dark text-white text-center">
+                                    <div class="small opacity-75 fw-bold text-uppercase mb-1">Total Tagihan</div>
+                                    <h3 class="fw-bold text-info mb-0" id="summary_grand_total">Rp 0</h3>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
-                        <div
-                            class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0 fw-bold text-dark text-uppercase small" style="letter-spacing: 1px;">Daftar
-                                Barang & Jasa</h6>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table align-middle mb-0" id="mainItemTable">
-                                <thead class="bg-light">
-                                    <tr class="text-secondary small fw-bold">
-                                        <th class="ps-4 py-3" width="40%">ITEM & DESKRIPSI</th>
-                                        <th class="text-center" width="10%">QTY</th>
-                                        <th class="text-end" width="20%">HARGA BELI</th>
-                                        <th class="text-end" width="15%">DISKON (RP)</th>
-                                        <th class="text-end pe-4" width="20%">TOTAL</th>
-                                        <th width="5%"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="itemBodyList">
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="p-3 bg-white border-top text-center">
-                            <button type="button" class="btn btn-outline-primary btn-sm fw-bold px-4 rounded-pill"
-                                onclick="addNewProductRow()">
-                                <i class="fa fa-plus-circle me-1"></i> Tambah Item Baru
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="row g-4 pb-5">
-                        <div class="col-md-7">
-                            <div class="card border-0 shadow-sm p-4 h-100">
-                                <div class="mb-3">
-                                    <label class="f-label text-primary">Keterangan Tambahan</label>
-                                    <textarea id="modal_keterangan" class="form-control border-0 bg-light f-text" rows="2"
-                                        placeholder="Catatan penerimaan barang, dll..."></textarea>
-                                </div>
-                                <div>
-                                    <label class="f-label text-primary">Syarat & Ketentuan</label>
-                                    <textarea id="modal_syarat" class="form-control border-0 bg-light f-text" rows="2">Barang yang sudah dibeli tidak dapat dikembalikan kecuali cacat produksi.</textarea>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-5">
-                            <div class="card border-0 shadow-sm bg-dark text-white p-4 h-100 rounded-3">
-                                <div class="d-flex justify-content-between mb-3 opacity-75">
-                                    <span class="small fw-semibold">Subtotal Bruto</span>
-                                    <span id="summary_subtotal" class="f-mono">Rp 0</span>
-                                </div>
-                                <div class="d-flex justify-content-between mb-3 align-items-center">
-                                    <span class="small fw-semibold opacity-75">Potongan (Lumpsum)</span>
-                                    <div class="input-group input-group-sm" style="width: 160px;">
-                                        <input type="number" id="modal_diskon_tambahan"
-                                            class="form-control bg-transparent border-secondary text-white text-end fw-bold"
-                                            value="0" oninput="calculateInvoiceTotal()">
-                                    </div>
-                                </div>
-                                <div class="border-top border-secondary my-3 opacity-25"></div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h6 class="fw-bold mb-0 text-uppercase small" style="letter-spacing: 1px;">Total
-                                        Netto Tagihan</h6>
-                                    <h3 id="summary_grand_total" class="fw-bold text-info mb-0 f-mono">Rp 0</h3>
-                                </div>
+                            <div class="p-4 border-top bg-light">
+                                <button type="button" class="btn btn-primary w-100 fw-bold py-2 shadow-sm"
+                                    onclick="saveFullInvoice()">
+                                    <i class="fa fa-save me-2"></i> SIMPAN INVOICE
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -157,69 +175,227 @@
     </div>
 </div>
 
+<template id="item-row-purchase-template">
+    <tr class="border-bottom border-light">
+        <td class="ps-4 py-3">
+            <select class="prod-select mb-2"></select>
+            <input type="text" class="form-control form-control-sm text-muted small prod-desc"
+                placeholder="Deskripsi (Opsional)">
+        </td>
+        <td class="py-3">
+            <input type="number" class="form-control form-control-sm text-center fw-bold prod-qty f-row-input"
+                min="1" value="1" oninput="if(this.value<0)this.value=0; calculateInvoiceTotal();">
+        </td>
+        <td class="py-3 text-center small text-muted pt-4 prod-unit">Pcs</td>
+        <td class="py-3">
+            <input type="number" class="form-control form-control-sm text-end prod-price f-row-input" min="0"
+                oninput="if(this.value<0)this.value=0; calculateInvoiceTotal();">
+        </td>
+        <td class="py-3">
+            <input type="number" class="form-control form-control-sm text-end prod-disc f-row-input" min="0"
+                oninput="if(this.value<0)this.value=0; calculateInvoiceTotal();">
+        </td>
+        <td class="py-3 text-end pe-4 fw-bold text-dark prod-subtotal">Rp 0</td>
+        <td class="py-3 text-center">
+            <button type="button" class="btn btn-link text-danger p-0 btn-remove-row"><i
+                    class="fa fa-times-circle fs-5"></i></button>
+        </td>
+    </tr>
+</template>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
 <style>
-    /* Utility CSS untuk Modal agar Seragam dengan Main Page */
-    .f-label {
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-        font-weight: 700;
-        color: #64748b;
-        margin-bottom: 6px;
-        display: block;
-    }
-
     .f-input {
-        border: 1px solid #e2e8f0;
-        padding: 0.6rem 0.8rem;
-        border-radius: 6px;
-        font-size: 13px;
-        transition: all 0.2s;
+        padding: 0.75rem 1rem !important;
+        font-size: 14px !important;
     }
 
-    .f-input:focus {
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        outline: none;
+    .ts-control {
+        min-height: 48px !important;
+        border-radius: 8px !important;
+        display: flex;
+        align-items: center;
     }
 
-    .f-input-lg {
-        padding: 0.75rem 1rem;
-        font-size: 14px;
-        font-weight: 600;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
+    .f-row-input {
+        min-height: 42px !important;
     }
 
-    .f-text {
-        font-size: 13px;
+    .flatpickr-wrapper,
+    .flatpickr-input,
+    .flatpickr-input+input {
+        width: 100% !important;
+        display: block !important;
     }
 
-    .f-mono {
-        font-family: 'JetBrains Mono', monospace;
+    .flatpickr-calendar.fp-has-sidebar {
+        width: 440px !important;
+        margin-left: -160px;
     }
 
-    #mainItemTable .f-row-input {
-        border: 1px solid transparent;
-        background: transparent;
-        padding: 6px;
-        font-size: 13px;
-        transition: all 0.2s;
+    .flatpickr-calendar .fp-sidebar-abs {
+        position: absolute;
+        left: 0;
+        width: 130px;
+        top: 45px;
+        bottom: 0;
+        border-right: 1px solid #e5e7eb;
+        background: #f8fafc;
+        padding: 12px 8px;
+        z-index: 5;
     }
 
-    #mainItemTable tr:hover .f-row-input {
+    .flatpickr-calendar.fp-has-sidebar .flatpickr-innerContainer {
+        margin-left: 130px;
+    }
+
+    .flatpickr-months {
+        z-index: 10 !important;
+        position: relative;
         background: #fff;
-        border-color: #e2e8f0;
-    }
-
-    #mainItemTable .f-row-input:focus {
-        background: #fff;
-        border-color: #3b82f6;
-        outline: none;
+        pointer-events: auto !important;
     }
 </style>
 
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+
 <script>
+    let fpInvoice = null,
+        fpDue = null;
+    let tomSelectMitraModal = null;
+
+    function applyDueShortcut(days) {
+        const base = document.getElementById('modal_tgl_invoice').value;
+        if (!base) return;
+        const date = new Date(base);
+        date.setDate(date.getDate() + parseInt(days));
+        if (fpDue) fpDue.setDate(date, true);
+    }
+
+    function initInvoiceDatePickers() {
+        if (fpInvoice) fpInvoice.destroy();
+        if (fpDue) fpDue.destroy();
+
+        const common = {
+            dateFormat: 'Y-m-d',
+            altInput: true,
+            altFormat: 'd/m/Y',
+            allowInput: true,
+            disableMobile: true,
+            monthSelectorType: 'dropdown',
+            static: true,
+            altInputClass: 'form-control f-input bg-white'
+        };
+
+        fpInvoice = flatpickr('#modal_tgl_invoice', {
+            ...common,
+            onChange: () => {
+                if (fpDue && !document.getElementById('modal_tgl_jatuh_tempo').value) applyDueShortcut(30);
+            }
+        });
+
+        fpDue = flatpickr('#modal_tgl_jatuh_tempo', {
+            ...common,
+            onReady: (sd, ds, inst) => injectDueSidebar(inst)
+        });
+    }
+
+    function injectDueSidebar(instance) {
+        const cal = instance.calendarContainer;
+        if (!cal || cal.querySelector('.fp-sidebar-abs')) return;
+        const sidebar = document.createElement('div');
+        sidebar.className = 'fp-sidebar-abs';
+        sidebar.innerHTML = '<div class="fp-title">Tempo</div>';
+        [{
+            l: '+7 Hari',
+            d: 7
+        }, {
+            l: '+14 Hari',
+            d: 14
+        }, {
+            l: '+30 Hari',
+            d: 30
+        }, {
+            l: '+45 Hari',
+            d: 45
+        }, {
+            l: '+60 Hari',
+            d: 60
+        }].forEach(opt => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-sm btn-outline-primary mb-1 shadow-none';
+            btn.textContent = opt.l;
+            btn.onclick = (e) => {
+                e.preventDefault();
+                applyDueShortcut(opt.d);
+                instance.close();
+            };
+            sidebar.appendChild(btn);
+        });
+        cal.appendChild(sidebar);
+        cal.classList.add('fp-has-sidebar');
+    }
+
+    async function addNewProductRow(data = null) {
+        const tbody = document.getElementById('itemBodyList');
+        const template = document.getElementById('item-row-purchase-template');
+        const clone = template.content.cloneNode(true);
+        const tr = clone.querySelector('tr');
+        const rowId = 'row_' + Date.now() + Math.random().toString(36).substr(2, 5);
+        tr.id = rowId;
+
+        const selectEl = tr.querySelector('.prod-select');
+        const qtyInp = tr.querySelector('.prod-qty');
+        const priceInp = tr.querySelector('.prod-price');
+        const discInp = tr.querySelector('.prod-disc');
+        const unitLbl = tr.querySelector('.prod-unit');
+
+        qtyInp.value = data ? (data.qty || 1) : 1;
+        priceInp.value = data ? (data.harga_satuan || 0) : 0;
+        discInp.value = data ? (data.diskon_nilai || 0) : 0;
+
+        tr.querySelector('.btn-remove-row').onclick = () => {
+            tr.remove();
+            calculateInvoiceTotal();
+        };
+        tbody.appendChild(tr);
+
+        const ts = new TomSelect(selectEl, {
+            options: productCollection.map(p => ({
+                id: p.id,
+                name: p.nama_produk,
+                price: p.harga_beli || p.harga_jual,
+                unit: p.unit?.nama_unit || 'Pcs'
+            })),
+            valueField: 'id',
+            labelField: 'name',
+            searchField: 'name',
+            placeholder: 'Pilih Produk...',
+            dropdownParent: 'body',
+            onChange: (val) => {
+                const prod = productCollection.find(p => p.id == val);
+                if (prod) {
+                    priceInp.value = prod.harga_beli || prod.harga_jual;
+                    unitLbl.textContent = prod.unit?.nama_unit || 'Pcs';
+                    calculateInvoiceTotal();
+                }
+            }
+        });
+
+        if (data && data.produk_id) ts.setValue(String(data.produk_id), true);
+        calculateInvoiceTotal();
+    }
+
+    const _origOpenModal = openInvoiceModal;
+    openInvoiceModal = async function(id = null, event = null) {
+        await _origOpenModal(id, event);
+        initInvoiceDatePickers();
+    };
+
     // Helper IDR & Number
     window.financeHelpers = window.financeHelpers || {
         formatIDR: (val) => new Intl.NumberFormat('id-ID', {
@@ -300,36 +476,12 @@
             document.getElementById('form_mode').value = 'create';
             document.getElementById('modal_nomor_invoice').value =
                 `PUR/${new Date().getFullYear()}/${Date.now().toString().slice(-4)}`;
-            document.getElementById('modal_tgl_invoice').valueAsDate = new Date();
+            document.getElementById('modal_tgl_invoice').value = new Date().toISOString().split('T')[0];
             addNewProductRow();
         }
+
+        initInvoiceDatePickers();
         modal.show();
-    }
-
-    function addNewProductRow(existing = null) {
-        const rowId = existing ? existing.id : Date.now() + Math.floor(Math.random() * 1000);
-        let optProd = productCollection.map(p =>
-            `<option value="${p.id}" data-price="${p.harga_jual}" ${existing && existing.produk_id == p.id ? 'selected' : ''}>${p.nama_produk}</option>`
-        ).join('');
-
-
-        const html = `
-            <tr id="row_${rowId}">
-                <td class="ps-4">
-                    <select class="form-select f-row-input fw-bold prod-select" onchange="autoFillPrice(${rowId})">
-                        <option value="">Cari Produk...</option>${optProd}
-                    </select>
-                    <input type="text" class="form-control f-row-input small text-muted prod-desc" value="${existing?.deskripsi_produk || ''}" placeholder="Deskripsi (opsional)">
-                </td>
-                <td><input type="number" class="form-control f-row-input text-center fw-bold prod-qty" value="${existing ? parseFloat(existing.qty) : 1}" oninput="calculateInvoiceTotal()"></td>
-                <td><input type="number" class="form-control f-row-input text-end prod-price" value="${existing ? parseFloat(existing.harga_satuan) : 0}" oninput="calculateInvoiceTotal()"></td>
-                <td><input type="number" class="form-control f-row-input text-end prod-disc" value="${existing ? parseFloat(existing.diskon_nilai) : 0}" oninput="calculateInvoiceTotal()"></td>
-                <td class="text-end pe-4 fw-bold f-mono prod-subtotal">Rp 0</td>
-                <td class="text-center"><button type="button" class="btn btn-link text-danger p-0" onclick="removeRow('${rowId}')"><i class="fa fa-times-circle"></i></button></td>
-            </tr>`;
-        document.getElementById('itemBodyList').insertAdjacentHTML('beforeend', html);
-
-        if (existing || true) calculateInvoiceTotal();
     }
 
     function removeRow(id) {
