@@ -158,42 +158,6 @@
                     </div>
                 </div>
 
-                <!-- Stats Cards -->
-                <div class="row mb-4 g-3">
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card border-0 shadow-sm rounded-3">
-                            <div class="card-body p-3 border-start border-4 border-primary">
-                                <label class="f-label">Total Outstanding</label>
-                                <h5 class="fw-bold mb-0 text-dark">Rp 450.000.000</h5>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card border-0 shadow-sm rounded-3">
-                            <div class="card-body p-3 border-start border-4 border-danger">
-                                <label class="f-label">Melewati Tempo</label>
-                                <h5 class="fw-bold mb-0 text-danger">12 Dokumen</h5>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card border-0 shadow-sm rounded-3">
-                            <div class="card-body p-3 border-start border-4 border-success">
-                                <label class="f-label">Lunas Bulan Ini</label>
-                                <h5 class="fw-bold mb-0 text-success">Rp 125.000.000</h5>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card border-0 shadow-sm rounded-3">
-                            <div class="card-body p-3 border-start border-4 border-secondary">
-                                <label class="f-label">Total Volume</label>
-                                <h5 class="fw-bold mb-0 text-dark">1.240 Unit</h5>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
                     <div class="card-header bg-white border-bottom py-0 px-4">
                         <ul class="nav nav-tabs nav-tabs-finance" role="tablist">
