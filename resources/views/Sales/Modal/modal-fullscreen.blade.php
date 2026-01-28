@@ -104,8 +104,9 @@
                             <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
                                 <div
                                     class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0 fw-bold text-dark text-uppercase small"><i
-                                            class="fa fa-box me-2 text-primary"></i>Rincian Barang & Jasa</h6>
+                                    <h6 class="mb-0 fw-bold text-dark text-uppercase small">
+                                        <i class="fa fa-box me-2 text-primary"></i>Rincian Barang & Jasa
+                                    </h6>
                                     <div class="d-flex gap-2">
                                         <button type="button"
                                             class="btn btn-outline-secondary btn-sm fw-bold px-3 rounded-pill"
@@ -502,7 +503,6 @@
             tomSelectMitraModal = null;
         }
     });
-
 
     // --- Modal Logic ---
     async function openInvoiceModal(id = null, type = null, mode = 'create') {

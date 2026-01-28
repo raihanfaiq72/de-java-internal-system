@@ -2,9 +2,10 @@
     <div class="modal-dialog modal-fullscreen">
         <div class="modal-content border-0" style="background-color: #f8fafc;">
 
+            {{-- Header --}}
             <div class="modal-header bg-white border-bottom px-4 py-3 sticky-top shadow-sm">
                 <div class="d-flex align-items-center">
-                    <div class="bg-dark text-white p-2 rounded-2 me-3">
+                    <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-2 me-3">
                         <i class="fa fa-shopping-cart fa-lg"></i>
                     </div>
                     <div>
@@ -21,16 +22,21 @@
                 </div>
             </div>
 
+            {{-- Body --}}
             <div class="modal-body p-0">
                 <form id="invoiceForm" class="h-100">
                     <input type="hidden" id="form_mode" value="create">
                     <input type="hidden" id="edit_invoice_id" value="">
 
                     <div class="row g-0 h-100">
+                        {{-- Main Form --}}
                         <div class="col-lg-9 h-100 overflow-auto custom-scrollbar p-4">
+
+                            {{-- Customer & Doc Details --}}
                             <div class="card border-0 shadow-sm rounded-3 mb-4">
                                 <div class="card-body p-4">
                                     <div class="row g-4">
+                                        {{-- Supplier --}}
                                         <div class="col-lg-6 border-end">
                                             <label class="f-label mb-2">Supplier / Vendor <span
                                                     class="text-danger">*</span></label>
@@ -57,13 +63,14 @@
                                             </div>
                                         </div>
 
+                                        {{-- Document --}}
                                         <div class="col-lg-6">
                                             <div class="row g-3">
                                                 <div class="col-md-6">
                                                     <label class="f-label">Nomor Invoice</label>
                                                     <input type="text" id="modal_nomor_invoice"
                                                         class="form-control f-input fw-bold bg-light text-primary"
-                                                        readonly>
+                                                        readonly placeholder="Auto Generated">
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="f-label">Referensi / PO</label>
@@ -76,7 +83,7 @@
                                                         class="form-control f-input">
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <label class="f-label">Jatuh Tempo</label>
+                                                    <label class="f-label">Tanggal Jatuh Tempo</label>
                                                     <input type="text" id="modal_tgl_jatuh_tempo"
                                                         class="form-control f-input">
                                                 </div>
@@ -92,18 +99,29 @@
                                 </div>
                             </div>
 
+                            {{-- Items --}}
                             <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
                                 <div
                                     class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0 fw-bold text-dark text-uppercase small">Rincian Barang & Jasa</h6>
-                                    <button type="button" class="btn btn-primary btn-sm fw-bold px-3 rounded-pill"
-                                        onclick="addNewProductRow()">
-                                        <i class="fa fa-plus me-1"></i> Tambah Baris
-                                    </button>
+                                    <h6 class="mb-0 fw-bold text-dark text-uppercase small">
+                                        <i class="fa fa-box me-2 text-primary"></i> Rincian Barang & Jasa
+                                    </h6>
+
+                                    <div class="d-flex gap-2">
+                                        <button type="button"
+                                            class="btn btn-outline-secondary btn-sm fw-bold px-3 rounded-pill"
+                                            onclick="openStockModal()">
+                                            <i class="fa fa-search me-1"></i> Cari Stok
+                                        </button>
+                                        <button type="button" class="btn btn-primary btn-sm fw-bold px-3 rounded-pill"
+                                            onclick="addNewProductRow()">
+                                            <i class="fa fa-plus me-1"></i> Tambah Baris
+                                        </button>
+                                    </div>
                                 </div>
+
                                 <div class="table-responsive">
-                                    <table class="table align-middle mb-0 table-hover" id="mainItemTable"
-                                        style="table-layout: fixed;">
+                                    <table class="table align-middle mb-0 table-hover" id="mainItemTable">
                                         <thead class="bg-light text-secondary small fw-bold text-uppercase">
                                             <tr>
                                                 <th class="ps-4 py-3" width="35%">Produk / Deskripsi</th>
@@ -116,10 +134,19 @@
                                             </tr>
                                         </thead>
                                         <tbody id="itemBodyList" class="border-top-0"></tbody>
+                                        <tfoot class="bg-light">
+                                            <tr>
+                                                <td colspan="7"
+                                                    class="text-center py-2 text-muted small fst-italic">
+                                                    Klik tombol tambah untuk memasukkan item
+                                                </td>
+                                            </tr>
+                                        </tfoot>
                                     </table>
                                 </div>
                             </div>
 
+                            {{-- Bottom Notes --}}
                             <div class="card border-0 shadow-sm rounded-3">
                                 <div class="card-body p-4">
                                     <div class="row g-4">
@@ -136,6 +163,8 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- Summary --}}
 
                         <div class="col-lg-3 bg-white border-start h-100 d-flex flex-column shadow-sm z-1">
                             <div class="p-4 border-bottom bg-light">
@@ -156,9 +185,12 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="p-3 rounded bg-dark text-white text-center">
-                                    <div class="small opacity-75 fw-bold text-uppercase mb-1">Total Tagihan</div>
-                                    <h3 class="fw-bold text-info mb-0" id="summary_grand_total">Rp 0</h3>
+                                <div
+                                    class="p-3 rounded bg-primary bg-opacity-10 border border-primary border-opacity-25">
+                                    <div class="text-center">
+                                        <div class="small opacity-75 fw-bold text-uppercase mb-1">Total Tagihan</div>
+                                        <h3 class="fw-bold text-primary mb-0" id="summary_grand_total">Rp 0</h3>
+                                    </div>
                                 </div>
                             </div>
                             <div class="p-4 border-top bg-light">
@@ -170,6 +202,63 @@
                         </div>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="stockModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-white border-bottom py-3">
+                <h5 class="modal-title fw-bold">Pilih Produk</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="p-3 bg-light border-bottom">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control col-filter" data-col="1"
+                                placeholder="Cari Kode Produk...">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="form-control col-filter" data-col="2"
+                                placeholder="Cari Nama Produk...">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="form-control col-filter" data-col="3"
+                                placeholder="Cari Kategori...">
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="stockTable">
+                        <thead class="bg-light sticky-top">
+                            <tr>
+                                <th width="5%" class="text-center py-3"><input type="checkbox"
+                                        class="form-check-input" id="checkAllStock" onclick="toggleAllStock(this)">
+                                </th>
+                                <th class="py-3">Produk</th>
+                                <th class="py-3">Kategori</th>
+                                <th class="text-center py-3">Stok</th>
+                                <th class="text-end py-3">Harga Jual</th>
+                                <th class="text-center py-3">Track</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockBodyList"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-top py-3">
+                <div class="d-flex justify-content-between w-100 align-items-center">
+                    <div class="small text-muted">
+                        <i class="fa fa-info-circle me-1"></i> Pilih produk yang akan ditambahkan ke invoice.
+                    </div>
+                    <button type="button" class="btn btn-primary fw-bold px-4 rounded-pill"
+                        onclick="addSelectedStocks()">
+                        <i class="fa fa-check me-2"></i> Tambahkan Terpilih
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -265,7 +354,6 @@
 <script>
     let fpInvoice = null,
         fpDue = null;
-    let tomSelectMitraModal = null;
 
     function applyDueShortcut(days) {
         const base = document.getElementById('modal_tgl_invoice').value;
@@ -340,6 +428,71 @@
         cal.classList.add('fp-has-sidebar');
     }
 
+    let tomSelectMitraModal = null;
+
+    function initTomSelectMitraModal(selectedId = null) {
+        if (!window.TomSelect) {
+            const sel = document.getElementById('modal_mitra_id');
+            sel.innerHTML = '<option value="">Cari Pelanggan...</option>';
+            masterMitra.forEach(m => sel.insertAdjacentHTML('beforeend', `<option value="${m.id}">${m.nama}</option>`));
+            if (selectedId) sel.value = selectedId;
+            return;
+        }
+
+        if (tomSelectMitraModal) {
+            try {
+                tomSelectMitraModal.destroy();
+            } catch (_) {}
+            tomSelectMitraModal = null;
+        }
+
+        const sel = document.getElementById('modal_mitra_id');
+        sel.innerHTML = '';
+
+        const options = (masterMitra || []).map(m => ({
+            id: m.id,
+            nama: m.nama,
+            info: [m.no_hp, m.alamat].filter(Boolean).join(' • ') || ''
+        }));
+
+        tomSelectMitraModal = new TomSelect('#modal_mitra_id', {
+            options,
+            valueField: 'id',
+            labelField: 'nama',
+            searchField: ['nama', 'info'],
+            allowEmptyOption: true,
+            placeholder: 'Cari Pelanggan...',
+            maxOptions: 1000,
+            create: false,
+            dropdownParent: 'body',
+            render: {
+                option: (data, escape) => `
+                <div>
+                    <div class="fw-bold">${escape(data.nama || '')}</div>
+                    ${data.info ? `<div class="small text-muted">${escape(data.info)}</div>` : ''}
+                </div>
+            `,
+                item: (data, escape) => `<div>${escape(data.nama || '')}</div>`
+            },
+            onChange: function(val) {
+                renderMitraDetail();
+            }
+        });
+
+        if (selectedId) {
+            tomSelectMitraModal.setValue(String(selectedId), true);
+        }
+    }
+
+    document.getElementById('invoiceModal').addEventListener('hidden.bs.modal', () => {
+        if (tomSelectMitraModal) {
+            try {
+                tomSelectMitraModal.destroy();
+            } catch (_) {}
+            tomSelectMitraModal = null;
+        }
+    });
+
     async function addNewProductRow(data = null) {
         const tbody = document.getElementById('itemBodyList');
         const template = document.getElementById('item-row-purchase-template');
@@ -391,8 +544,8 @@
     }
 
     const _origOpenModal = openInvoiceModal;
-    openInvoiceModal = async function(id = null, event = null) {
-        await _origOpenModal(id, event);
+    openInvoiceModal = async function(id = null, type = null, mode = 'create') {
+        await _origOpenModal(id, type, mode);
         initInvoiceDatePickers();
     };
 
@@ -431,12 +584,25 @@
         }
     }
 
-    async function openInvoiceModal(id = null, event = null) {
-        if (event) event.stopPropagation();
-        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('invoiceModal'));
-        resetModalForm();
+    async function openInvoiceModal(id = null, type = null, mode = 'create') {
+        const modal = new bootstrap.Modal(document.getElementById('invoiceModal'));
+        document.getElementById('invoiceForm').reset();
+        document.getElementById('itemBodyList').innerHTML = '';
+        document.getElementById('mitra_detail_display').classList.add('d-none');
+        document.getElementById('mitra_empty_state').classList.remove('d-none');
 
-        if (id) {
+        // Reset totals
+        document.getElementById('summary_subtotal').innerText = 'Rp 0';
+        document.getElementById('summary_grand_total').innerText = 'Rp 0';
+
+        // Load Master Data if empty
+        if (!Array.isArray(masterMitra) || masterMitra.length === 0) {
+            await initializeMasterData();
+        }
+
+        initTomSelectMitraModal();
+
+        if (mode === 'edit' && id) {
             document.getElementById('modalTitle').innerText = 'Edit Invoice Pembelian';
             document.getElementById('form_mode').value = 'edit';
             document.getElementById('edit_invoice_id').value = id;
@@ -457,30 +623,44 @@
                     document.getElementById('modal_keterangan').value = inv.keterangan;
                     document.getElementById('modal_syarat').value = inv.syarat_ketentuan;
                     document.getElementById('modal_diskon_tambahan').value = inv.diskon_tambahan_nilai || 0;
+
+                    if (inv.mitra_id && tomSelectMitraModal) {
+                        tomSelectMitraModal.setValue(String(inv.mitra_id), true);
+                    } else {
+                        initTomSelectMitraModal(inv.mitra_id || null);
+                    }
+
                     renderMitraDetail();
 
                     // Populate Items
-                    if (inv.items && inv.items.length > 0) {
-                        inv.items.forEach(it => addNewProductRow(it));
-                    } else {
-                        addNewProductRow();
+                    if (inv.items) {
+                        inv.items.forEach(item => addNewProductRow(item));
                     }
-                    calculateInvoiceTotal();
                 }
             } catch (e) {
                 console.error("Edit fetch fail", e);
                 alert('Gagal mengambil data invoice.');
             }
         } else {
-            document.getElementById('modalTitle').innerText = 'Buat Invoice Pembelian Baru';
+            document.getElementById('modalTitle').innerText = 'Invoice Penjualan Baru';
             document.getElementById('form_mode').value = 'create';
-            document.getElementById('modal_nomor_invoice').value =
-                `PUR/${new Date().getFullYear()}/${Date.now().toString().slice(-4)}`;
             document.getElementById('modal_tgl_invoice').value = new Date().toISOString().split('T')[0];
-            addNewProductRow();
+            // Set default due date (e.g. +30 days)
+            const d = new Date();
+            d.setDate(d.getDate() + 30);
+            document.getElementById('modal_tgl_jatuh_tempo').value = d.toISOString().split('T')[0];
+            document.getElementById('modal_nomor_invoice').value =
+                `INV/${new Date().getFullYear()}/${Date.now().toString().slice(-4)}`;
+
+
+            if (tomSelectMitraModal) {
+                tomSelectMitraModal.clear(true);
+            }
+
+
+            addNewProductRow(); // Add 1 empty row
         }
 
-        initInvoiceDatePickers();
         modal.show();
     }
 
@@ -523,11 +703,31 @@
 
     function renderMitraDetail() {
         const id = document.getElementById('modal_mitra_id').value;
-        const item = mitraCollection.find(x => x.id == id);
-        document.getElementById('mitra_detail_display').innerHTML = item ?
-            `<strong>${item.nama}</strong><br>${item.alamat || 'Alamat tidak tersedia'}<br><i class="fa fa-phone me-1 small"></i> ${item.no_hp || '-'}` :
-            `<i class="fa fa-info-circle me-2 text-primary"></i>Detail alamat dan kontak akan muncul otomatis.`;
+        const disp = document.getElementById('mitra_detail_display');
+        const empty = document.getElementById('mitra_empty_state');
+
+        if (!id) {
+            disp.classList.add('d-none');
+            empty.classList.remove('d-none');
+            return;
+        }
+
+        const m = masterMitra.find(x => x.id == id);
+        if (m) {
+            document.getElementById('disp_mitra_nama').innerText = m.nama;
+            document.getElementById('disp_mitra_tipe').innerText = m.tipe_mitra;
+            document.getElementById('disp_mitra_alamat').innerText = m.alamat || '-';
+            document.getElementById('disp_mitra_telp').innerText = m.no_hp || '-';
+
+            disp.classList.remove('d-none');
+            empty.classList.add('d-none');
+        } else {
+            disp.classList.add('d-none');
+            empty.classList.remove('d-none');
+        }
+
     }
+
 
     function resetModalForm() {
         document.getElementById('invoiceForm').reset();
@@ -629,6 +829,80 @@
         }
     }
 
-    // Load Data on Start
+    let stockCache = [];
+
+    async function openStockModal() {
+        const modal = new bootstrap.Modal(document.getElementById('stockModal'));
+        document.getElementById('stockBodyList').innerHTML =
+            '<tr><td colspan="6" class="text-center p-4"><div class="spinner-border text-primary"></div></td></tr>';
+        modal.show();
+
+        try {
+            // Adjust API endpoint as needed
+            const res = await fetch('/api/stock-api');
+            const result = await res.json();
+            if (result.success) {
+                stockCache = result.data.data || result.data; // Handle pagination structure
+                renderStockList(stockCache);
+            }
+        } catch (e) {
+            document.getElementById('stockBodyList').innerHTML =
+                '<tr><td colspan="6" class="text-center text-danger p-4">Gagal load stock</td></tr>';
+        }
+    }
+
+    function renderStockList(data) {
+        const tbody = document.getElementById('stockBodyList');
+        tbody.innerHTML = '';
+        data.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="text-center"><input type="checkbox" class="form-check-input stock-check" value="${item.id}" data-raw='${JSON.stringify(item)}'></td>
+                <td>
+                    <div class="fw-bold text-dark">${item.nama_produk}</div>
+                    <div class="small text-muted">${item.kode_produk}</div>
+                </td>
+                <td><span class="badge bg-light text-dark border">${item.kategori?.nama_kategori || '-'}</span></td>
+                <td class="text-center fw-bold">${item.stok_akhir || 0} ${item.unit?.nama_unit || ''}</td>
+                <td class="text-end font-monospace">${window.financeApp.formatIDR(item.harga_jual)}</td>
+                <td class="text-center"><span class="badge ${item.lacak_stok ? 'bg-success' : 'bg-secondary'}">${item.lacak_stok ? 'YES' : 'NO'}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Filter Stock
+    document.querySelectorAll('.col-filter').forEach(inp => {
+        inp.addEventListener('keyup', function() {
+            const val = this.value.toLowerCase();
+            const col = this.dataset.col; // 1=code, 2=name, 3=cat
+
+            const filtered = stockCache.filter(item => {
+                if (col == 1) return (item.kode_produk || '').toLowerCase().includes(val);
+                if (col == 2) return (item.nama_produk || '').toLowerCase().includes(val);
+                if (col == 3) return (item.kategori?.nama_kategori || '').toLowerCase()
+                    .includes(val);
+                return true;
+            });
+            renderStockList(filtered);
+        });
+    });
+
+    function addSelectedStocks() {
+        const checked = document.querySelectorAll('.stock-check:checked');
+        checked.forEach(chk => {
+            const data = JSON.parse(chk.dataset.raw);
+            addNewProductRow({
+                product_id: data.id,
+                product: data,
+                nama_produk_manual: data.nama_produk,
+                qty: 1,
+                harga_satuan: data.harga_jual,
+                diskon_item: 0
+            });
+        });
+        bootstrap.Modal.getInstance(document.getElementById('stockModal')).hide();
+    }
+
     document.addEventListener('DOMContentLoaded', initializeInvoiceData);
 </script>
