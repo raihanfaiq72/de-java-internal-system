@@ -124,11 +124,17 @@
 
     <style>
         .ts-dropdown {
-            z-index: 2000 !important;
+            z-index: 9999 !important;
         }
 
         .ts-wrapper.form-control {
             overflow: visible !important;
+        }
+
+        .f-input:focus,
+        .f-text:focus {
+            outline: none !important;
+            border-color: #3b82f6 !important;
         }
 
         .ts-dropdown-content {
@@ -367,12 +373,13 @@
 
         });
 
-        let masterMitra = [];
+        let masterMitra, products, salesPersons = []; // Will be populated from API
 
         async function initializeMasterData() {
             try {
-                const [mitraRes] = await Promise.all([
-                    fetch('/api/mitra-api').then(r => r.json())
+                const [mitraRes, productRes] = await Promise.all([
+                    fetch('/api/mitra-api').then(r => r.json()),
+                    fetch('/api/product-api').then(r => r.json()),
                 ]);
 
                 if (mitraRes.success) {
@@ -387,6 +394,16 @@
                     });
 
                     if (tomSelectMitraIndex) tomSelectMitraIndex.sync();
+                }
+
+                if (productRes.success) {
+                    products = productRes.data.data || productRes.data;
+
+                    products.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.id;
+                        opt.textContent = p.nama_produk;
+                    });
                 }
             } catch (error) {
                 alert('Gagal memuat data master:', error);
