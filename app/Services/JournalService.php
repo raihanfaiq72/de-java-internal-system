@@ -52,7 +52,7 @@ class JournalService
         // Debit Expense Account
         $details[] = [
             'akun_id' => $expense->akun_beban_id,
-            'debit' => $expense->jumlah,
+            'debit' => $expense->jumlah ?: 0,
             'kredit' => 0
         ];
 
@@ -72,7 +72,7 @@ class JournalService
             $details[] = [
                 'akun_id' => $creditCoaId,
                 'debit' => 0,
-                'kredit' => $expense->jumlah
+                'kredit' => $expense->jumlah ?: 0
             ];
 
             $this->createJournal(
@@ -113,7 +113,7 @@ class JournalService
 
         // Debit: Split based on items
         foreach ($invoice->items as $item) {
-            $amount = $item->total; // qty * price - discount + tax (assuming total is net)
+            $amount = $item->total ?: 0; // qty * price - discount + tax (assuming total is net)
             // Wait, InvoiceItem model usually has 'total'. Let's check calculation.
             // Assuming item->total is correct.
             
@@ -179,14 +179,14 @@ class JournalService
         // Debit AR
         $details[] = [
             'akun_id' => $accAR->id,
-            'debit' => $invoice->total_akhir,
+            'debit' => $invoice->total_akhir ?: 0,
             'kredit' => 0
         ];
         // Credit Revenue
         $details[] = [
             'akun_id' => $accRevenue->id,
             'debit' => 0,
-            'kredit' => $invoice->total_akhir
+            'kredit' => $invoice->total_akhir ?: 0
         ];
 
         // 2. COGS Entry (Perpetual)
@@ -250,7 +250,7 @@ class JournalService
             // Debit Cash/Bank
             $details[] = [
                 'akun_id' => $accCashBank->id,
-                'debit' => $payment->jumlah_bayar,
+                'debit' => $payment->jumlah_bayar ?: 0,
                 'kredit' => 0
             ];
             
@@ -260,7 +260,7 @@ class JournalService
                 $details[] = [
                     'akun_id' => $accAR->id,
                     'debit' => 0,
-                    'kredit' => $payment->jumlah_bayar
+                    'kredit' => $payment->jumlah_bayar ?: 0
                 ];
             }
         } else {
@@ -269,7 +269,7 @@ class JournalService
             $details[] = [
                 'akun_id' => $accCashBank->id,
                 'debit' => 0,
-                'kredit' => $payment->jumlah_bayar
+                'kredit' => $payment->jumlah_bayar ?: 0
             ];
 
             // Debit AP
@@ -277,7 +277,7 @@ class JournalService
             if ($accAP) {
                 $details[] = [
                     'akun_id' => $accAP->id,
-                    'debit' => $payment->jumlah_bayar,
+                    'debit' => $payment->jumlah_bayar ?: 0,
                     'kredit' => 0
                 ];
             }
