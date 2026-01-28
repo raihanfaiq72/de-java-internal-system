@@ -14,7 +14,12 @@ class PurchaseController extends Controller
 
     public function index()
     {
-        return view($this->views.'index');
+        return view($this->views . 'index');
+    }
+
+    public function show($id)
+    {
+        return view($this->views . 'detail', compact('id'));
     }
 
     public function receipt()
@@ -23,11 +28,11 @@ class PurchaseController extends Controller
         $mitras = \App\Models\Mitra::whereIn('tipe_mitra', ['Supplier', 'Both'])
             ->where('office_id', session('active_office_id'))
             ->get();
-        
+
         // Ambil Akun Kas & Bank
         $accounts = \Illuminate\Support\Facades\DB::table('chart_of_accounts')
-                    ->where('is_kas_bank', 1)
-                    ->get();
+            ->where('is_kas_bank', 1)
+            ->get();
 
         return view($this->views . 'receipt', compact('mitras', 'accounts'));
     }

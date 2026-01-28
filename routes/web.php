@@ -23,7 +23,7 @@ Route::post('/login-proses', [AuthController::class, 'loginProses'])->name('logi
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth'])->group(function () {
-    
+
     Route::get('/select-your-outlet', [AuthController::class, 'syo'])->name('syo');
     Route::post('/set-active-outlet', [AuthController::class, 'setOutlet'])->name('set.outlet');
     Route::delete('/delete-outlet/{id}', [AuthController::class, 'destroyOutlet'])->name('syo.destroy');
@@ -33,27 +33,28 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
 
     Route::middleware(['module.access'])->group(function () {
-        
+
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('dashboard-piutang', [DashboardPiutangController::class, 'index'])->name('dashboard.piutang');
         Route::get('dashboard-sales', [DashboardSalesController::class, 'index'])->name('dashboard.sales');
         Route::get('dashboard-sales/detail/{id}', [DashboardSalesController::class, 'detail'])->name('dashboard.sales.detail');
-        
+
         Route::get('sales', [SalesController::class, 'index'])->name('sales');
         Route::get('sales/{id}', [SalesController::class, 'show'])->name('sales.show');
         Route::get('sales/print/{id}', [SalesController::class, 'printInvoice'])->name('sales.print');
-        Route::get('sales-receipt',[SalesController::class,'receipt'])->name('sales.receipt');
+        Route::get('sales-receipt', [SalesController::class, 'receipt'])->name('sales.receipt');
         Route::get('sales-receipt/print/{id}', [SalesController::class, 'printReceipt'])->name('sales.receipt.print');
-        
+
         Route::get('purchase', [PurchaseController::class, 'index'])->name('purchase');
+        Route::get('purchase/{id}', [PurchaseController::class, 'show'])->name('purchase.show');
         Route::get('purchase/print/{id}', [PurchaseController::class, 'printInvoice'])->name('purchase.print');
-        Route::get('purchase-receipt',[PurchaseController::class,'receipt'])->name('purchase.receipt');
+        Route::get('purchase-receipt', [PurchaseController::class, 'receipt'])->name('purchase.receipt');
         Route::get('purchase-receipt/print/{id}', [PurchaseController::class, 'printReceipt'])->name('purchase.receipt.print');
         Route::get('mitra', [MitraController::class, 'index'])->name('mitra');
         Route::get('barang', [BarangController::class, 'index'])->name('barang');
         Route::get('stok', [StockController::class, 'index'])->name('stok');
         Route::get('expenses', [ExpenseController::class, 'index'])->name('expenses.index');
-        
+
         // Finance
         Route::get('finance', [App\Http\Controllers\FinanceController::class, 'index'])->name('finance.index');
         Route::post('finance/transaction', [App\Http\Controllers\FinanceController::class, 'storeTransaction'])->name('finance.transaction.store');
@@ -79,14 +80,14 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
             Route::put('/permissions/{id}', [PermissionController::class, 'update'])->name('permissions.update');
             Route::resource('roles', RoleController::class);
-            
+
             // Offices
             Route::get('/offices', [OfficeController::class, 'index'])->name('offices.index');
             Route::post('/offices', [OfficeController::class, 'store'])->name('offices.store');
             Route::get('/offices/{id}', [OfficeController::class, 'show'])->name('offices.show');
             Route::put('/offices/{id}', [OfficeController::class, 'update'])->name('offices.update');
             Route::delete('/offices/{id}', [OfficeController::class, 'destroy'])->name('offices.destroy');
-            
+
             // User Plots
             Route::get('/user-plots', [UserPlotController::class, 'index'])->name('user_plots.index');
             Route::post('/user-plots', [UserPlotController::class, 'store'])->name('user_plots.store');

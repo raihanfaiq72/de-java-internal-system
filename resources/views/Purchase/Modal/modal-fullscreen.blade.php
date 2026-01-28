@@ -819,7 +819,7 @@
             if (result.success) {
                 alert('Invoice Pembelian berhasil disimpan!');
                 bootstrap.Modal.getInstance(document.getElementById('invoiceModal')).hide();
-                if (typeof loadInvoiceData === 'function') loadInvoiceData(); // Reload table
+                window.location.href = `{{ url('purchase') }}/${result.data.invoice.id}`;
             } else {
                 alert('Gagal menyimpan: ' + (result.message || JSON.stringify(result.errors)));
             }
