@@ -1,4 +1,4 @@
-<div class="modal fade" id="invoiceModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="invoiceModal" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen">
         <div class="modal-content border-0" style="background-color: #f8fafc;">
             <!-- Header -->
@@ -79,14 +79,15 @@
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="f-label">Tanggal Invoice</label>
-                                                    <input type="date" id="modal_tgl_invoice"
+                                                    <input type="text" id="modal_tgl_invoice"
                                                         class="form-control f-input">
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <label class="f-label">Jatuh Tempo</label>
-                                                    <input type="date" id="modal_tgl_jatuh_tempo"
+                                                    <label class="f-label">Tanggal Jatuh Tempo</label>
+                                                    <input type="text" id="modal_tgl_jatuh_tempo"
                                                         class="form-control f-input">
                                                 </div>
+
                                                 <div class="col-12">
                                                     <label class="f-label">Salesperson</label>
                                                     <select id="modal_sales_id" class="form-select f-input">
@@ -263,11 +264,181 @@
     </div>
 </div>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<style>
+    .f-input {
+        padding: 0.75rem 1rem !important;
+        font-size: 14px !important;
+    }
+
+    .flatpickr-input,
+    .flatpickr-input+input {
+        width: 100% !important;
+        display: block !important;
+    }
+
+    .flatpickr-calendar {
+        z-index: 10000 !important;
+    }
+
+    /* Lebar kalender diperluas agar sidebar 130px tidak memotong konten */
+    .flatpickr-calendar.fp-has-sidebar {
+        width: 440px !important;
+    }
+
+    .flatpickr-calendar .fp-sidebar-abs {
+        position: absolute;
+        left: 0;
+        width: 130px;
+        top: 0;
+        bottom: 0;
+        border-right: 1px solid #e5e7eb;
+        background: #f8fafc;
+        padding: 12px 8px;
+        z-index: 5;
+    }
+
+    .flatpickr-calendar.fp-has-sidebar .flatpickr-innerContainer {
+        margin-left: 130px;
+        width: 310px;
+        /* Standar lebar Flatpickr */
+    }
+
+    .fp-title {
+        font-size: 10px;
+        font-weight: 800;
+        color: #94a3b8;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        letter-spacing: 1px;
+    }
+
+    .fp-sidebar-abs .btn {
+        width: 100%;
+        font-size: 11px;
+        padding: 6px;
+        margin-bottom: 5px;
+        text-align: left;
+        font-weight: 600;
+    }
+
+    /* Pastikan bulan/tahun tetap di atas sidebar */
+    .flatpickr-months {
+        z-index: 10 !important;
+        pointer-events: auto !important;
+    }
+
+    .flatpickr-current-month select {
+        appearance: auto !important;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+
 <script>
-    // Will be populated
+    let fpInvoice = null,
+        fpDue = null;
+
+    function applyDueShortcut(days) {
+        const baseDateStr = document.getElementById('modal_tgl_invoice').value;
+        if (!baseDateStr) return;
+
+        const date = new Date(baseDateStr);
+        date.setDate(date.getDate() + parseInt(days));
+        if (fpDue) fpDue.setDate(date, true);
+    }
+
+    function initInvoiceDatePickers() {
+        if (fpInvoice) fpInvoice.destroy();
+        if (fpDue) fpDue.destroy();
+
+        const commonCfg = {
+            dateFormat: 'Y-m-d',
+            altInput: true,
+            altFormat: 'd/m/Y',
+            allowInput: true, // SESUDAH: Memungkinkan pengetikan manual tahun
+            disableMobile: true,
+            monthSelectorType: 'dropdown',
+            static: true, // SESUDAH: Meletakkan elemen di dalam DOM modal agar tidak diblokir focus-trap
+            altInputClass: 'form-control f-input bg-white'
+        };
+
+        fpInvoice = flatpickr('#modal_tgl_invoice', {
+            ...commonCfg,
+            onChange: (selectedDates, dateStr) => {
+                if (fpDue && !document.getElementById('modal_tgl_jatuh_tempo').value) {
+                    applyDueShortcut(30);
+                }
+            }
+        });
+
+        fpDue = flatpickr('#modal_tgl_jatuh_tempo', {
+            ...commonCfg,
+            onReady: (selectedDates, dateStr, instance) => injectDueSidebar(instance)
+        });
+    }
+
+    function injectDueSidebar(instance) {
+        const cal = instance.calendarContainer;
+        if (!cal || cal.querySelector('.fp-sidebar-abs')) return;
+
+        const sidebar = document.createElement('div');
+        sidebar.className = 'fp-sidebar-abs';
+        sidebar.innerHTML = '<div class="fp-title">Tempo</div>';
+
+        const options = [{
+                l: 'Hari Ini',
+                d: 0
+            },
+            {
+                l: '+7 Hari',
+                d: 7
+            },
+            {
+                l: '+14 Hari',
+                d: 14
+            },
+            {
+                l: '+30 Hari',
+                d: 30
+            },
+            {
+                l: '+45 Hari',
+                d: 45
+            },
+            {
+                l: '+60 Hari',
+                d: 60
+            }
+        ];
+
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-sm btn-outline-primary shadow-none';
+            btn.textContent = opt.l;
+            btn.onclick = (e) => {
+                e.preventDefault();
+                applyDueShortcut(opt.d);
+                instance.close();
+            };
+            sidebar.appendChild(btn);
+        });
+
+        cal.appendChild(sidebar);
+        cal.classList.add('fp-has-sidebar');
+    }
+
+    // Override openInvoiceModal untuk memanggil inisialisasi picker
+    const originalOpenInvoiceModal = openInvoiceModal;
+    openInvoiceModal = async function(id = null, type = null, mode = 'create') {
+        await originalOpenInvoiceModal(id, type, mode);
+        initInvoiceDatePickers();
+    };
 
     let tomSelectMitraModal = null;
-
 
     function initTomSelectMitraModal(selectedId = null) {
         if (!window.TomSelect) {
@@ -591,7 +762,7 @@
                 alert('Invoice berhasil disimpan!');
                 bootstrap.Modal.getInstance(document.getElementById('invoiceModal')).hide();
                 // Redirect to detail page
-                window.location.href = `{{ url('sales') }}/${result.data.id}`;
+                window.location.href = `{{ url('sales') }}/${result.data.invoice.id}`;
             } else {
                 if (result.errors) {
                     let errorMsg = "Terjadi kesalahan:\n";
