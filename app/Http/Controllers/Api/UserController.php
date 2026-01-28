@@ -167,6 +167,7 @@ class UserController extends Controller
     private function logActivity($tindakan, $tabel, $dataId, $before, $after)
     {
         ActivityLog::create([
+            'office_id' => session('active_office_id') ?? 1,
             'user_id' => 1,
             'tindakan' => $tindakan,
             'tabel_terkait' => $tabel,
