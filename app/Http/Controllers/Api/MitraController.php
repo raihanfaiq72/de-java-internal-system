@@ -62,6 +62,9 @@ class MitraController extends Controller
             }
 
             $data = $request->all();
+            if (empty($data['nomor_mitra'])) {
+                $data['nomor_mitra'] = $this->generateNomorMitra();
+            }
             $data['office_id'] = session('active_office_id');
             $data['akun_hutang_id']  = 18;
             $data['akun_piutang_id'] = 5;
@@ -75,8 +78,6 @@ class MitraController extends Controller
                 null,
                 $mitra->toArray()
             );
-
-            return apiResponse(true, 'Mitra berhasil dibuat', $mitra, null, 201);
 
             return apiResponse(true, 'Mitra berhasil dibuat', $mitra, null, 201);
         } catch (Throwable $e) {
@@ -106,7 +107,16 @@ class MitraController extends Controller
                 return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
             }
 
-            $mitra->update($request->all());
+            $dataToUpdate = $request->all();
+            if (empty($dataToUpdate['nomor_mitra'])) {
+                if (empty($mitra->nomor_mitra)) {
+                    $dataToUpdate['nomor_mitra'] = $this->generateNomorMitra();
+                } else {
+                    unset($dataToUpdate['nomor_mitra']);
+                }
+            }
+
+            $mitra->update($dataToUpdate);
 
             $this->logActivity(
                 'Update',
@@ -185,6 +195,25 @@ class MitraController extends Controller
                 500
             );
         }
+    }
+
+    private function generateNomorMitra()
+    {
+        $prefix = 'M-' . date('ym') . '-';
+        
+        $lastMitra = Mitra::where('nomor_mitra', 'LIKE', $prefix . '%')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        $nextNumber = 1;
+        if ($lastMitra) {
+            $parts = explode('-', $lastMitra->nomor_mitra);
+            if (count($parts) >= 3 && is_numeric(end($parts))) {
+                $nextNumber = intval(end($parts)) + 1;
+            }
+        }
+
+        return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 
     private function logActivity(
