@@ -75,16 +75,20 @@
 
 @push('js')
     <script>
-        const API_URL = "{{ route('brand-api.index') }}";
-        const SUPPLIER_URL = "{{ route('mitra-api.index') }}";
-        const SUPPLIER_BRAND_URL = "{{ route('supplier-brand-api.index') }}";
-
         document.addEventListener('DOMContentLoaded', () => {
-            loadBrandData(API_URL);
+            loadBrandData(BRAND_URL);
         });
 
-        async function loadBrandData(url = API_URL) {
-            if (typeof url !== 'string') url = API_URL;
+        function syncSupplierOptions() {
+            if (!tsSupplier) return;
+            if (tsSupplier.options.length === 0 && masterSuppliers.length > 0) {
+                tsSupplier.addOptions(masterSuppliers);
+            }
+            tsSupplier.refreshOptions(false);
+        }
+
+        async function loadBrandData(url = BRAND_URL) {
+            if (typeof url !== 'string') url = BRAND_URL;
 
             const tbody = document.getElementById('brand-table-body');
             tbody.innerHTML =
@@ -164,24 +168,20 @@
             document.getElementById('brandId').value = id;
 
             try {
-                const res = await fetch(`${API_URL}/${id}`);
+                const res = await fetch(`${BRAND_URL}/${id}`);
                 const result = await res.json();
 
                 if (result.success) {
                     const brand = result.data;
                     document.getElementById('nama_brand').value = brand.nama_brand;
 
-                    await loadSupplier();
-
-                    if (tsSupplier && brand.suppliers) {
-                        const supplierIds = brand.suppliers.map(s => String(s.id));
+                    if (tsSupplier) {
+                        syncSupplierOptions();
+                        const supplierIds = brand.suppliers ? brand.suppliers.map(s => String(s.id)) : [];
                         tsSupplier.setValue(supplierIds);
                     }
 
-                    const modal = new bootstrap.Modal(document.getElementById('modalBrand'));
-                    modal.show();
-                } else {
-                    alert('Gagal mengambil data brand: ' + result.message);
+                    new bootstrap.Modal(document.getElementById('modalBrand')).show();
                 }
             } catch (error) {
                 console.error('Edit error:', error);
@@ -193,7 +193,7 @@
             if (!confirm('Hapus brand ini?')) return;
 
             try {
-                const res = await fetch(`${API_URL}/${id}`, {
+                const res = await fetch(`${BRAND_URL}/${id}`, {
                     method: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
@@ -239,9 +239,8 @@
 
             if (tsSupplier) {
                 tsSupplier.clear();
+                syncSupplierOptions();
             }
-
-            await loadSupplier();
 
             new bootstrap.Modal(document.getElementById('modalBrand')).show();
         }
@@ -257,8 +256,10 @@
                 return;
             }
 
-            const url = brandId ? `${API_URL}/${brandId}` : API_URL;
+            const url = brandId ? `${BRAND_URL}/${brandId}` : BRAND_URL;
             const method = brandId ? 'PUT' : 'POST';
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute(
+                'content') || '';
 
             const payload = {
                 nama_brand: brandName,
@@ -273,8 +274,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
-                            'content') || ''
+                        'X-CSRF-TOKEN': token
                     },
                     body: JSON.stringify(payload)
                 });
@@ -285,35 +285,40 @@
                     const finalBrandId = brandId || result.data
                         .id;
 
-                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                    if (brandId) {
+                        const getRel = await fetch(`${SUPPLIER_BRAND_URL}?brand_id=${finalBrandId}`);
+                        const relData = await getRel.json();
 
-                    for (const sId of selectedSuppliers) {
-                        try {
-                            await fetch(SUPPLIER_BRAND_URL, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': token
-                                },
-                                body: JSON.stringify({
-                                    supplier_id: sId,
-                                    brand_id: finalBrandId
-                                })
-                            });
-                        } catch (err) {
-                            console.error(`Gagal menyimpan relasi untuk Supplier ID: ${sId}`, err);
+                        if (relData.success) {
+                            for (const rel of relData.data) {
+                                await fetch(`${SUPPLIER_BRAND_URL}/${rel.id}`, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'X-CSRF-TOKEN': token
+                                    }
+                                });
+                            }
                         }
                     }
 
-                    const modalEl = document.getElementById('modalBrand');
-                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
-                    if (modalInstance) modalInstance.hide();
+                    for (const sId of selectedSuppliers) {
+                        await fetch(SUPPLIER_BRAND_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token
+                            },
+                            body: JSON.stringify({
+                                supplier_id: sId,
+                                brand_id: finalBrandId
+                            })
+                        });
+                    }
 
-                    alert(brandId ? 'Brand dan Supplier berhasil diperbarui!' :
-                        'Brand dan Supplier berhasil ditambahkan!');
+                    bootstrap.Modal.getInstance(document.getElementById('modalBrand')).hide();
+                    alert('Data berhasil disimpan!');
                     loadBrandData();
-
                 } else {
                     alert('Gagal: ' + (result.message || 'Terjadi kesalahan'));
                 }

@@ -104,7 +104,14 @@
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 
     <script>
-        let tsSupplier = null;
+        const BRAND_URL = "{{ route('brand-api.index') }}";
+        const SUPPLIER_URL = "{{ route('mitra-api.index') }}";
+        const SUPPLIER_BRAND_URL = "{{ route('supplier-brand-api.index') }}";
+        const PRODUCT_URL = "{{ route('product-api.index') }}";
+
+        let masterSuppliers = [];
+
+        let tsSupplier, tsProductSupplier, tsProductBrand = null;
 
         const safeTomSelect = (selector, options) => {
             if (typeof TomSelect !== 'undefined') {
@@ -133,10 +140,50 @@
                 placeholder: 'Pilih Supplier ...',
                 dropdownParent: 'body'
             });
+
+            // tsProductSupplier = safeTomSelect('#suppliers', {
+            //     plugins: ['remove_button'],
+            //     valueField: 'id',
+            //     labelField: 'nama',
+            //     searchField: 'nama',
+            //     create: false,
+            //     allowEmptyOption: true,
+            //     placeholder: 'Pilih Supplier ...',
+            //     dropdownParent: 'body'
+            // });
+
+            // tsProductBrand = safeTomSelect('#suppliers', {
+            //     plugins: ['remove_button'],
+            //     valueField: 'id',
+            //     labelField: 'nama',
+            //     searchField: 'nama',
+            //     create: false,
+            //     allowEmptyOption: true,
+            //     placeholder: 'Pilih Supplier ...',
+            //     dropdownParent: 'body'
+            // });
+        }
+
+        async function fetchMasterSuppliers() {
+            try {
+                const res = await fetch(SUPPLIER_URL);
+                const result = await res.json();
+                if (result.success) {
+                    masterSuppliers = result.data.data || result.data;
+
+                    if (tsSupplier) {
+                        tsSupplier.clearOptions();
+                        tsSupplier.addOptions(masterSuppliers);
+                    }
+                }
+            } catch (error) {
+                console.error("Gagal memuat master supplier:", error);
+            }
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
             initTomSelect();
+            await fetchMasterSuppliers();
 
             document.getElementById('btnSaveBrand')
                 .addEventListener('click', saveBrand);
