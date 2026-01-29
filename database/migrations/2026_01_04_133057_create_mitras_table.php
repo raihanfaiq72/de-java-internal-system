@@ -20,6 +20,8 @@ return new class extends Migration
             $table->string('no_hp', 20)->nullable();
             $table->string('email', 100)->nullable();
             $table->enum('tipe_mitra', ['Supplier', 'Client', 'Both']);
+            $table->string('payment_terms', 50)->nullable();
+            $table->string('identity_card', 50)->nullable();
             $table->text('alamat')->nullable();
 
             $table->string('kontak_nama', 100)->nullable();

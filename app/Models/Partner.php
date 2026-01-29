@@ -19,6 +19,8 @@ class Partner extends Model
         'no_hp',
         'email',
         'tipe_mitra',
+        'payment_terms',
+        'identity_card',
         'alamat',
         'kontak_nama',
         'kontak_jabatan',

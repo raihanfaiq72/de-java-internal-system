@@ -51,6 +51,8 @@ class PartnerController extends Controller
                 'tipe_mitra' => 'required|in:Supplier,Client,Both',
                 'email' => 'nullable|email',
                 'nomor_mitra' => 'nullable|unique:mitras,nomor_mitra',
+                'payment_terms' => 'nullable|string|max:50',
+                'identity_card' => 'nullable|string|max:50',
             ]);
 
             if ($validator->fails()) {
@@ -101,6 +103,8 @@ class PartnerController extends Controller
                 'tipe_mitra' => 'sometimes|required|in:Supplier,Client,Both',
                 'email' => 'nullable|email',
                 'nomor_mitra' => 'nullable|unique:mitras,nomor_mitra,' . $id,
+                'payment_terms' => 'nullable|string|max:50',
+                'identity_card' => 'nullable|string|max:50',
             ]);
 
             if ($validator->fails()) {
