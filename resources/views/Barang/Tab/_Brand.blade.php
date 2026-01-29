@@ -3,7 +3,7 @@
     <div class="row g-2 mb-3 align-items-end">
         <div class="col-md-3">
             <label class="small fw-bold text-muted">Cari</label>
-            <input type="text" id="filter-produk-search" class="form-control form-control-sm"
+            <input type="text" id="filter-brand-search" class="form-control form-control-sm"
                 placeholder="Ketik pencarian...">
         </div>
 
@@ -28,7 +28,7 @@
                     <th width="80" class="text-center">Aksi</th>
                 </tr>
             </thead>
-            <tbody id="produk-table-body">
+            <tbody id="brand-table-body">
                 <tr>
                     <td colspan="2" class="text-center text-muted">Memuat data...</td>
                 </tr>
@@ -37,13 +37,39 @@
     </div>
 
     <div class="d-flex justify-content-between align-items-center px-2">
-        <span id="produk-pagination-info" class="text-muted small"></span>
+        <span id="brand-pagination-info" class="text-muted small"></span>
         <nav>
-            <ul class="pagination pagination-sm mb-0" id="produk-pagination-container"></ul>
+            <ul class="pagination pagination-sm mb-0" id="brand-pagination-container"></ul>
         </nav>
     </div>
 
 </div>
+
+<template id="brand-row-template">
+    <tr>
+        <td class="brand-name"></td>
+        <td class="text-center">
+            <div class="dropdown">
+                <button class="btn btn-sm btn-light border dropdown-toggle" data-bs-toggle="dropdown">Aksi</button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item btn-edit" href="javascript:void(0)">
+                            <i class="fa fa-edit me-2 text-warning"></i> Edit
+                        </a>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li>
+                        <a class="dropdown-item text-danger btn-delete" href="javascript:void(0)">
+                            <i class="fa fa-trash me-2"></i> Hapus
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </td>
+    </tr>
+</template>
 
 @include('Barang.Modal._Brand')
 
@@ -51,10 +77,140 @@
     <script>
         const API_URL = "{{ route('brand-api.index') }}";
         const SUPPLIER_URL = "{{ route('mitra-api.index') }}";
+        const SUPPLIER_BRAND_URL = "{{ route('supplier-brand-api.index') }}";
 
         document.addEventListener('DOMContentLoaded', () => {
-
+            loadBrandData(API_URL);
         });
+
+        async function loadBrandData(url = API_URL) {
+            if (typeof url !== 'string') url = API_URL;
+
+            const tbody = document.getElementById('brand-table-body');
+            tbody.innerHTML =
+                `<tr><td colspan="2" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>`;
+
+            try {
+                const search = document.getElementById('filter-brand-search').value;
+                const fetchUrl = new URL(url);
+                if (search) fetchUrl.searchParams.append('search', search);
+
+                const res = await fetch(fetchUrl);
+                const result = await res.json();
+
+                if (result.success) {
+                    renderBrandTable(result.data.data);
+                    renderBrandPagination(result.data);
+                }
+            } catch (error) {
+                console.error('Gagal memuat data brand:', error);
+                tbody.innerHTML =
+                    `<tr><td colspan="2" class="text-center text-danger">Gagal memuat data brand</td></tr>`;
+            }
+        }
+
+        function renderBrandTable(data) {
+            const tbody = document.getElementById('brand-table-body');
+            const template = document.getElementById('brand-row-template');
+            tbody.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2" class="text-center text-muted">Data brand tidak ditemukan</td></tr>`;
+                return;
+            }
+
+            data.forEach(item => {
+                const clone = template.content.cloneNode(true);
+                clone.querySelector('.brand-name').textContent = item.nama_brand;
+
+                clone.querySelector('.btn-edit').onclick = () => editBrand(item.id);
+                clone.querySelector('.btn-delete').onclick = () => deleteBrand(item.id);
+
+                tbody.appendChild(clone);
+            });
+        }
+
+        function renderBrandPagination(meta) {
+            const info = document.getElementById('brand-pagination-info');
+            if (info) {
+                info.innerText = `Menampilkan ${meta.from || 0} ke ${meta.to || 0} dari ${meta.total} data`;
+            }
+
+            const container = document.getElementById('brand-pagination-container');
+            container.innerHTML = '';
+
+            if (meta.links) {
+                meta.links.forEach(link => {
+                    const active = link.active ? 'active' : '';
+                    const disabled = !link.url ? 'disabled' : '';
+                    const label = link.label.replace('&laquo;', '').replace('&raquo;', '');
+
+                    const li = document.createElement('li');
+                    li.className = `page-item ${active} ${disabled}`;
+                    li.innerHTML = `<a class="page-link shadow-none" href="javascript:void(0)">${label}</a>`;
+
+                    if (link.url && !link.active) {
+                        li.onclick = () => loadBrandData(link.url);
+                    }
+
+                    container.appendChild(li);
+                });
+            }
+        }
+
+        async function editBrand(id) {
+            document.getElementById('formBrand').reset();
+            document.getElementById('brandModalTitle').innerText = 'Edit Brand';
+            document.getElementById('brandId').value = id;
+
+            try {
+                const res = await fetch(`${API_URL}/${id}`);
+                const result = await res.json();
+
+                if (result.success) {
+                    const brand = result.data;
+                    document.getElementById('nama_brand').value = brand.nama_brand;
+
+                    await loadSupplier();
+
+                    if (tsSupplier && brand.suppliers) {
+                        const supplierIds = brand.suppliers.map(s => String(s.id));
+                        tsSupplier.setValue(supplierIds);
+                    }
+
+                    const modal = new bootstrap.Modal(document.getElementById('modalBrand'));
+                    modal.show();
+                } else {
+                    alert('Gagal mengambil data brand: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Edit error:', error);
+                alert('Terjadi kesalahan saat memuat data brand.');
+            }
+        }
+
+        async function deleteBrand(id) {
+            if (!confirm('Hapus brand ini?')) return;
+
+            try {
+                const res = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
+                            'content') || ''
+                    }
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    loadBrandData();
+                } else {
+                    alert('Gagal: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+            }
+        }
 
         async function loadSupplier() {
             if (!tsSupplier) return;
@@ -92,27 +248,31 @@
 
         async function saveBrand() {
             const btn = document.getElementById('btnSaveBrand');
+            const brandId = document.getElementById('brandId').value;
             const brandName = document.getElementById('nama_brand').value;
-            const selectedSuppliers = tsSupplier.getValue(); // Mengambil array ID supplier
+            const selectedSuppliers = tsSupplier.getValue();
 
             if (!brandName) {
                 alert('Nama Brand wajib diisi!');
                 return;
             }
 
+            const url = brandId ? `${API_URL}/${brandId}` : API_URL;
+            const method = brandId ? 'PUT' : 'POST';
+
             const payload = {
                 nama_brand: brandName,
-                supplier_ids: selectedSuppliers // Mengirim array ID
             };
 
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...';
 
             try {
-                const res = await fetch(API_URL, {
-                    method: 'POST',
+                const res = await fetch(url, {
+                    method: method,
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
                             'content') || ''
                     },
@@ -122,9 +282,38 @@
                 const result = await res.json();
 
                 if (result.success) {
-                    alert('Brand berhasil disimpan!');
-                    bootstrap.Modal.getInstance(document.getElementById('modalBrand')).hide();
-                    if (typeof loadBrandData === 'function') loadBrandData();
+                    const finalBrandId = brandId || result.data
+                        .id;
+
+                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+                    for (const sId of selectedSuppliers) {
+                        try {
+                            await fetch(SUPPLIER_BRAND_URL, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': token
+                                },
+                                body: JSON.stringify({
+                                    supplier_id: sId,
+                                    brand_id: finalBrandId
+                                })
+                            });
+                        } catch (err) {
+                            console.error(`Gagal menyimpan relasi untuk Supplier ID: ${sId}`, err);
+                        }
+                    }
+
+                    const modalEl = document.getElementById('modalBrand');
+                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                    if (modalInstance) modalInstance.hide();
+
+                    alert(brandId ? 'Brand dan Supplier berhasil diperbarui!' :
+                        'Brand dan Supplier berhasil ditambahkan!');
+                    loadBrandData();
+
                 } else {
                     alert('Gagal: ' + (result.message || 'Terjadi kesalahan'));
                 }
