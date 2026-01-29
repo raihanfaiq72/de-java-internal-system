@@ -28,20 +28,8 @@
                                         </a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-kategori-produk"
-                                            role="tab">
-                                            <i class="fa fa-tags me-1"></i> Kategori Produk
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-unit" role="tab">
-                                            <i class="fa fa-ruler-combined me-1"></i> Unit Ukuran
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-kategori-unit"
-                                            role="tab">
-                                            <i class="fa fa-layer-group me-1"></i> Kategori Unit
+                                        <a href="#tab-brand" class="nav-link fw-bold" data-bs-toggle="tab" role="tab">
+                                            <i class="fa fa-tags me-1"></i> Brand
                                         </a>
                                     </li>
                                 </ul>
@@ -53,14 +41,17 @@
                                     {{-- TAB 1: PRODUK --}}
                                     @include('Barang.Tab._Produk')
 
+                                    {{-- TAB 2: BRAND --}}
+                                    @include('Barang.Tab._Brand')
+
                                     {{-- TAB 2: KATEGORI PRODUK --}}
-                                    @include('Barang.Tab._KategoriProduk')
+                                    {{-- @include('Barang.Tab._KategoriProduk') --}}
 
                                     {{-- TAB 3: UNIT UKURAN --}}
-                                    @include('Barang.Tab._UnitUkuran')
+                                    {{-- @include('Barang.Tab._UnitUkuran') --}}
 
                                     {{-- TAB 4: KATEGORI UNIT --}}
-                                    @include('Barang.Tab._KategoriUnit')
+                                    {{-- @include('Barang.Tab._KategoriUnit') --}}
 
                                 </div>
                             </div>

@@ -1,10 +1,17 @@
-<div class="tab-pane fade show active" id="tab-produk" role="tabpanel">
+<div class="tab-pane fade show" id="tab-brand" role="tabpanel">
 
     <div class="row g-2 mb-3 align-items-end">
         <div class="col-md-3">
-            <label class="small fw-bold text-muted">Cari Barang</label>
+            <label class="small fw-bold text-muted">Cari SKU / Nama</label>
             <input type="text" id="filter-produk-search" class="form-control form-control-sm"
                 placeholder="Ketik pencarian...">
+        </div>
+
+        <div class="col-md-3">
+            <label class="small fw-bold text-muted">Kategori</label>
+            <select id="filter-produk-kategori" class="form-select form-select-sm">
+                <option value="">Semua Kategori</option>
+            </select>
         </div>
 
         <div class="col-md-auto">
@@ -25,21 +32,18 @@
             <thead class="table-light">
                 <tr>
                     <th width="120">SKU</th>
-                    <th>Supplier</th>
-                    <th>Brand</th>
                     <th>Nama Produk</th>
                     <th>Kategori</th>
-                    <th>Kemasan</th>
-                    <th>Satuan</th>
-                    <th>Qty</th>
+                    <th>Unit</th>
                     <th>Harga Beli</th>
                     <th>Harga Jual</th>
+                    <th>Kuntitas</th>
                     <th width="80" class="text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody id="produk-table-body">
                 <tr>
-                    <td colspan="11" class="text-center text-muted">Memuat data...</td>
+                    <td colspan="5" class="text-center text-muted">Memuat data...</td>
                 </tr>
             </tbody>
         </table>
@@ -53,8 +57,6 @@
     </div>
 
 </div>
-
-@include('Barang.Modal._Produk')
 
 @push('js')
     {{-- <script>
