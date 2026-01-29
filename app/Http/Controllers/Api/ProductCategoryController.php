@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
-use App\Models\ProductCategorie;
+use App\Models\ProductCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -12,7 +12,7 @@ class ProductCategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = ProductCategorie::with('parent')
+        $query = ProductCategory::with('parent')
             ->where('office_id', session('active_office_id'));
 
         if ($request->search) {
@@ -26,7 +26,7 @@ class ProductCategoryController extends Controller
 
     public function show($id)
     {
-        $data = ProductCategorie::with('parent')
+        $data = ProductCategory::with('parent')
             ->where('office_id', session('active_office_id'))
             ->find($id);
         if (!$data) {
@@ -53,7 +53,7 @@ class ProductCategoryController extends Controller
         $input = $request->all();
         $input['office_id'] = session('active_office_id');
 
-        $data = ProductCategorie::create($input);
+        $data = ProductCategory::create($input);
 
         $this->logActivity('Create', 'product_categories', $data->id, null, $data);
 
@@ -62,7 +62,7 @@ class ProductCategoryController extends Controller
 
     public function update(Request $request, $id)
     {
-        $data = ProductCategorie::where('office_id', session('active_office_id'))->find($id);
+        $data = ProductCategory::where('office_id', session('active_office_id'))->find($id);
         if (!$data) {
             return apiResponse(false, 'Data tidak ditemukan', null, null, 404);
         }
@@ -77,7 +77,7 @@ class ProductCategoryController extends Controller
 
     public function destroy($id)
     {
-        $data = ProductCategorie::where('id', $id)
+        $data = ProductCategory::where('id', $id)
             ->where('office_id', session('active_office_id'))
             ->first();
 
@@ -95,7 +95,7 @@ class ProductCategoryController extends Controller
 
     public function search($value)
     {
-        $data = ProductCategorie::where('office_id', session('active_office_id'))
+        $data = ProductCategory::where('office_id', session('active_office_id'))
             ->where('nama_kategori', 'LIKE', "%$value%")
             ->paginate(10);
 

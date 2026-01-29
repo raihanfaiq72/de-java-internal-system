@@ -10,7 +10,7 @@ class COAType extends Model
     use SoftDeletes;
 
     protected $table = 'coa_type';
-    
+
     protected $fillable = ['kelompok_id', 'nama_tipe'];
 
     public function group()

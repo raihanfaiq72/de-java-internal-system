@@ -5,10 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class InvoiceItemTaxe extends Model
+class InvoiceItemTax extends Model
 {
     use SoftDeletes;
-    
+
     protected $table = 'invoice_item_taxes';
 
     protected $fillable = [
@@ -24,6 +24,6 @@ class InvoiceItemTaxe extends Model
 
     public function tax()
     {
-        return $this->belongsTo(Taxe::class, 'tax_id');
+        return $this->belongsTo(Tax::class, 'tax_id');
     }
 }

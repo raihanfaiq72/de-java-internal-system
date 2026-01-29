@@ -4,18 +4,18 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
-use App\Models\Mitra;
+use App\Models\Partner;
 use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Throwable;
 
-class MitraController extends Controller
+class PartnerController extends Controller
 {
     public function index()
     {
         try {
-            $data = Mitra::with(['akunHutang', 'akunPiutang'])
+            $data = Partner::with(['akunHutang', 'akunPiutang'])
                 ->where('office_id', session('active_office_id'))
                 ->latest()
                 ->paginate(10);
@@ -29,15 +29,15 @@ class MitraController extends Controller
     public function show($id)
     {
         try {
-            $mitra = Mitra::with(['akunHutang', 'akunPiutang'])
+            $partner = Partner::with(['akunHutang', 'akunPiutang'])
                 ->where('office_id', session('active_office_id'))
                 ->find($id);
 
-            if (!$mitra) {
+            if (!$partner) {
                 return apiResponse(false, 'Mitra tidak ditemukan', null, null, 404);
             }
 
-            return apiResponse(true, 'Detail mitra', $mitra);
+            return apiResponse(true, 'Detail mitra', $partner);
         } catch (Throwable $e) {
             return apiResponse(false, 'Gagal mengambil detail mitra', null, $e->getMessage(), 500);
         }
@@ -69,32 +69,32 @@ class MitraController extends Controller
             $data['akun_hutang_id']  = 18;
             $data['akun_piutang_id'] = 5;
 
-            $mitra = Mitra::create($data);
+            $partner = Partner::create($data);
 
             $this->logActivity(
                 'Create',
                 'mitras',
-                $mitra->id,
+                $partner->id,
                 null,
-                $mitra->toArray()
+                $partner->toArray()
             );
 
-            return apiResponse(true, 'Mitra berhasil dibuat', $mitra, null, 201);
+            return apiResponse(true, 'Mitra berhasil dibuat', $partner, null, 201);
         } catch (Throwable $e) {
-            return apiResponse(false, 'Gagal membuat mitra', null, $e->getMessage(), 500);
+            return apiResponse(false, 'Gagal membuat Mitra', null, $e->getMessage(), 500);
         }
     }
 
     public function update(Request $request, $id)
     {
         try {
-            $mitra = Mitra::find($id);
+            $partner = Partner::find($id);
 
-            if (!$mitra) {
+            if (!$partner) {
                 return apiResponse(false, 'Mitra tidak ditemukan', null, null, 404);
             }
 
-            $dataSebelum = $mitra->toArray();
+            $dataSebelum = $partner->toArray();
 
             $validator = Validator::make($request->all(), [
                 'nama' => 'sometimes|required|string|max:150',
@@ -116,17 +116,17 @@ class MitraController extends Controller
                 }
             }
 
-            $mitra->update($dataToUpdate);
+            $partner->update($dataToUpdate);
 
             $this->logActivity(
                 'Update',
                 'mitras',
-                $mitra->id,
+                $partner->id,
                 $dataSebelum,
-                $mitra->fresh()->toArray()
+                $partner->fresh()->toArray()
             );
 
-            return apiResponse(true, 'Mitra berhasil diperbarui', $mitra);
+            return apiResponse(true, 'Mitra berhasil diperbarui', $partner);
         } catch (Throwable $e) {
             return apiResponse(false, 'Gagal memperbarui mitra', null, $e->getMessage(), 500);
         }
@@ -135,7 +135,7 @@ class MitraController extends Controller
     public function destroy($id)
     {
         try {
-            $mitra = Mitra::where('office_id', session('active_office_id'))->find($id);
+            $mitra = Partner::where('office_id', session('active_office_id'))->find($id);
 
             if (!$mitra) {
                 return apiResponse(false, 'Mitra tidak ditemukan', null, null, 404);
@@ -162,20 +162,20 @@ class MitraController extends Controller
     public function search($value)
     {
         try {
-            $data = Mitra::with(['akunHutang', 'akunPiutang'])
+            $data = Partner::with(['akunHutang', 'akunPiutang'])
                 ->where('office_id', session('active_office_id'))
                 ->where(function ($q) use ($value) {
                     $q->where('nama', 'LIKE', "%{$value}%")
-                    ->orWhere('nomor_mitra', 'LIKE', "%{$value}%")
-                    ->orWhere('email', 'LIKE', "%{$value}%")
-                    ->orWhere('no_hp', 'LIKE', "%{$value}%")
-                    ->orWhere('tipe_mitra', 'LIKE', "%{$value}%")
-                    ->orWhere('badan_usaha', 'LIKE', "%{$value}%")
-                    ->orWhere('alamat', 'LIKE', "%{$value}%")
-                    ->orWhere('kontak_nama', 'LIKE', "%{$value}%")
-                    ->orWhere('kontak_jabatan', 'LIKE', "%{$value}%")
-                    ->orWhere('kontak_no_hp', 'LIKE', "%{$value}%")
-                    ->orWhere('kontak_email', 'LIKE', "%{$value}%");
+                        ->orWhere('nomor_mitra', 'LIKE', "%{$value}%")
+                        ->orWhere('email', 'LIKE', "%{$value}%")
+                        ->orWhere('no_hp', 'LIKE', "%{$value}%")
+                        ->orWhere('tipe_mitra', 'LIKE', "%{$value}%")
+                        ->orWhere('badan_usaha', 'LIKE', "%{$value}%")
+                        ->orWhere('alamat', 'LIKE', "%{$value}%")
+                        ->orWhere('kontak_nama', 'LIKE', "%{$value}%")
+                        ->orWhere('kontak_jabatan', 'LIKE', "%{$value}%")
+                        ->orWhere('kontak_no_hp', 'LIKE', "%{$value}%")
+                        ->orWhere('kontak_email', 'LIKE', "%{$value}%");
                 })
                 ->latest()
                 ->paginate(10);
@@ -185,7 +185,6 @@ class MitraController extends Controller
                 'Hasil pencarian mitra',
                 $data
             );
-
         } catch (Throwable $e) {
             return apiResponse(
                 false,
@@ -200,8 +199,8 @@ class MitraController extends Controller
     private function generateNomorMitra()
     {
         $prefix = 'M-' . date('ym') . '-';
-        
-        $lastMitra = Mitra::where('nomor_mitra', 'LIKE', $prefix . '%')
+
+        $lastMitra = Partner::where('nomor_mitra', 'LIKE', $prefix . '%')
             ->orderBy('id', 'desc')
             ->first();
 

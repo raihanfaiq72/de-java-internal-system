@@ -14,7 +14,7 @@ class TaxController extends Controller
 {
     public function index()
     {
-        $data = Taxe::where('office_id', session('active_office_id'))
+        $data = Tax::where('office_id', session('active_office_id'))
             ->latest()
             ->paginate(10);
         return apiResponse(true, 'Data pajak', $data);
@@ -22,7 +22,7 @@ class TaxController extends Controller
 
     public function show($id)
     {
-        $data = Taxe::where('office_id', session('active_office_id'))->find($id);
+        $data = Tax::where('office_id', session('active_office_id'))->find($id);
         if (!$data) {
             return apiResponse(false, 'Pajak tidak ditemukan', null, null, 404);
         }
@@ -48,7 +48,7 @@ class TaxController extends Controller
         $input = $request->all();
         $input['office_id'] = session('active_office_id');
 
-        $data = Taxe::create($input);
+        $data = Tax::create($input);
 
         $this->logActivity('Create', 'taxes', $data->id, null, $data);
 
@@ -57,7 +57,7 @@ class TaxController extends Controller
 
     public function update(Request $request, $id)
     {
-        $data = Taxe::where('office_id', session('active_office_id'))->find($id);
+        $data = Tax::where('office_id', session('active_office_id'))->find($id);
         if (!$data) {
             return apiResponse(false, 'Pajak tidak ditemukan', null, null, 404);
         }
@@ -72,7 +72,7 @@ class TaxController extends Controller
 
     public function destroy($id)
     {
-        $data = Taxe::where('office_id', session('active_office_id'))->find($id);
+        $data = Tax::where('office_id', session('active_office_id'))->find($id);
         if (!$data) {
             return apiResponse(false, 'Pajak tidak ditemukan', null, null, 404);
         }
@@ -87,7 +87,7 @@ class TaxController extends Controller
 
     public function search($value)
     {
-        $data = Taxe::where('office_id', session('active_office_id'))
+        $data = Tax::where('office_id', session('active_office_id'))
             ->where('nama_pajak', 'LIKE', "%$value%")
             ->paginate(10);
 

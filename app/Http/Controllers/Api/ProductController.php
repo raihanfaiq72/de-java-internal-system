@@ -56,7 +56,6 @@ class ProductController extends Controller
         $validator = Validator::make($request->all(), [
             'sku_kode' => 'required|unique:products,sku_kode',
             'nama_produk' => 'required',
-            'unit_id' => 'required|exists:units,id'
         ]);
 
         if ($validator->fails()) {
@@ -87,8 +86,6 @@ class ProductController extends Controller
         $validator = Validator::make($request->all(), [
             'sku_kode' => 'required|unique:products,sku_kode,' . $id,
             'nama_produk' => 'required',
-            'unit_id' => 'exists:units,id',
-            'unit_category_id' => 'nullable|exists:unit_categories,id',
             'harga_beli' => 'nullable|numeric|min:0',
             'harga_jual' => 'nullable|numeric|min:0',
         ]);

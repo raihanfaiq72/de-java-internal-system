@@ -4,14 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
-use App\Models\InvoiceItemTaxe;
+use App\Models\InvoiceItemTax;
 use Illuminate\Http\Request;
 
 class InvoiceItemTaxController extends Controller
 {
     public function index(Request $request)
     {
-        $query = InvoiceItemTaxe::with(['invoiceItem'])
+        $query = InvoiceItemTax::with(['invoiceItem'])
             ->whereHas('invoiceItem.invoice', function ($q) {
                 $q->where('office_id', session('active_office_id'));
             });
@@ -31,7 +31,7 @@ class InvoiceItemTaxController extends Controller
             return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
         }
 
-        $data = InvoiceItemTaxe::create($request->all());
+        $data = InvoiceItemTax::create($request->all());
 
         $this->logActivity('Create', 'invoice_item_taxes', $data->id, null, $data);
 
@@ -40,7 +40,7 @@ class InvoiceItemTaxController extends Controller
 
     public function destroy($id)
     {
-        $data = InvoiceItemTaxe::whereHas('invoiceItem.invoice', function ($q) {
+        $data = InvoiceItemTax::whereHas('invoiceItem.invoice', function ($q) {
                 $q->where('office_id', session('active_office_id'));
             })
             ->find($id);

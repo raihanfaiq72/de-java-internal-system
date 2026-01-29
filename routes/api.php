@@ -16,10 +16,9 @@ use App\Http\Controllers\Api\TaxController;
 use App\Http\Controllers\Api\StockController;
 use App\Http\Controllers\Api\StockLocationController;
 use App\Http\Controllers\Api\OfficeController;
-use App\Http\Controllers\Api\UnitCategoryController;
-use App\Http\Controllers\Api\UnitController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ChartOfAccountController;
+use App\Http\Controllers\Api\PartnerController;
 
 Route::middleware(['web', 'auth'])->group(function () {
     Route::prefix('office-api')
@@ -31,34 +30,12 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::prefix('mitra-api')
         ->name('mitra-api.')
         ->group(function () {
-            Route::get('/', [MitraController::class, 'index'])->name('index');
-            Route::post('/', [MitraController::class, 'store'])->name('store');
-            Route::get('/{id}', [MitraController::class, 'show'])->name('show');
-            Route::put('/{id}', [MitraController::class, 'update'])->name('update');
-            Route::delete('/{id}', [MitraController::class, 'destroy'])->name('destroy');
-            Route::get('/search/{value}', [MitraController::class, 'search'])->name('search');
-        });
-
-    Route::prefix('unit-categories-api')
-        ->name('unit-category-api.')
-        ->group(function () {
-            Route::get('/', [UnitCategoryController::class, 'index'])->name('index');
-            Route::post('/', [UnitCategoryController::class, 'store'])->name('store');
-            Route::get('/{id}', [UnitCategoryController::class, 'show'])->name('show');
-            Route::put('/{id}', [UnitCategoryController::class, 'update'])->name('update');
-            Route::delete('/{id}', [UnitCategoryController::class, 'destroy'])->name('destroy');
-            Route::get('/search/{value}', [UnitCategoryController::class, 'search'])->name('search');
-        });
-
-    Route::prefix('unit-api')
-        ->name('unit-api.')
-        ->group(function () {
-            Route::get('/', [UnitController::class, 'index'])->name('index');
-            Route::post('/', [UnitController::class, 'store'])->name('store');
-            Route::get('/{id}', [UnitController::class, 'show'])->name('show');
-            Route::put('/{id}', [UnitController::class, 'update'])->name('update');
-            Route::delete('/{id}', [UnitController::class, 'destroy'])->name('destroy');
-            Route::get('/search/{value}', [UnitController::class, 'search'])->name('search');
+            Route::get('/', [PartnerController::class, 'index'])->name('index');
+            Route::post('/', [PartnerController::class, 'store'])->name('store');
+            Route::get('/{id}', [PartnerController::class, 'show'])->name('show');
+            Route::put('/{id}', [PartnerController::class, 'update'])->name('update');
+            Route::delete('/{id}', [PartnerController::class, 'destroy'])->name('destroy');
+            Route::get('/search/{value}', [PartnerController::class, 'search'])->name('search');
         });
 
     Route::prefix('product-categories-api')

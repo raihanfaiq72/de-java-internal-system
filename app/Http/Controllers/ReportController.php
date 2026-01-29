@@ -225,7 +225,6 @@ class ReportController extends Controller
         $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfMonth();
 
         $query = DB::table('products')
-            ->leftJoin('units', 'products.unit_id', '=', 'units.id')
             ->leftJoin('product_categories', 'products.product_category_id', '=', 'product_categories.id')
             ->leftJoin('stock_mutations', function ($join) use ($officeId, $request) {
                 $join->on('products.id', '=', 'stock_mutations.product_id')
@@ -242,7 +241,6 @@ class ReportController extends Controller
                 'products.id',
                 'products.nama_produk',
                 'products.sku_kode',
-                'units.nama_unit',
                 'product_categories.nama_kategori',
                 DB::raw("SUM(CASE 
                     WHEN stock_mutations.created_at < '$startDate' AND stock_mutations.type = 'IN' THEN stock_mutations.qty 
@@ -265,7 +263,7 @@ class ReportController extends Controller
                     WHEN stock_mutations.created_at BETWEEN '$startDate' AND '$endDate' AND stock_mutations.type = 'OUT' THEN stock_mutations.qty * stock_mutations.cost_price
                     ELSE 0 END) as value_out")
             )
-            ->groupBy('products.id', 'products.nama_produk', 'products.sku_kode', 'units.nama_unit', 'product_categories.nama_kategori');
+            ->groupBy('products.id', 'products.nama_produk', 'products.sku_kode', 'product_categories.nama_kategori');
 
         if ($request->category_id) {
             $query->where('products.product_category_id', $request->category_id);

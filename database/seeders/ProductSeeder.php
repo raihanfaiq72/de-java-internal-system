@@ -16,8 +16,6 @@ class ProductSeeder extends Seeder
         $faker = Faker::create();
         
         // Ambil atau buat ID yang diperlukan
-        $catId = DB::table('unit_categories')->insertGetId(['nama_kategori' => 'Unit', 'konversi_nilai' => 1, 'office_id' => 1]);
-        $unitId = DB::table('units')->insertGetId(['unit_category_id' => $catId, 'nama_unit' => 'Pcs', 'simbol' => 'Pcs', 'office_id' => 1]);
         $prodCatId = DB::table('product_categories')->insertGetId(['nama_kategori' => 'General', 'deskripsi' => 'Testing', 'office_id' => 1]);
         $akunId = DB::table('chart_of_accounts')->first()->id ?? 1;
 
@@ -32,8 +30,6 @@ class ProductSeeder extends Seeder
                 'sku_kode' => 'PROD-' . str_pad($i, 5, '0', STR_PAD_LEFT), 
                 'nama_produk' => 'Produk Test ' . $i,
                 'product_category_id' => $prodCatId,
-                'unit_category_id' => $catId,
-                'unit_id' => $unitId,
                 'harga_beli' => $faker->numberBetween(5000, 50000),
                 'harga_jual' => $faker->numberBetween(60000, 150000),
                 'qty' => $faker->numberBetween(100, 500),
