@@ -4,7 +4,6 @@ use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\InvoiceItemController;
 use App\Http\Controllers\Api\InvoiceItemTaxController;
-use App\Http\Controllers\Api\MitraController;
 use App\Http\Controllers\Api\PaymentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -19,6 +18,8 @@ use App\Http\Controllers\Api\OfficeController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ChartOfAccountController;
 use App\Http\Controllers\Api\PartnerController;
+use App\Http\Controllers\API\BrandController;
+use App\Http\Controllers\API\SupplierBrandController;
 
 Route::middleware(['web', 'auth'])->group(function () {
     Route::prefix('office-api')
@@ -63,6 +64,26 @@ Route::middleware(['web', 'auth'])->group(function () {
 
     Route::get('/product-next-sku-api', [ProductController::class, 'nextSku'])
         ->name('product.next-sku-api');
+
+    Route::prefix('brand-api')
+        ->name('brand-api.')
+        ->group(function () {
+            Route::get('/', [BrandController::class, 'index'])->name('index');
+            Route::post('/', [BrandController::class, 'store'])->name('store');
+            Route::get('/{id}', [BrandController::class, 'show'])->name('show');
+            Route::put('/{id}', [BrandController::class, 'update'])->name('update');
+            Route::delete('/{id}', [BrandController::class, 'destroy'])->name('destroy');
+        });
+
+    Route::prefix('supplier-brand-api')
+        ->name('supplier-brand-api.')
+        ->group(function () {
+            Route::get('/', [SupplierBrandController::class, 'index'])->name('index');
+            Route::post('/', [SupplierBrandController::class, 'store'])->name('store');
+            Route::get('/{id}', [SupplierBrandController::class, 'show'])->name('show');
+            Route::put('/{id}', [SupplierBrandController::class, 'update'])->name('update');
+            Route::delete('/{id}', [SupplierBrandController::class, 'destroy'])->name('destroy');
+        });
 
     Route::prefix('stock-api')
         ->name('stock-api.')

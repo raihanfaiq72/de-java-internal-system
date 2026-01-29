@@ -16,4 +16,14 @@ class SupplierBrand extends Model
         'supplier_id',
         'brand_id',
     ];
+
+    public function supplier()
+    {
+        return $this->belongsTo(Partner::class, 'supplier_id');
+    }
+
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
+    }
 }

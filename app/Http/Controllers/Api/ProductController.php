@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ActivityLog;
-use App\Models\ProductCategorie;
 use App\Services\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -21,7 +20,7 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'unit'])
+        $query = Product::with(['category'])
             ->where('office_id', session('active_office_id'));
 
         if ($request->search) {
@@ -42,7 +41,7 @@ class ProductController extends Controller
 
     public function show($id)
     {
-        $data = Product::with(['category', 'unit'])
+        $data = Product::with(['category'])
             ->where('office_id', session('active_office_id'))
             ->find($id);
         if (!$data) {
