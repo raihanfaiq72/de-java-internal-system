@@ -104,12 +104,7 @@
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 
     <script>
-        let tomSelectKategoriParent,
-            tomSelectKategoriUnit,
-            tomSelectFilterKategoriProduk,
-            tomSelectProdukKategori,
-            tomSelectProdukUnitKategori,
-            tomSelectProdukUnit = null;
+        let tsSupplier = null;
 
         const safeTomSelect = (selector, options) => {
             if (typeof TomSelect !== 'undefined') {
@@ -128,53 +123,23 @@
                 console.warn('TomSelect is not loaded. Filters will use default select behavior.');
             }
 
-            tomSelectKategoriParent = safeTomSelect('#kategori-parent', {
+            tsSupplier = safeTomSelect('#suppliers', {
+                plugins: ['remove_button'],
+                valueField: 'id',
+                labelField: 'nama',
+                searchField: 'nama',
                 create: false,
                 allowEmptyOption: true,
-                placeholder: 'Pilih Kategori ...',
+                placeholder: 'Pilih Supplier ...',
                 dropdownParent: 'body'
             });
-
-            tomSelectKategoriUnit = safeTomSelect('#unit-category', {
-                create: false,
-                allowEmptyOption: true,
-                placeholder: 'Pilih Kategori Unit ...',
-                dropdownParent: 'body'
-            });
-
-            tomSelectFilterKategoriProduk = safeTomSelect('#filter-produk-kategori', {
-                create: false,
-                allowEmptyOption: true,
-                placeholder: 'Filter Kategori Produk ...',
-                dropdownParent: 'body'
-            });
-
-            tomSelectProdukKategori = safeTomSelect('#produk-kategori', {
-                create: false,
-                allowEmptyOption: true,
-                placeholder: 'Pilih Kategori ...',
-                dropdownParent: 'body'
-            });
-
-            tomSelectProdukUnitKategori = safeTomSelect('#produk-unit-category', {
-                create: false,
-                allowEmptyOption: true,
-                placeholder: 'Pilih Kategori Unit ...',
-                dropdownParent: 'body'
-            });
-
-            tomSelectProdukUnit = safeTomSelect('#produk-unit', {
-                create: false,
-                allowEmptyOption: true,
-                placeholder: 'Pilih Unit ...',
-                dropdownParent: 'body'
-            });
-
-
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
             initTomSelect();
+
+            document.getElementById('btnSaveBrand')
+                .addEventListener('click', saveBrand);
         });
     </script>
 @endpush

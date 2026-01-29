@@ -18,8 +18,8 @@ use App\Http\Controllers\Api\OfficeController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ChartOfAccountController;
 use App\Http\Controllers\Api\PartnerController;
-use App\Http\Controllers\API\BrandController;
-use App\Http\Controllers\API\SupplierBrandController;
+use App\Http\Controllers\Api\BrandController;
+use App\Http\Controllers\Api\SupplierBrandController;
 
 Route::middleware(['web', 'auth'])->group(function () {
     Route::prefix('office-api')
