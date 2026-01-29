@@ -5,16 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ProductCategorie extends Model
+class Brand extends Model
 {
     use SoftDeletes;
-    
-    protected $table = 'product_categories';
+
+    protected $table = 'brands';
 
     protected $fillable = [
         'office_id',
-        'nama_kategori',
-        'deskripsi',
+        'nama_brand',
     ];
 
 }

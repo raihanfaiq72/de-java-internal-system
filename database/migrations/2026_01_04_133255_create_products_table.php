@@ -16,16 +16,9 @@ return new class extends Migration
             $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
             $table->string('sku_kode', 50)->unique();
             $table->string('nama_produk', 255);
-            $table->text('deskripsi_produk')->nullable();
 
             $table->foreignId('product_category_id')
                 ->constrained('product_categories');
-
-            $table->foreignId('unit_category_id')
-                ->constrained('unit_categories');
-
-            $table->foreignId('unit_id')
-                ->constrained('units');
 
             $table->decimal('harga_beli', 15, 2)->default(0);
             $table->decimal('harga_jual', 15, 2)->default(0);
@@ -33,16 +26,7 @@ return new class extends Migration
             $table->integer('qty')->default(0);
             $table->string('foto_produk')->nullable();
 
-            $table->foreignId('akun_penjualan_id')
-                ->constrained('chart_of_accounts');
-
-            $table->foreignId('akun_pembelian_id')
-                ->constrained('chart_of_accounts');
-
-            $table->foreignId('akun_diskon_penjualan_id')
-                ->constrained('chart_of_accounts');
-
-            $table->foreignId('akun_diskon_pembelian_id')
+            $table->foreignId('coa_id')
                 ->constrained('chart_of_accounts');
 
             $table->timestamps();

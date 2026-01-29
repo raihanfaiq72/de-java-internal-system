@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('unit_categories', function (Blueprint $table) {
+        Schema::create('supplier_brands', function (Blueprint $table) {
             $table->id();
             $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
-            $table->string('nama_kategori', 100);
-            $table->decimal('konversi_nilai', 15, 2)->default(1);
+            $table->foreignId('supplier_id')->constrained('mitras')->onDelete('cascade');
+            $table->foreignId('brand_id')->constrained('brands')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
         });
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('unit_categories');
+        Schema::dropIfExists('supplier_brands');
     }
 };
