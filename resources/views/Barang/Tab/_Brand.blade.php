@@ -2,16 +2,9 @@
 
     <div class="row g-2 mb-3 align-items-end">
         <div class="col-md-3">
-            <label class="small fw-bold text-muted">Cari SKU / Nama</label>
+            <label class="small fw-bold text-muted">Cari</label>
             <input type="text" id="filter-produk-search" class="form-control form-control-sm"
                 placeholder="Ketik pencarian...">
-        </div>
-
-        <div class="col-md-3">
-            <label class="small fw-bold text-muted">Kategori</label>
-            <select id="filter-produk-kategori" class="form-select form-select-sm">
-                <option value="">Semua Kategori</option>
-            </select>
         </div>
 
         <div class="col-md-auto">
@@ -22,7 +15,7 @@
 
         <div class="col text-end">
             <button class="btn btn-sm btn-primary px-3 shadow-sm" onclick="tambahProduk()">
-                <i class="fa fa-plus me-1"></i> TAMBAH PRODUK
+                <i class="fa fa-plus me-1"></i> TAMBAH BRAND
             </button>
         </div>
     </div>
@@ -31,19 +24,13 @@
         <table class="table table-sm table-bordered align-middle">
             <thead class="table-light">
                 <tr>
-                    <th width="120">SKU</th>
-                    <th>Nama Produk</th>
-                    <th>Kategori</th>
-                    <th>Unit</th>
-                    <th>Harga Beli</th>
-                    <th>Harga Jual</th>
-                    <th>Kuntitas</th>
+                    <th>Nama Brand</th>
                     <th width="80" class="text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody id="produk-table-body">
                 <tr>
-                    <td colspan="5" class="text-center text-muted">Memuat data...</td>
+                    <td colspan="2" class="text-center text-muted">Memuat data...</td>
                 </tr>
             </tbody>
         </table>
