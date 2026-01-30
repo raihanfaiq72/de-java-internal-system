@@ -26,7 +26,7 @@ class InvoiceController extends Controller
     }
     public function index(Request $request)
     {
-        $query = Invoice::with(['mitra', 'items.taxes', 'payment'])
+        $query = Invoice::with(['mitra', 'items.taxes', 'payment', 'items.product'])
             ->where('office_id', session('active_office_id'))
             ->withSum('payment', 'jumlah_bayar');
 
