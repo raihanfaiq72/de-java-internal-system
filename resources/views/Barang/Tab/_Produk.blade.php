@@ -115,7 +115,7 @@
         <td class="col-qty text-center"></td>
         <td class="col-beli text-end"></td>
         <td class="col-jual text-end"></td>
-        <td class="col-coa text-center"></td>
+        <td class="col-coa text-start"></td>
         <td class="text-center">
             <div class="dropdown">
                 <button class="btn btn-sm btn-light border dropdown-toggle" data-bs-toggle="dropdown">Aksi</button>
@@ -347,6 +347,9 @@
             data.forEach(item => {
                 const clone = template.content.cloneNode(true);
 
+                const coaLookup = masterCOA.find(c => String(c.id) === String(item.coa_id));
+                const coaName = coaLookup ? coaLookup.nama_akun : '-';
+
                 // Mengisi Konten Baris
                 clone.querySelector('.col-sku').textContent = item.sku_kode || '-';
                 clone.querySelector('.col-supplier').textContent = item.supplier?.nama || '-';
@@ -358,7 +361,7 @@
                 clone.querySelector('.col-qty').textContent = item.qty || 0;
                 clone.querySelector('.col-beli').textContent = formatIDR(item.harga_beli);
                 clone.querySelector('.col-jual').textContent = formatIDR(item.harga_jual);
-                clone.querySelector('.col-coa').textContent = item.coa?.nama_akun || '-';
+                clone.querySelector('.col-coa').textContent = coaName;
 
                 // Memasang Event Klik
                 clone.querySelector('.btn-edit').onclick = () => editProduk(item.id);
@@ -420,7 +423,7 @@
                 console.error('Fetch error:', error);
                 tbody.innerHTML = `
                 <tr>
-                    <td colspan="11" class="text-center text-danger">
+                    <td colspan="12" class="text-center text-danger">
                         Gagal memuat data
                     </td>
                 </tr>`;
@@ -432,11 +435,6 @@
             currency: 'IDR',
             minimumFractionDigits: 0
         }).format(val);
-
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadProductData();
-        });
     </script>
     {{-- <script>
         const API_URL = 'http://localhost:8000/api/product-api';

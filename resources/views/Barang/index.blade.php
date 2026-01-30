@@ -112,7 +112,10 @@
         const NEXT_SKU_URL = "{{ route('product.next-sku-api') }}";
         const COA_URL = "{{ route('coa-api.index') }}";
 
-        let masterSuppliers, masterBrands, masterCategories, masterCOA = [];
+        let masterSuppliers = [],
+            masterBrands = [],
+            masterCategories = [],
+            masterCOA = [];
 
         let tsSupplier = null;
 
@@ -208,6 +211,10 @@
                 fetchMasterCategories(),
                 fetchMasterCOA()
             ]);
+
+            if (typeof loadProductData === 'function') {
+                await loadProductData();
+            }
 
             document.getElementById('btnSaveBrand')
                 .addEventListener('click', saveBrand);
