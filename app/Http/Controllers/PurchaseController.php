@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Mitra;
 use App\Models\Invoice;
+use App\Models\Partner;
 use App\Models\Payment;
 use Illuminate\Support\Facades\DB;
 
@@ -25,7 +26,7 @@ class PurchaseController extends Controller
     public function receipt()
     {
         // Ambil Mitra untuk pilihan vendor/supplier
-        $mitras = \App\Models\Mitra::whereIn('tipe_mitra', ['Supplier', 'Both'])
+        $mitras = Partner::whereIn('tipe_mitra', ['Supplier', 'Both'])
             ->where('office_id', session('active_office_id'))
             ->get();
 
@@ -46,7 +47,7 @@ class PurchaseController extends Controller
             abort(404);
         }
 
-        return view($this->views . 'Nota.PurchaseNota', compact('invoice'));
+        return view($this->views . 'Nota.PurchaseNota', compact('invoice', 'id'));
     }
 
     public function printReceipt($id)
