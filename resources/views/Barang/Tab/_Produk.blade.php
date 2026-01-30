@@ -14,7 +14,7 @@
         </div>
 
         <div class="col text-end">
-            <button class="btn btn-sm btn-primary px-3 shadow-sm" onclick="">
+            <button class="btn btn-sm btn-primary px-3 shadow-sm" onclick="tambahProduk()">
                 <i class="fa fa-plus me-1"></i> TAMBAH PRODUK
             </button>
         </div>
@@ -34,6 +34,7 @@
                     <th>Qty</th>
                     <th>Harga Beli</th>
                     <th>Harga Jual</th>
+                    <th>COA</th>
                     <th width="80" class="text-center">Aksi</th>
                 </tr>
             </thead>
@@ -54,9 +55,298 @@
 
 </div>
 
+<template id="produk-row-inline-template">
+    <tr class="bg-primary bg-opacity-10 border-primary">
+        <td>
+            <div class="input-group input-group-sm">
+                <input type="text" class="form-control fw-bold in-sku" placeholder="SKU...">
+                <button class="btn btn-outline-primary btn-gen-sku" type="button" title="Generate SKU">
+                    <i class="fa fa-magic"></i>
+                </button>
+            </div>
+        </td>
+        <td>
+            <select class="in-supplier"></select>
+        </td>
+        <td>
+            <select class="in-brand"></select>
+        </td>
+        <td>
+            <input type="text" class="form-control form-control-sm in-nama">
+        </td>
+        <td>
+            <select class="in-kategori"></select>
+        </td>
+        <td>
+            <input type="text" class="form-control form-control-sm in-kemasan">
+        </td>
+        <td>
+            <input type="text" class="form-control form-control-sm in-satuan">
+        </td>
+        <td>
+            <input type="number" class="form-control form-control-sm in-qty" value="0">
+        </td>
+        <td>
+            <input type="number" class="form-control form-control-sm in-beli" value="0">
+        </td>
+        <td>
+            <input type="number" class="form-control form-control-sm in-jual" value="0">
+        </td>
+        <td>
+            <select class="in-coa"></select>
+        </td>
+        <td class="text-center">
+            <div class="d-flex gap-1 justify-content-center">
+                <button class="btn btn-xs btn-success btn-save-inline" title="Simpan">
+                    <i class="fa fa-check"></i>
+                </button>
+                <button class="btn btn-xs btn-danger btn-cancel-inline" title="Batal">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+        </td>
+    </tr>
+</template>
+
+@push('css')
+    <style>
+        .btn-xs {
+            padding: 0.25rem 0.4rem;
+            font-size: 0.75rem;
+            line-height: 1;
+            border-radius: 0.2rem;
+        }
+
+        .ts-control {
+            min-height: 31px !important;
+            padding: 2px 8px !important;
+            font-size: 12px !important;
+        }
+    </style>
+@endpush
+
 @include('Barang.Modal._Produk')
 
 @push('js')
+    <script>
+        async function tambahProduk() {
+            await fetchMasterSuppliers();
+            await fetchMasterBrands();
+            await fetchMasterCategories();
+            await fetchMasterCOA();
+
+            const tbody = document.getElementById('produk-table-body');
+            const template = document.getElementById('produk-row-inline-template');
+
+            if (document.querySelector('.in-sku')) return;
+
+            const clone = template.content.cloneNode(true);
+            const tr = clone.querySelector('tr');
+
+            tbody.prepend(tr);
+
+            const tsProductSupplier = new TomSelect(tr.querySelector('.in-supplier'), {
+                options: masterSuppliers.map(s => ({
+                    value: s.id,
+                    text: s.nama
+                })),
+                placeholder: 'Supplier...',
+                dropdownParent: 'body'
+            });
+
+            const tsProductBrand = new TomSelect(tr.querySelector('.in-brand'), {
+                options: masterBrands.map(b => ({
+                    value: b.id,
+                    text: b.nama_brand
+                })),
+                placeholder: 'Brand...',
+                dropdownParent: 'body'
+            });
+
+            const tsProductKategori = new TomSelect(tr.querySelector('.in-kategori'), {
+                options: masterCategories.map(c => ({
+                    value: c.id,
+                    text: c.nama_kategori
+                })),
+                placeholder: 'Kategori...',
+                create: true,
+                dropdownParent: 'body'
+            });
+
+            const tsCOA = new TomSelect(tr.querySelector('.in-coa'), {
+                options: masterCOA.map(c => ({
+                    value: c.id,
+                    text: c.nama_akun
+                })),
+                placeholder: 'COA...',
+                create: false,
+                dropdownParent: 'body'
+            });
+
+            const skuInput = tr.querySelector('.in-sku');
+            tr.querySelector('.btn-gen-sku').onclick = async () => {
+                skuInput.value = '...';
+                const res = await fetch(NEXT_SKU_URL);
+                const result = await res.json();
+                if (result.success) skuInput.value = result.data;
+            };
+
+            tr.querySelector('.btn-cancel-inline').onclick = () => tr.remove();
+
+            tr.querySelector('.btn-save-inline').onclick = async () => {
+                const payload = {
+                    sku_kode: skuInput.value,
+                    nama_produk: tr.querySelector('.in-nama').value,
+                    supplier_id: tsProductSupplier.getValue(),
+                    brand_id: tsProductBrand.getValue(),
+                    product_category_id: tsProductKategori.getValue(),
+                    kemasan: tr.querySelector('.in-kemasan').value,
+                    satuan: tr.querySelector('.in-satuan').value,
+                    qty: tr.querySelector('.in-qty').value,
+                    harga_beli: tr.querySelector('.in-beli').value,
+                    harga_jual: tr.querySelector('.in-jual').value,
+                    track_stock: 1,
+                    akun_penjualan_id: 1,
+                    akun_pembelian_id: 1,
+                    coa_id: tsCOA.getValue()
+                };
+
+                if (!payload.nama_produk || !payload.sku_kode) {
+                    alert('Nama dan SKU wajib diisi');
+                    return;
+                }
+
+                try {
+                    const res = await fetch(PRODUCT_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute('content')
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await res.json();
+                    if (result.success) {
+                        alert('Produk berhasil ditambahkan');
+                        loadProductData();
+                    } else {
+                        alert('Gagal: ' + result.message);
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+            };
+        }
+
+        function renderProductTable(data) {
+            const tbody = document.getElementById('produk-table-body');
+            tbody.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="11" class="text-center text-muted">Data tidak ditemukan</td></tr>`;
+                return;
+            }
+
+            data.forEach(item => {
+                tbody.insertAdjacentHTML('beforeend', `
+        <tr>
+            <td class="fw-bold">${item.sku_kode || '-'}</td>
+            <td>${item.supplier?.nama || '-'}</td>
+            <td>${item.brand?.nama_brand || '-'}</td>
+            <td>${item.nama_produk}</td>
+            <td>${item.category?.nama_kategori || '-'}</td>
+            <td>${item.kemasan || '-'}</td>
+            <td>${item.satuan || '-'}</td>
+            <td class="text-center">${item.qty || 0}</td>
+            <td class="text-end">${formatIDR(item.harga_beli)}</td>
+            <td class="text-end">${formatIDR(item.harga_jual)}</td>
+            <td class="text-center">
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-light border dropdown-toggle" data-bs-toggle="dropdown">Aksi</button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="editProduk(${item.id})"><i class="fa fa-edit me-2 text-warning"></i> Edit</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="hapusProduk(${item.id})"><i class="fa fa-trash me-2"></i> Hapus</a></li>
+                    </ul>
+                </div>
+            </td>
+        </tr>`);
+            });
+        }
+
+        function renderProductPagination(meta) {
+            document.getElementById('produk-pagination-info').innerText =
+                `Menampilkan ${meta.from || 0} ke ${meta.to || 0} dari ${meta.total} data`;
+
+            const container = document.getElementById('produk-pagination-container');
+            container.innerHTML = '';
+
+            meta.links.forEach(link => {
+                const active = link.active ? 'active' : '';
+                const disabled = !link.url ? 'disabled' : '';
+                const label = link.label.replace('&laquo;', '').replace('&raquo;', '');
+
+                container.insertAdjacentHTML('beforeend', `
+                <li class="page-item ${active} ${disabled}">
+                    <a class="page-link shadow-none"
+                       href="javascript:void(0)"
+                       onclick="loadProductData('${link.url}')">
+                        ${label}
+                    </a>
+                </li>
+            `);
+            });
+        }
+
+        async function loadProductData(url = PRODUCT_URL) {
+            if (typeof url !== 'string') url = PRODUCT_URL;
+
+            const tbody = document.getElementById('produk-table-body');
+            tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-4">
+                    <div class="spinner-border text-primary"></div>
+                </td>
+            </tr>`;
+
+            try {
+                const search = document.getElementById('filter-produk-search').value;
+
+                const fetchUrl = new URL(url);
+                if (search) fetchUrl.searchParams.append('search', search);
+
+                const res = await fetch(fetchUrl);
+                const result = await res.json();
+
+                if (result.success) {
+                    renderProductTable(result.data.data);
+                    renderProductPagination(result.data);
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                tbody.innerHTML = `
+                <tr>
+                    <td colspan="11" class="text-center text-danger">
+                        Gagal memuat data
+                    </td>
+                </tr>`;
+            }
+        }
+
+        const formatIDR = (val) => new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0
+        }).format(val);
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProductData();
+        });
+    </script>
     {{-- <script>
         const API_URL = 'http://localhost:8000/api/product-api';
         const CATEGORY_API_URL = 'http://localhost:8000/api/product-categories-api';
