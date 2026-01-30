@@ -6,7 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\ActivityLog;
 use App\Models\InvoiceItem;
-use App\Models\InvoiceItemTaxe;
+use App\Models\InvoiceItemTax;
+use App\Models\Partner;
 use App\Services\StockService;
 use App\Services\JournalService;
 use Illuminate\Http\Request;
@@ -92,11 +93,11 @@ class InvoiceController extends Controller
             return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
         }
 
-        // Validate Mitra ownership
-        $mitra = \App\Models\Mitra::where('id', $request->mitra_id)
+        // Validate Partner ownership
+        $partner = Partner::where('id', $request->mitra_id)
             ->where('office_id', session('active_office_id'))
             ->first();
-        if (!$mitra) {
+        if (!$partner) {
             return apiResponse(false, 'Mitra tidak valid untuk outlet ini', null, null, 422);
         }
 
@@ -136,7 +137,7 @@ class InvoiceController extends Controller
 
                     if (!empty($itemData['taxes'])) {
                         foreach ($itemData['taxes'] as $taxData) {
-                            InvoiceItemTaxe::create([
+                            InvoiceItemTax::create([
                                 'invoice_item_id'       => $item->id,
                                 'tax_id'                => $taxData['tax_id'],
                                 'nilai_pajak_diterapkan'=> $taxData['nilai_pajak_diterapkan'] ?? 0
@@ -213,7 +214,7 @@ class InvoiceController extends Controller
 
         // Validate Mitra ownership
         $mitraId = $request->input('invoice.mitra_id');
-        $mitra = \App\Models\Mitra::where('id', $mitraId)
+        $mitra = Partner::where('id', $mitraId)
             ->where('office_id', session('active_office_id'))
             ->first();
         if (!$mitra) {
@@ -278,7 +279,7 @@ class InvoiceController extends Controller
                 if (!empty($itemData['taxes'])) {
                     foreach ($itemData['taxes'] as $taxData) {
                         if (!empty($taxData['tax_id'])) {
-                            $tax = InvoiceItemTaxe::create([
+                            $tax = InvoiceItemTax::create([
                                 'invoice_item_id'       => $item->id,
                                 'tax_id'                => $taxData['tax_id'],
                                 'nilai_pajak_diterapkan'=> $taxData['nilai_pajak_diterapkan'] ?? 0

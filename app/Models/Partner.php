@@ -39,4 +39,17 @@ class Partner extends Model
     {
         return $this->belongsTo(COA::class, 'akun_piutang_id');
     }
+
+    public function brands()
+    {
+        return $this->belongsToMany(
+            Brand::class,
+            'supplier_brands',
+            'supplier_id',
+            'brand_id'
+        )
+            ->withPivot(['id', 'office_id', 'deleted_at'])
+            ->withTimestamps()
+            ->wherePivotNull('deleted_at');
+    }
 }

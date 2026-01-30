@@ -7,6 +7,8 @@ use App\Models\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\ActivityLog;
+use App\Models\SupplierBrand;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class BrandController extends Controller
@@ -16,7 +18,8 @@ class BrandController extends Controller
         try {
             $search = $request->search;
 
-            $data = Brand::where('office_id', session('active_office_id'))
+            $data = Brand::with(['suppliers:id,nama'])
+                ->where('office_id', session('active_office_id'))
                 ->when($search, function ($q) use ($search) {
                     $q->where('nama_brand', 'like', "%{$search}%");
                 })
@@ -32,7 +35,9 @@ class BrandController extends Controller
     public function show($id)
     {
         try {
-            $brand = Brand::where('office_id', session('active_office_id'))->find($id);
+            $brand = Brand::with(['suppliers:id,nama'])
+                ->where('office_id', session('active_office_id'))
+                ->find($id);
 
             if (!$brand) {
                 return apiResponse(false, 'Brand tidak ditemukan', null, null, 404);
@@ -53,26 +58,41 @@ class BrandController extends Controller
 
             $validator = Validator::make($request->all(), [
                 'nama_brand' => 'required|string|max:100|unique:brands,nama_brand,NULL,id,office_id,' . session('active_office_id'),
+                'supplier_ids' => 'nullable|array',
+                'supplier_ids.*' => 'exists:mitras,id'
             ]);
 
             if ($validator->fails()) {
                 return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
             }
 
-            $brand = Brand::create([
-                'office_id'  => session('active_office_id'),
-                'nama_brand' => $request->nama_brand,
-            ]);
+            $brand = DB::transaction(function () use ($request) {
 
-            $this->logActivity(
-                'Create',
-                'brands',
-                $brand->id,
-                null,
-                $brand->toArray()
-            );
+                $brand = Brand::create([
+                    'office_id'  => session('active_office_id'),
+                    'nama_brand' => $request->nama_brand,
+                ]);
 
-            return apiResponse(true, 'Brand berhasil ditambahkan', $brand, null, 201);
+                if ($request->filled('supplier_ids')) {
+                    $attachData = collect($request->supplier_ids)->mapWithKeys(function ($id) {
+                        return [$id => ['office_id' => session('active_office_id')]];
+                    });
+
+                    $brand->suppliers()->attach($attachData);
+                }
+
+                $this->logActivity(
+                    'Create',
+                    'brands',
+                    $brand->id,
+                    null,
+                    $brand->toArray()
+                );
+
+                return $brand; // ⬅️ penting
+            });
+
+            return apiResponse(true, 'Brand berhasil ditambahkan', $brand->load('suppliers'), null, 201);
         } catch (Throwable $e) {
             return apiResponse(false, 'Gagal menambahkan brand', null, $e->getMessage(), 500);
         }
@@ -87,29 +107,64 @@ class BrandController extends Controller
                 return apiResponse(false, 'Brand tidak ditemukan', null, null, 404);
             }
 
-            $dataSebelum = $brand->toArray();
-
             $validator = Validator::make($request->all(), [
                 'nama_brand' => 'required|string|max:100|unique:brands,nama_brand,' . $id . ',id,office_id,' . session('active_office_id'),
+                'supplier_ids' => 'nullable|array',
+                'supplier_ids.*' => 'exists:mitras,id'
             ]);
 
             if ($validator->fails()) {
                 return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
             }
 
-            $brand->update([
-                'nama_brand' => $request->nama_brand,
-            ]);
+            $brand = DB::transaction(function () use ($request, $brand) {
 
-            $this->logActivity(
-                'Update',
-                'brands',
-                $brand->id,
-                $dataSebelum,
-                $brand->fresh()->toArray()
-            );
+                $dataSebelum = $brand->load('suppliers')->toArray();
 
-            return apiResponse(true, 'Brand berhasil diperbarui', $brand);
+                $brand->update([
+                    'nama_brand' => $request->nama_brand,
+                ]);
+
+                if ($request->has('supplier_ids')) {
+
+                    $newIds = collect($request->supplier_ids)->unique()->values();
+
+                    $existing = SupplierBrand::where('brand_id', $brand->id)
+                        ->whereNull('deleted_at')
+                        ->pluck('supplier_id');
+
+                    $toDelete = $existing->diff($newIds);
+                    SupplierBrand::where('brand_id', $brand->id)
+                        ->whereIn('supplier_id', $toDelete)
+                        ->delete();
+
+                    $toAdd = $newIds->diff($existing);
+                    foreach ($toAdd as $supplierId) {
+                        SupplierBrand::updateOrCreate(
+                            [
+                                'brand_id'    => $brand->id,
+                                'supplier_id' => $supplierId,
+                            ],
+                            [
+                                'office_id'  => session('active_office_id'),
+                                'deleted_at' => null
+                            ]
+                        );
+                    }
+                }
+
+                $this->logActivity(
+                    'Update',
+                    'brands',
+                    $brand->id,
+                    $dataSebelum,
+                    $brand->fresh()->load('suppliers')->toArray()
+                );
+
+                return $brand;
+            });
+
+            return apiResponse(true, 'Brand berhasil diperbarui', $brand->load('suppliers'));
         } catch (Throwable $e) {
             return apiResponse(false, 'Gagal memperbarui brand', null, $e->getMessage(), 500);
         }
@@ -126,7 +181,10 @@ class BrandController extends Controller
 
             $dataSebelum = $brand->toArray();
 
-            $brand->delete();
+            DB::transaction(function () use ($brand) {
+                SupplierBrand::where('brand_id', $brand->id)->delete();
+                $brand->delete();
+            });
 
             $this->logActivity(
                 'Soft Delete',

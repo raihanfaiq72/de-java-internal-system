@@ -16,4 +16,16 @@ class Brand extends Model
         'nama_brand',
     ];
 
+    public function suppliers()
+    {
+        return $this->belongsToMany(
+            Partner::class,
+            'supplier_brands',
+            'brand_id',
+            'supplier_id'
+        )
+            ->withPivot(['id', 'office_id', 'deleted_at'])
+            ->withTimestamps()
+            ->wherePivotNull('deleted_at');
+    }
 }
