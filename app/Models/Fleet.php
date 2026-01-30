@@ -25,6 +25,21 @@ class Fleet extends Model
 
     public function deliveryOrders()
     {
+        return $this->belongsToMany(DeliveryOrder::class, 'delivery_order_fleets')
+            ->withPivot([
+                'driver_name',
+                'fuel_start_liter',
+                'fuel_end_liter',
+                'total_distance_km',
+                'fuel_used_liter',
+                'extra_cost',
+                'notes'
+            ])
+            ->withTimestamps();
+    }
+
+    public function deliveryOrderFleets()
+    {
         return $this->hasMany(DeliveryOrderFleet::class);
     }
 }
