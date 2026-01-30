@@ -264,31 +264,53 @@
     </div>
 </div>
 
-<template id="item-row-purchase-template">
-    <tr class="border-bottom border-light">
+<template id="productRowTemplate">
+    <tr class="border-bottom border-light product-row">
         <td class="ps-4 py-3">
-            <select class="prod-select mb-2"></select>
+            <input type="hidden" class="prod-id">
+            <div class="mb-1">
+                <select class="prod-select-item"></select>
+            </div>
             <input type="text" class="form-control form-control-sm text-muted small prod-desc"
                 placeholder="Deskripsi (Opsional)">
         </td>
         <td class="py-3">
-            <input type="number" class="form-control form-control-sm text-center fw-bold prod-qty f-row-input"
-                min="1" value="1" oninput="if(this.value<0)this.value=0; calculateInvoiceTotal();">
+            <input type="number" class="form-control form-control-sm text-center prod-qty" value="1"
+                min="1" oninput="calculateInvoiceTotal()">
         </td>
-        <td class="py-3 text-center small text-muted pt-4 prod-unit">Pcs</td>
-        <td class="py-3">
-            <input type="number" class="form-control form-control-sm text-end prod-price f-row-input" min="0"
-                oninput="if(this.value<0)this.value=0; calculateInvoiceTotal();">
+        <td class="py-3 text-center">
+            <span class="badge bg-light text-secondary border prod-unit-label">-</span>
         </td>
         <td class="py-3">
-            <input type="number" class="form-control form-control-sm text-end prod-disc f-row-input" min="0"
-                oninput="if(this.value<0)this.value=0; calculateInvoiceTotal();">
+            <input type="number" class="form-control form-control-sm text-end prod-price" value="0"
+                oninput="calculateInvoiceTotal()">
+        </td>
+        <td class="py-3">
+            <input type="number" class="form-control form-control-sm text-end prod-disc" value="0"
+                oninput="calculateInvoiceTotal()">
         </td>
         <td class="py-3 text-end pe-4 fw-bold text-dark prod-subtotal">Rp 0</td>
         <td class="py-3 text-center">
-            <button type="button" class="btn btn-link text-danger p-0 btn-remove-row"><i
-                    class="fa fa-times-circle fs-5"></i></button>
+            <button type="button" class="btn btn-link text-danger p-0 btn-remove-row">
+                <i class="fa fa-times"></i>
+            </button>
         </td>
+    </tr>
+</template>
+
+<template id="stockRowTemplate">
+    <tr class="stock-item-row">
+        <td class="text-center">
+            <input type="checkbox" class="form-check-input stock-check">
+        </td>
+        <td>
+            <div class="fw-bold text-dark col-stock-nama"></div>
+            <div class="small text-muted col-stock-sku"></div>
+        </td>
+        <td><span class="badge bg-light text-dark border col-stock-kategori"></span></td>
+        <td class="text-center fw-bold col-stock-qty"></td>
+        <td class="text-end font-monospace col-stock-harga"></td>
+        <td class="text-center"><span class="badge col-stock-track"></span></td>
     </tr>
 </template>
 
@@ -300,34 +322,34 @@
         font-size: 14px !important;
     }
 
-    .ts-control {
-        min-height: 48px !important;
-        border-radius: 8px !important;
-        display: flex;
-        align-items: center;
+    .flatpickr-wrapper {
+        width: 100% !important;
+        display: block !important;
     }
 
-    .f-row-input {
-        min-height: 42px !important;
+    .flatpickr-input.form-control[readonly] {
+        background-color: #fff !important;
     }
 
-    .flatpickr-wrapper,
     .flatpickr-input,
     .flatpickr-input+input {
         width: 100% !important;
         display: block !important;
     }
 
+    .flatpickr-calendar {
+        z-index: 10000 !important;
+    }
+
     .flatpickr-calendar.fp-has-sidebar {
         width: 440px !important;
-        margin-left: -160px;
     }
 
     .flatpickr-calendar .fp-sidebar-abs {
         position: absolute;
         left: 0;
         width: 130px;
-        top: 45px;
+        top: 0;
         bottom: 0;
         border-right: 1px solid #e5e7eb;
         background: #f8fafc;
@@ -337,16 +359,37 @@
 
     .flatpickr-calendar.fp-has-sidebar .flatpickr-innerContainer {
         margin-left: 130px;
+        width: 310px;
     }
 
+    .fp-title {
+        font-size: 10px;
+        font-weight: 800;
+        color: #94a3b8;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        letter-spacing: 1px;
+    }
+
+    .fp-sidebar-abs .btn {
+        width: 100%;
+        font-size: 11px;
+        padding: 6px;
+        margin-bottom: 5px;
+        text-align: left;
+        font-weight: 600;
+    }
+
+    /* Pastikan bulan/tahun tetap di atas sidebar */
     .flatpickr-months {
         z-index: 10 !important;
-        position: relative;
-        background: #fff;
         pointer-events: auto !important;
     }
-</style>
 
+    .flatpickr-current-month select {
+        appearance: auto !important;
+    }
+</style>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
@@ -354,6 +397,27 @@
 <script>
     let fpInvoice = null,
         fpDue = null;
+
+    let masterProduk = [];
+
+    async function fetchMasterProduk() {
+        try {
+            const res = await fetch('{{ route('product-api.index') }}');
+            const result = await res.json();
+            if (result.success) {
+                masterProduk = result.data.data || result.data;
+            }
+        } catch (error) {
+            console.error('Gagal load master:', e);
+        }
+    }
+
+    function toggleAllStock(el) {
+        const checkboxes = document.querySelectorAll('.stock-check:not(:disabled)');
+        checkboxes.forEach(chk => {
+            chk.checked = el.checked;
+        });
+    }
 
     function applyDueShortcut(days) {
         const base = document.getElementById('modal_tgl_invoice').value;
@@ -394,28 +458,41 @@
     function injectDueSidebar(instance) {
         const cal = instance.calendarContainer;
         if (!cal || cal.querySelector('.fp-sidebar-abs')) return;
+
         const sidebar = document.createElement('div');
         sidebar.className = 'fp-sidebar-abs';
         sidebar.innerHTML = '<div class="fp-title">Tempo</div>';
-        [{
-            l: '+7 Hari',
-            d: 7
-        }, {
-            l: '+14 Hari',
-            d: 14
-        }, {
-            l: '+30 Hari',
-            d: 30
-        }, {
-            l: '+45 Hari',
-            d: 45
-        }, {
-            l: '+60 Hari',
-            d: 60
-        }].forEach(opt => {
+
+        const options = [{
+                l: 'Hari Ini',
+                d: 0
+            },
+            {
+                l: '+7 Hari',
+                d: 7
+            },
+            {
+                l: '+14 Hari',
+                d: 14
+            },
+            {
+                l: '+30 Hari',
+                d: 30
+            },
+            {
+                l: '+45 Hari',
+                d: 45
+            },
+            {
+                l: '+60 Hari',
+                d: 60
+            }
+        ];
+
+        options.forEach(opt => {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'btn btn-sm btn-outline-primary mb-1 shadow-none';
+            btn.className = 'btn btn-sm btn-outline-primary shadow-none';
             btn.textContent = opt.l;
             btn.onclick = (e) => {
                 e.preventDefault();
@@ -424,9 +501,16 @@
             };
             sidebar.appendChild(btn);
         });
+
         cal.appendChild(sidebar);
         cal.classList.add('fp-has-sidebar');
     }
+
+    const originalOpenInvoiceModal = openInvoiceModal;
+    openInvoiceModal = async function(id = null, type = null, mode = 'create') {
+        await originalOpenInvoiceModal(id, type, mode);
+        initInvoiceDatePickers();
+    };
 
     let tomSelectMitraModal = null;
 
@@ -493,53 +577,74 @@
         }
     });
 
-    async function addNewProductRow(data = null) {
+    function addNewProductRow(data = null) {
         const tbody = document.getElementById('itemBodyList');
-        const template = document.getElementById('item-row-purchase-template');
+        const template = document.getElementById('productRowTemplate');
         const clone = template.content.cloneNode(true);
         const tr = clone.querySelector('tr');
+
         const rowId = 'row_' + Date.now() + Math.random().toString(36).substr(2, 5);
         tr.id = rowId;
 
-        const selectEl = tr.querySelector('.prod-select');
-        const qtyInp = tr.querySelector('.prod-qty');
-        const priceInp = tr.querySelector('.prod-price');
-        const discInp = tr.querySelector('.prod-disc');
-        const unitLbl = tr.querySelector('.prod-unit');
-
-        qtyInp.value = data ? (data.qty || 1) : 1;
-        priceInp.value = data ? (data.harga_satuan || 0) : 0;
-        discInp.value = data ? (data.diskon_nilai || 0) : 0;
-
-        tr.querySelector('.btn-remove-row').onclick = () => {
-            tr.remove();
-            calculateInvoiceTotal();
-        };
-        tbody.appendChild(tr);
+        const selectEl = tr.querySelector('.prod-select-item');
+        const priceInput = tr.querySelector('.prod-price');
+        const qtyInput = tr.querySelector('.prod-qty');
+        const discInput = tr.querySelector('.prod-disc');
+        const idInput = tr.querySelector('.prod-id');
+        const unitLabel = tr.querySelector('.prod-unit-label');
+        const descInput = tr.querySelector('.prod-desc');
 
         const ts = new TomSelect(selectEl, {
-            options: productCollection.map(p => ({
+            options: masterProduk.map(p => ({
                 id: p.id,
-                name: p.nama_produk,
-                price: p.harga_beli || p.harga_jual,
+                nama: p.nama_produk,
+                sku: p.sku_kode,
+                harga: p.harga_jual,
                 unit: p.unit?.nama_unit || 'Pcs'
             })),
             valueField: 'id',
-            labelField: 'name',
-            searchField: 'name',
-            placeholder: 'Pilih Produk...',
-            dropdownParent: 'body',
-            onChange: (val) => {
-                const prod = productCollection.find(p => p.id == val);
-                if (prod) {
-                    priceInp.value = prod.harga_beli || prod.harga_jual;
-                    unitLbl.textContent = prod.unit?.nama_unit || 'Pcs';
+            labelField: 'nama',
+            searchField: ['nama', 'sku'],
+            placeholder: 'Cari barang...',
+            render: {
+                option: (d, esc) =>
+                    `<div><div class="fw-bold">${esc(d.nama)}</div><small class="text-muted">${esc(d.sku)}</small></div>`,
+                item: (d, esc) => `<div>${esc(d.nama)}</div>`
+            },
+            onChange: function(val) {
+                const selected = this.options[val];
+                if (selected) {
+                    idInput.value = selected.id;
+                    priceInput.value = selected.harga;
+                    unitLabel.innerText = selected.unit;
                     calculateInvoiceTotal();
                 }
             }
         });
 
-        if (data && data.produk_id) ts.setValue(String(data.produk_id), true);
+        if (data) {
+            ts.setValue(data.product_id || data.id, true); // true agar tidak trigger onChange ganda
+            idInput.value = data.product_id || data.id;
+            qtyInput.value = data.qty || 1;
+            priceInput.value = data.harga_satuan || data.harga_jual || 0;
+            discInput.value = data.diskon_item || data.diskon_nilai || 0;
+            descInput.value = data.deskripsi_item || data.deskripsi_produk || '';
+            unitLabel.innerText = data.product?.unit?.nama_unit || data.unit || 'Pcs';
+        }
+
+        tr.querySelector('.btn-remove-row').onclick = () => {
+            ts.destroy();
+            tr.remove();
+            calculateInvoiceTotal();
+        };
+
+        tbody.appendChild(tr);
+        calculateInvoiceTotal();
+    }
+
+    function removeProductRow(id) {
+        const row = document.getElementById(`row_${id}`);
+        if (row) row.remove();
         calculateInvoiceTotal();
     }
 
@@ -596,33 +701,30 @@
         document.getElementById('summary_grand_total').innerText = 'Rp 0';
 
         // Load Master Data if empty
-        if (!Array.isArray(masterMitra) || masterMitra.length === 0) {
-            await initializeMasterData();
-        }
+        if (masterProduk.length === 0) await fetchMasterProduk();
+        if (masterMitra.length === 0) await initializeMasterData();
 
         initTomSelectMitraModal();
 
         if (mode === 'edit' && id) {
-            document.getElementById('modalTitle').innerText = 'Edit Invoice Pembelian';
+            document.getElementById('modalTitle').innerText = 'Edit Invoice Penjualan';
             document.getElementById('form_mode').value = 'edit';
             document.getElementById('edit_invoice_id').value = id;
 
             try {
-                // Use window.financeApp.API_URL if available, else default
-                const baseUrl = (window.financeApp && window.financeApp.API_URL) ? window.financeApp.API_URL :
-                    '/api/invoice-api';
-                const res = await fetch(`${baseUrl}/${id}`);
+                const res = await fetch(`${window.financeApp.API_URL}/${id}`);
                 const result = await res.json();
                 if (result.success) {
                     const inv = result.data;
                     document.getElementById('modal_nomor_invoice').value = inv.nomor_invoice;
+                    document.getElementById('modal_ref_no').value = inv.ref_no || '';
                     document.getElementById('modal_tgl_invoice').value = inv.tgl_invoice;
                     document.getElementById('modal_tgl_jatuh_tempo').value = inv.tgl_jatuh_tempo;
                     document.getElementById('modal_mitra_id').value = inv.mitra_id;
-                    document.getElementById('modal_ref_no').value = inv.ref_no;
-                    document.getElementById('modal_keterangan').value = inv.keterangan;
-                    document.getElementById('modal_syarat').value = inv.syarat_ketentuan;
+                    document.getElementById('modal_keterangan').value = inv.keterangan || '';
+                    document.getElementById('modal_syarat').value = inv.syarat_ketentuan || '';
                     document.getElementById('modal_diskon_tambahan').value = inv.diskon_tambahan_nilai || 0;
+
 
                     if (inv.mitra_id && tomSelectMitraModal) {
                         tomSelectMitraModal.setValue(String(inv.mitra_id), true);
@@ -632,15 +734,16 @@
 
                     renderMitraDetail();
 
-                    // Populate Items
+                    // Items
                     if (inv.items) {
                         inv.items.forEach(item => addNewProductRow(item));
                     }
                 }
             } catch (e) {
-                console.error("Edit fetch fail", e);
-                alert('Gagal mengambil data invoice.');
+                console.error(e);
+                alert('Gagal load data invoice');
             }
+
         } else {
             document.getElementById('modalTitle').innerText = 'Invoice Penjualan Baru';
             document.getElementById('form_mode').value = 'create';
@@ -681,24 +784,34 @@
     }
 
     function calculateInvoiceTotal() {
-        let sub = 0;
+        let subtotal = 0;
+
         document.querySelectorAll('#itemBodyList tr').forEach(row => {
-            const q = parseFloat(row.querySelector('.prod-qty').value) || 0,
-                p = parseFloat(row.querySelector('.prod-price').value) || 0,
-                d = parseFloat(row.querySelector('.prod-disc').value) || 0;
+            const qtyEl = row.querySelector('.prod-qty');
+            const priceEl = row.querySelector('.prod-price');
+            const discEl = row.querySelector('.prod-disc');
+            const subtotalDisplay = row.querySelector('.prod-subtotal');
 
-            let lineSub = (q * p) - d;
-            if (lineSub < 0) lineSub = 0;
+            if (!qtyEl || !priceEl || !discEl) return;
 
-            row.querySelector('.prod-subtotal').innerText = window.financeHelpers.formatIDR(lineSub);
-            sub += lineSub;
+            const qty = parseFloat(qtyEl.value) || 0;
+            const price = parseFloat(priceEl.value) || 0;
+            const disc = parseFloat(discEl.value) || 0;
+
+            let lineTotal = (qty * price) - disc;
+            if (lineTotal < 0) lineTotal = 0;
+
+            if (subtotalDisplay) {
+                subtotalDisplay.innerText = window.financeApp.formatIDR(lineTotal);
+            }
+            subtotal += lineTotal;
         });
 
-        const extra = parseFloat(document.getElementById('modal_diskon_tambahan').value) || 0;
-        const grand = Math.max(0, sub - extra);
+        const extraDisc = parseFloat(document.getElementById('modal_diskon_tambahan').value) || 0;
+        const grandTotal = Math.max(0, subtotal - extraDisc);
 
-        document.getElementById('summary_subtotal').innerText = window.financeHelpers.formatIDR(sub);
-        document.getElementById('summary_grand_total').innerText = window.financeHelpers.formatIDR(grand);
+        document.getElementById('summary_subtotal').innerText = window.financeApp.formatIDR(subtotal);
+        document.getElementById('summary_grand_total').innerText = window.financeApp.formatIDR(grandTotal);
     }
 
     function renderMitraDetail() {
@@ -728,7 +841,6 @@
 
     }
 
-
     function resetModalForm() {
         document.getElementById('invoiceForm').reset();
         document.getElementById('itemBodyList').innerHTML = '';
@@ -741,91 +853,103 @@
     async function saveFullInvoice() {
         const mode = document.getElementById('form_mode').value;
         const id = document.getElementById('edit_invoice_id').value;
+        const url = mode === 'edit' ? `/api/invoice-api/${id}` : '/api/invoice-create-api';
+        const method = mode === 'edit' ? 'PUT' : 'POST';
 
-        // Prepare Payload
+        const mitraIdVal = tomSelectMitraModal ? tomSelectMitraModal.getValue() : document.getElementById(
+            'modal_mitra_id').value;
+
+        // Build Payload
+        const items = [];
+        document.querySelectorAll('#itemBodyList tr').forEach(row => {
+            const qty = parseFloat(row.querySelector('.prod-qty').value) || 0;
+            const price = parseFloat(row.querySelector('.prod-price').value) || 0;
+            const disc = parseFloat(row.querySelector('.prod-disc').value) || 0;
+            const subtotal = Math.max(0, (qty * price) - disc);
+
+            const productId = row.querySelector('.prod-id').value;
+
+            const productData = masterProduk.find(p => String(p.id) === String(productId));
+            const namaProduk = productData ? productData.nama_produk : '';
+
+            items.push({
+                produk_id: row.querySelector('.prod-id').value || null,
+                nama_produk_manual: namaProduk,
+                deskripsi_produk: row.querySelector('.prod-desc').value,
+                qty: qty,
+                harga_satuan: price,
+                diskon_nilai: disc,
+                total_harga_item: subtotal
+            });
+        });
+
         const payload = {
             invoice: {
-                tipe_invoice: 'Purchase', // Tipe Purchase
+                tipe_invoice: 'Purchase',
                 nomor_invoice: document.getElementById('modal_nomor_invoice').value,
                 tgl_invoice: document.getElementById('modal_tgl_invoice').value,
                 tgl_jatuh_tempo: document.getElementById('modal_tgl_jatuh_tempo').value,
-                mitra_id: document.getElementById('modal_mitra_id').value,
+                mitra_id: mitraIdVal,
                 ref_no: document.getElementById('modal_ref_no').value,
                 keterangan: document.getElementById('modal_keterangan').value,
                 syarat_ketentuan: document.getElementById('modal_syarat').value,
                 diskon_tambahan_nilai: parseFloat(document.getElementById('modal_diskon_tambahan').value) || 0,
                 total_akhir: parseFloat(document.getElementById('summary_grand_total').innerText.replace(
-                    /[^0-9,-]+/g, "").replace(",", ".")) || 0,
-                // Basic Defaults
+                    /[^0-9,-]+/g, '').replace(',', '.')) || 0,
                 status_dok: 'Approved',
                 status_pembayaran: 'Unpaid',
                 biaya_kirim: 0,
                 uang_muka: 0
             },
-            items: []
+            items: items
         };
 
-        // Validate basic fields
+        // Basic Validation
         if (!payload.invoice.mitra_id) {
-            alert('Harap pilih Supplier/Mitra!');
+            alert('Harap pilih Pelanggan/Mitra!');
             return;
         }
         if (!payload.invoice.tgl_invoice) {
             alert('Harap isi Tanggal Invoice!');
             return;
         }
-
-        let totalValid = 0;
-        document.querySelectorAll('#itemBodyList tr').forEach(row => {
-            const sel = row.querySelector('.prod-select');
-            const qty = parseFloat(row.querySelector('.prod-qty').value) || 0;
-            const price = parseFloat(row.querySelector('.prod-price').value) || 0;
-
-            if (sel.value && qty > 0) {
-                payload.items.push({
-                    produk_id: sel.value,
-                    qty: qty,
-                    harga_satuan: price,
-                    diskon_nilai: parseFloat(row.querySelector('.prod-disc').value) || 0,
-                    total_harga_item: (qty * price) - (parseFloat(row.querySelector('.prod-disc')
-                        .value) || 0),
-                    taxes: []
-                });
-                totalValid++;
-            }
-        });
-
-        if (totalValid === 0) {
-            alert('Harap tambahkan minimal satu item produk valid!');
+        if (!payload.invoice.nomor_invoice) {
+            alert('Nomor invoice belum diisi.');
+            return;
+        }
+        if (items.length === 0) {
+            alert('Harap tambahkan minimal satu item.');
             return;
         }
 
-        const url = mode === 'edit' ? `/api/invoice-api/${id}` : '/api/invoice-create-api';
-        const method = mode === 'edit' ? 'PUT' : 'POST';
-
         try {
-            const response = await fetch(url, {
+            const res = await fetch(url, {
                 method: method,
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
-                        'content') || ''
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
                 body: JSON.stringify(payload)
             });
 
-            const result = await response.json();
-
+            const result = await res.json();
             if (result.success) {
-                alert('Invoice Pembelian berhasil disimpan!');
+                alert('Invoice berhasil disimpan!');
                 bootstrap.Modal.getInstance(document.getElementById('invoiceModal')).hide();
+                // Redirect to detail page
                 window.location.href = `{{ url('purchase') }}/${result.data.invoice.id}`;
             } else {
-                alert('Gagal menyimpan: ' + (result.message || JSON.stringify(result.errors)));
+                if (result.errors) {
+                    let errorMsg = "Terjadi kesalahan:\n";
+                    Object.values(result.errors).forEach(err => errorMsg += `- ${err}\n`);
+                    alert(errorMsg);
+                } else {
+                    alert('Gagal: ' + result.message);
+                }
             }
-        } catch (error) {
-            console.error('Save error', error);
-            alert('Terjadi kesalahan sistem saat menyimpan.');
+        } catch (e) {
+            console.error(e);
+            alert('Terjadi kesalahan saat menyimpan.');
         }
     }
 
@@ -853,22 +977,42 @@
 
     function renderStockList(data) {
         const tbody = document.getElementById('stockBodyList');
+        const template = document.getElementById('stockRowTemplate');
         tbody.innerHTML = '';
+
+        const existingIds = Array.from(document.querySelectorAll('#itemBodyList .prod-id'))
+            .map(input => input.value);
+
         data.forEach(item => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="text-center"><input type="checkbox" class="form-check-input stock-check" value="${item.id}" data-raw='${JSON.stringify(item)}'></td>
-                <td>
-                    <div class="fw-bold text-dark">${item.nama_produk}</div>
-                    <div class="small text-muted">${item.kode_produk}</div>
-                </td>
-                <td><span class="badge bg-light text-dark border">${item.kategori?.nama_kategori || '-'}</span></td>
-                <td class="text-center fw-bold">${item.stok_akhir || 0} ${item.unit?.nama_unit || ''}</td>
-                <td class="text-end font-monospace">${window.financeApp.formatIDR(item.harga_jual)}</td>
-                <td class="text-center"><span class="badge ${item.lacak_stok ? 'bg-success' : 'bg-secondary'}">${item.lacak_stok ? 'YES' : 'NO'}</span></td>
-            `;
-            tbody.appendChild(tr);
+            const clone = template.content.cloneNode(true);
+            const tr = clone.querySelector('tr');
+            const chk = clone.querySelector('.stock-check');
+
+            // Set Data Checkbox
+            chk.value = item.id;
+            chk.dataset.raw = JSON.stringify(item);
+
+            if (existingIds.includes(String(item.id))) {
+                chk.checked = true;
+            }
+
+            // Isi Konten
+            clone.querySelector('.col-stock-nama').textContent = item.nama_produk;
+            clone.querySelector('.col-stock-sku').textContent = item.sku_kode || item.kode_produk || '-';
+            clone.querySelector('.col-stock-kategori').textContent = item.category?.nama_kategori || '-';
+            clone.querySelector('.col-stock-qty').textContent =
+                `${item.qty || 0} ${item.unit?.nama_unit || ''}`;
+            clone.querySelector('.col-stock-harga').textContent = window.financeApp.formatIDR(item.harga_jual);
+
+            const trackBadge = clone.querySelector('.col-stock-track');
+            trackBadge.textContent = item.track_stock ? 'YES' : 'NO';
+            trackBadge.className = `badge ${item.track_stock ? 'bg-success' : 'bg-secondary'}`;
+
+            tbody.appendChild(clone);
         });
+
+        const masterChk = document.getElementById('checkAllStock');
+        if (masterChk) masterChk.checked = false;
     }
 
     // Filter Stock
@@ -890,19 +1034,27 @@
 
     function addSelectedStocks() {
         const checked = document.querySelectorAll('.stock-check:checked');
+
+        const existingIds = Array.from(document.querySelectorAll('#itemBodyList .prod-id'))
+            .map(input => input.value);
+
         checked.forEach(chk => {
             const data = JSON.parse(chk.dataset.raw);
-            addNewProductRow({
-                product_id: data.id,
-                product: data,
-                nama_produk_manual: data.nama_produk,
-                qty: 1,
-                harga_satuan: data.harga_jual,
-                diskon_item: 0
-            });
+            const productId = String(data.id);
+
+            if (!existingIds.includes(productId)) {
+                addNewProductRow({
+                    product_id: data.id,
+                    id: data.id,
+                    nama_produk_manual: data.nama_produk,
+                    harga_jual: data.harga_jual,
+                    qty: 1,
+                    unit: data.unit?.nama_unit || 'Pcs',
+                    product: data
+                });
+            }
         });
+
         bootstrap.Modal.getInstance(document.getElementById('stockModal')).hide();
     }
-
-    document.addEventListener('DOMContentLoaded', initializeInvoiceData);
 </script>

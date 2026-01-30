@@ -593,7 +593,7 @@
                     deleteInvoice(item.id);
                 }
             };
-            document.getElementById('btnDetailPrint').href = `{{ url('sales/print') }}/${item.id}`;
+            document.getElementById('btnDetailPrint').href = `{{ url('purchase/print') }}/${item.id}`;
 
             // Show Modal
             new bootstrap.Modal(document.getElementById('detailInvoiceModal')).show();
@@ -622,7 +622,7 @@
                     // Prevent if clicked on checkbox or actions
                     if (e.target.closest('.invoice-checkbox') || e.target.closest('.dropdown') || e.target
                         .closest('a') || e.target.closest('button')) return;
-                    window.location.href = `{{ url('sales') }}/${item.id}`;
+                    window.location.href = `{{ url('purchase') }}/${item.id}`;
                 };
 
                 row.querySelector('.invoice-checkbox').dataset.id = item.id;
@@ -671,13 +671,13 @@
                         e.preventDefault();
                         // Redirect to receipt page with params
                         window.location.href =
-                            `{{ route('sales.receipt') }}?open_create=true&invoice_id=${item.id}&mitra_id=${item.mitra_id}`;
+                            `{{ route('purchase.receipt') }}?open_create=true&invoice_id=${item.id}&mitra_id=${item.mitra_id}`;
                     };
                 }
 
                 row.querySelector('.btn-edit').onclick = () => openInvoiceModal(item.id, null, 'edit');
                 row.querySelector('.btn-delete').onclick = () => deleteInvoice(item.id);
-                row.querySelector('.btn-print').href = `{{ url('sales/print') }}/${item.id}`;
+                row.querySelector('.btn-print').href = `{{ url('purchase/print') }}/${item.id}`;
 
                 // Remove chevron
                 const chevron = row.querySelector('.chevron-icon');
