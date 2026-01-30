@@ -19,9 +19,13 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ChartOfAccountController;
 use App\Http\Controllers\Api\PartnerController;
 use App\Http\Controllers\Api\BrandController;
+use App\Http\Controllers\Api\DeliveryOrderController;
+use App\Http\Controllers\Api\DeliveryOrderFleetController;
+use App\Http\Controllers\Api\DeliveryOrderInvoiceController;
+use App\Http\Controllers\Api\FleetController;
 use App\Http\Controllers\Api\SupplierBrandController;
 
-Route::middleware(['web', 'auth'])->group(function () {
+// Route::middleware(['web', 'auth'])->group(function () {
     Route::prefix('office-api')
         ->name('office-api.')
         ->group(function () {
@@ -207,7 +211,41 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::put('/{id}', [ChartOfAccountController::class, 'update'])->name('update');
             Route::delete('/{id}', [ChartOfAccountController::class, 'destroy'])->name('destroy');
         });
-});
+
+    Route::prefix('delivery-order-api')->name('delivery-order-api.')->group(function () {
+        Route::get('/', [DeliveryOrderController::class, 'index'])->name('index');
+        Route::post('/', [DeliveryOrderController::class, 'store'])->name('store');
+        Route::get('/{id}', [DeliveryOrderController::class, 'show'])->name('show');
+        Route::put('/{id}', [DeliveryOrderController::class, 'update'])->name('update');
+        Route::delete('/{id}', [DeliveryOrderController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('delivery-order-invoice-api')->name('delivery-order-invoice-api.')->group(function () {
+        Route::get('/', [DeliveryOrderInvoiceController::class, 'index'])->name('index');
+        Route::post('/', [DeliveryOrderInvoiceController::class, 'store'])->name('store');
+        Route::get('/{id}', [DeliveryOrderInvoiceController::class, 'show'])->name('show');
+        Route::put('/{id}', [DeliveryOrderInvoiceController::class, 'update'])->name('update');
+        Route::delete('/{id}', [DeliveryOrderInvoiceController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('delivery-order-fleet-api')->name('delivery-order-fleet-api.')->group(function () {
+        Route::get('/', [DeliveryOrderFleetController::class, 'index'])->name('index');
+        Route::post('/', [DeliveryOrderFleetController::class, 'store'])->name('store');
+        Route::get('/{id}', [DeliveryOrderFleetController::class, 'show'])->name('show');
+        Route::put('/{id}', [DeliveryOrderFleetController::class, 'update'])->name('update');
+        Route::delete('/{id}', [DeliveryOrderFleetController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('fleet-api')
+        ->name('fleet-api.')
+        ->group(function () {
+            Route::get('/', [FleetController::class, 'index'])->name('index');
+            Route::post('/', [FleetController::class, 'store'])->name('store');
+            Route::get('/{id}', [FleetController::class, 'show'])->name('show');
+            Route::put('/{id}', [FleetController::class, 'update'])->name('update');
+            Route::delete('/{id}', [FleetController::class, 'destroy'])->name('destroy');
+        });
+// });
 
 Route::get('/user', function (Request $request) {
     return $request->user();
