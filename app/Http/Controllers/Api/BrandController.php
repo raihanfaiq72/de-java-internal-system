@@ -7,6 +7,7 @@ use App\Models\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\ActivityLog;
+use App\Models\Partner;
 use App\Models\SupplierBrand;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -29,6 +30,39 @@ class BrandController extends Controller
             return apiResponse(true, 'Data brand berhasil diambil', $data);
         } catch (Throwable $e) {
             return apiResponse(false, 'Gagal mengambil data brand', null, $e->getMessage(), 500);
+        }
+    }
+
+    public function suppliers($supplier_id)
+    {
+        try {
+            $officeId = session('active_office_id');
+
+            $supplier = Partner::where('office_id', $officeId)
+                ->where('tipe_mitra', 'supplier')
+                ->find($supplier_id);
+
+            if (!$supplier) {
+                return apiResponse(false, 'Supplier tidak ditemukan', null, null, 404);
+            }
+
+            $brands = Brand::where('office_id', $officeId)
+                ->whereHas('suppliers', function ($q) use ($supplier_id) {
+                    $q->where('mitras.id', $supplier_id);
+                })
+                ->with(['suppliers:id,nama'])
+                ->orderBy('nama_brand')
+                ->get();
+
+            return apiResponse(true, 'Daftar brand milik supplier', [
+                'supplier' => [
+                    'id'   => $supplier->id,
+                    'nama' => $supplier->nama,
+                ],
+                'brands' => $brands
+            ]);
+        } catch (Throwable $e) {
+            return apiResponse(false, 'Gagal mengambil data brand supplier', null, $e->getMessage(), 500);
         }
     }
 

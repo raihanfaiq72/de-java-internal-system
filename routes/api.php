@@ -69,6 +69,7 @@ Route::middleware(['web', 'auth'])->group(function () {
         ->name('brand-api.')
         ->group(function () {
             Route::get('/', [BrandController::class, 'index'])->name('index');
+            Route::get('/suppliers/{supplier_id}', [BrandController::class, 'suppliers'])->name('suppliers');
             Route::post('/', [BrandController::class, 'store'])->name('store');
             Route::get('/{id}', [BrandController::class, 'show'])->name('show');
             Route::put('/{id}', [BrandController::class, 'update'])->name('update');
