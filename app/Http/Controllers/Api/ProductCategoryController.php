@@ -12,8 +12,7 @@ class ProductCategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = ProductCategory::with('parent')
-            ->where('office_id', session('active_office_id'));
+        $query = ProductCategory::where('office_id', session('active_office_id'));
 
         if ($request->search) {
             $query->where('nama_kategori', 'LIKE', "%{$request->search}%");
@@ -26,8 +25,7 @@ class ProductCategoryController extends Controller
 
     public function show($id)
     {
-        $data = ProductCategory::with('parent')
-            ->where('office_id', session('active_office_id'))
+        $data = ProductCategory::where('office_id', session('active_office_id'))
             ->find($id);
         if (!$data) {
             return apiResponse(false, 'Data tidak ditemukan', null, null, 404);
