@@ -15,7 +15,7 @@ class FleetController extends Controller
         try {
             $search = $request->search;
 
-            $data = Fleet::where('office_id', '1')
+            $data = Fleet::where('office_id', session('active_office_id'))
                 ->when($search, function ($q) use ($search) {
                     $q->where('fleet_name', 'like', "%{$search}%")
                         ->orWhere('license_plate', 'like', "%{$search}%")
@@ -42,7 +42,7 @@ class FleetController extends Controller
                 return apiResponse(false, 'Validation failed', null, $validator->errors(), 422);
 
             $fleet = Fleet::create([
-                'office_id' => '1',
+                'office_id' => session('active_office_id'),
                 'fleet_name' => $request->fleet_name,
                 'fuel_type' => $request->fuel_type,
                 'license_plate' => $request->license_plate,
