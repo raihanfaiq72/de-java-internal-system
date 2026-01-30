@@ -14,7 +14,7 @@
         </div>
 
         <div class="col text-end">
-            <button class="btn btn-sm btn-primary px-3 shadow-sm" onclick="tambahProduk()">
+            <button class="btn btn-sm btn-primary px-3 shadow-sm" onclick="">
                 <i class="fa fa-plus me-1"></i> TAMBAH PRODUK
             </button>
         </div>
