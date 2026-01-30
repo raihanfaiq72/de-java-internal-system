@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
             $table->enum('tipe_invoice', ['Sales', 'Purchase']);
+            $table->boolean('is_kop')->default(false);
             $table->string('logo_img')->nullable();
             $table->string('nomor_invoice', 100)->unique();
 

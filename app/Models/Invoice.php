@@ -14,6 +14,7 @@ class Invoice extends Model
     protected $fillable = [
         'office_id',
         'tipe_invoice',
+        'is_kop',
         'logo_img',
         'nomor_invoice',
         'tgl_invoice',
@@ -39,7 +40,7 @@ class Invoice extends Model
 
     public function mitra()
     {
-        return $this->belongsTo(Mitra::class);
+        return $this->belongsTo(Partner::class);
     }
 
     public function items()
