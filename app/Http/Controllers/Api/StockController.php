@@ -22,7 +22,7 @@ class StockController extends Controller
 
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'unit'])
+        $query = Product::with(['category', 'supplier', 'brand'])
             ->where('office_id', session('active_office_id'));
 
         if ($request->search) {
