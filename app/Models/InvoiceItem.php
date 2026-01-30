@@ -34,6 +34,6 @@ class InvoiceItem extends Model
 
     public function taxes()
     {
-        return $this->hasMany(InvoiceItemTaxe::class, 'invoice_item_id');
+        return $this->hasMany(InvoiceItemTax::class, 'invoice_item_id');
     }
 }
