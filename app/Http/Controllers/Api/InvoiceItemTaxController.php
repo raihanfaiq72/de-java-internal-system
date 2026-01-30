@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\ActivityLog;
 use App\Models\InvoiceItemTax;
 use Illuminate\Http\Request;
 
@@ -33,8 +32,6 @@ class InvoiceItemTaxController extends Controller
 
         $data = InvoiceItemTax::create($request->all());
 
-        $this->logActivity('Create', 'invoice_item_taxes', $data->id, null, $data);
-
         return apiResponse(true, 'Pajak item invoice ditambahkan', $data, null, 201);
     }
 
@@ -52,22 +49,7 @@ class InvoiceItemTaxController extends Controller
         $before = $data->toArray();
         $data->delete();
 
-        $this->logActivity('Soft Delete', 'invoice_item_taxes', $id, $before, null);
-
         return apiResponse(true, 'Pajak item invoice dihapus');
     }
 
-    private function logActivity($tindakan, $tabel, $dataId, $before, $after)
-    {
-        ActivityLog::create([
-            'office_id' => session('active_office_id'),
-            'user_id' => 1,
-            'tindakan' => $tindakan,
-            'tabel_terkait' => $tabel,
-            'data_id' => $dataId,
-            'data_sebelum' => $before,
-            'data_sesudah' => $after,
-            'ip_address' => request()->ip(),
-        ]);
-    }
 }

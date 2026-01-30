@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Throwable;
@@ -49,14 +48,6 @@ class UserController extends Controller
                 'password' => $request->password, 
             ]);
 
-            $this->logActivity(
-                'Create',
-                'users',
-                $user->id,
-                null,
-                $user
-            );
-
             return apiResponse(true, 'User berhasil dibuat', $user, null, 201);
 
         } catch (Throwable $e) {
@@ -94,14 +85,6 @@ class UserController extends Controller
 
             $user->update($data);
 
-            $this->logActivity(
-                'Update',
-                'users',
-                $user->id,
-                $before,
-                $user
-            );
-
             return apiResponse(true, 'User berhasil diperbarui', $user);
 
         } catch (Throwable $e) {
@@ -120,14 +103,6 @@ class UserController extends Controller
         try {
             $before = $user->toArray();
             $user->delete();
-
-            $this->logActivity(
-                'Delete',
-                'users',
-                $id,
-                $before,
-                null
-            );
 
             return apiResponse(true, 'User berhasil dihapus');
 
@@ -164,17 +139,4 @@ class UserController extends Controller
         }
     }
 
-    private function logActivity($tindakan, $tabel, $dataId, $before, $after)
-    {
-        ActivityLog::create([
-            'office_id' => session('active_office_id') ?? 1,
-            'user_id' => 1,
-            'tindakan' => $tindakan,
-            'tabel_terkait' => $tabel,
-            'data_id' => $dataId,
-            'data_sebelum' => $before,
-            'data_sesudah' => $after,
-            'ip_address' => request()->ip(),
-        ]);
-    }
 }

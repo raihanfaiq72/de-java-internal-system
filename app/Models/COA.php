@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\ActivityLogs;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class COA extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, ActivityLogs;
 
     protected $table = 'chart_of_accounts';
     

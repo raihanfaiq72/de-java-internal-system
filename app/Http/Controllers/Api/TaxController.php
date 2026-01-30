@@ -4,11 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tax;
-use App\Models\ActivityLog;
-use App\Models\Taxe;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Throwable;
 
 class TaxController extends Controller
 {
@@ -50,8 +47,6 @@ class TaxController extends Controller
 
         $data = Tax::create($input);
 
-        $this->logActivity('Create', 'taxes', $data->id, null, $data);
-
         return apiResponse(true, 'Pajak berhasil ditambahkan', $data, null, 201);
     }
 
@@ -64,8 +59,6 @@ class TaxController extends Controller
 
         $before = $data->toArray();
         $data->update($request->all());
-
-        $this->logActivity('Update', 'taxes', $id, $before, $data);
 
         return apiResponse(true, 'Pajak berhasil diperbarui', $data);
     }
@@ -80,8 +73,6 @@ class TaxController extends Controller
         $before = $data->toArray();
         $data->delete();
 
-        $this->logActivity('Soft Delete', 'taxes', $id, $before, null);
-
         return apiResponse(true, 'Pajak berhasil dihapus');
     }
 
@@ -94,17 +85,4 @@ class TaxController extends Controller
         return apiResponse(true, 'Hasil pencarian pajak', $data);
     }
 
-    private function logActivity($tindakan, $tabel, $dataId, $before, $after)
-    {
-        ActivityLog::create([
-            'office_id' => session('active_office_id'),
-            'user_id' => 1,
-            'tindakan' => $tindakan,
-            'tabel_terkait' => $tabel,
-            'data_id' => $dataId,
-            'data_sebelum' => $before,
-            'data_sesudah' => $after,
-            'ip_address' => request()->ip(),
-        ]);
-    }
 }

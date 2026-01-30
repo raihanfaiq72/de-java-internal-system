@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\InvoiceItem;
-use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -53,8 +52,6 @@ class InvoiceItemController extends Controller
 
         $item = InvoiceItem::create($request->all());
 
-        $this->logActivity('Create', 'invoice_items', $item->id, null, $item);
-
         return apiResponse(true, 'Item invoice ditambahkan', $item, null, 201);
     }
 
@@ -87,8 +84,6 @@ class InvoiceItemController extends Controller
         $before = $item->toArray();
         $item->update($request->all());
 
-        $this->logActivity('Update', 'invoice_items', $id, $before, $item);
-
         return apiResponse(true, 'Item invoice diperbarui', $item);
     }
 
@@ -106,22 +101,7 @@ class InvoiceItemController extends Controller
         $before = $item->toArray();
         $item->delete();
 
-        $this->logActivity('Soft Delete', 'invoice_items', $id, $before, null);
-
         return apiResponse(true, 'Item invoice dihapus');
     }
 
-    private function logActivity($tindakan, $tabel, $dataId, $before, $after)
-    {
-        ActivityLog::create([
-            'office_id' => session('active_office_id'),
-            'user_id' => 1,
-            'tindakan' => $tindakan,
-            'tabel_terkait' => $tabel,
-            'data_id' => $dataId,
-            'data_sebelum' => $before,
-            'data_sesudah' => $after,
-            'ip_address' => request()->ip(),
-        ]);
-    }
 }

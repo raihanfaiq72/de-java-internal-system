@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
-use App\Models\ActivityLog;
 use App\Models\InvoiceItem;
 use App\Models\InvoiceItemTax;
 use App\Models\Partner;
@@ -106,8 +105,6 @@ class InvoiceController extends Controller
 
         $invoice = Invoice::create($input);
 
-        $this->logActivity('Create', 'invoices', $invoice->id, null, $invoice);
-
         return apiResponse(true, 'Invoice berhasil dibuat', $invoice, null, 201);
     }
 
@@ -147,8 +144,6 @@ class InvoiceController extends Controller
                 }
             }
 
-            $this->logActivity('Update', 'invoices', $id, null, $invoice->fresh('items'));
-
             return apiResponse(true, 'Invoice berhasil diperbarui', $invoice->load('items.taxes.tax'));
         });
     }
@@ -162,8 +157,6 @@ class InvoiceController extends Controller
 
         $before = $invoice->toArray();
         $invoice->delete();
-
-        $this->logActivity('Soft Delete', 'invoices', $id, $before, null);
 
         return apiResponse(true, 'Invoice berhasil dihapus');
     }
@@ -238,14 +231,6 @@ class InvoiceController extends Controller
             $invoiceData['office_id'] = session('active_office_id');
             $invoice = Invoice::create($invoiceData);
 
-            $this->logActivity(
-                'Create',
-                'invoices',
-                $invoice->id,
-                null,
-                $invoice
-            );
-
             foreach ($request->items as $itemData) {
 
                 $itemData['invoice_id'] = $invoice->id;
@@ -284,14 +269,6 @@ class InvoiceController extends Controller
                                 'tax_id'                => $taxData['tax_id'],
                                 'nilai_pajak_diterapkan'=> $taxData['nilai_pajak_diterapkan'] ?? 0
                             ]);
-
-                            $this->logActivity(
-                                'Create',
-                                'invoice_item_taxes',
-                                $tax->id,
-                                null,
-                                $tax
-                            );
                         }
                     }
                 }
@@ -308,19 +285,5 @@ class InvoiceController extends Controller
                 'invoice' => $invoice->load('items.taxes.tax')
             ], null, 201);
         });
-    }
-
-    private function logActivity($tindakan, $tabel, $dataId, $before, $after)
-    {
-        ActivityLog::create([
-            'office_id' => session('active_office_id'),
-            'user_id' => 1,
-            'tindakan' => $tindakan,
-            'tabel_terkait' => $tabel,
-            'data_id' => $dataId,
-            'data_sebelum' => $before,
-            'data_sesudah' => $after,
-            'ip_address' => request()->ip(),
-        ]);
     }
 }

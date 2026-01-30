@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\ActivityLog;
 use App\Models\ProductCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -53,8 +52,6 @@ class ProductCategoryController extends Controller
 
         $data = ProductCategory::create($input);
 
-        $this->logActivity('Create', 'product_categories', $data->id, null, $data);
-
         return apiResponse(true, 'Kategori produk berhasil ditambahkan', $data, null, 201);
     }
 
@@ -67,8 +64,6 @@ class ProductCategoryController extends Controller
 
         $before = $data->toArray();
         $data->update($request->all());
-
-        $this->logActivity('Update', 'product_categories', $id, $before, $data);
 
         return apiResponse(true, 'Kategori produk berhasil diperbarui', $data);
     }
@@ -86,8 +81,6 @@ class ProductCategoryController extends Controller
         $before = $data->toArray();
         $data->delete();
 
-        $this->logActivity('Soft Delete', 'product_categories', $id, $before, null);
-
         return apiResponse(true, 'Kategori produk berhasil dihapus');
     }
 
@@ -100,17 +93,4 @@ class ProductCategoryController extends Controller
         return apiResponse(true, 'Hasil pencarian kategori produk', $data);
     }
 
-    private function logActivity($tindakan, $tabel, $dataId, $before, $after)
-    {
-        ActivityLog::create([
-            'office_id' => session('active_office_id'),
-            'user_id' => 1,
-            'tindakan' => $tindakan,
-            'tabel_terkait' => $tabel,
-            'data_id' => $dataId,
-            'data_sebelum' => $before,
-            'data_sesudah' => $after,
-            'ip_address' => request()->ip()
-        ]);
-    }
 }

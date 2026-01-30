@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\ActivityLog;
 use App\Models\SupplierBrand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -86,14 +85,6 @@ class SupplierBrandController extends Controller
                 'brand_id'    => $request->brand_id,
             ]);
 
-            $this->logActivity(
-                'Create',
-                'supplier_brands',
-                $data->id,
-                null,
-                $data->toArray()
-            );
-
             return apiResponse(true, 'Supplier berhasil dikaitkan dengan brand', $data, null, 201);
         } catch (Throwable $e) {
             return apiResponse(false, 'Gagal menyimpan relasi supplier-brand', null, $e->getMessage(), 500);
@@ -137,14 +128,6 @@ class SupplierBrandController extends Controller
                 'brand_id'    => $request->brand_id,
             ]);
 
-            $this->logActivity(
-                'Update',
-                'supplier_brands',
-                $data->id,
-                $dataSebelum,
-                $data->fresh()->toArray()
-            );
-
             return apiResponse(true, 'Relasi supplier-brand berhasil diperbarui', $data);
         } catch (Throwable $e) {
             return apiResponse(false, 'Gagal memperbarui relasi', null, $e->getMessage(), 500);
@@ -164,36 +147,10 @@ class SupplierBrandController extends Controller
 
             $data->delete();
 
-            $this->logActivity(
-                'Soft Delete',
-                'supplier_brands',
-                $data->id,
-                $dataSebelum,
-                null
-            );
-
             return apiResponse(true, 'Relasi supplier-brand berhasil dihapus');
         } catch (Throwable $e) {
             return apiResponse(false, 'Gagal menghapus relasi', null, $e->getMessage(), 500);
         }
     }
 
-    private function logActivity(
-        string $tindakan,
-        string $tabel,
-        int $dataId,
-        $dataSebelum = null,
-        $dataSesudah = null
-    ) {
-        ActivityLog::create([
-            'office_id'     => session('active_office_id'),
-            'user_id'       => '1',
-            'tindakan'      => $tindakan,
-            'tabel_terkait' => $tabel,
-            'data_id'       => $dataId,
-            'data_sebelum'  => $dataSebelum,
-            'data_sesudah'  => $dataSesudah,
-            'ip_address'    => request()->ip(),
-        ]);
-    }
 }

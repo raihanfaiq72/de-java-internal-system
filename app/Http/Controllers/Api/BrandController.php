@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Models\ActivityLog;
 use App\Models\Partner;
 use App\Models\SupplierBrand;
 use Illuminate\Support\Facades\DB;
@@ -115,14 +114,6 @@ class BrandController extends Controller
                     $brand->suppliers()->attach($attachData);
                 }
 
-                $this->logActivity(
-                    'Create',
-                    'brands',
-                    $brand->id,
-                    null,
-                    $brand->toArray()
-                );
-
                 return $brand; // ⬅️ penting
             });
 
@@ -187,14 +178,6 @@ class BrandController extends Controller
                     }
                 }
 
-                $this->logActivity(
-                    'Update',
-                    'brands',
-                    $brand->id,
-                    $dataSebelum,
-                    $brand->fresh()->load('suppliers')->toArray()
-                );
-
                 return $brand;
             });
 
@@ -220,36 +203,10 @@ class BrandController extends Controller
                 $brand->delete();
             });
 
-            $this->logActivity(
-                'Soft Delete',
-                'brands',
-                $brand->id,
-                $dataSebelum,
-                null
-            );
-
             return apiResponse(true, 'Brand berhasil dihapus');
         } catch (Throwable $e) {
             return apiResponse(false, 'Gagal menghapus brand', null, $e->getMessage(), 500);
         }
     }
 
-    private function logActivity(
-        string $tindakan,
-        string $tabel,
-        int $dataId,
-        $dataSebelum = null,
-        $dataSesudah = null
-    ) {
-        ActivityLog::create([
-            'office_id'     => session('active_office_id'),
-            'user_id'       => '1',
-            'tindakan'      => $tindakan,
-            'tabel_terkait' => $tabel,
-            'data_id'       => $dataId,
-            'data_sebelum'  => $dataSebelum,
-            'data_sesudah'  => $dataSesudah,
-            'ip_address'    => request()->ip(),
-        ]);
-    }
 }

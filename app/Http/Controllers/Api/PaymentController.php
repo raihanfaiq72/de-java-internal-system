@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
-use App\Models\ActivityLog;
 use App\Models\Invoice;
 use App\Services\JournalService;
 use Carbon\Carbon;
@@ -121,14 +120,6 @@ class PaymentController extends Controller
                 'status_pembayaran' => $statusPembayaran
             ]);
 
-            $this->logActivity(
-                'Create',
-                'payments',
-                $payment->id,
-                null,
-                $payment
-            );
-
             // Automatic Journal Entry
             $this->journalService->recordPayment($payment);
 
@@ -199,18 +190,6 @@ class PaymentController extends Controller
                 'status_pembayaran' => $statusPembayaran
             ]);
 
-            $this->logActivity(
-                'Soft Delete',
-                'payments',
-                $payment->id,
-                $before,
-                [
-                    'invoice_id' => $invoice->id,
-                    'status_pembayaran_baru' => $statusPembayaran,
-                    'total_bayar_setelah_delete' => $totalBayar
-                ]
-            );
-
             return apiResponse(true, 'Pembayaran berhasil dihapus dan status invoice diperbarui', [
                 'invoice_id' => $invoice->id,
                 'total_invoice' => $totalInvoice,
@@ -220,17 +199,4 @@ class PaymentController extends Controller
         });
     }
 
-    private function logActivity($tindakan, $tabel, $dataId, $before, $after)
-    {
-        ActivityLog::create([
-            'office_id' => session('active_office_id'),
-            'user_id' => 1,
-            'tindakan' => $tindakan,
-            'tabel_terkait' => $tabel,
-            'data_id' => $dataId,
-            'data_sebelum' => $before,
-            'data_sesudah' => $after,
-            'ip_address' => request()->ip()
-        ]);
-    }
 }

@@ -3,9 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\ActivityLog;
 use App\Models\Partner;
-use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Throwable;
@@ -73,14 +71,6 @@ class PartnerController extends Controller
 
             $partner = Partner::create($data);
 
-            $this->logActivity(
-                'Create',
-                'mitras',
-                $partner->id,
-                null,
-                $partner->toArray()
-            );
-
             return apiResponse(true, 'Mitra berhasil dibuat', $partner, null, 201);
         } catch (Throwable $e) {
             return apiResponse(false, 'Gagal membuat Mitra', null, $e->getMessage(), 500);
@@ -122,14 +112,6 @@ class PartnerController extends Controller
 
             $partner->update($dataToUpdate);
 
-            $this->logActivity(
-                'Update',
-                'mitras',
-                $partner->id,
-                $dataSebelum,
-                $partner->fresh()->toArray()
-            );
-
             return apiResponse(true, 'Mitra berhasil diperbarui', $partner);
         } catch (Throwable $e) {
             return apiResponse(false, 'Gagal memperbarui mitra', null, $e->getMessage(), 500);
@@ -148,14 +130,6 @@ class PartnerController extends Controller
             $dataSebelum = $mitra->toArray();
 
             $mitra->delete();
-
-            $this->logActivity(
-                'Soft Delete',
-                'mitras',
-                $mitra->id,
-                $dataSebelum,
-                null
-            );
 
             return apiResponse(true, 'Mitra berhasil dihapus');
         } catch (Throwable $e) {
@@ -219,22 +193,4 @@ class PartnerController extends Controller
         return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 
-    private function logActivity(
-        string $tindakan,
-        string $tabel,
-        int $dataId,
-        $dataSebelum = null,
-        $dataSesudah = null
-    ) {
-        ActivityLog::create([
-            'office_id'     => session('active_office_id'),
-            'user_id'       => '1',
-            'tindakan'      => $tindakan,
-            'tabel_terkait' => $tabel,
-            'data_id'       => $dataId,
-            'data_sebelum'  => $dataSebelum,
-            'data_sesudah'  => $dataSesudah,
-            'ip_address'    => request()->ip(),
-        ]);
-    }
 }
