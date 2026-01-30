@@ -1,802 +1,649 @@
 @extends('Layout.main')
 
-@section('main')
-    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
-
-    <div class="page-wrapper">
-        <div class="page-content">
-            <div class="container-fluid">
-                <!-- Page Title -->
-                <div class="row mb-3">
-                    <div class="col-sm-12">
-                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
-                            <div>
-                                <h4 class="page-title fw-bold">Semua Kuitansi Penjualan</h4>
-                                <p class="text-muted mb-0 small">Kelola kuitansi dan riwayat pembayaran pelanggan.</p>
-                            </div>
-                            <ol class="breadcrumb mb-0">
-                                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                                <li class="breadcrumb-item active">Kuitansi</li>
-                            </ol>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-                            <div class="card-body p-4">
-                                <!-- Filters -->
-                                <div class="row g-2 mb-4 p-3 bg-light rounded-3 align-items-end border">
-                                    <div class="col-md-4">
-                                        <label class="form-label small fw-bold text-muted">Cari Kuitansi / Pelanggan</label>
-                                        <input type="text" id="filter-search" class="form-control"
-                                            placeholder="Ketik nomor kuitansi...">
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label small fw-bold text-muted">Metode</label>
-                                        <select id="filter-metode" class="form-select">
-                                            <option value="">Semua Metode</option>
-                                            <option value="Cash">Cash</option>
-                                            <option value="Transfer">Transfer</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <button onclick="loadReceiptData()" class="btn btn-dark w-100 fw-bold shadow-sm">
-                                            <i class="fa fa-filter me-1"></i> FILTER
-                                        </button>
-                                    </div>
-                                    <div class="col-md-3 text-end">
-                                        <button class="btn btn-primary px-4 fw-bold shadow-sm" onclick="openCreateModal()">
-                                            <i class="fa fa-plus-circle me-1"></i> TAMBAH KUITANSI
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- List Header -->
-                                <div class="bg-light border-bottom header-table-custom py-2 px-1 rounded-top border">
-                                    <div class="d-flex align-items-center">
-                                        <div class="col-fixed-check text-center px-2">#</div>
-                                        <div class="row flex-grow-1 m-0 text-uppercase fw-bold text-muted text-center"
-                                            style="font-size: 10px; letter-spacing: 1px;">
-                                            <div class="col-3 text-start ps-0">No. Kuitansi & Pelanggan</div>
-                                            <div class="col-2">Metode / Akun</div>
-                                            <div class="col-2">Status</div>
-                                            <div class="col-2">Tgl Bayar</div>
-                                            <div class="col-3 text-end">Jumlah Bayar</div>
-                                        </div>
-                                        <div class="col-fixed-aksi text-center">Aksi</div>
-                                    </div>
-                                </div>
-
-                                <!-- Accordion List -->
-                                <div class="accordion custom-coa-accordion mt-3" id="receiptAccordion">
-                                    <!-- Data will be populated by JS -->
-                                </div>
-
-                                <!-- Pagination -->
-                                <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-                                    <span id="pagination-info" class="text-muted small"></span>
-                                    <nav>
-                                        <ul class="pagination pagination-sm mb-0 shadow-sm" id="pagination-container"></ul>
-                                    </nav>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Create Receipt -->
-    <div class="modal fade" id="modalCreateReceipt" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg rounded-4">
-                <div class="modal-header">
-                    <h5 class="fw-bold mb-0">Terima Pembayaran untuk Invoice</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <form id="form-receipt" enctype="multipart/form-data">
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-muted small">Pembayaran Dari</label>
-                                <select id="mitra_id" name="mitra_id" class="tom-select-init"
-                                    placeholder="Loading clients...">
-                                    <option value="">Loading...</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold text-muted small">Ref. No.</label>
-                                <input type="text" name="ref_no" id="ref_no" class="form-control"
-                                    placeholder="Contoh: REF-123">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold text-muted small">Setoran Ke (Akun Keuangan)</label>
-                                <select id="akun_keuangan_id" name="akun_keuangan_id" class="form-select">
-                                    <option value="">Loading...</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="fw-bold m-0"><i class="fa fa-file-invoice me-2 text-primary"></i>Rincian Tagihan</h6>
-                            <button type="button" class="btn btn-outline-primary btn-sm fw-bold px-3"
-                                onclick="openInvoiceSelection()">
-                                <i class="fa fa-plus-circle me-1"></i> Pilih Invoice Penjualan
-                            </button>
-                        </div>
-
-                        <div class="table-responsive border rounded-3 mb-4">
-                            <table class="table table-hover align-middle mb-0" id="table-selected-invoices">
-                                <thead class="bg-light">
-                                    <tr>
-                                        <th class="small fw-bold text-muted py-3 ps-3">No. Invoice</th>
-                                        <th class="small fw-bold text-muted py-3">Pelanggan</th>
-                                        <th class="small fw-bold text-muted py-3 text-center">Tgl / Jatuh Tempo</th>
-                                        <th class="small fw-bold text-muted py-3 text-end">Total Jumlah</th>
-                                        <th class="small fw-bold text-muted py-3 text-end">Jumlah Tertagih</th>
-                                        <th class="small fw-bold text-muted py-3 text-end pe-3" width="200">Jumlah
-                                            Terbayar</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="invoice-details-body">
-                                    <tr>
-                                        <td colspan="6" class="text-center py-5 text-muted">
-                                            <i class="fa fa-info-circle me-1"></i> Belum ada invoice yang dipilih.
-                                        </td>
-                                    </tr>
-                                </tbody>
-                                <tfoot class="bg-light border-top-0">
-                                    <tr>
-                                        <td colspan="5" class="text-end fw-bold py-3">Total Jumlah Terbayar</td>
-                                        <td class="text-end fw-bold py-3 pe-3 text-primary" id="total-payment-display">IDR
-                                            0.00</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <div class="p-3 border rounded-3 bg-light">
-                                    <span class="small fw-bold text-muted d-block mb-1">Estimasi dalam SGD* (1 SGD =
-                                        13,128.53 IDR)</span>
-                                    <div class="d-flex align-items-baseline">
-                                        <h4 class="fw-bold mb-0 text-dark" id="sgd-display">SGD 0.00</h4>
-                                        <button type="button" class="btn btn-link btn-sm p-0 ms-2"
-                                            onclick="refreshSgd()"><i class="fa fa-sync-alt fa-xs"></i></button>
-                                    </div>
-                                    <p class="text-muted small mt-1 mb-0">Estimasi Konversi Nominal</p>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-muted small">Catatan</label>
-                                <textarea name="catatan" id="catatan" class="form-control" rows="3"
-                                    placeholder="Masukkan catatan tambahan..."></textarea>
-                            </div>
-                        </div>
-
-                        <div class="row mt-4">
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold text-muted small d-block">Tanda Tangan dan Meterai
-                                    (Opsional)</label>
-                                <div class="upload-area text-center border p-4 rounded-3 bg-light"
-                                    id="upload-signature-area" style="cursor: pointer;"
-                                    onclick="document.getElementById('signature_file').click()">
-                                    <i class="fa fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
-                                    <p class="mb-1 small fw-bold">Unggah Tanda Tangan</p>
-                                    <p class="mb-0 text-muted" style="font-size: 10px;">Maksimal 20MB (JPEG, PNG)</p>
-                                </div>
-                                <input type="file" name="signature_file" id="signature_file" class="d-none"
-                                    accept="image/*">
-                                <div id="signature-preview" class="mt-2 text-center d-none">
-                                    <img src="" class="img-thumbnail" style="max-height: 100px;">
-                                    <button type="button"
-                                        class="btn btn-sm btn-outline-danger border-0 d-block mx-auto mt-1"
-                                        onclick="clearSignature()">Hapus</button>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light px-4 fw-bold" data-bs-dismiss="modal">BATAL</button>
-                    <button type="button" onclick="submitReceipt('save')" class="btn btn-primary px-4 fw-bold shadow-sm"
-                        id="btn-save-submit">SIMPAN</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Invoice Selection -->
-    <div class="modal fade" id="modalInvoiceSelection" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg rounded-4">
-                <div class="modal-header">
-                    <h5 class="fw-bold mb-0">Pilih Invoice Penjualan</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4" id="selection-list-container">
-                    <!-- Population by JS -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Tutup</button>
-                    <button type="button" class="btn btn-primary px-4 fw-bold" onclick="addSelectedInvoices()">Tambahkan
-                        Invoice</button>
-                </div>
-            </div>
-        </div>
-    </div>
-@endsection
-
 @push('css')
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+        rel="stylesheet">
+
     <style>
-        .col-fixed-check {
-            width: 50px;
-            flex-shrink: 0;
+        .f-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 700;
+            color: #64748b;
+            margin-bottom: 5px;
+            display: block;
         }
 
-        .col-fixed-aksi {
-            width: 80px;
-            flex-shrink: 0;
+        .f-mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
         }
 
-        .header-table-custom {
-            background: #f8f9fa;
+        /* Table Styling */
+        #invoiceTable thead th {
+            border-bottom: 1px solid #e2e8f0;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+            padding-top: 12px;
+            padding-bottom: 12px;
         }
 
-        .accordion-item {
-            border: 1px solid #edf2f9 !important;
-            margin-bottom: 10px;
-            border-radius: 12px !important;
+        #invoiceTable tbody td {
+            font-size: 13px;
+            color: #334155;
+            padding-top: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f1f5f9;
         }
 
-        .row-spacious {
-            padding: 15px 0;
+        .clickable-row {
+            cursor: pointer;
+            transition: background-color 0.1s;
         }
 
-        .upload-area:hover {
-            border-color: #0d6efd !important;
-            background-color: #f0f7ff !important;
+        .clickable-row:hover {
+            background-color: #f1f5f9 !important;
         }
 
-        .accordion-button:not(.collapsed) {
-            background-color: #fff;
-            color: inherit;
+        /* Nested Detail Row */
+        .detail-row td {
+            padding: 0 !important;
+            border-bottom: 0 !important;
+        }
+
+        .detail-wrapper {
+            background: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        /* Badges */
+        .f-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+        }
+
+        .f-paid {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .f-unpaid {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .f-partial {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Chevron */
+        .chevron-icon {
+            display: inline-block;
+            transition: transform 0.2s ease-in-out;
+            color: #cbd5e1;
+            font-size: 10px;
+            margin-right: 2px;
+        }
+
+        .clickable-row[aria-expanded="true"] .chevron-icon {
+            transform: rotate(90deg);
+            color: #3b82f6;
+        }
+
+        /* Dropdown */
+        .dropdown-menu-finance {
+            border: none;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            min-width: 140px;
+            border-top: 3px solid #3b82f6;
+        }
+
+        .dropdown-menu-finance .dropdown-item {
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            padding: 6px 12px;
+        }
+
+        .dropdown-menu-finance .dropdown-item:hover {
+            background-color: #f1f5f9;
+            color: #3b82f6;
+        }
+    </style>
+
+    <style>
+        .ts-dropdown {
+            z-index: 9999 !important;
+        }
+
+        .ts-wrapper.form-control {
+            overflow: visible !important;
+        }
+
+        .f-input:focus,
+        .f-text:focus {
+            outline: none !important;
+            border-color: #3b82f6 !important;
+        }
+
+        .ts-dropdown-content {
+            z-index: 2001 !important;
         }
     </style>
 @endpush
 
-@push('js')
-    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
-    <script>
-        const API_PAYMENT = '{{ url('api/payment-api') }}';
-        const API_INVOICE = '{{ url('api/invoice-api') }}';
-        const API_MITRA = '{{ url('api/mitra-api') }}';
-        const API_COA = '{{ url('api/coa-api') }}';
-        const SGD_RATE = 13128.53;
-        let tomMitra;
-        let selectedInvoices = [];
+@section('main')
+    <div class="page-wrapper" style="background-color: #f8fafc; min-height: 100vh; font-family: 'Inter', sans-serif;">
+        <div class="page-content">
+            <div class="container-fluid">
 
-        // --- MODAL FUNCTIONS ---
-        function openCreateModal() {
-            document.getElementById('form-receipt').reset();
-            selectedInvoices = [];
-            renderSelectedTable();
-            if (tomMitra) tomMitra.clear();
-            document.getElementById('upload-signature-area').classList.remove('d-none');
-            document.getElementById('signature-preview').classList.add('d-none');
-
-            const modal = new bootstrap.Modal(document.getElementById('modalCreateReceipt'));
-            modal.show();
-        }
-
-        function clearSignature() {
-            document.getElementById('signature_file').value = '';
-            document.getElementById('upload-signature-area').classList.remove('d-none');
-            document.getElementById('signature-preview').classList.add('d-none');
-        }
-
-        function refreshSgd() {
-            let total = 0;
-            selectedInvoices.forEach(inv => total += parseFloat(inv.bayar));
-            const sgd = total / SGD_RATE;
-            document.getElementById('sgd-display').innerText = 'SGD ' + formatNumber(sgd);
-        }
-
-        // --- INVOICE SELECTION ---
-        async function openInvoiceSelection() {
-            const mitraId = document.getElementById('mitra_id').value;
-            if (!mitraId) {
-                alert('Pilih Pelanggan terlebih dahulu!');
-                return;
-            }
-
-            const container = document.getElementById('selection-list-container');
-            container.innerHTML = '<div class="text-center"><div class="spinner-border"></div></div>';
-
-            const modal = new bootstrap.Modal(document.getElementById('modalInvoiceSelection'));
-            modal.show();
-
-            try {
-                // Fetch UNPAID invoices for this mitra
-                // Assuming API supports filtering by mitra_id and status
-                // We might need to adjust API InvoiceController to support this specific filter if not exists
-                // For now assuming we can filter by search or similar, but ideally we need specific endpoint
-                // Let's try fetching all for mitra and filtering client side if API limit is small, 
-                // or assume backend supports status_pembayaran param.
-
-                const url = `${API_INVOICE}?search=${mitraId}&status_pembayaran=Unpaid&per_page=100`;
-                // Note: The search param in InvoiceController searches 'nomor_invoice', 'ref_no' OR 'mitra.nama'. 
-                // It doesn't strictly filter by mitra_id. 
-                // Ideally we should add 'mitra_id' filter to InvoiceController. 
-                // But for now let's use what we have or client-side filter.
-
-                const res = await fetch(url);
-                const result = await res.json();
-
-                if (result.success) {
-                    let html = '<div class="list-group">';
-                    const invoices = result.data.data.filter(inv =>
-                        inv.mitra_id == mitraId &&
-                        inv.status_pembayaran !== 'Paid'
-                    );
-
-                    if (invoices.length === 0) {
-                        container.innerHTML =
-                            '<div class="alert alert-info">Tidak ada invoice unpaid untuk pelanggan ini.</div>';
-                        return;
-                    }
-
-                    invoices.forEach(inv => {
-                        const isSelected = selectedInvoices.find(s => s.id == inv.id) ? 'checked' : '';
-                        const sisa = inv.total_akhir - (inv.payment_sum_jumlah_bayar || 0);
-
-                        html += `
-                            <label class="list-group-item d-flex gap-3">
-                                <input class="form-check-input flex-shrink-0" type="checkbox" 
-                                    value="${inv.id}" 
-                                    data-json='${JSON.stringify(inv).replace(/'/g, "&apos;")}' 
-                                    ${isSelected}>
-                                <span class="pt-1 form-checked-content w-100">
-                                    <div class="d-flex justify-content-between w-100">
-                                        <strong>${inv.nomor_invoice}</strong>
-                                        <small class="text-muted">${inv.tgl_invoice}</small>
-                                    </div>
-                                    <div class="d-flex justify-content-between w-100 small">
-                                        <span>Total: ${formatIDR(inv.total_akhir)}</span>
-                                        <span class="text-danger fw-bold">Sisa: ${formatIDR(sisa)}</span>
-                                    </div>
-                                </span>
-                            </label>
-                        `;
-                    });
-                    html += '</div>';
-                    container.innerHTML = html;
-                }
-            } catch (e) {
-                container.innerHTML = '<div class="text-danger">Gagal memuat invoice.</div>';
-                console.error(e);
-            }
-        }
-
-        function addSelectedInvoices() {
-            const checkboxes = document.querySelectorAll('#selection-list-container input[type="checkbox"]:checked');
-            checkboxes.forEach(cb => {
-                const inv = JSON.parse(cb.getAttribute('data-json'));
-                if (!selectedInvoices.find(s => s.id == inv.id)) {
-                    const sisa = inv.total_akhir - (inv.payment_sum_jumlah_bayar || 0);
-                    selectedInvoices.push({
-                        id: inv.id,
-                        nomor_invoice: inv.nomor_invoice,
-                        pelanggan: inv.mitra?.nama || '-',
-                        tgl: inv.tgl_invoice,
-                        jatuh_tempo: inv.tgl_jatuh_tempo || '-',
-                        total: inv.total_akhir,
-                        tertagih: sisa,
-                        bayar: sisa
-                    });
-                }
-            });
-            renderSelectedTable();
-            bootstrap.Modal.getInstance(document.getElementById('modalInvoiceSelection')).hide();
-        }
-
-        function renderSelectedTable() {
-            const tbody = document.getElementById('invoice-details-body');
-            tbody.innerHTML = '';
-            let totalBayar = 0;
-
-            if (selectedInvoices.length === 0) {
-                tbody.innerHTML =
-                    `<tr><td colspan="6" class="text-center py-5 text-muted"><i class="fa fa-info-circle me-1"></i> Belum ada invoice yang dipilih.</td></tr>`;
-                document.getElementById('total-payment-display').innerText = 'IDR 0.00';
-                refreshSgd();
-                return;
-            }
-
-            selectedInvoices.forEach((inv, index) => {
-                totalBayar += parseFloat(inv.bayar);
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${inv.nomor_invoice}</td>
-                        <td>${inv.pelanggan}</td>
-                        <td class="text-center">${inv.tgl}</td>
-                        <td class="text-end">${formatNumber(inv.total)}</td>
-                        <td class="text-end">${formatNumber(inv.tertagih)}</td>
-                        <td class="text-end pe-3">
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text">Rp</span>
-                                <input type="number" class="form-control text-end" 
-                                    value="${inv.bayar}" 
-                                    onchange="updateBayar(${index}, this.value)"
-                                    min="0" max="${inv.tertagih}">
-                                <button class="btn btn-outline-danger" onclick="removeInvoice(${index})"><i class="fa fa-times"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            document.getElementById('total-payment-display').innerText = formatIDR(totalBayar);
-            refreshSgd();
-        }
-
-        function updateBayar(index, val) {
-            selectedInvoices[index].bayar = val;
-            renderSelectedTable();
-        }
-
-        function removeInvoice(index) {
-            selectedInvoices.splice(index, 1);
-            renderSelectedTable();
-        }
-
-        // --- SUBMIT ---
-        async function submitReceipt(action) {
-            if (selectedInvoices.length === 0) {
-                alert('Pilih minimal satu invoice!');
-                return;
-            }
-
-            const btn = document.getElementById('btn-save-submit');
-            const originalText = btn.innerText;
-            btn.disabled = true;
-            btn.innerText = 'Menyimpan...';
-
-            try {
-                const formData = new FormData(document.getElementById('form-receipt'));
-
-                // We handle single payment for single invoice or multiple? 
-                // Backend PaymentController::store seems to handle ONE invoice per payment request: 'invoice_id' => 'required'
-                // If we want bulk payment, we need to loop calls or update backend.
-                // Looking at PaymentController: 
-                // public function store(Request $request) { ... 'invoice_id' => 'required' ... }
-                // So it only supports one invoice per payment. 
-                // For now, let's assume we loop through selectedInvoices and create multiple payments.
-
-                let successCount = 0;
-                for (const inv of selectedInvoices) {
-                    const payload = new FormData();
-                    payload.append('invoice_id', inv.id);
-                    payload.append('nomor_pembayaran', 'PAY-' + Date.now() + '-' + Math.floor(Math.random() *
-                    1000)); // Auto gen or input? 
-                    // Wait, usually backend auto-gens or we provide. Controller says: 'nomor_pembayaran' => 'required|unique...'
-                    // Let's generate a unique one or ask user? The form doesn't have nomor_pembayaran input.
-                    // Ideally backend should auto-gen if not provided, or we generate here.
-                    // Let's generate a unique sequence here.
-
-                    const uniqueSuffix = Math.random().toString(36).substr(2, 5).toUpperCase();
-                    payload.append('nomor_pembayaran', `RCP/${new Date().getFullYear()}/${inv.id}/${uniqueSuffix}`);
-
-                    payload.append('tgl_pembayaran', new Date().toISOString().split('T')[0]); // Today
-                    payload.append('metode_pembayaran', document.getElementById('filter-metode').value ||
-                    'Transfer'); // Fallback
-                    // Wait, the form doesn't have method input?
-                    // The filter has 'filter-metode', but form has 'akun_keuangan_id'. 
-                    // We should probably add 'metode_pembayaran' select to the form or infer it.
-                    // The mockup had 'Metode' in filter. The form has 'Setoran Ke'.
-                    // Let's add 'metode_pembayaran' to form or hardcode 'Transfer'/'Cash' based on logic.
-                    // Controller requires 'metode_pembayaran'.
-                    // Let's assume 'Transfer' if bank, 'Cash' if cash account.
-                    // Or just add a hidden field or select in modal.
-                    // For now, I'll default to 'Transfer' to pass validation.
-                    payload.append('metode_pembayaran', 'Transfer');
-
-                    payload.append('jumlah_bayar', inv.bayar);
-                    payload.append('akun_keuangan_id', formData.get('akun_keuangan_id'));
-                    payload.append('catatan', formData.get('catatan'));
-                    if (formData.get('ref_no')) payload.append('ref_no', formData.get('ref_no'));
-
-                    // Signature? Backend doesn't seem to handle it in store(), maybe ActivityLog or ignored?
-                    // PaymentController::store doesn't look like it saves file. 
-                    // We'll skip file upload for now as backend doesn't support it yet in the code I saw.
-
-                    const res = await fetch(API_PAYMENT, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json'
-                        },
-                        body: payload
-                    });
-
-                    const json = await res.json();
-                    if (json.success) successCount++;
-                }
-
-                if (successCount === selectedInvoices.length) {
-                    alert('Semua pembayaran berhasil disimpan!');
-                    bootstrap.Modal.getInstance(document.getElementById('modalCreateReceipt')).hide();
-                    loadReceiptData();
-                } else {
-                    alert(`Berhasil menyimpan ${successCount} dari ${selectedInvoices.length} pembayaran.`);
-                    loadReceiptData();
-                }
-
-            } catch (e) {
-                console.error(e);
-                alert('Terjadi kesalahan saat menyimpan.');
-            } finally {
-                btn.disabled = false;
-                btn.innerText = originalText;
-            }
-        }
-
-        // --- RENDER LIST ---
-        function renderReceiptList(data) {
-            const accordion = document.getElementById('receiptAccordion');
-            if (!data || data.length === 0) {
-                accordion.innerHTML = '<div class="text-center p-5 text-muted">Belum ada data kuitansi.</div>';
-                return;
-            }
-
-            let html = '';
-            data.forEach((item, index) => {
-                const invoice = item.invoice || {};
-                const mitra = invoice.mitra || {};
-                const account = item.akun_keuangan || {};
-
-                html += `
-                <div class="accordion-item shadow-sm border-0 overflow-hidden mb-3">
-                    <h2 class="accordion-header" id="heading${item.id}">
-                        <button class="accordion-button collapsed bg-white py-3" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapse${item.id}">
-                            <div class="d-flex align-items-center w-100">
-                                <div class="col-fixed-check text-center fw-bold text-muted">${index + 1}</div>
-                                <div class="row flex-grow-1 m-0 align-items-center">
-                                    <div class="col-3">
-                                        <div class="fw-bold text-dark">${item.nomor_pembayaran}</div>
-                                        <div class="small text-muted text-uppercase">${mitra.nama || '-'}</div>
-                                    </div>
-                                    <div class="col-2">
-                                        <div class="badge bg-light text-dark border px-2 py-1">${item.metode_pembayaran}</div>
-                                        <div class="small text-muted mt-1">${account.nama_akun || '-'}</div>
-                                    </div>
-                                    <div class="col-2">
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">
-                                            SETTLED
-                                        </span>
-                                    </div>
-                                    <div class="col-2 small text-muted">
-                                        <i class="fa fa-calendar-alt me-1"></i> ${item.tgl_pembayaran}
-                                    </div>
-                                    <div class="col-3 text-end pe-4">
-                                        <div class="fw-bold text-dark" style="font-size: 1.1em;">${formatIDR(item.jumlah_bayar)}</div>
-                                    </div>
-                                </div>
-                                <div class="col-fixed-aksi text-center">
-                                    <a href="{{ url('sales-receipt') }}/${item.id}" class="btn btn-sm btn-light border text-primary rounded-circle shadow-sm"
-                                        title="Lihat Detail" target="_blank">
-                                        <i class="fa fa-arrow-right"></i>
-                                    </a>
-                                </div>
-                            </div>
+                <div class="row align-items-center mb-4">
+                    <div class="col-md-7">
+                        <h4 class="fw-bold text-dark mb-1">Manajemen Delivery Order</h4>
+                        <p class="text-muted small mb-0">Pantau delivery order saat ini.</p>
+                    </div>
+                    <div class="col-md-5 text-md-end mt-3 mt-md-0">
+                        <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openDeliveryOrderModal()">
+                            <i class="fa fa-plus-circle me-1"></i> TAMBAH DO
                         </button>
-                    </h2>
-                    <div id="collapse${item.id}" class="accordion-collapse collapse" data-bs-parent="#receiptAccordion">
-                        <div class="accordion-body bg-light border-top p-4">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h6 class="fw-bold text-muted mb-3">Informasi Invoice</h6>
-                                    <table class="table table-sm table-borderless mb-0">
-                                        <tr>
-                                            <td class="text-muted" width="120">No. Invoice</td>
-                                            <td class="fw-bold">: ${invoice.nomor_invoice || '-'}</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-muted">Total Tagihan</td>
-                                            <td class="fw-bold">: ${formatIDR(invoice.total_akhir)}</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-muted">Catatan</td>
-                                            <td>: ${item.catatan || '-'}</td>
-                                        </tr>
-                                    </table>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+                    {{-- <div class="card-header bg-white border-bottom py-0 px-4">
+                        <ul class="nav nav-tabs nav-tabs-finance" role="tablist">
+                            <li class="nav-item"><a class="nav-link active fw-bold py-3" data-bs-toggle="tab"
+                                    href="#invoice-active">Invoice Aktif</a></li>
+                            <li class="nav-item"><a class="nav-link fw-bold py-3" data-bs-toggle="tab"
+                                    href="#invoice-archive">Arsip</a></li>
+                            <li class="nav-item"><a class="nav-link fw-bold py-3" data-bs-toggle="tab"
+                                    href="#invoice-in-trash">Invoice Terhapus</a></li>
+                        </ul>
+                    </div> --}}
+
+                    <div class="card-body p-4 bg-white">
+                        <div class="mb-4 p-3 rounded-3 bg-light border shadow-sm">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-md-4">
+                                    <label class="f-label mb-1 fw-bold text-muted"
+                                        style="font-size: 11px;">Pencarian</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-white border-end-0 py-1">
+                                            <i class="fa fa-search text-muted small"></i>
+                                        </span>
+                                        <input type="text" id="filter-search"
+                                            class="form-control border-start-0 shadow-none py-1"
+                                            placeholder="Ketik nomor DO atau Invoice...">
+                                    </div>
                                 </div>
-                                <div class="col-md-6 text-end">
-                                    <a href="{{ url('sales/print-receipt') }}/${item.id}" target="_blank" 
-                                       class="btn btn-outline-dark btn-sm fw-bold">
-                                        <i class="fa fa-print me-1"></i> CETAK KUITANSI
-                                    </a>
+
+                                <div class="col-md-2">
+                                    <button onclick="loadInvoiceData()" class="btn btn-dark fw-bold shadow-sm px-3 w-100"
+                                        style="padding-top: 7px; padding-bottom: 7px;">
+                                        <i class="fa fa-filter me-1 small"></i> FILTER
+                                    </button>
                                 </div>
                             </div>
                         </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" id="invoiceTable">
+                                <thead class="bg-light text-uppercase text-secondary fw-bold"
+                                    style="font-size: 11px; letter-spacing: 0.5px;">
+                                    <tr>
+                                        <th class="text-start">
+                                            <input type="checkbox" class="form-check-input" id="master-checkbox"
+                                                onclick="toggleSelectAll(this)">
+                                        </th>
+                                        <th class="text-start">#</th>
+                                        <th>Delivery Order Note</th>
+                                        <th>Invoice</th>
+                                        <th class="text-end pe-3">Tindakan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoiceTableBody" class="border-top-0">
+                                    <!-- Rows injected by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div
+                            class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <span id="pagination-info" class="text-muted small fw-medium"></span>
+                            <nav>
+                                <ul class="pagination pagination-sm mb-0 shadow-sm" id="pagination-container">
+                                </ul>
+                            </nav>
+                        </div>
+
+                        {{-- <div class="tab-content">
+                            <div class="tab-pane active" id="invoice-active"></div>
+                            <div class="tab-pane" id="invoice-archive"></div>
+                            <div class="tab-pane" id="invoice-in-trash"></div>
+                        </div> --}}
                     </div>
-                </div>`;
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @include('DeliveryOrder.Modal.modal-fullscreen')
+    {{-- @include('Sales.Modal.detail-modal')
+    @include('Sales.Partials.invoice-templates') --}}
+@endsection
+
+{{-- @push('js')
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <script>
+        if (!window.financeApp) {
+            window.financeApp = {
+                API_URL: '/api/invoice-api',
+                selectedIds: [],
+                formatIDR: (val) => new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0
+                }).format(val),
+                formatDate: (dateStr) => {
+                    if (!dateStr) return '-';
+                    const date = new Date(dateStr);
+                    return date.toLocaleDateString('id-ID', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+                }
+            };
+        }
+
+        let currentTabStatus = 'active';
+
+        // Safe TomSelect wrapper
+        const safeTomSelect = (selector, options) => {
+            if (typeof TomSelect !== 'undefined') {
+                try {
+                    return new TomSelect(selector, options);
+                } catch (e) {
+                    console.warn('TomSelect init failed for', selector, e);
+                    return null;
+                }
+            }
+            return null;
+        };
+
+        document.querySelectorAll('.nav-tabs-finance .nav-link').forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function(event) {
+                const targetId = event.target.getAttribute('href');
+
+                if (targetId === '#invoice-archive') {
+                    currentTabStatus = 'archive';
+                } else if (targetId === '#invoice-in-trash') {
+                    currentTabStatus = 'trash';
+                } else {
+                    currentTabStatus = 'active';
+                }
+
+                loadInvoiceData();
             });
-            accordion.innerHTML = html;
+
+        });
+
+        let masterMitra, products, salesPersons = []; // Will be populated from API
+
+        async function initializeMasterData() {
+            try {
+                const [mitraRes, productRes] = await Promise.all([
+                    fetch('/api/mitra-api').then(r => r.json()),
+                    fetch('/api/product-api').then(r => r.json()),
+                ]);
+
+                if (mitraRes.success) {
+                    masterMitra = mitraRes.data.data || mitraRes.data;
+                    const selectFilter = document.getElementById('filter-mitra-id');
+
+                    masterMitra.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.id;
+                        opt.textContent = m.nama;
+                        selectFilter.appendChild(opt);
+                    });
+
+                    if (tomSelectMitraIndex) tomSelectMitraIndex.sync();
+                }
+
+                if (productRes.success) {
+                    products = productRes.data.data || productRes.data;
+
+                    products.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.id;
+                        opt.textContent = p.nama_produk;
+                    });
+                }
+            } catch (error) {
+                alert('Gagal memuat data master:', error);
+            }
+        }
+
+        async function loadInvoiceData(url = window.financeApp.API_URL) {
+            const tbody = document.getElementById('invoiceTableBody');
+            tbody.innerHTML =
+                '<tr><td colspan="10" class="text-center p-5"><div class="spinner-border spinner-border-sm text-primary"></div><p class="mt-2 text-muted small mb-0">Memuat data...</p></td></tr>';
+            resetSelection();
+
+            try {
+                let finalUrl = (typeof url === 'string' && url.includes('/')) ? url : window.financeApp.API_URL;
+                const params = new URLSearchParams({
+                    tipe_invoice: 'Sales',
+                    tab_status: currentTabStatus,
+                    search: document.getElementById('filter-search').value,
+                    status_dok: document.getElementById('filter-status-dok').value,
+                    status_pembayaran: document.getElementById('filter-status-bayar').value,
+                    mitra_id: document.getElementById('filter-mitra-id').value,
+                    tgl_invoice: document.getElementById('filter-tgl-invoice').value,
+                    tgl_jatuh_tempo: document.getElementById('filter-tgl-jatuh-tempo').value
+                });
+
+                const response = await fetch(`${finalUrl}${finalUrl.includes('?') ? '&' : '?'}${params.toString()}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    renderInvoiceList(result.data.data);
+                    renderPagination(result.data);
+                }
+            } catch (error) {
+                console.error(error);
+                tbody.innerHTML =
+                    '<tr><td colspan="10" class="text-center text-danger p-4">Gagal memuat data.</td></tr>';
+            }
+        }
+
+        function openDetailModal(item) {
+            const modalEl = document.getElementById('detailInvoiceModal');
+            if (!modalEl) return;
+
+            // Populate Modal Data
+            document.getElementById('detailInvoiceNumber').textContent = item.nomor_invoice;
+            document.getElementById('detailInvoiceTitle').textContent = `Detail Invoice ${item.nomor_invoice}`;
+            document.getElementById('detailDate').textContent = window.financeApp.formatDate(item.tgl_invoice);
+            document.getElementById('detailDueDate').textContent = window.financeApp.formatDate(item.tgl_jatuh_tempo);
+
+            // Mitra Info
+            document.getElementById('detailMitraName').textContent = item.mitra?.nama || '-';
+            document.getElementById('detailMitraAddress').textContent = item.mitra?.alamat || '-';
+
+            // Payment Status
+            const payBadge = document.getElementById('detailPaymentStatus');
+            const payClass = item.status_pembayaran === 'Paid' ? 'bg-success-subtle text-success' : (item
+                .status_pembayaran === 'Unpaid' ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning');
+            payBadge.className = `badge ${payClass} border`;
+            payBadge.textContent = item.status_pembayaran;
+
+            // Items
+            const tbody = document.getElementById('detailItemsBody');
+            tbody.innerHTML = '';
+            item.items?.forEach(it => {
+                const tr = document.createElement('tr');
+                tr.classList.add('border-bottom', 'border-light');
+                tr.innerHTML = `
+                    <td class="ps-3 py-3">
+                        <div class="fw-bold text-dark">${it.nama_produk_manual || it.product?.nama_produk || '-'}</div>
+                        <div class="small text-muted">${it.product?.kode_produk || '-'}</div>
+                    </td>
+                    <td class="text-center py-3">${parseFloat(it.qty)} ${it.product?.unit?.nama_unit || ''}</td>
+                    <td class="text-end py-3">${window.financeApp.formatIDR(it.harga_satuan)}</td>
+                    <td class="text-end pe-3 py-3">${window.financeApp.formatIDR(it.total_harga_item)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Totals
+            document.getElementById('detailSubtotal').textContent = window.financeApp.formatIDR(item.total_akhir);
+            document.getElementById('detailTotal').textContent = window.financeApp.formatIDR(item.total_akhir);
+
+            // Action Buttons
+            document.getElementById('btnDetailEdit').onclick = () => {
+                bootstrap.Modal.getInstance(document.getElementById('detailInvoiceModal')).hide();
+                openInvoiceModal(item.id, null, 'edit');
+            };
+            document.getElementById('btnDetailDelete').onclick = () => {
+                if (confirm('Hapus invoice ini?')) {
+                    bootstrap.Modal.getInstance(document.getElementById('detailInvoiceModal')).hide();
+                    deleteInvoice(item.id);
+                }
+            };
+            document.getElementById('btnDetailPrint').href = `{{ url('sales/print') }}/${item.id}`;
+
+            // Show Modal
+            new bootstrap.Modal(document.getElementById('detailInvoiceModal')).show();
+        }
+
+        function renderInvoiceList(data) {
+            const tbody = document.getElementById('invoiceTableBody');
+            const rowTpl = document.getElementById('row-template');
+
+            tbody.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML =
+                    '<tr><td colspan="10" class="text-center p-5 text-muted fst-italic">Data tidak ditemukan.</td></tr>';
+                return;
+            }
+
+            data.forEach((item, index) => {
+                const row = rowTpl.content.cloneNode(true);
+                const trMain = row.querySelector('.clickable-row');
+
+                // Click to open detail
+                trMain.removeAttribute('data-bs-target');
+                trMain.removeAttribute('data-bs-toggle');
+                trMain.onclick = (e) => {
+                    // Prevent if clicked on checkbox or actions
+                    if (e.target.closest('.invoice-checkbox') || e.target.closest('.dropdown') || e.target
+                        .closest('a') || e.target.closest('button')) return;
+                    window.location.href = `{{ url('sales') }}/${item.id}`;
+                };
+
+                row.querySelector('.invoice-checkbox').dataset.id = item.id;
+                row.querySelector('.row-index').textContent = index + 1;
+                row.querySelector('.row-nomor').textContent = item.nomor_invoice;
+                row.querySelector('.row-ref').textContent = item.ref_no || '-';
+                row.querySelector('.row-mitra').textContent = item.mitra ? item.mitra.nama : 'Umum';
+                row.querySelector('.row-mitra-no').textContent = item.mitra?.nomor_mitra || '-';
+
+                // Badge Status Dokumen
+                const statusBadge = row.querySelector('.row-status-dok-badge');
+                statusBadge.innerHTML =
+                    `<span class="badge ${item.status_dok === 'Approved' ? 'bg-soft-primary text-primary' : 'bg-soft-secondary text-secondary'}" style="font-size:10px;">${item.status_dok.toUpperCase()}</span>`;
+
+                // Badge Status Bayar
+                const payBadge = row.querySelector('.row-status-bayar-badge');
+                const payClass = item.status_pembayaran === 'Paid' ? 'f-paid' : (item.status_pembayaran ===
+                    'Unpaid' ? 'f-unpaid' : 'f-partial');
+                payBadge.textContent = item.status_pembayaran;
+                payBadge.classList.add(payClass);
+
+                // Nilai Uang
+                const amountDue = item.total_akhir - (item.payment_sum_jumlah_bayar || 0);
+                row.querySelector('.row-total').textContent = window.financeApp.formatIDR(item.total_akhir);
+                row.querySelector('.row-terhutang').textContent = window.financeApp.formatIDR(amountDue);
+                row.querySelector('.row-terhutang').classList.add(amountDue > 0 ? 'text-danger' : 'text-success');
+
+                // Tanggal
+                row.querySelector('.row-tgl').textContent = window.financeApp.formatDate(item.tgl_invoice);
+                row.querySelector('.row-jatuh-tempo').textContent =
+                    `Due: ${window.financeApp.formatDate(item.tgl_jatuh_tempo)}`;
+
+                // Aksi
+                const btnShow = row.querySelector('.btn-show');
+                if (btnShow) {
+                    btnShow.onclick = (e) => {
+                        e.preventDefault();
+                        openDetailModal(item);
+                    };
+                    btnShow.removeAttribute('href');
+                }
+
+                const btnReceipt = row.querySelector('.btn-create-receipt');
+                if (btnReceipt) {
+                    btnReceipt.onclick = (e) => {
+                        e.preventDefault();
+                        // Redirect to receipt page with params
+                        window.location.href =
+                            `{{ route('sales.receipt') }}?open_create=true&invoice_id=${item.id}&mitra_id=${item.mitra_id}`;
+                    };
+                }
+
+                row.querySelector('.btn-edit').onclick = () => openInvoiceModal(item.id, null, 'edit');
+                row.querySelector('.btn-delete').onclick = () => deleteInvoice(item.id);
+                row.querySelector('.btn-print').href = `{{ url('sales/print') }}/${item.id}`;
+
+                // Remove chevron
+                const chevron = row.querySelector('.chevron-icon');
+                if (chevron) chevron.remove();
+
+                tbody.appendChild(row);
+            });
+        }
+
+        // Checkbox & Utils
+        function toggleSelectAll(master) {
+            document.querySelectorAll('.invoice-checkbox').forEach(cb => cb.checked = master.checked);
+            updateSelection();
+        }
+
+        function updateSelection() {
+            const chk = document.querySelectorAll('.invoice-checkbox:checked');
+            window.financeApp.selectedIds = Array.from(chk).map(c => c.dataset.id);
+            const area = document.getElementById('bulk-action-area');
+            if (window.financeApp.selectedIds.length > 0) {
+                area.classList.remove('d-none');
+                area.querySelector('.selected-count').innerText = `${window.financeApp.selectedIds.length} terpilih`;
+            } else {
+                area.classList.add('d-none');
+            }
+        }
+
+        function resetSelection() {
+            window.financeApp.selectedIds = [];
+            if (document.getElementById('master-checkbox')) document.getElementById('master-checkbox').checked = false;
+            updateSelection();
+        }
+
+        async function deleteInvoice(id) {
+            if (!confirm('Hapus invoice ini?')) return;
+            try {
+                const res = await fetch(`${window.financeApp.API_URL}/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                });
+                const dat = await res.json();
+                if (dat.success) {
+                    alert('Terhapus');
+                    loadInvoiceData();
+                } else alert(dat.message);
+            } catch (e) {
+                alert('Gagal menghapus');
+            }
+        }
+
+        function bulkDelete() {
+            alert('Fitur hapus massal segera hadir.');
         }
 
         function renderPagination(meta) {
-            const container = document.getElementById('pagination-container');
-            const info = document.getElementById('pagination-info');
-
-            if (!meta || !meta.links) return;
-
-            info.innerText = `Menampilkan ${meta.from || 0} sampai ${meta.to || 0} dari ${meta.total || 0} data`;
-
-            let html = '';
-            meta.links.forEach(link => {
-                const activeClass = link.active ? 'active' : '';
-                const disabledClass = link.url ? '' : 'disabled';
-                html += `
-                    <li class="page-item ${activeClass} ${disabledClass}">
-                        <button class="page-link" onclick="loadReceiptData('${link.url}')" ${!link.url ? 'disabled' : ''}>
-                            ${link.label}
-                        </button>
-                    </li>
-                `;
+            const c = document.getElementById('pagination-container');
+            c.innerHTML = '';
+            document.getElementById('pagination-info').innerText = `${meta.from||0}-${meta.to||0} dari ${meta.total}`;
+            meta.links.forEach(l => {
+                const cls = l.active ? 'bg-primary text-white' : 'bg-white text-dark';
+                c.insertAdjacentHTML('beforeend',
+                    `<li class="page-item ${!l.url?'disabled':''}"><a class="page-link border-0 mx-1 rounded shadow-sm fw-bold ${cls}" href="#" onclick="loadInvoiceData('${l.url}')">${l.label}</a></li>`
+                );
             });
-            container.innerHTML = html;
+        }
+
+        function resetFilter() {
+            document.getElementById('filter-search').value = '';
+            document.getElementById('filter-tgl-invoice').value = '';
+            document.getElementById('filter-tgl-jatuh-tempo').value = '';
+
+            document.querySelectorAll('.tom-select-init').forEach(s => {
+                s.tomselect?.clear();
+                s.tomselect?.setValue('');
+            });
+
+            loadInvoiceData();
+        }
+
+        let tomSelectPaymentStatus, tomSelectDocumentStatus, tomSelectMitraIndex;
+
+        function initFilters() {
+            if (typeof TomSelect === 'undefined') {
+                console.warn('TomSelect is not loaded. Filters will use default select behavior.');
+            }
+
+            tomSelectDocumentStatus = safeTomSelect('#filter-status-dok', {
+                create: false,
+                allowEmptyOption: true,
+                dropdownParent: 'body'
+            });
+
+            tomSelectPaymentStatus = safeTomSelect('#filter-status-bayar', {
+                create: false,
+                allowEmptyOption: true,
+                dropdownParent: 'body'
+            });
+
+            tomSelectMitraIndex = safeTomSelect('#filter-mitra-id', {
+                create: false,
+                allowEmptyOption: true,
+                placeholder: 'Cari Pemasok / Mitra ...',
+                dropdownParent: 'body'
+            })
+
+            const searchInput = document.getElementById('filter-search');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        loadInvoiceData();
+                    }
+                });
+            }
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // Load Dropdowns Data
-            await loadDropdowns();
-
-            document.getElementById('signature_file').addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        document.getElementById('upload-signature-area').classList.add('d-none');
-                        document.getElementById('signature-preview').classList.remove('d-none');
-                        document.querySelector('#signature-preview img').src = ev.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-
-            loadReceiptData();
-
-            // Check URL Params for Direct Create
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('open_create') === 'true') {
-                openCreateModal();
-
-                const mitraId = urlParams.get('mitra_id');
-                const invoiceId = urlParams.get('invoice_id');
-
-                // Wait for TomSelect to be ready if it's async (it's not here, but good practice)
-                if (mitraId && tomMitra) {
-                    tomMitra.skipClear = true;
-                    tomMitra.setValue(mitraId);
-                    tomMitra.skipClear = false;
-                }
-
-                if (invoiceId) {
-                    try {
-                        const res = await fetch(`${API_INVOICE}/${invoiceId}`);
-                        const json = await res.json();
-                        if (json.success) {
-                            const data = json.data;
-                            if (!selectedInvoices.find(s => s.id == data.id)) {
-                                const tertagih = data.total_akhir - (data.payment_sum_jumlah_bayar || 0);
-                                selectedInvoices.push({
-                                    id: data.id,
-                                    nomor_invoice: data.nomor_invoice,
-                                    pelanggan: data.mitra?.nama || '-',
-                                    tgl: data.tgl_invoice,
-                                    jatuh_tempo: data.tgl_jatuh_tempo || '-',
-                                    total: data.total_akhir,
-                                    tertagih: tertagih,
-                                    bayar: tertagih // Auto-fill full amount
-                                });
-                                renderSelectedTable();
-                            }
-                        }
-                    } catch (e) {
-                        console.error('Failed to load invoice for receipt', e);
-                    }
-                }
+            try {
+                initFilters();
+            } catch (e) {
+                console.error('Filter init error:', e);
             }
+
+            try {
+                await initializeMasterData();
+            } catch (e) {
+                console.error('Master data error:', e);
+            }
+
+            loadInvoiceData();
         });
-
-        async function loadDropdowns() {
-            try {
-                // Load Mitras
-                const resMitra = await fetch(API_MITRA);
-                const jsonMitra = await resMitra.json();
-
-                const mitraSelect = document.getElementById('mitra_id');
-                mitraSelect.innerHTML = '<option value="">Pilih Pelanggan...</option>';
-                if (jsonMitra.success) {
-                    jsonMitra.data.data.forEach(m => { // Assuming paginated, or adjust if array
-                        // NOTE: If API returns paginated 'data', use jsonMitra.data.data. If flat, jsonMitra.data
-                        // Checking standard API format in this project usually returns paginated.
-                        // But index methods might return pagination object.
-                        // Let's assume pagination based on other files.
-                        // Wait, for dropdowns we usually need all or search. 
-                        // Let's just try to map whatever array we find.
-                        mitraSelect.innerHTML += `<option value="${m.id}">${m.nama}</option>`;
-                    });
-                }
-
-                // Initialize TomSelect after options loaded
-                tomMitra = new TomSelect("#mitra_id", {
-                    onChange: () => {
-                        if (!tomMitra.skipClear) {
-                            selectedInvoices = [];
-                            renderSelectedTable();
-                        }
-                    }
-                });
-
-                // Load COA
-                const resCoa = await fetch(`${API_COA}?is_kas_bank=1`);
-                const jsonCoa = await resCoa.json();
-
-                const coaSelect = document.getElementById('akun_keuangan_id');
-                coaSelect.innerHTML = '';
-                if (jsonCoa.success) {
-                    jsonCoa.data.forEach(acc => {
-                        coaSelect.innerHTML += `<option value="${acc.id}">${acc.nama_akun}</option>`;
-                    });
-                }
-
-            } catch (e) {
-                console.error("Failed to load dropdowns", e);
-            }
-        }
-
-        function formatIDR(val) {
-            return new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0
-            }).format(val);
-        }
-
-        function formatNumber(val) {
-            return new Intl.NumberFormat('id-ID', {
-                minimumFractionDigits: 2
-            }).format(val);
-        }
-
-        // --- LOGIKA LIST ---
-        async function loadReceiptData(url = API_PAYMENT) {
-            const accordion = document.getElementById('receiptAccordion');
-            accordion.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>';
-
-            try {
-                const search = document.getElementById('filter-search').value;
-                const metode = document.getElementById('filter-metode').value;
-                let fetchUrl = new URL(url);
-                if (search) fetchUrl.searchParams.append('search', search);
-                if (metode) fetchUrl.searchParams.append('metode_pembayaran', metode);
-
-                const res = await fetch(fetchUrl);
-                const result = await res.json();
-                if (result.success) {
-                    renderReceiptList(result.data.data);
-                    renderPagination(result.data);
-                }
-            } catch (e) {
-                accordion.innerHTML = '<div class="alert alert-danger">Gagal memuat data.</div>';
-            }
-        }
     </script>
+@endpush --}}
+
+@push('js')
 @endpush
