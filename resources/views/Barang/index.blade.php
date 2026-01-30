@@ -202,10 +202,12 @@
         document.addEventListener('DOMContentLoaded', async () => {
             initTomSelect();
 
-            await fetchMasterSuppliers();
-            await fetchMasterBrands();
-            await fetchMasterCategories();
-            await fetchMasterCOA();
+            await Promise.all([
+                fetchMasterSuppliers(),
+                fetchMasterBrands(),
+                fetchMasterCategories(),
+                fetchMasterCOA()
+            ]);
 
             document.getElementById('btnSaveBrand')
                 .addEventListener('click', saveBrand);
