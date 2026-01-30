@@ -1,0 +1,70 @@
+<?php
+
+namespace App\Models;
+
+use App\Traits\ActivityLogs;
+use Illuminate\Database\Eloquent\Model;
+
+class DeliveryOrderFleet extends Model
+{
+    use ActivityLogs;
+
+    protected $fillable = [
+        'delivery_order_id',
+        'fleet_id',
+        'driver_id',
+        'fuel_start_liters',
+        'fuel_end_liters',
+        'distance_traveled_km',
+        'fuel_used_liters',
+        'toll_cost',
+        'parking_cost',
+        'other_cost',
+        'notes',
+    ];
+
+    protected $casts = [
+        'fuel_start_liters'     => 'decimal:2',
+        'fuel_end_liters'       => 'decimal:2',
+        'distance_traveled_km'  => 'decimal:2',
+        'fuel_used_liters'      => 'decimal:2',
+        'toll_cost'             => 'decimal:2',
+        'parking_cost'          => 'decimal:2',
+        'other_cost'            => 'decimal:2',
+    ];
+
+    public function deliveryOrder()
+    {
+        return $this->belongsTo(DeliveryOrder::class);
+    }
+
+    public function fleet()
+    {
+        return $this->belongsTo(Fleet::class);
+    }
+
+    public function driver()
+    {
+        return $this->belongsTo(User::class, 'driver_id');
+    }
+
+    // 🔥 Helper: total additional operational cost
+    public function getTotalAdditionalCostAttribute()
+    {
+        return $this->toll_cost + $this->parking_cost + $this->other_cost;
+    }
+
+    // 🔥 Helper: auto calculate fuel used
+    public function calculateFuelUsage()
+    {
+        if ($this->fuel_start_liters && $this->fuel_end_liters) {
+            return $this->fuel_start_liters - $this->fuel_end_liters;
+        }
+
+        if ($this->distance_traveled_km && $this->fleet?->km_per_liter) {
+            return $this->distance_traveled_km / $this->fleet->km_per_liter;
+        }
+
+        return null;
+    }
+}
