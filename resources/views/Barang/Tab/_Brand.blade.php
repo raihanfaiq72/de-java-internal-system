@@ -8,7 +8,7 @@
         </div>
 
         <div class="col-md-auto">
-            <button onclick="loadProductData()" class="btn btn-sm btn-dark px-3">
+            <button onclick="loadBrandData()" class="btn btn-sm btn-dark px-3">
                 <i class="fa fa-filter me-1"></i> Filter
             </button>
         </div>
@@ -163,7 +163,8 @@
         }
 
         async function editBrand(id) {
-            document.getElementById('formBrand').reset();
+            const form = document.getElementById('formBrand');
+            form.reset();
             document.getElementById('brandModalTitle').innerText = 'Edit Brand';
             document.getElementById('brandId').value = id;
 
@@ -176,9 +177,12 @@
                     document.getElementById('nama_brand').value = brand.nama_brand;
 
                     if (tsSupplier) {
+                        tsSupplier.clear();
                         syncSupplierOptions();
-                        const supplierIds = brand.suppliers ? brand.suppliers.map(s => String(s.id)) : [];
-                        tsSupplier.setValue(supplierIds);
+                        if (brand.suppliers && Array.isArray(brand.suppliers)) {
+                            const ids = brand.suppliers.map(s => String(s.id));
+                            tsSupplier.setValue(ids);
+                        }
                     }
 
                     new bootstrap.Modal(document.getElementById('modalBrand')).show();
@@ -263,6 +267,7 @@
 
             const payload = {
                 nama_brand: brandName,
+                supplier_ids: selectedSuppliers
             };
 
             btn.disabled = true;
@@ -282,40 +287,6 @@
                 const result = await res.json();
 
                 if (result.success) {
-                    const finalBrandId = brandId || result.data
-                        .id;
-
-                    if (brandId) {
-                        const getRel = await fetch(`${SUPPLIER_BRAND_URL}?brand_id=${finalBrandId}`);
-                        const relData = await getRel.json();
-
-                        if (relData.success) {
-                            for (const rel of relData.data) {
-                                await fetch(`${SUPPLIER_BRAND_URL}/${rel.id}`, {
-                                    method: 'DELETE',
-                                    headers: {
-                                        'X-CSRF-TOKEN': token
-                                    }
-                                });
-                            }
-                        }
-                    }
-
-                    for (const sId of selectedSuppliers) {
-                        await fetch(SUPPLIER_BRAND_URL, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': token
-                            },
-                            body: JSON.stringify({
-                                supplier_id: sId,
-                                brand_id: finalBrandId
-                            })
-                        });
-                    }
-
                     bootstrap.Modal.getInstance(document.getElementById('modalBrand')).hide();
                     alert('Data berhasil disimpan!');
                     loadBrandData();
