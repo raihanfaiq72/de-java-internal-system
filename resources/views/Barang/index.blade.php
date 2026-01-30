@@ -108,10 +108,13 @@
         const SUPPLIER_URL = "{{ route('mitra-api.index') }}";
         const SUPPLIER_BRAND_URL = "{{ route('supplier-brand-api.index') }}";
         const PRODUCT_URL = "{{ route('product-api.index') }}";
+        const CATEGORY_URL = "{{ route('product-category-api.index') }}";
+        const NEXT_SKU_URL = "{{ route('product.next-sku-api') }}";
+        const COA_URL = "{{ route('coa-api.index') }}";
 
-        let masterSuppliers = [];
+        let masterSuppliers, masterBrands, masterCategories, masterCOA = [];
 
-        let tsSupplier, tsProductSupplier, tsProductBrand = null;
+        let tsSupplier = null;
 
         const safeTomSelect = (selector, options) => {
             if (typeof TomSelect !== 'undefined') {
@@ -140,28 +143,6 @@
                 placeholder: 'Pilih Supplier ...',
                 dropdownParent: 'body'
             });
-
-            // tsProductSupplier = safeTomSelect('#suppliers', {
-            //     plugins: ['remove_button'],
-            //     valueField: 'id',
-            //     labelField: 'nama',
-            //     searchField: 'nama',
-            //     create: false,
-            //     allowEmptyOption: true,
-            //     placeholder: 'Pilih Supplier ...',
-            //     dropdownParent: 'body'
-            // });
-
-            // tsProductBrand = safeTomSelect('#suppliers', {
-            //     plugins: ['remove_button'],
-            //     valueField: 'id',
-            //     labelField: 'nama',
-            //     searchField: 'nama',
-            //     create: false,
-            //     allowEmptyOption: true,
-            //     placeholder: 'Pilih Supplier ...',
-            //     dropdownParent: 'body'
-            // });
         }
 
         async function fetchMasterSuppliers() {
@@ -181,9 +162,50 @@
             }
         }
 
+        async function fetchMasterBrands() {
+            try {
+                const res = await fetch(BRAND_URL);
+                const result = await res.json();
+                if (result.success) {
+                    masterBrands = result.data.data || result.data;
+                }
+            } catch (error) {
+                console.error("Gagal memuat master brand:", error);
+            }
+        }
+
+        async function fetchMasterCategories() {
+            try {
+                const res = await fetch(CATEGORY_URL);
+                const result = await res.json();
+                if (result.success) {
+                    masterCategories = result.data.data || result.data;
+                }
+            } catch (error) {
+                console.error("Gagal memuat master kategori:", error);
+            }
+        }
+
+        async function fetchMasterCOA() {
+            try {
+                const res = await fetch(COA_URL);
+                const result = await res.json();
+
+                if (result.success) {
+                    masterCOA = result.data.data || result.data;
+                }
+            } catch (error) {
+                console.error('Gagal memuat master COA:', error);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             initTomSelect();
+
             await fetchMasterSuppliers();
+            await fetchMasterBrands();
+            await fetchMasterCategories();
+            await fetchMasterCOA();
 
             document.getElementById('btnSaveBrand')
                 .addEventListener('click', saveBrand);

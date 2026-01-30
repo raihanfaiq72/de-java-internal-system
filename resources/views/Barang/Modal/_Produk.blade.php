@@ -4,8 +4,7 @@
 
             <div class="modal-header">
                 <h5 class="modal-title" id="modalProdukTitle">Tambah Produk</h5>
-                <button type="button" class="btn-close"
-                        data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body">
@@ -14,14 +13,12 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="small fw-bold">SKU</label>
-                        <input type="text" id="produk-sku"
-                               class="form-control form-control-sm">
+                        <input type="text" id="produk-sku" class="form-control form-control-sm">
                     </div>
 
                     <div class="col-md-6">
                         <label class="small fw-bold">Nama Produk</label>
-                        <input type="text" id="produk-nama"
-                               class="form-control form-control-sm">
+                        <input type="text" id="produk-nama" class="form-control form-control-sm">
                     </div>
 
                     <div class="col-md-4">
@@ -47,27 +44,26 @@
 
                     <div class="col-md-4">
                         <label class="small fw-bold">Harga Beli</label>
-                        <input type="number" id="produk-harga-beli"
-                               class="form-control form-control-sm">
+                        <input type="number" id="produk-harga-beli" class="form-control form-control-sm">
                     </div>
 
                     <div class="col-md-4">
                         <label class="small fw-bold">Harga Jual</label>
-                        <input type="number" id="produk-harga-jual"
-                               class="form-control form-control-sm">
+                        <input type="number" id="produk-harga-jual" class="form-control form-control-sm">
                     </div>
 
                     <div class="col-12">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="produk-track-stock" onchange="toggleTrackStock()">
-                            <label class="form-check-label small fw-bold" for="produk-track-stock">Lacak Stok Barang (Track Stock)</label>
+                            <input class="form-check-input" type="checkbox" id="produk-track-stock"
+                                onchange="toggleTrackStock()">
+                            <label class="form-check-label small fw-bold" for="produk-track-stock">Lacak Stok Barang
+                                (Track Stock)</label>
                         </div>
                     </div>
 
                     <div class="col-md-4 stock-field" style="display:none;">
                         <label class="small fw-bold">Stok Awal (Qty)</label>
-                        <input type="number" id="produk-qty"
-                               class="form-control form-control-sm">
+                        <input type="number" id="produk-qty" class="form-control form-control-sm">
                     </div>
                     <div class="col-md-8 stock-field" style="display:none;">
                         <span class="text-muted small d-block mt-4">
@@ -77,17 +73,14 @@
 
                     <div class="col-12">
                         <label class="small fw-bold">Deskripsi</label>
-                        <textarea id="produk-deskripsi"
-                                  class="form-control form-control-sm"></textarea>
+                        <textarea id="produk-deskripsi" class="form-control form-control-sm"></textarea>
                     </div>
                 </div>
             </div>
 
             <div class="modal-footer">
-                <button class="btn btn-secondary btn-sm"
-                        data-bs-dismiss="modal">Batal</button>
-                <button id="btn-simpan-produk" class="btn btn-primary btn-sm"
-                        onclick="submitProduk()">Simpan</button>
+                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                <button id="btn-simpan-produk" class="btn btn-primary btn-sm" onclick="submitProduk()">Simpan</button>
             </div>
 
         </div>
