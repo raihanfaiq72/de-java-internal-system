@@ -58,12 +58,7 @@
 <template id="produk-row-inline-template">
     <tr class="bg-primary bg-opacity-10 border-primary">
         <td>
-            <div class="input-group input-group-sm">
-                <input type="text" class="form-control fw-bold in-sku" placeholder="SKU...">
-                <button class="btn btn-outline-primary btn-gen-sku" type="button" title="Generate SKU">
-                    <i class="fa fa-magic"></i>
-                </button>
-            </div>
+            <input type="text" class="form-control form-control-sm in-sku" disabled>
         </td>
         <td>
             <select class="in-supplier"></select>
@@ -130,10 +125,12 @@
 @push('js')
     <script>
         async function tambahProduk() {
-            await fetchMasterSuppliers();
-            await fetchMasterBrands();
-            await fetchMasterCategories();
-            await fetchMasterCOA();
+            await Promise.all([
+                fetchMasterSuppliers(),
+                fetchMasterBrands(),
+                fetchMasterCategories(),
+                fetchMasterCOA()
+            ]);
 
             const tbody = document.getElementById('produk-table-body');
             const template = document.getElementById('produk-row-inline-template');
@@ -145,15 +142,6 @@
 
             tbody.prepend(tr);
 
-            const tsProductSupplier = new TomSelect(tr.querySelector('.in-supplier'), {
-                options: masterSuppliers.map(s => ({
-                    value: s.id,
-                    text: s.nama
-                })),
-                placeholder: 'Supplier...',
-                dropdownParent: 'body'
-            });
-
             const tsProductBrand = new TomSelect(tr.querySelector('.in-brand'), {
                 options: masterBrands.map(b => ({
                     value: b.id,
@@ -163,14 +151,84 @@
                 dropdownParent: 'body'
             });
 
+            const tsProductSupplier = new TomSelect(tr.querySelector('.in-supplier'), {
+                options: masterSuppliers.map(s => ({
+                    value: s.id,
+                    text: s.nama
+                })),
+                placeholder: 'Supplier...',
+                dropdownParent: 'body',
+                onChange: function(supplierId) {
+                    if (!tsProductBrand) return;
+
+                    tsProductBrand.clear();
+                    tsProductBrand.clearOptions();
+
+                    if (!supplierId) {
+                        const allOptions = masterBrands.map(b => ({
+                            value: b.id,
+                            text: b.nama_brand
+                        }));
+                        tsProductBrand.addOptions(allOptions);
+                    } else {
+                        const filteredBrands = masterBrands.filter(brand => {
+                            return brand.suppliers && brand.suppliers.some(s => String(s.id) ===
+                                String(supplierId))
+                        })
+                        const newOptions = filteredBrands.map(b => ({
+                            value: b.id,
+                            text: b.nama_brand
+                        }));
+                        tsProductBrand.addOptions(newOptions);
+                    }
+
+                    tsProductBrand.refreshOptions(false);
+                }
+            });
+
             const tsProductKategori = new TomSelect(tr.querySelector('.in-kategori'), {
                 options: masterCategories.map(c => ({
                     value: c.id,
                     text: c.nama_kategori
                 })),
                 placeholder: 'Kategori...',
-                create: true,
-                dropdownParent: 'body'
+                dropdownParent: 'body',
+                create: function(input, callback) {
+                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute(
+                        'content') || '';
+
+                    fetch(CATEGORY_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token
+                            },
+                            body: JSON.stringify({
+                                nama_kategori: input
+                            })
+                        }).then(response => response.json())
+                        .then(result => {
+                            if (result.success) {
+                                masterCategories.push(result.data);
+
+                                callback({
+                                    value: result.data.id,
+                                    text: result.data.nama_kategori
+                                });
+
+                                console.log('Kategori baru berhasil disimpan:', result.data
+                                    .nama_kategori);
+                            } else {
+                                alert('Gagal menyimpan kategori baru: ' + result.message);
+                                callback(false);
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Error creating category:', err);
+                            callback(false);
+                        });
+                }
             });
 
             const tsCOA = new TomSelect(tr.querySelector('.in-coa'), {
@@ -184,12 +242,10 @@
             });
 
             const skuInput = tr.querySelector('.in-sku');
-            tr.querySelector('.btn-gen-sku').onclick = async () => {
-                skuInput.value = '...';
-                const res = await fetch(NEXT_SKU_URL);
-                const result = await res.json();
-                if (result.success) skuInput.value = result.data;
-            };
+            skuInput.value = '...';
+            const res = await fetch(NEXT_SKU_URL);
+            const result = await res.json();
+            if (result.success) skuInput.value = result.data;
 
             tr.querySelector('.btn-cancel-inline').onclick = () => tr.remove();
 
