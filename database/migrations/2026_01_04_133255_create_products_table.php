@@ -28,6 +28,8 @@ return new class extends Migration
 
             $table->decimal('harga_beli', 15, 2)->default(0);
             $table->decimal('harga_jual', 15, 2)->default(0);
+            $table->integer('kemasan')->nullable();
+            $table->string('satuan', 20)->default('pcs');
             $table->boolean('track_stock')->default(true);
             $table->integer('qty')->default(0);
             $table->string('foto_produk')->nullable();

@@ -57,6 +57,8 @@ class ProductController extends Controller
             'nama_produk' => 'required',
             'supplier_id' => 'nullable|exists:mitras,id',
             'brand_id' => 'nullable|exists:brands,id',
+            'kemasan' => 'nullable|integer|min:1',
+            'satuan' => 'nullable|string|max:20',
         ]);
 
         if ($validator->fails()) {
@@ -90,6 +92,8 @@ class ProductController extends Controller
             'harga_jual' => 'nullable|numeric|min:0',
             'supplier_id' => 'nullable|exists:mitras,id',
             'brand_id' => 'nullable|exists:brands,id',
+            'kemasan' => 'nullable|integer|min:1',
+            'satuan' => 'nullable|string|max:20',
         ]);
 
         if ($validator->fails()) {

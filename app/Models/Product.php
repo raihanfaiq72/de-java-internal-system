@@ -18,6 +18,8 @@ class Product extends Model
         'product_category_id',
         'supplier_id',
         'brand_id',
+        'kemasan',
+        'satuan',
         'harga_beli',
         'harga_jual',
         'track_stock',
