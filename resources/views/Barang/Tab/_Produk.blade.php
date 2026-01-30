@@ -103,6 +103,42 @@
     </tr>
 </template>
 
+<template id="produk-row-display-template">
+    <tr>
+        <td class="col-sku fw-bold text-primary"></td>
+        <td class="col-supplier"></td>
+        <td class="col-brand"></td>
+        <td class="col-nama"></td>
+        <td class="col-kategori"></td>
+        <td class="col-kemasan text-center"></td>
+        <td class="col-satuan text-center"></td>
+        <td class="col-qty text-center"></td>
+        <td class="col-beli text-end"></td>
+        <td class="col-jual text-end"></td>
+        <td class="col-coa text-center"></td>
+        <td class="text-center">
+            <div class="dropdown">
+                <button class="btn btn-sm btn-light border dropdown-toggle" data-bs-toggle="dropdown">Aksi</button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item btn-edit" href="javascript:void(0)">
+                            <i class="fa fa-edit me-2 text-warning"></i> Edit
+                        </a>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li>
+                        <a class="dropdown-item btn-delete text-danger" href="javascript:void(0)">
+                            <i class="fa fa-trash me-2"></i> Hapus
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </td>
+    </tr>
+</template>
+
 @push('css')
     <style>
         .btn-xs {
@@ -299,37 +335,36 @@
 
         function renderProductTable(data) {
             const tbody = document.getElementById('produk-table-body');
+            const template = document.getElementById('produk-row-display-template');
             tbody.innerHTML = '';
 
             if (!data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="11" class="text-center text-muted">Data tidak ditemukan</td></tr>`;
+                tbody.innerHTML =
+                    `<tr><td colspan="12" class="text-center text-muted py-4">Data produk tidak ditemukan</td></tr>`;
                 return;
             }
 
             data.forEach(item => {
-                tbody.insertAdjacentHTML('beforeend', `
-        <tr>
-            <td class="fw-bold">${item.sku_kode || '-'}</td>
-            <td>${item.supplier?.nama || '-'}</td>
-            <td>${item.brand?.nama_brand || '-'}</td>
-            <td>${item.nama_produk}</td>
-            <td>${item.category?.nama_kategori || '-'}</td>
-            <td>${item.kemasan || '-'}</td>
-            <td>${item.satuan || '-'}</td>
-            <td class="text-center">${item.qty || 0}</td>
-            <td class="text-end">${formatIDR(item.harga_beli)}</td>
-            <td class="text-end">${formatIDR(item.harga_jual)}</td>
-            <td class="text-center">
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-light border dropdown-toggle" data-bs-toggle="dropdown">Aksi</button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="editProduk(${item.id})"><i class="fa fa-edit me-2 text-warning"></i> Edit</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="hapusProduk(${item.id})"><i class="fa fa-trash me-2"></i> Hapus</a></li>
-                    </ul>
-                </div>
-            </td>
-        </tr>`);
+                const clone = template.content.cloneNode(true);
+
+                // Mengisi Konten Baris
+                clone.querySelector('.col-sku').textContent = item.sku_kode || '-';
+                clone.querySelector('.col-supplier').textContent = item.supplier?.nama || '-';
+                clone.querySelector('.col-brand').textContent = item.brand?.nama_brand || '-';
+                clone.querySelector('.col-nama').textContent = item.nama_produk || '-';
+                clone.querySelector('.col-kategori').textContent = item.category?.nama_kategori || '-';
+                clone.querySelector('.col-kemasan').textContent = item.kemasan || '-';
+                clone.querySelector('.col-satuan').textContent = item.satuan || '-';
+                clone.querySelector('.col-qty').textContent = item.qty || 0;
+                clone.querySelector('.col-beli').textContent = formatIDR(item.harga_beli);
+                clone.querySelector('.col-jual').textContent = formatIDR(item.harga_jual);
+                clone.querySelector('.col-coa').textContent = item.coa?.nama_akun || '-';
+
+                // Memasang Event Klik
+                clone.querySelector('.btn-edit').onclick = () => editProduk(item.id);
+                clone.querySelector('.btn-delete').onclick = () => hapusProduk(item.id);
+
+                tbody.appendChild(clone);
             });
         }
 
@@ -363,7 +398,7 @@
             const tbody = document.getElementById('produk-table-body');
             tbody.innerHTML = `
             <tr>
-                <td colspan="8" class="text-center py-4">
+                <td colspan="12" class="text-center py-4">
                     <div class="spinner-border text-primary"></div>
                 </td>
             </tr>`;
