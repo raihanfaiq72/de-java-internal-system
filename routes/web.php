@@ -9,6 +9,7 @@ use App\Http\Controllers\DashboardSalesController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\BarangController;
+use App\Http\Controllers\DeliveryOrderController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\MitraController;
 use App\Http\Controllers\OfficeController;
@@ -75,6 +76,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('report/balance-sheet/export/csv', [ReportController::class, 'balanceSheetExportCSV'])->name('report.balance-sheet.export.csv');
         Route::get('report/profit-loss', [ReportController::class, 'profitAndLoss'])->name('report.profit-loss');
         Route::get('report/coa-management', [ReportController::class, 'coaManagement'])->name('report.coa-management');
+
+        Route::prefix('delivery-order')->name('delivery-order.')->group(function () {
+            Route::get('/', [DeliveryOrderController::class, 'index'])->name('index');
+        });
 
         Route::prefix('admin')->group(function () {
             Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
