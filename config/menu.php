@@ -147,6 +147,12 @@ return [
         ],
     ],
     [
+        'type' => 'item',
+        'title' => 'Delivery Order',
+        'route' => 'delivery-order.index',
+        'icon' => 'iconoir-delivery-truck',
+    ],
+    [
         'type' => 'label',
         'title' => 'Report',
     ],
