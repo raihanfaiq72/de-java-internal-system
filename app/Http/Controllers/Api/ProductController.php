@@ -20,7 +20,7 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $query = Product::with(['category'])
+        $query = Product::with(['category', 'supplier', 'brand'])
             ->where('office_id', session('active_office_id'));
 
         if ($request->search) {
@@ -41,7 +41,7 @@ class ProductController extends Controller
 
     public function show($id)
     {
-        $data = Product::with(['category'])
+        $data = Product::with(['category', 'supplier', 'brand'])
             ->where('office_id', session('active_office_id'))
             ->find($id);
         if (!$data) {
@@ -55,6 +55,8 @@ class ProductController extends Controller
         $validator = Validator::make($request->all(), [
             'sku_kode' => 'required|unique:products,sku_kode',
             'nama_produk' => 'required',
+            'supplier_id' => 'nullable|exists:mitras,id',
+            'brand_id' => 'nullable|exists:brands,id',
         ]);
 
         if ($validator->fails()) {
@@ -83,10 +85,11 @@ class ProductController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'sku_kode' => 'required|unique:products,sku_kode,' . $id,
             'nama_produk' => 'required',
             'harga_beli' => 'nullable|numeric|min:0',
             'harga_jual' => 'nullable|numeric|min:0',
+            'supplier_id' => 'nullable|exists:mitras,id',
+            'brand_id' => 'nullable|exists:brands,id',
         ]);
 
         if ($validator->fails()) {

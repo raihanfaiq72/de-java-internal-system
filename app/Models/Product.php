@@ -16,6 +16,8 @@ class Product extends Model
         'sku_kode',
         'nama_produk',
         'product_category_id',
+        'supplier_id',
+        'brand_id',
         'harga_beli',
         'harga_jual',
         'track_stock',
@@ -32,5 +34,15 @@ class Product extends Model
     public function stock_mutations()
     {
         return $this->hasMany(StockMutation::class);
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Partner::class, 'supplier_id');
+    }
+
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class, 'brand_id');
     }
 }

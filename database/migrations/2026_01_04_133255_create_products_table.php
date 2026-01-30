@@ -19,6 +19,12 @@ return new class extends Migration
 
             $table->foreignId('product_category_id')
                 ->constrained('product_categories');
+            
+            $table->foreignId('supplier_id')
+                ->constrained('mitras');
+            
+            $table->foreignId('brand_id')
+                ->constrained('brands');
 
             $table->decimal('harga_beli', 15, 2)->default(0);
             $table->decimal('harga_jual', 15, 2)->default(0);
