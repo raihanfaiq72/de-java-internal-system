@@ -65,7 +65,7 @@ class InvoiceController extends Controller
 
     public function show($id)
     {
-        $data = Invoice::with(['mitra', 'items.taxes.tax', 'payment', 'items.product'])
+        $data = Invoice::with(['mitra', 'items.taxes.tax', 'payment', 'items.product', 'items.product.supplier', 'items.product.brand'])
             ->where('office_id', session('active_office_id'))
             ->find($id);
 
