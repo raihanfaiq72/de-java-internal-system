@@ -136,7 +136,7 @@
             <div class="customer-details">
                 <table>
                     <tr>
-                        <td width="30%">Kepada Yth</td>
+                        <td width="30%">Pembelian Dari</td>
                         <td id="mitra_nama">: </td>
                     </tr>
                     <tr>
