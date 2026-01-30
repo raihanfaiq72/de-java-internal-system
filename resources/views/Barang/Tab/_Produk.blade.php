@@ -333,6 +333,198 @@
             };
         }
 
+        async function editProduk(id) {
+            const res = await fetch(`${PRODUCT_URL}/${id}`);
+            const result = await res.json();
+            if (!result.success) return alert('Gagal mengambil data produk');
+
+            const item = result.data;
+
+            const oldRow = document.getElementById(`row-product-${id}`);
+            if (!oldRow) return;
+
+            const template = document.getElementById('produk-row-inline-template');
+            const clone = template.content.cloneNode(true);
+            const editRow = clone.querySelector('tr');
+
+            const tsBrand = new TomSelect(editRow.querySelector('.in-brand'), {
+                options: masterBrands.map(b => ({
+                    value: b.id,
+                    text: b.nama_brand
+                })),
+                placeholder: 'Brand...',
+                dropdownParent: 'body'
+            });
+
+            const tsSupplier = new TomSelect(editRow.querySelector('.in-supplier'), {
+                options: masterSuppliers.map(s => ({
+                    value: s.id,
+                    text: s.nama
+                })),
+                placeholder: 'Supplier...',
+                dropdownParent: 'body',
+                onChange: function(supplierId) {
+                    tsBrand.clear();
+                    tsBrand.clearOptions();
+                    const filtered = masterBrands.filter(brand =>
+                        !supplierId || (brand.suppliers && brand.suppliers.some(s => String(s.id) ===
+                            String(supplierId)))
+                    );
+                    tsBrand.addOptions(filtered.map(b => ({
+                        value: b.id,
+                        text: b.nama_brand
+                    })));
+                }
+            });
+
+            const tsKategori = new TomSelect(editRow.querySelector('.in-kategori'), {
+                options: masterCategories.map(c => ({
+                    value: c.id,
+                    text: c.nama_kategori
+                })),
+                create: function(input, callback) {
+                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute(
+                        'content') || '';
+
+                    fetch(CATEGORY_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token
+                            },
+                            body: JSON.stringify({
+                                nama_kategori: input
+                            })
+                        }).then(response => response.json())
+                        .then(result => {
+                            if (result.success) {
+                                masterCategories.push(result.data);
+
+                                callback({
+                                    value: result.data.id,
+                                    text: result.data.nama_kategori
+                                });
+
+                                console.log('Kategori baru berhasil disimpan:', result.data
+                                    .nama_kategori);
+                            } else {
+                                alert('Gagal menyimpan kategori baru: ' + result.message);
+                                callback(false);
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Error creating category:', err);
+                            callback(false);
+                        });
+                },
+                dropdownParent: 'body'
+            });
+
+            const tsCOA = new TomSelect(editRow.querySelector('.in-coa'), {
+                options: masterCOA.map(c => ({
+                    value: c.id,
+                    text: c.nama_akun
+                })),
+                dropdownParent: 'body'
+            });
+
+            editRow.querySelector('.in-sku').value = item.sku_kode;
+            editRow.querySelector('.in-nama').value = item.nama_produk;
+            editRow.querySelector('.in-kemasan').value = item.kemasan || '';
+            editRow.querySelector('.in-satuan').value = item.satuan || '';
+            editRow.querySelector('.in-qty').value = item.qty || 0;
+            editRow.querySelector('.in-beli').value = item.harga_beli || 0;
+            editRow.querySelector('.in-jual').value = item.harga_jual || 0;
+
+            tsSupplier.setValue(item.supplier_id);
+            tsBrand.setValue(item.brand_id);
+            tsKategori.setValue(item.product_category_id);
+            tsCOA.setValue(item.coa_id);
+
+            oldRow.replaceWith(editRow);
+
+            editRow.querySelector('.btn-cancel-inline').onclick = () => loadProductData();
+
+            editRow.querySelector('.btn-save-inline').onclick = async () => {
+                const payload = {
+                    sku_kode: item.sku_kode,
+                    nama_produk: editRow.querySelector('.in-nama').value,
+                    supplier_id: tsSupplier.getValue(),
+                    brand_id: tsBrand.getValue(),
+                    product_category_id: tsKategori.getValue(),
+                    kemasan: editRow.querySelector('.in-kemasan').value,
+                    satuan: editRow.querySelector('.in-satuan').value,
+                    qty: editRow.querySelector('.in-qty').value,
+                    harga_beli: editRow.querySelector('.in-beli').value,
+                    harga_jual: editRow.querySelector('.in-jual').value,
+                    coa_id: tsCOA.getValue(),
+                    track_stock: 1
+                };
+
+                try {
+                    const saveRes = await fetch(`${PRODUCT_URL}/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute('content')
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const saveResult = await saveRes.json();
+                    if (saveResult.success) {
+                        alert('Produk berhasil diperbarui');
+                        loadProductData();
+                    } else {
+                        alert('Gagal memperbarui: ' + saveResult.message);
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+            };
+        }
+
+        async function hapusProduk(id) {
+            if (!confirm('Apakah Anda yakin ingin menghapus produk ini? Tindakan ini tidak dapat dibatalkan.')) return;
+
+            try {
+                const res = await fetch(`${PRODUCT_URL}/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
+                            'content') || ''
+                    }
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    const row = document.getElementById(`row-product-${id}`);
+                    if (row) {
+                        row.style.transition = '0.3s';
+                        row.style.opacity = '0';
+                        row.style.backgroundColor = '#fee2e2';
+
+                        setTimeout(() => {
+                            row.remove();
+                            loadProductData();
+                        }, 300);
+                    }
+
+                    alert('Produk berhasil dihapus.');
+                } else {
+                    alert('Gagal menghapus: ' + (result.message || 'Terjadi kesalahan server'));
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                alert('Terjadi kesalahan sistem saat mencoba menghapus data.');
+            }
+        }
+
         function renderProductTable(data) {
             const tbody = document.getElementById('produk-table-body');
             const template = document.getElementById('produk-row-display-template');
@@ -346,6 +538,8 @@
 
             data.forEach(item => {
                 const clone = template.content.cloneNode(true);
+                const tr = clone.querySelector('tr');
+                tr.id = `row-product-${item.id}`;
 
                 const coaLookup = masterCOA.find(c => String(c.id) === String(item.coa_id));
                 const coaName = coaLookup ? coaLookup.nama_akun : '-';
@@ -364,8 +558,14 @@
                 clone.querySelector('.col-coa').textContent = coaName;
 
                 // Memasang Event Klik
-                clone.querySelector('.btn-edit').onclick = () => editProduk(item.id);
-                clone.querySelector('.btn-delete').onclick = () => hapusProduk(item.id);
+                clone.querySelector('.btn-edit').onclick = (e) => {
+                    e.preventDefault();
+                    editProduk(item.id);
+                };
+                clone.querySelector('.btn-delete').onclick = (e) => {
+                    e.preventDefault();
+                    hapusProduk(item.id);
+                };
 
                 tbody.appendChild(clone);
             });
