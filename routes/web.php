@@ -18,6 +18,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\FleetController;
 
 Route::get('/', [AuthController::class, 'login'])->name('login');
 Route::post('/login-proses', [AuthController::class, 'loginProses'])->name('login.proses');
@@ -55,6 +56,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('barang', [BarangController::class, 'index'])->name('barang');
         Route::get('stok', [StockController::class, 'index'])->name('stok');
         Route::get('expenses', [ExpenseController::class, 'index'])->name('expenses.index');
+        Route::get('fleets', [FleetController::class, 'index'])->name('fleets.index');
 
         // Finance
         Route::get('finance', [App\Http\Controllers\FinanceController::class, 'index'])->name('finance.index');

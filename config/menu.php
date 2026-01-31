@@ -41,6 +41,11 @@ return [
                 'route' => 'stok',
                 'icon' => 'iconoir-archive',
             ],
+            [
+                'title' => 'Armada',
+                'route' => 'fleets.index',
+                'icon' => 'iconoir-truck',
+            ],
         ],
     ],
     [
