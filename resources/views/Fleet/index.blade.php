@@ -16,7 +16,7 @@
                         <p class="text-muted small mb-0">Kelola armada yang dimiliki.</p>
                     </div>
                     <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                        <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openUserModal()">
+                        <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openFleetModal()">
                             <i class="fa fa-plus-circle me-1"></i> Tambah Armada Baru
                         </button>
                     </div>
@@ -40,7 +40,7 @@
                                 </div>
                             </div>
                             <div class="col-lg-7 text-end">
-                                <button onclick="loadUserData()"
+                                <button onclick="loadFleetsData()"
                                     class="btn btn-dark fw-bold py-2 px-4 shadow-sm btn-sm">FILTER</button>
                                 <button onclick="resetFilter()"
                                     class="btn btn-light border fw-bold text-dark py-2 btn-sm">RESET</button>
@@ -49,20 +49,20 @@
 
                         <!-- Table Structure -->
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="userTable">
+                            <table class="table table-hover align-middle mb-0" id="fleetTable">
                                 <thead class="bg-light text-uppercase text-secondary fw-bold"
                                     style="font-size: 11px; letter-spacing: 0.5px;">
                                     <tr>
                                         <th width="50" class="ps-4 text-center">#</th>
                                         <th width="200">Nama Lengkap</th>
-                                        <th width="150">Username</th>
+                                        <th width="150">fleetname</th>
                                         <th width="200">Email</th>
                                         <th width="120" class="text-center">Status</th>
                                         <th width="150" class="text-center">Terdaftar</th>
                                         <th width="200" class="text-end pe-4">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody id="userTableBody" class="border-top-0">
+                                <tbody id="fleetTableBody" class="border-top-0">
                                     <!-- Rows injected by JS -->
                                 </tbody>
                             </table>
@@ -82,7 +82,7 @@
         </div>
     </div>
 
-    @include('Users.Modal.modal-fullscreen')
+    @include('Fleet.Modal.modal-fullscreen')
 @endsection
 
 @push('css')
@@ -102,7 +102,7 @@
             font-size: 13px;
         }
 
-        #userTable thead th {
+        #fleetTable thead th {
             border-bottom: 1px solid #e2e8f0;
             border-top: 1px solid #e2e8f0;
             background: #f8fafc;
@@ -110,7 +110,7 @@
             padding-bottom: 12px;
         }
 
-        #userTable tbody td {
+        #fleetTable tbody td {
             font-size: 13px;
             color: #334155;
             padding-top: 12px;
@@ -146,26 +146,26 @@
 
 @push('js')
     <script>
-        const USER_API_URL = '/api/user-api';
+        const FLEET_URL = "{{ route('fleet-api.index') }}";
 
-        async function loadUserData(url = USER_API_URL) {
-            const tbody = document.getElementById('userTableBody');
+        async function loadFleetsData(url = FLEET_URL) {
+            const tbody = document.getElementById('fleetTableBody');
             tbody.innerHTML =
-                '<tr><td colspan="7" class="text-center p-5"><div class="spinner-border spinner-border-sm text-primary"></div><p class="mt-2 text-muted small mb-0">Memuat data user...</p></td></tr>';
+                '<tr><td colspan="7" class="text-center p-5"><div class="spinner-border spinner-border-sm text-primary"></div><p class="mt-2 text-muted small mb-0">Memuat data fleet...</p></td></tr>';
 
             try {
                 const searchVal = document.getElementById('filter-search').value;
                 let finalUrl = url;
 
                 if (searchVal) {
-                    finalUrl = `/api/user-api/search/${encodeURIComponent(searchVal)}`;
+                    finalUrl = `url?search=${searchVal}`;
                 }
 
                 const response = await fetch(finalUrl);
                 const result = await response.json();
 
                 if (result.success) {
-                    renderUserList(result.data.data ? result.data.data : result.data);
+                    renderFleetsData(result.data.data ? result.data.data : result.data);
                     renderPagination(result.data);
                 }
             } catch (error) {
@@ -175,13 +175,13 @@
             }
         }
 
-        function renderUserList(data) {
-            const tbody = document.getElementById('userTableBody');
+        function renderFleetsData(data) {
+            const tbody = document.getElementById('fleetTableBody');
             tbody.innerHTML = '';
 
             if (!data || data.length === 0) {
                 tbody.innerHTML =
-                    '<tr><td colspan="7" class="text-center p-5 text-muted fst-italic">Data user tidak ditemukan.</td></tr>';
+                    '<tr><td colspan="7" class="text-center p-5 text-muted fst-italic">Data armada tidak ditemukan.</td></tr>';
                 return;
             }
 
@@ -190,13 +190,13 @@
                 <tr class="clickable-row">
                     <td class="text-center ps-4 text-muted small">${index + 1}</td>
                     <td class="fw-bold text-dark">${item.name}</td>
-                    <td class="text-muted">${item.username}</td>
+                    <td class="text-muted">${item.fleetname}</td>
                     <td class="text-muted"><i class="fa fa-envelope me-1 small"></i> ${item.email}</td>
                     <td class="text-center"><span class="f-badge f-active">Active</span></td>
                     <td class="text-center text-muted small">${new Date(item.created_at).toLocaleDateString('id-ID')}</td>
                     <td class="text-end pe-4">
-                        <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-primary me-1" onclick="openUserModal(${item.id})"><i class="fa fa-pencil"></i></button>
-                        <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-danger" onclick="deleteUser(${item.id})"><i class="fa fa-trash"></i></button>
+                        <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-primary me-1" onclick="openFleetModal(${item.id})"><i class="fa fa-pencil"></i></button>
+                        <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-danger" onclick="deleteFleet(${item.id})"><i class="fa fa-trash"></i></button>
                     </td>
                 </tr>
             `;
@@ -204,10 +204,10 @@
             });
         }
 
-        async function deleteUser(id) {
-            if (!confirm('Hapus user ini?')) return;
+        async function deleteFleet(id) {
+            if (!confirm('Hapus armada ini?')) return;
             try {
-                const res = await fetch(`${USER_API_URL}/${id}`, {
+                const res = await fetch(`${FLEET_URL}/${id}`, {
                     method: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -217,7 +217,7 @@
                 const dat = await res.json();
                 if (dat.success) {
                     alert('Berhasil dihapus');
-                    loadUserData();
+                    loadFleetsData();
                 } else alert(dat.message);
             } catch (e) {
                 alert('Gagal menghapus');
@@ -232,16 +232,16 @@
             meta.links.forEach(l => {
                 const cls = l.active ? 'bg-primary text-white' : 'bg-white text-dark';
                 c.insertAdjacentHTML('beforeend',
-                    `<li class="page-item ${!l.url?'disabled':''}"><a class="page-link border-0 mx-1 rounded shadow-sm fw-bold ${cls}" href="#" onclick="loadUserData('${l.url}')">${l.label}</a></li>`
+                    `<li class="page-item ${!l.url?'disabled':''}"><a class="page-link border-0 mx-1 rounded shadow-sm fw-bold ${cls}" href="#" onclick="loadFleetsData('${l.url}')">${l.label}</a></li>`
                 );
             });
         }
 
         function resetFilter() {
             document.getElementById('filter-search').value = '';
-            loadUserData();
+            loadFleetsData();
         }
 
-        document.addEventListener('DOMContentLoaded', () => loadUserData());
+        document.addEventListener('DOMContentLoaded', () => loadFleetsData());
     </script>
 @endpush
