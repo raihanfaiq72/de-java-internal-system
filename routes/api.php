@@ -25,7 +25,7 @@ use App\Http\Controllers\Api\DeliveryOrderInvoiceController;
 use App\Http\Controllers\Api\FleetController;
 use App\Http\Controllers\Api\SupplierBrandController;
 
-// Route::middleware(['web', 'auth'])->group(function () {
+Route::middleware(['web', 'auth'])->group(function () {
     Route::prefix('office-api')
         ->name('office-api.')
         ->group(function () {
@@ -245,7 +245,7 @@ use App\Http\Controllers\Api\SupplierBrandController;
             Route::put('/{id}', [FleetController::class, 'update'])->name('update');
             Route::delete('/{id}', [FleetController::class, 'destroy'])->name('destroy');
         });
-// });
+});
 
 Route::get('/user', function (Request $request) {
     return $request->user();
