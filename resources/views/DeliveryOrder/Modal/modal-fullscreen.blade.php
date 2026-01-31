@@ -36,15 +36,15 @@
                                     <div class="row g-4">
                                         <!-- Customer Selection -->
                                         <div class="col-lg-6 border-end">
-                                            <label class="f-label mb-2">Pelanggan / Mitra <span
+                                            <label class="f-label mb-2">Invoice <span
                                                     class="text-danger">*</span></label>
                                             <select id="modal_mitra_id" class="form-select f-input-lg mb-3"
                                                 onchange="renderMitraDetail()">
-                                                <option value="">Cari Pelanggan...</option>
+                                                <option value="">Cari Banyak Invoice...</option>
                                             </select>
 
                                             <!-- Mitra Detail Card -->
-                                            <div id="mitra_detail_display" class="d-none bg-light p-3 rounded border">
+                                            {{-- <div id="mitra_detail_display" class="d-none bg-light p-3 rounded border">
                                                 <div class="d-flex align-items-center mb-2">
                                                     <div class="fw-bold text-dark" id="disp_mitra_nama">-</div>
                                                     <span class="badge bg-primary ms-auto" id="disp_mitra_tipe">-</span>
@@ -60,48 +60,23 @@
                                                 class="text-center py-4 text-muted border border-dashed rounded bg-light">
                                                 <i class="fa fa-user-plus mb-2 fs-4 text-secondary"></i>
                                                 <div class="small">Pilih pelanggan untuk melihat detail</div>
-                                            </div>
+                                            </div> --}}
                                         </div>
 
                                         <!-- Document Details -->
                                         <div class="col-lg-6">
-                                            <div class="row g-3">
-                                                <div class="col-md-6">
-                                                    <label class="f-label">Nomor Delivery Order</label>
-                                                    <input type="text" id="modal_nomor_invoice"
-                                                        class="form-control f-input fw-bold bg-light text-primary"
-                                                        readonly placeholder="Auto Generated">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="f-label">Referensi / PO</label>
-                                                    <input type="text" id="modal_ref_no" class="form-control f-input"
-                                                        placeholder="Contoh: PO-001">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="f-label">Tanggal Delivery Order</label>
-                                                    <input type="text" id="modal_tgl_invoice"
-                                                        class="form-control f-input">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="f-label">Tanggal Jatuh Tempo</label>
-                                                    <input type="text" id="modal_tgl_jatuh_tempo"
-                                                        class="form-control f-input">
-                                                </div>
-
-                                                <div class="col-12">
-                                                    <label class="f-label">Salesperson</label>
-                                                    <select id="modal_sales_id" class="form-select f-input">
-                                                        <option value="">Pilih Sales...</option>
-                                                    </select>
-                                                </div>
-                                            </div>
+                                            <label class="f-label">Armada <span class="text-danger">*</span></label>
+                                            <select id="modal_mitra_id" class="form-select f-input-lg mb-3"
+                                                onchange="renderMitraDetail()">
+                                                <option value="">Cari Banyak Armada...</option>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Items Section -->
-                            <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+                            {{-- <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
                                 <div
                                     class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
                                     <h6 class="mb-0 fw-bold text-dark text-uppercase small">
@@ -143,10 +118,10 @@
                                         </tfoot>
                                     </table>
                                 </div>
-                            </div>
+                            </div> --}}
 
                             <!-- Bottom Notes -->
-                            <div class="card border-0 shadow-sm rounded-3">
+                            {{-- <div class="card border-0 shadow-sm rounded-3">
                                 <div class="card-body p-4">
                                     <div class="row g-4">
                                         <div class="col-md-6">
@@ -160,7 +135,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
 
                         </div>
 
