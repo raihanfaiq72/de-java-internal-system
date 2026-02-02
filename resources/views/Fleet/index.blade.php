@@ -54,10 +54,10 @@
                                     style="font-size: 11px; letter-spacing: 0.5px;">
                                     <tr>
                                         <th width="50" class="ps-4 text-center">#</th>
-                                        <th width="200">Nama Lengkap</th>
-                                        <th width="150">fleetname</th>
-                                        <th width="200">Email</th>
-                                        <th width="120" class="text-center">Status</th>
+                                        <th width="200">Nama Armada</th>
+                                        <th width="150">Plat Nomor</th>
+                                        <th width="150">Tipe BBM</th>
+                                        <th width="120" class="text-center">KM/Liter</th>
                                         <th width="150" class="text-center">Terdaftar</th>
                                         <th width="200" class="text-end pe-4">Aksi</th>
                                     </tr>
@@ -189,10 +189,10 @@
                 const tr = `
                 <tr class="clickable-row">
                     <td class="text-center ps-4 text-muted small">${index + 1}</td>
-                    <td class="fw-bold text-dark">${item.name}</td>
-                    <td class="text-muted">${item.fleetname}</td>
-                    <td class="text-muted"><i class="fa fa-envelope me-1 small"></i> ${item.email}</td>
-                    <td class="text-center"><span class="f-badge f-active">Active</span></td>
+                    <td class="fw-bold text-dark">${item.fleet_name}</td>
+                    <td class="text-muted f-mono">${item.license_plate}</td>
+                    <td class="text-muted">${item.fuel_type}</td>
+                    <td class="text-center"><span class="f-badge f-active">${item.km_per_liter || '-'}</span></td>
                     <td class="text-center text-muted small">${new Date(item.created_at).toLocaleDateString('id-ID')}</td>
                     <td class="text-end pe-4">
                         <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-primary me-1" onclick="openFleetModal(${item.id})"><i class="fa fa-pencil"></i></button>

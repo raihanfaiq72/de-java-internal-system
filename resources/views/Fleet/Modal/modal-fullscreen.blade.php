@@ -76,7 +76,7 @@
                     document.getElementById('modal_fleet_fleet_name').value = data.fleet_name;
                     document.getElementById('modal_fleet_fuel_type').value = data.fuel_type;
                     document.getElementById('modal_fleet_km_per_liter').value = data.km_per_liter;
-                    document.getElementById('modal_fleet_license_plate').value = data.licence_plate;
+                    document.getElementById('modal_fleet_license_plate').value = data.license_plate;
                 }
             } catch (e) {
                 console.error(e);

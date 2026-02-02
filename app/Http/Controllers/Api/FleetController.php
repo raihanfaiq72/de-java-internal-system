@@ -30,6 +30,18 @@ class FleetController extends Controller
         }
     }
 
+    public function show($id)
+    {
+        try {
+            $fleet = Fleet::find($id);
+            if (!$fleet) return apiResponse(false, 'Not found', null, null, 404);
+
+            return apiResponse(true, 'Fleet detail', $fleet);
+        } catch (Throwable $e) {
+            return apiResponse(false, 'Failed to retrieve fleet detail', null, $e->getMessage(), 500);
+        }
+    }
+
     public function store(Request $request)
     {
         try {
