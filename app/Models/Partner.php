@@ -29,6 +29,8 @@ class Partner extends Model
         'kontak_email',
         'akun_hutang_id',
         'akun_piutang_id',
+        'latitude',
+        'longitude',
     ];
 
     public function akunHutang()

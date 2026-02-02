@@ -50,7 +50,7 @@ class PaymentController extends Controller
             'invoice_id' => 'required|exists:invoices,id',
             'nomor_pembayaran' => 'required|unique:payments,nomor_pembayaran',
             'tgl_pembayaran' => 'required|date',
-            'metode_pembayaran' => 'required|in:Cash,Transfer,Lainnya',
+            'metode_pembayaran' => 'required|in:Cash,Transfer,Lainnya,Cek/Giro',
             'jumlah_bayar' => 'required|numeric|min:0.01',
             'akun_keuangan_id' => 'required|exists:financial_accounts,id'
         ]);

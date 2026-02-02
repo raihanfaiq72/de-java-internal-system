@@ -81,6 +81,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::prefix('delivery-order')->name('delivery-order.')->group(function () {
             Route::get('/', [DeliveryOrderController::class, 'index'])->name('index');
+            Route::get('/print/{id}', [DeliveryOrderController::class, 'print'])->name('print');
         });
 
         Route::prefix('admin')->group(function () {

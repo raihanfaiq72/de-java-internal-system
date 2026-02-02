@@ -39,4 +39,9 @@ class DeliveryOrder extends Model
     {
         return $this->hasMany(DeliveryOrderFleet::class);
     }
+
+    public function office()
+    {
+        return $this->belongsTo(Office::class);
+    }
 }

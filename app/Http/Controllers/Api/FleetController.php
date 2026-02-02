@@ -59,6 +59,7 @@ class FleetController extends Controller
                 'fuel_type' => $request->fuel_type,
                 'license_plate' => $request->license_plate,
                 'km_per_liter' => $request->km_per_liter,
+                'liter_price' => $request->liter_price,
             ]);
 
             return apiResponse(true, 'Created', $fleet);

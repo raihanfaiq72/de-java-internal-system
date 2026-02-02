@@ -108,15 +108,32 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
+                                <label class="form-label fw-bold text-muted small">Metode Pembayaran</label>
+                                <select id="metode_pembayaran" name="metode_pembayaran" class="form-select">
+                                    <option value="Transfer">Transfer</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Cek/Giro">Cek/Giro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
                                 <label class="form-label fw-bold text-muted small">Ref. No.</label>
                                 <input type="text" name="ref_no" id="ref_no" class="form-control"
                                     placeholder="Contoh: REF-123">
                             </div>
-                            <div class="col-md-3">
+                        </div>
+
+                        <!-- Row 2: Setoran Ke & Catatan -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
                                 <label class="form-label fw-bold text-muted small">Setoran Ke (Akun Keuangan)</label>
                                 <select id="akun_keuangan_id" name="akun_keuangan_id" class="form-select">
                                     <option value="">Loading...</option>
                                 </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-muted small">Catatan</label>
+                                <textarea name="catatan" id="catatan" class="form-control" rows="1"
+                                    placeholder="Masukkan catatan tambahan..."></textarea>
                             </div>
                         </div>
 
@@ -161,11 +178,6 @@
                         <div class="row mb-4">
                             <div class="col-md-6">
 
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-muted small">Catatan</label>
-                                <textarea name="catatan" id="catatan" class="form-control" rows="3"
-                                    placeholder="Masukkan catatan tambahan..."></textarea>
                             </div>
                         </div>
 
@@ -477,17 +489,7 @@
                     payload.append('nomor_pembayaran', `RCP/${new Date().getFullYear()}/${inv.id}/${uniqueSuffix}`);
                     
                     payload.append('tgl_pembayaran', new Date().toISOString().split('T')[0]); // Today
-                    payload.append('metode_pembayaran', document.getElementById('filter-metode').value || 'Transfer'); // Fallback
-                    // Wait, the form doesn't have method input?
-                    // The filter has 'filter-metode', but form has 'akun_keuangan_id'. 
-                    // We should probably add 'metode_pembayaran' select to the form or infer it.
-                    // The mockup had 'Metode' in filter. The form has 'Setoran Ke'.
-                    // Let's add 'metode_pembayaran' to form or hardcode 'Transfer'/'Cash' based on logic.
-                    // Controller requires 'metode_pembayaran'.
-                    // Let's assume 'Transfer' if bank, 'Cash' if cash account.
-                    // Or just add a hidden field or select in modal.
-                    // For now, I'll default to 'Transfer' to pass validation.
-                    payload.append('metode_pembayaran', 'Transfer'); 
+                    payload.append('metode_pembayaran', document.getElementById('metode_pembayaran').value);
                     
                     payload.append('jumlah_bayar', inv.bayar);
                     payload.append('akun_keuangan_id', formData.get('akun_keuangan_id'));

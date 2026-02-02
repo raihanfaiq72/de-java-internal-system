@@ -43,6 +43,11 @@
                                     <input type="number" id="modal_fleet_km_per_liter" class="form-control f-input"
                                         placeholder="Co: 5">
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="f-label">Harga per Liter (IDR) *</label>
+                                    <input type="number" id="modal_fleet_liter_price" class="form-control f-input"
+                                        placeholder="Co: 10000">
+                                </div>
                                 <div class="col-md-12">
                                     <label class="f-label">Nomor Plat *</label>
                                     <input type="text" id="modal_fleet_license_plate" class="form-control f-input"
@@ -76,6 +81,7 @@
                     document.getElementById('modal_fleet_fleet_name').value = data.fleet_name;
                     document.getElementById('modal_fleet_fuel_type').value = data.fuel_type;
                     document.getElementById('modal_fleet_km_per_liter').value = data.km_per_liter;
+                    document.getElementById('modal_fleet_liter_price').value = data.liter_price;
                     document.getElementById('modal_fleet_license_plate').value = data.license_plate;
                 }
             } catch (e) {
@@ -102,7 +108,8 @@
             fleet_name: document.getElementById('modal_fleet_fleet_name').value,
             fuel_type: document.getElementById('modal_fleet_fuel_type').value,
             license_plate: document.getElementById('modal_fleet_license_plate').value,
-            km_per_liter: document.getElementById('modal_fleet_km_per_liter').value
+            km_per_liter: document.getElementById('modal_fleet_km_per_liter').value,
+            liter_price: document.getElementById('modal_fleet_liter_price').value
         };
 
         try {

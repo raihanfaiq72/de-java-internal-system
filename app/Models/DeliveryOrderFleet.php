@@ -21,6 +21,10 @@ class DeliveryOrderFleet extends Model
         'parking_cost',
         'other_cost',
         'notes',
+        'route_data',
+        'estimated_distance_km',
+        'estimated_fuel_cost',
+        'additional_costs',
     ];
 
     protected $casts = [
@@ -31,6 +35,9 @@ class DeliveryOrderFleet extends Model
         'toll_cost'             => 'decimal:2',
         'parking_cost'          => 'decimal:2',
         'other_cost'            => 'decimal:2',
+        'estimated_distance_km' => 'decimal:2',
+        'estimated_fuel_cost'   => 'decimal:2',
+        'additional_costs'      => 'array',
     ];
 
     public function deliveryOrder()

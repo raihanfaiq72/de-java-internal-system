@@ -128,7 +128,7 @@ Route::middleware(['web', 'auth'])->group(function () {
         ->name('invoice.create-full-api');
 
     Route::prefix('invoice-api')
-        ->name('invoice-api')
+        ->name('invoice-api.')
         ->group(function () {
             Route::get('/', [InvoiceController::class, 'index'])->name('index');
             Route::post('/', [InvoiceController::class, 'store'])->name('store');
@@ -238,6 +238,7 @@ Route::middleware(['web', 'auth'])->group(function () {
 
     Route::prefix('delivery-order-fleet-api')->name('delivery-order-fleet-api.')->group(function () {
         Route::get('/', [DeliveryOrderFleetController::class, 'index'])->name('index');
+        Route::get('/by-do/{doId}', [DeliveryOrderFleetController::class, 'getByDeliveryOrder'])->name('by-do');
         Route::post('/', [DeliveryOrderFleetController::class, 'store'])->name('store');
         Route::get('/{id}', [DeliveryOrderFleetController::class, 'show'])->name('show');
         Route::put('/{id}', [DeliveryOrderFleetController::class, 'update'])->name('update');

@@ -39,10 +39,28 @@ class DeliveryOrderFleetController extends Controller
             if ($validator->fails())
                 return apiResponse(false, 'Validation failed', null, $validator->errors(), 422);
 
-            $data = DeliveryOrderFleet::create($request->all());
+            $data = DeliveryOrderFleet::updateOrCreate(
+                ['delivery_order_id' => $request->delivery_order_id],
+                $request->all()
+            );
             return apiResponse(true, 'Fleet assigned', $data);
         } catch (Throwable $e) {
             return apiResponse(false, 'Failed to assign fleet', null, $e->getMessage(), 500);
+        }
+    }
+
+    public function getByDeliveryOrder($doId)
+    {
+        try {
+            $data = DeliveryOrderFleet::with('fleet', 'driver')
+                ->where('delivery_order_id', $doId)
+                ->first(); // Assuming one active fleet per DO for now, or returns the first one
+
+            if(!$data) return apiResponse(false, 'Data not found', null, null, 404);
+
+            return apiResponse(true, 'DO Fleet Data', $data);
+        } catch (Throwable $e) {
+            return apiResponse(false, 'Failed to retrieve', null, $e->getMessage(), 500);
         }
     }
 

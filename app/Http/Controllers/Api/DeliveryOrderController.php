@@ -15,9 +15,9 @@ class DeliveryOrderController extends Controller
         try {
             $search = $request->search;
 
-            $data = DeliveryOrder::with('invoices', 'fleets')
+            $data = DeliveryOrder::with('invoices', 'fleets.fleet')
                 ->when($search, function ($q) use ($search) {
-                    $q->where('do_number', 'like', "%{$search}%")
+                    $q->where('delivery_order_number', 'like', "%{$search}%")
                         ->orWhere('status', 'like', "%{$search}%");
                 })
                 ->latest()
@@ -33,18 +33,24 @@ class DeliveryOrderController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'delivery_order_number' => 'required|unique:delivery_orders',
+                'delivery_order_number' => 'nullable|unique:delivery_orders',
                 'delivery_date' => 'required|date',
             ]);
 
             if ($validator->fails())
                 return apiResponse(false, 'Validation failed', null, $validator->errors(), 422);
 
+            $doNumber = $request->delivery_order_number;
+            if (empty($doNumber)) {
+                $doNumber = 'DO/' . date('Ymd') . '/' . strtoupper(uniqid());
+            }
+
             $do = DeliveryOrder::create([
                 'office_id' => session('active_office_id'),
-                'delivery_order_number' => $request->delivery_order_number,
+                'delivery_order_number' => $doNumber,
                 'delivery_date' => $request->delivery_date,
                 'notes' => $request->notes,
+                'status' => 'Scheduled', // Default status
             ]);
 
             return apiResponse(true, 'Created', $do, null, 201);

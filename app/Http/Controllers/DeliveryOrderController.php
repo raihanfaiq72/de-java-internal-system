@@ -10,4 +10,20 @@ class DeliveryOrderController extends Controller
     {
         return view('DeliveryOrder.index');
     }
+
+    public function print($id)
+    {
+        $do = \App\Models\DeliveryOrder::with([
+            'invoices.invoice.mitra', 
+            'fleets.fleet', 
+            'fleets.driver',
+            'office'
+        ])
+        ->where('office_id', session('active_office_id'))
+        ->find($id);
+
+        if (!$do) abort(404);
+
+        return view('DeliveryOrder.print', compact('do'));
+    }
 }

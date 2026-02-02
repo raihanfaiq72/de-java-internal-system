@@ -239,14 +239,17 @@
     </div>
 
     @include('DeliveryOrder.Modal.modal-fullscreen')
+    @include('DeliveryOrder.Modal.detail-modal')
     {{-- @include('Sales.Modal.detail-modal')
     @include('Sales.Partials.invoice-templates') --}}
 @endsection
 
 @push('js')
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <script>
-        let INVOICES_URL = "{{ route('invoice-apiindex') }}"
-        let FLEETS_URL = "{{ route('fleet-api.index') }}";
+        const INVOICES_URL = "{{ route('invoice-api.index') }}"; // Fixed typo
+        const FLEETS_URL = "{{ route('fleet-api.index') }}";
+        const DO_API_URL = "{{ route('delivery-order-api.index') }}";
 
         let masterInvoices = [],
             masterFleets = [];
@@ -265,16 +268,130 @@
                 if (fleetsRes.success) {
                     masterFleets = fleetsRes.data.data || fleetsRes.data;
                 }
-
-                console.log(masterInvoices);
-                console.log(masterFleets);
             } catch (error) {
-                alert('Gagal memuat data master:');
+                console.error('Gagal memuat data master:', error);
             }
+        }
+
+        async function loadInvoiceData(url = DO_API_URL) {
+            const tbody = document.getElementById('invoiceTableBody');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-5"><div class="spinner-border spinner-border-sm text-primary"></div><p class="mt-2 text-muted small mb-0">Memuat data...</p></td></tr>';
+
+            try {
+                const searchVal = document.getElementById('filter-search').value;
+                let finalUrl = url;
+                // Basic search query param
+                if (url.includes('?')) {
+                    finalUrl += `&search=${searchVal}`;
+                } else {
+                    finalUrl += `?search=${searchVal}`;
+                }
+
+                const response = await fetch(finalUrl);
+                const result = await response.json();
+
+                if (result.success) {
+                    renderTable(result.data.data || []);
+                    renderPagination(result.data);
+                }
+            } catch (error) {
+                console.error(error);
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger p-4">Gagal memuat data.</td></tr>';
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('invoiceTableBody');
+            tbody.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-5 text-muted fst-italic">Belum ada Delivery Order.</td></tr>';
+                return;
+            }
+
+            data.forEach((item, index) => {
+                // Determine Fleet Name
+                let fleetName = '-';
+                let driverName = '-';
+                if (item.fleets && item.fleets.length > 0) {
+                    const f = item.fleets[0]; // Take the first assigned fleet
+                    if (f.fleet) fleetName = `${f.fleet.fleet_name} (${f.fleet.license_plate})`;
+                    // if (f.driver) driverName = f.driver.name; // Assuming driver relation exists
+                }
+
+                const tr = `
+                <tr class="clickable-row" onclick="openDetailDOModal(${item.id})">
+                    <td class="text-start ps-3" onclick="event.stopPropagation()"><input type="checkbox" class="form-check-input"></td>
+                    <td class="text-start text-muted small">${index + 1}</td>
+                    <td>
+                        <div class="fw-bold text-dark">${item.delivery_order_number}</div>
+                        <div class="small text-muted"><i class="fa fa-calendar me-1"></i> ${new Date(item.delivery_date).toLocaleDateString('id-ID')}</div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center mb-1">
+                            <div class="bg-light rounded px-2 py-1 border me-2">
+                                <i class="fa fa-truck text-secondary"></i>
+                            </div>
+                            <div class="fw-bold text-dark">${fleetName}</div>
+                        </div>
+                        <div class="small text-muted fst-italic text-truncate" style="max-width: 250px;">${item.notes || '-'}</div>
+                    </td>
+                    <td class="text-end pe-3" onclick="event.stopPropagation()">
+                        <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-primary me-1" onclick="openDeliveryOrderModal(${item.id})"><i class="fa fa-pencil"></i></button>
+                        <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-danger" onclick="deleteDO(${item.id})"><i class="fa fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+                tbody.insertAdjacentHTML('beforeend', tr);
+            });
+        }
+
+        async function deleteDO(id) {
+            if (!confirm('Hapus Delivery Order ini?')) return;
+            try {
+                const res = await fetch(`${DO_API_URL}/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                const json = await res.json();
+                if (json.success) {
+                    alert('Berhasil dihapus');
+                    loadInvoiceData();
+                } else {
+                    alert('Gagal: ' + json.message);
+                }
+            } catch (e) {
+                alert('Error sistem');
+            }
+        }
+
+        function renderPagination(meta) {
+            const c = document.getElementById('pagination-container');
+            c.innerHTML = '';
+            if (!meta || !meta.links) return;
+            document.getElementById('pagination-info').innerText = `${meta.from||0}-${meta.to||0} dari ${meta.total} data`;
+            meta.links.forEach(l => {
+                const cls = l.active ? 'bg-primary text-white' : 'bg-white text-dark';
+                // Only show if url is present
+                const onclick = l.url ? `onclick="loadInvoiceData('${l.url}')"` : '';
+                const disabled = !l.url ? 'disabled' : '';
+                
+                c.insertAdjacentHTML('beforeend',
+                    `<li class="page-item ${disabled}"><a class="page-link border-0 mx-1 rounded shadow-sm fw-bold ${cls}" href="#" ${onclick}>${l.label}</a></li>`
+                );
+            });
+        }
+
+        function toggleSelectAll(source) {
+            const checkboxes = document.querySelectorAll('#invoiceTableBody input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = source.checked);
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
             await initializeMasterData();
+            loadInvoiceData();
         })
     </script>
 @endpush

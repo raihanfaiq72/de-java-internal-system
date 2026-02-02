@@ -17,10 +17,12 @@ class Fleet extends Model
         'fuel_type',
         'license_plate',
         'km_per_liter',
+        'liter_price',
     ];
 
     protected $casts = [
         'km_per_liter' => 'decimal:2',
+        'liter_price' => 'decimal:2',
     ];
 
     public function deliveryOrders()

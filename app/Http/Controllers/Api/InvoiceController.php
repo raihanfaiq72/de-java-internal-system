@@ -57,7 +57,8 @@ class InvoiceController extends Controller
              });
         }
 
-        $data = $query->latest()->paginate(10);
+        $perPage = $request->get('per_page', 10);
+        $data = $query->latest()->paginate($perPage);
 
         return apiResponse(true, 'Data invoice', $data);
     }

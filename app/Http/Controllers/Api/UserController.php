@@ -10,8 +10,12 @@ use Throwable;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        if ($request->has('all')) {
+            $data = User::latest()->get();
+            return apiResponse(true, 'Data all users', $data);
+        }
         $data = User::latest()->paginate(10);
         return apiResponse(true, 'Data user', $data);
     }
