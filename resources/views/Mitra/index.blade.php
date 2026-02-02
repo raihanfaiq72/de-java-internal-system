@@ -31,7 +31,7 @@
                             <li class="nav-item"><a class="nav-link active fw-bold py-3" data-bs-toggle="tab"
                                     href="#mitra-active">Mitra Aktif</a></li>
                             <li class="nav-item"><a class="nav-link fw-bold py-3" data-bs-toggle="tab"
-                                    href="#mitra-deleted">Sampah</a></li>
+                                    href="#mitra-deleted">Mitra Terhapus</a></li>
                         </ul>
                     </div>
 
