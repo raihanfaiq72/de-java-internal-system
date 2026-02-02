@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\DeliveryOrderController;
 use App\Http\Controllers\Api\DeliveryOrderFleetController;
 use App\Http\Controllers\Api\DeliveryOrderInvoiceController;
+use App\Http\Controllers\Api\FinancialAccountController;
 use App\Http\Controllers\Api\FleetController;
 use App\Http\Controllers\Api\SupplierBrandController;
 
@@ -210,6 +211,13 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::get('/{id}', [ChartOfAccountController::class, 'show'])->name('show');
             Route::put('/{id}', [ChartOfAccountController::class, 'update'])->name('update');
             Route::delete('/{id}', [ChartOfAccountController::class, 'destroy'])->name('destroy');
+        });
+
+    Route::prefix('financial-account-api')
+        ->name('financial-account-api.')
+        ->group(function () {
+            Route::get('/', [FinancialAccountController::class, 'index'])->name('index');
+            Route::get('/{id}', [FinancialAccountController::class, 'show'])->name('show');
         });
 
     Route::prefix('delivery-order-api')->name('delivery-order-api.')->group(function () {

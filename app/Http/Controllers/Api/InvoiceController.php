@@ -116,8 +116,18 @@ class InvoiceController extends Controller
                 return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
             }
 
+            $dataToUpdate = $request->invoice ?? $request->all();
+
+            // Handle Logo Upload
+            if ($request->hasFile('logo_img')) {
+                $file = $request->file('logo_img');
+                $filename = 'kop_' . time() . '_' . $file->getClientOriginalName();
+                $path = $file->move(public_path('invoices/kop'), $filename);
+                $dataToUpdate['logo_img'] = 'invoices/kop/' . $filename;
+            }
+
             // Update Invoice Details
-            $invoice->update($request->invoice ?? $request->all());
+            $invoice->update($dataToUpdate);
 
             // If items are provided, replace them (Full Sync)
             if ($request->has('items') && is_array($request->items)) {

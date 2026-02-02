@@ -120,6 +120,19 @@
 
                     <!-- Right Column: Sidebar -->
                     <div class="col-lg-4">
+                        <!-- Kop Toggle Card -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1">Berikan Kop?</h6>
+                                    <p class="text-muted small mb-0">Tandai sebagai invoice resmi</p>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="toggle-kop" style="width: 3em; height: 1.5em; cursor: pointer;">
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Documents Sidebar -->
                         <div class="card border-0 shadow-sm rounded-4 mb-4">
                             <div class="card-header bg-white border-bottom py-3 px-4">
@@ -277,6 +290,35 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Kop Settings -->
+    <div class="modal fade" id="modalKopSettings" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-bottom-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold">Pengaturan Kop Invoice</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 pb-4">
+                    <div class="alert alert-info small mb-3">
+                        <i class="fa fa-info-circle me-1"></i> Penanda ini digunakan untuk invoice resmi/pajak.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Logo Kop</label>
+                        <input type="file" class="form-control" id="kop-logo-input" accept="image/*">
+                        <div class="form-text">Format: JPG, PNG. Max: 2MB.</div>
+                    </div>
+                    <!-- Placeholder for preview if needed -->
+                    <div id="kop-logo-preview" class="text-center p-3 bg-light rounded d-none">
+                        <img src="" alt="Logo Preview" style="max-height: 80px;">
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 px-4 pb-4">
+                    <button type="button" class="btn btn-primary w-100 fw-bold shadow-sm" onclick="saveKopSettings()">Simpan Pengaturan</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('js')
@@ -317,6 +359,28 @@
             btnPrint.href = 'javascript:void(0)';
             btnPrint.onclick = () => openPrintPreview(data.id);
             btnPrint.classList.remove('d-none');
+
+            // Setup Kop Toggle
+            const toggleKop = document.getElementById('toggle-kop');
+            toggleKop.checked = data.is_kop == 1;
+            
+            // Setup Modal Preview
+            const imgPreview = document.getElementById('kop-logo-preview').querySelector('img');
+            const previewContainer = document.getElementById('kop-logo-preview');
+            if (data.logo_img) {
+                imgPreview.src = `{{ asset('') }}${data.logo_img}`;
+                previewContainer.classList.remove('d-none');
+            } else {
+                previewContainer.classList.add('d-none');
+            }
+
+            // Remove old listener if any (to avoid duplicates on re-render)
+            const newToggle = toggleKop.cloneNode(true);
+            toggleKop.parentNode.replaceChild(newToggle, toggleKop);
+            
+            newToggle.addEventListener('change', function() {
+                updateKopStatus(this.checked);
+            });
 
             // Main Visual
             document.getElementById('inv-no').textContent = `#${data.nomor_invoice}`;
@@ -438,6 +502,81 @@
             if (iframe && iframe.contentWindow) {
                 iframe.contentWindow.focus();
                 iframe.contentWindow.print();
+            }
+        }
+
+        async function updateKopStatus(isChecked) {
+            try {
+                const response = await fetch(`${API_URL}/${invoiceId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        invoice: {
+                            is_kop: isChecked ? 1 : 0
+                        }
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    if (isChecked) {
+                        const modal = new bootstrap.Modal(document.getElementById('modalKopSettings'));
+                        modal.show();
+                    }
+                } else {
+                    alert('Gagal mengupdate status kop: ' + (result.message || 'Error'));
+                    // Revert toggle if failed
+                    document.getElementById('toggle-kop').checked = !isChecked;
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Terjadi kesalahan saat update');
+                document.getElementById('toggle-kop').checked = !isChecked;
+            }
+        }
+
+        async function saveKopSettings() {
+            const fileInput = document.getElementById('kop-logo-input');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                // If no file, just close modal (assuming only file update for now)
+                // Or verify if logo already exists
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalKopSettings'));
+                modal.hide();
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('_method', 'PUT'); // Spoof PUT
+            formData.append('logo_img', file);
+            // We don't need to send is_kop here as it's already set by the toggle
+
+            try {
+                // Using POST for FormData with _method: PUT
+                const response = await fetch(`${API_URL}/${invoiceId}`, {
+                    method: 'POST', 
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert('Pengaturan Kop berhasil disimpan');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('modalKopSettings'));
+                    modal.hide();
+                    loadInvoiceDetail(); // Reload to show new logo in preview if implemented
+                } else {
+                    alert('Gagal menyimpan: ' + (result.message || 'Error'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Terjadi kesalahan saat upload');
             }
         }
 

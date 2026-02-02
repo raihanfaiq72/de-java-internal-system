@@ -122,6 +122,18 @@
             padding: 50px;
             font-size: 16px;
         }
+
+        .kop-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+        }
+        .kop-header img {
+            max-width: 100%;
+            max-height: 100px;
+            object-fit: contain;
+        }
     </style>
 </head>
 
@@ -130,6 +142,10 @@
     <div id="loading">Memuat data invoice...</div>
 
     <div class="nota-container" id="nota-content" style="display: none;">
+        <div id="kop-section" class="kop-header" style="display: none;">
+            <!-- Logo will be injected here -->
+        </div>
+
         <div class="header">
             <div class="invoice-info">
                 <strong id="tgl_invoice"></strong><br>
@@ -264,6 +280,13 @@
                     const template = document.getElementById('item-row-template');
                     const tbody = document.getElementById('items-body');
                     tbody.innerHTML = '';
+
+                    // Kop Handling
+                    if (data.is_kop && data.logo_img) {
+                        const kopSection = document.getElementById('kop-section');
+                        kopSection.style.display = 'block';
+                        kopSection.innerHTML = `<img src="{{ asset('') }}${data.logo_img}" alt="Kop Surat">`;
+                    }
 
                     // Header
                     document.getElementById('tgl_invoice').innerText = formatDate(data.tgl_invoice);

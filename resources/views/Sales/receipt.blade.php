@@ -160,16 +160,7 @@
 
                         <div class="row mb-4">
                             <div class="col-md-6">
-                                <div class="p-3 border rounded-3 bg-light">
-                                    <span class="small fw-bold text-muted d-block mb-1">Estimasi dalam SGD* (1 SGD =
-                                        13,128.53 IDR)</span>
-                                    <div class="d-flex align-items-baseline">
-                                        <h4 class="fw-bold mb-0 text-dark" id="sgd-display">SGD 0.00</h4>
-                                        <button type="button" class="btn btn-link btn-sm p-0 ms-2"
-                                            onclick="refreshSgd()"><i class="fa fa-sync-alt fa-xs"></i></button>
-                                    </div>
-                                    <p class="text-muted small mt-1 mb-0">Estimasi Konversi Nominal</p>
-                                </div>
+
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold text-muted small">Catatan</label>
@@ -275,7 +266,7 @@
         const API_PAYMENT = '{{ url('api/payment-api') }}';
         const API_INVOICE = '{{ url('api/invoice-api') }}';
         const API_MITRA = '{{ url('api/mitra-api') }}';
-        const API_COA = '{{ url('api/coa-api') }}';
+        const API_FIN_ACC = '{{ url('api/financial-account-api') }}';
         const SGD_RATE = 13128.53;
         let tomMitra;
         let selectedInvoices = [];
@@ -297,13 +288,6 @@
             document.getElementById('signature_file').value = '';
             document.getElementById('upload-signature-area').classList.remove('d-none');
             document.getElementById('signature-preview').classList.add('d-none');
-        }
-
-        function refreshSgd() {
-            let total = 0;
-            selectedInvoices.forEach(inv => total += parseFloat(inv.bayar));
-            const sgd = total / SGD_RATE;
-            document.getElementById('sgd-display').innerText = 'SGD ' + formatNumber(sgd);
         }
 
         // --- INVOICE SELECTION ---
@@ -411,7 +395,6 @@
             if (selectedInvoices.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted"><i class="fa fa-info-circle me-1"></i> Belum ada invoice yang dipilih.</td></tr>`;
                 document.getElementById('total-payment-display').innerText = 'IDR 0.00';
-                refreshSgd();
                 return;
             }
 
@@ -439,7 +422,6 @@
             });
 
             document.getElementById('total-payment-display').innerText = formatIDR(totalBayar);
-            refreshSgd();
         }
 
         function updateBayar(index, val) {
@@ -456,6 +438,12 @@
         async function submitReceipt(action) {
             if (selectedInvoices.length === 0) {
                 alert('Pilih minimal satu invoice!');
+                return;
+            }
+
+            const akunId = document.getElementById('akun_keuangan_id').value;
+            if (!akunId) {
+                alert('Pilih Akun Keuangan (Setoran Ke) terlebih dahulu!');
                 return;
             }
 
@@ -741,15 +729,15 @@
                     }
                 });
 
-                // Load COA
-                const resCoa = await fetch(`${API_COA}?is_kas_bank=1`);
-                const jsonCoa = await resCoa.json();
+                // Load Financial Accounts
+                const resFin = await fetch(API_FIN_ACC);
+                const jsonFin = await resFin.json();
                 
                 const coaSelect = document.getElementById('akun_keuangan_id');
-                coaSelect.innerHTML = '';
-                if(jsonCoa.success) {
-                    jsonCoa.data.forEach(acc => {
-                        coaSelect.innerHTML += `<option value="${acc.id}">${acc.nama_akun}</option>`;
+                coaSelect.innerHTML = '<option value="">Pilih Akun...</option>';
+                if(jsonFin.success) {
+                    jsonFin.data.forEach(acc => {
+                        coaSelect.innerHTML += `<option value="${acc.id}">${acc.name} (${acc.code})</option>`;
                     });
                 }
 
