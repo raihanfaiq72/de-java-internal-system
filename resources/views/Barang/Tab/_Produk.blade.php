@@ -82,10 +82,10 @@
             <input type="number" class="form-control form-control-sm in-qty" value="0">
         </td>
         <td>
-            <input type="number" class="form-control form-control-sm in-beli" value="0">
+            <input type="text" class="form-control form-control-sm in-beli" value="0">
         </td>
         <td>
-            <input type="number" class="form-control form-control-sm in-jual" value="0">
+            <input type="text" class="form-control form-control-sm in-jual" value="0">
         </td>
         <td>
             <select class="in-coa"></select>
@@ -160,6 +160,17 @@
 
 @push('js')
     <script>
+        function formatRupiahInput(el) {
+            let val = el.value.replace(/[^0-9]/g, '');
+
+            if (val === "") {
+                el.value = "";
+                return;
+            }
+
+            el.value = new Intl.NumberFormat('id-ID').format(val);
+        }
+
         async function tambahProduk() {
             await Promise.all([
                 fetchMasterSuppliers(),
@@ -177,6 +188,16 @@
             const tr = clone.querySelector('tr');
 
             tbody.prepend(tr);
+
+            const inBeli = tr.querySelector('.in-beli');
+            const inJual = tr.querySelector('.in-jual');
+
+            inBeli.addEventListener('input', function() {
+                formatRupiahInput(this);
+            });
+            inJual.addEventListener('input', function() {
+                formatRupiahInput(this);
+            });
 
             const tsProductBrand = new TomSelect(tr.querySelector('.in-brand'), {
                 options: masterBrands.map(b => ({
@@ -295,8 +316,8 @@
                     kemasan: tr.querySelector('.in-kemasan').value,
                     satuan: tr.querySelector('.in-satuan').value,
                     qty: tr.querySelector('.in-qty').value,
-                    harga_beli: tr.querySelector('.in-beli').value,
-                    harga_jual: tr.querySelector('.in-jual').value,
+                    harga_beli: inBeli.value.replace(/\./g, ''),
+                    harga_jual: inJual.value.replace(/\./g, ''),
                     track_stock: 1,
                     akun_penjualan_id: 1,
                     akun_pembelian_id: 1,
@@ -442,6 +463,19 @@
             tsKategori.setValue(item.product_category_id);
             tsCOA.setValue(item.coa_id);
 
+            const inBeliEdit = editRow.querySelector('.in-beli');
+            const inJualEdit = editRow.querySelector('.in-jual');
+
+            inBeliEdit.addEventListener('input', function() {
+                formatRupiahInput(this);
+            });
+            inJualEdit.addEventListener('input', function() {
+                formatRupiahInput(this);
+            });
+
+            inBeliEdit.value = new Intl.NumberFormat('id-ID').format(item.harga_beli || 0);
+            inJualEdit.value = new Intl.NumberFormat('id-ID').format(item.harga_jual || 0);
+
             oldRow.replaceWith(editRow);
 
             editRow.querySelector('.btn-cancel-inline').onclick = () => loadProductData();
@@ -456,8 +490,8 @@
                     kemasan: editRow.querySelector('.in-kemasan').value,
                     satuan: editRow.querySelector('.in-satuan').value,
                     qty: editRow.querySelector('.in-qty').value,
-                    harga_beli: editRow.querySelector('.in-beli').value,
-                    harga_jual: editRow.querySelector('.in-jual').value,
+                    harga_beli: inBeliEdit.value.replace(/\./g, ''),
+                    harga_jual: inJualEdit.value.replace(/\./g, ''),
                     coa_id: tsCOA.getValue(),
                     track_stock: 1
                 };
