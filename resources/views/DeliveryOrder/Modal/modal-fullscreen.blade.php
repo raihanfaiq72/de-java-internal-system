@@ -26,10 +26,11 @@
                 <form id="deliveryOrderForm">
                     <input type="hidden" id="form_mode" value="create">
                     <input type="hidden" id="edit_do_id" value="">
-                    
+
                     <!-- Leaflet Assets -->
                     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-                    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+                    <link rel="stylesheet"
+                        href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
                     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
                     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
@@ -45,19 +46,23 @@
                                         <label class="f-label">Nomor DO</label>
                                         <input type="text" id="modal_do_number" class="form-control f-input fw-bold"
                                             placeholder="(Otomatis)" readonly>
-                                        <div class="form-text text-muted small">Nomor akan digenerate otomatis jika kosong.</div>
+                                        <div class="form-text text-muted small">Nomor akan digenerate otomatis jika
+                                            kosong.</div>
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="f-label">Tanggal Pengiriman <span class="text-danger">*</span></label>
+                                        <label class="f-label">Tanggal Pengiriman <span
+                                                class="text-danger">*</span></label>
                                         <input type="date" id="modal_delivery_date" class="form-control f-input">
                                     </div>
 
                                     <!-- Replaced Rute/Tujuan with Invoice Selection -->
                                     <div class="mb-3">
-                                        <label class="f-label mb-2">Pilih Invoice (Tujuan) <span class="text-danger">*</span></label>
+                                        <label class="f-label mb-2">Pilih Invoice (Tujuan) <span
+                                                class="text-danger">*</span></label>
                                         <select id="modal_invoice_ids" multiple placeholder="Cari invoice..."></select>
-                                        <div class="form-text text-muted small">Alamat akan diambil dari mitra invoice terpilih.</div>
+                                        <div class="form-text text-muted small">Alamat akan diambil dari mitra invoice
+                                            terpilih.</div>
                                     </div>
 
                                     <div class="mb-3">
@@ -76,12 +81,16 @@
                                 </div>
                                 <div class="card-body p-4">
                                     <!-- Map Container -->
-                                    <div id="map" style="height: 350px; width: 100%; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e2e8f0;"></div>
+                                    <div id="map"
+                                        style="height: 350px; width: 100%; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+                                    </div>
 
                                     <div class="row g-3">
                                         <div class="col-md-6">
-                                            <label class="f-label">Pilih Armada <span class="text-danger">*</span></label>
-                                            <select id="modal_fleet_id" class="form-select f-input" onchange="onFleetChange()">
+                                            <label class="f-label">Pilih Armada <span
+                                                    class="text-danger">*</span></label>
+                                            <select id="modal_fleet_id" class="form-select f-input"
+                                                onchange="onFleetChange()">
                                                 <option value="">-- Pilih Armada --</option>
                                             </select>
                                         </div>
@@ -99,23 +108,25 @@
                                         <!-- Auto-filled Fleet Specs -->
                                         <div class="col-md-3">
                                             <label class="f-label text-muted">Konsumsi (KM/L)</label>
-                                            <input type="number" id="modal_km_per_liter" class="form-control bg-light border-0" readonly>
+                                            <input type="number" id="modal_km_per_liter"
+                                                class="form-control bg-light border-0" readonly>
                                         </div>
                                         <div class="col-md-3">
                                             <label class="f-label text-muted">Harga BBM (/L)</label>
-                                            <input type="number" id="modal_liter_price" class="form-control bg-light border-0" readonly>
+                                            <input type="number" id="modal_liter_price"
+                                                class="form-control bg-light border-0" readonly>
                                         </div>
 
                                         <!-- Estimation Inputs -->
                                         <div class="col-md-6">
                                             <label class="f-label text-primary">Jarak Total (KM)</label>
                                             <div class="input-group">
-                                                <input type="number" id="modal_est_distance" class="form-control f-input fw-bold" 
-                                                    placeholder="0" readonly>
+                                                <input type="number" id="modal_est_distance"
+                                                    class="form-control f-input fw-bold" placeholder="0" readonly>
                                                 <span class="input-group-text bg-white text-muted">km</span>
                                             </div>
                                         </div>
-                                        
+
                                         <!-- Cost Summary -->
                                         <div class="col-12 mt-3">
                                             <h6 class="fw-bold mb-3">Rincian Biaya</h6>
@@ -133,24 +144,29 @@
                                                         <tr class="bg-light">
                                                             <td class="align-middle">Biaya BBM (Estimasi)</td>
                                                             <td>
-                                                                <input type="number" id="modal_est_fuel_cost" class="form-control form-control-sm border-0 bg-transparent text-end fw-bold" readonly value="0">
+                                                                <input type="number" id="modal_est_fuel_cost"
+                                                                    class="form-control form-control-sm border-0 bg-transparent text-end fw-bold"
+                                                                    readonly value="0">
                                                             </td>
                                                             <td></td>
                                                         </tr>
                                                         <!-- Additional Costs will be added here -->
                                                     </tbody>
                                                 </table>
-                                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addCostRow()">
+                                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                                    onclick="addCostRow()">
                                                     <i class="fa fa-plus me-1"></i> Tambah Biaya Lain
                                                 </button>
                                             </div>
-                                            
-                                            <div class="alert alert-primary bg-primary bg-opacity-10 border-primary border-opacity-25 d-flex justify-content-between align-items-center mb-0">
+
+                                            <div
+                                                class="alert alert-primary bg-primary bg-opacity-10 border-primary border-opacity-25 d-flex justify-content-between align-items-center mb-0">
                                                 <div>
                                                     <i class="fa fa-coins me-2"></i>
                                                     <span class="fw-bold">Total Estimasi Biaya</span>
                                                 </div>
-                                                <span class="fs-5 fw-bold text-primary" id="disp_total_cost">Rp 0</span>
+                                                <span class="fs-5 fw-bold text-primary" id="disp_total_cost">Rp
+                                                    0</span>
                                             </div>
                                         </div>
                                     </div>
@@ -167,30 +183,33 @@
 <script>
     let fleetSelect, invoiceSelect, driverSelect;
     let selectedFleetData = null;
-    let currentDOInvoices = []; 
+    let currentDOInvoices = [];
     let map, routingControl;
     let mapMarkers = [];
-    
+
     // Default Office Location (Semarang)
     const OFFICE_LAT = -6.966667;
     const OFFICE_LNG = 110.416664;
-    
+
     // Store addresses to route
     let routeWaypoints = []; // Array of { lat, lng, title }
 
     async function initModalScripts() {
         // Initialize TomSelect for Invoices
-        if(document.getElementById('modal_invoice_ids') && !invoiceSelect) {
+        if (document.getElementById('modal_invoice_ids') && !invoiceSelect) {
             invoiceSelect = new TomSelect('#modal_invoice_ids', {
                 plugins: ['remove_button'],
                 create: false,
-                sortField: { field: "text", direction: "asc" },
+                sortField: {
+                    field: "text",
+                    direction: "asc"
+                },
                 onChange: function(value) {
                     updateMapRoute(value);
                 }
             });
         }
-        
+
         // Populate Fleets
         const fleetEl = document.getElementById('modal_fleet_id');
         fleetEl.innerHTML = '<option value="">-- Pilih Armada --</option>';
@@ -204,14 +223,14 @@
                 fleetEl.appendChild(opt);
             });
         }
-        
+
         // Populate Drivers
         const driverEl = document.getElementById('modal_driver_id');
         driverEl.innerHTML = '<option value="">-- Pilih Supir --</option>';
         try {
             const res = await fetch("{{ route('user-api.index') }}?all=1");
             const json = await res.json();
-            if(json.success) {
+            if (json.success) {
                 json.data.forEach(u => {
                     const opt = document.createElement('option');
                     opt.value = u.id;
@@ -219,17 +238,19 @@
                     driverEl.appendChild(opt);
                 });
             }
-        } catch(e) { console.error(e); }
+        } catch (e) {
+            console.error(e);
+        }
 
         // Populate Invoices
         try {
-            if(invoiceSelect) {
+            if (invoiceSelect) {
                 invoiceSelect.clearOptions();
                 // Fetch more invoices to ensure better coverage
-                const resInv = await fetch("{{ route('invoice-api.index') }}?status=Unpaid&per_page=100"); 
+                const resInv = await fetch("{{ route('invoice-api.index') }}?status=Unpaid&per_page=100");
                 const jsonInv = await resInv.json();
-                
-                if(jsonInv.success) {
+
+                if (jsonInv.success) {
                     jsonInv.data.data.forEach(inv => {
                         invoiceSelect.addOption({
                             value: inv.id,
@@ -242,51 +263,53 @@
                     });
                 }
             }
-        } catch(e) { console.error(e); }
-        
+        } catch (e) {
+            console.error(e);
+        }
+
         // Initialize Map
         setTimeout(() => initMap(), 500);
     }
-    
+
     function initMap() {
-        if(map) {
+        if (map) {
             map.invalidateSize();
             return;
         }
-        
+
         map = L.map('map').setView([OFFICE_LAT, OFFICE_LNG], 12);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
-        
+
         // Add Office Marker
         L.marker([OFFICE_LAT, OFFICE_LNG]).addTo(map)
             .bindPopup("Lokasi Kantor (Start)")
             .openPopup();
     }
-    
+
     async function updateMapRoute(invoiceIds) {
-        if(!map) return;
-        
+        if (!map) return;
+
         // Clear existing routing and markers (except office)
         if (routingControl) {
             map.removeControl(routingControl);
             routingControl = null;
         }
-        
+
         // Clear other markers
         mapMarkers.forEach(m => map.removeLayer(m));
         mapMarkers = [];
-        
+
         if (!invoiceIds || invoiceIds.length === 0) {
-             document.getElementById('modal_est_distance').value = 0;
-             calculateTotalCost();
-             return;
+            document.getElementById('modal_est_distance').value = 0;
+            calculateTotalCost();
+            return;
         }
-        
+
         // Fetch Invoice Details to get Addresses
         const waypoints = [L.latLng(OFFICE_LAT, OFFICE_LNG)];
-        
+
         for (const id of invoiceIds) {
             try {
                 // Try to get data from TomSelect options
@@ -301,17 +324,17 @@
                 }
 
                 if (lat && lng) {
-                     const latLng = L.latLng(lat, lng);
-                     waypoints.push(latLng);
-                     const m = L.marker(latLng).addTo(map).bindPopup(`<b>${title}</b><br>${address}`);
-                     mapMarkers.push(m);
+                    const latLng = L.latLng(lat, lng);
+                    waypoints.push(latLng);
+                    const m = L.marker(latLng).addTo(map).bindPopup(`<b>${title}</b><br>${address}`);
+                    mapMarkers.push(m);
                 } else if (address) {
                     // Fallback to Geocoding if coordinates missing but address exists
                     const coords = await geocodeAddress(address);
-                    if(coords) {
+                    if (coords) {
                         const latLng = L.latLng(coords.lat, coords.lon);
                         waypoints.push(latLng);
-                        
+
                         const m = L.marker(latLng).addTo(map)
                             .bindPopup(`<b>${title}</b><br>${address} (Geocoded)`);
                         mapMarkers.push(m);
@@ -320,10 +343,10 @@
                     // Fallback: Fetch via API if not in options (e.g. from search)
                     const res = await fetch(`{{ url('api/invoice-api') }}/${id}`);
                     const json = await res.json();
-                    if(json.success && json.data.mitra && json.data.mitra.alamat) {
+                    if (json.success && json.data.mitra && json.data.mitra.alamat) {
                         const address = json.data.mitra.alamat;
                         const coords = await geocodeAddress(address);
-                        if(coords) {
+                        if (coords) {
                             const latLng = L.latLng(coords.lat, coords.lon);
                             waypoints.push(latLng);
                             const m = L.marker(latLng).addTo(map)
@@ -332,10 +355,12 @@
                         }
                     }
                 }
-            } catch(e) { console.error(e); }
+            } catch (e) {
+                console.error(e);
+            }
         }
-        
-        if(waypoints.length > 1) {
+
+        if (waypoints.length > 1) {
             routingControl = L.Routing.control({
                 waypoints: waypoints,
                 routeWhileDragging: false,
@@ -351,35 +376,41 @@
             }).addTo(map);
         }
     }
-    
+
     // Simple Nominatim Geocoding (Rate Limited!)
     const geocodeCache = {};
     async function geocodeAddress(address) {
-        if(geocodeCache[address]) return geocodeCache[address];
-        
+        if (geocodeCache[address]) return geocodeCache[address];
+
         try {
             // Delay to respect rate limit
-            await new Promise(r => setTimeout(r, 1000)); 
-            
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+            await new Promise(r => setTimeout(r, 1000));
+
+            const res = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
             const data = await res.json();
-            if(data && data.length > 0) {
-                const result = { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+            if (data && data.length > 0) {
+                const result = {
+                    lat: parseFloat(data[0].lat),
+                    lon: parseFloat(data[0].lon)
+                };
                 geocodeCache[address] = result;
                 return result;
             }
-        } catch(e) { console.error("Geocode error", e); }
+        } catch (e) {
+            console.error("Geocode error", e);
+        }
         return null;
     }
 
     function onFleetChange() {
         const fleetEl = document.getElementById('modal_fleet_id');
         const selectedOpt = fleetEl.options[fleetEl.selectedIndex];
-        
+
         if (selectedOpt && selectedOpt.value) {
             const km = parseFloat(selectedOpt.dataset.km) || 0;
             const price = parseFloat(selectedOpt.dataset.price) || 0;
-            
+
             document.getElementById('modal_km_per_liter').value = km;
             document.getElementById('modal_liter_price').value = price;
         } else {
@@ -393,17 +424,17 @@
         const distance = parseFloat(document.getElementById('modal_est_distance').value) || 0;
         const kmPerLiter = parseFloat(document.getElementById('modal_km_per_liter').value) || 0;
         const pricePerLiter = parseFloat(document.getElementById('modal_liter_price').value) || 0;
-        
+
         let cost = 0;
         if (distance > 0 && kmPerLiter > 0 && pricePerLiter > 0) {
             const litersNeeded = distance / kmPerLiter;
             cost = litersNeeded * pricePerLiter;
         }
-        
+
         document.getElementById('modal_est_fuel_cost').value = cost.toFixed(2);
         calculateTotalCost();
     }
-    
+
     function addCostRow(name = '', amount = 0) {
         const tbody = document.getElementById('costTableBody');
         const tr = document.createElement('tr');
@@ -414,14 +445,14 @@
         `;
         tbody.appendChild(tr);
     }
-    
+
     function calculateTotalCost() {
         let total = parseFloat(document.getElementById('modal_est_fuel_cost').value) || 0;
-        
+
         document.querySelectorAll('.cost-amount').forEach(inp => {
             total += parseFloat(inp.value) || 0;
         });
-        
+
         document.getElementById('disp_total_cost').innerText = 'Rp ' + total.toLocaleString('id-ID');
     }
 
@@ -432,7 +463,7 @@
         const notes = document.getElementById('modal_notes').value;
         const fleetId = document.getElementById('modal_fleet_id').value;
         const invoiceIds = invoiceSelect ? invoiceSelect.getValue() : [];
-        
+
         if (!date) return alert("Tanggal Pengiriman wajib diisi!");
         if (invoiceIds.length === 0) return alert("Pilih minimal satu invoice!");
         if (!fleetId) return alert("Pilih Armada!");
@@ -442,32 +473,35 @@
             delivery_date: date,
             notes: notes
         };
-        
+
         try {
             const baseUrl = "{{ url('api/delivery-order-api') }}";
             const url = mode === 'create' ? baseUrl : `${baseUrl}/${id}`;
             const method = mode === 'create' ? 'POST' : 'PUT';
-            
+
             // Step 1: Save DO
             const resDO = await fetch(url, {
                 method: method,
-                headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
                 body: JSON.stringify(doPayload)
             });
             const jsonDO = await resDO.json();
-            
+
             if (!jsonDO.success) throw new Error(jsonDO.message);
             const doId = jsonDO.data.id;
-            
+
             // Step 2: Assign Invoices
             let currentIds = [];
-            if(mode === 'edit') {
-                 currentIds = currentDOInvoices.map(i => i.invoice_id.toString());
+            if (mode === 'edit') {
+                currentIds = currentDOInvoices.map(i => i.invoice_id.toString());
             }
-            
+
             // Ensure invoiceIds is an array
             const selectedIds = Array.isArray(invoiceIds) ? invoiceIds : [invoiceIds];
-            
+
             const toAdd = selectedIds.filter(id => !currentIds.includes(id));
             const toRemove = currentDOInvoices.filter(i => !selectedIds.includes(i.invoice_id.toString()));
 
@@ -477,40 +511,45 @@
             for (const invId of toAdd) {
                 const resInv = await fetch("{{ url('api/delivery-order-invoice-api') }}", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
                     body: JSON.stringify({
                         delivery_order_id: doId,
                         invoice_id: invId,
-                        delivery_sequence: 1 
+                        delivery_sequence: 1
                     })
                 });
                 const jsonInv = await resInv.json();
-                if(!jsonInv.success) {
+                if (!jsonInv.success) {
                     console.error("Failed to save invoice:", jsonInv);
                     throw new Error("Gagal menyimpan invoice ID " + invId + ": " + jsonInv.message);
                 }
             }
-            
+
             for (const item of toRemove) {
                 await fetch(`{{ url('api/delivery-order-invoice-api') }}/${item.id}`, {
-                     method: 'DELETE',
-                     headers: { 'X-CSRF-TOKEN': "{{ csrf_token() }}" }
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                    }
                 });
             }
-            
+
             // Step 3: Assign Fleet with Costs
             const additionalCosts = [];
             document.querySelectorAll('#costTableBody tr').forEach(tr => {
                 const nameInp = tr.querySelector('.cost-name');
                 const amountInp = tr.querySelector('.cost-amount');
-                if(nameInp && amountInp && nameInp.value) {
+                if (nameInp && amountInp && nameInp.value) {
                     additionalCosts.push({
                         name: nameInp.value,
                         amount: parseFloat(amountInp.value) || 0
                     });
                 }
             });
-            
+
             const fleetData = {
                 delivery_order_id: doId,
                 fleet_id: fleetId,
@@ -519,26 +558,29 @@
                 estimated_fuel_cost: document.getElementById('modal_est_fuel_cost').value,
                 additional_costs: additionalCosts
             };
-            
+
             const resFleet = await fetch("{{ url('api/delivery-order-fleet-api') }}", {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
                 body: JSON.stringify(fleetData)
             });
             const jsonFleet = await resFleet.json();
-            
-            if(!jsonFleet.success) throw new Error("Gagal menyimpan data armada: " + jsonFleet.message);
-            
+
+            if (!jsonFleet.success) throw new Error("Gagal menyimpan data armada: " + jsonFleet.message);
+
             // Success! Open Print
             window.open(`{{ url('delivery-order/print') }}/${doId}`, '_blank');
             location.reload(); // Refresh main page
-            
-        } catch(e) {
+
+        } catch (e) {
             alert("Terjadi kesalahan: " + e.message);
             console.error(e);
         }
     }
-    
+
     async function openDeliveryOrderModal(id = null) {
         const modal = new bootstrap.Modal(document.getElementById('deliveryOrderModal'));
         document.getElementById('deliveryOrderForm').reset();
@@ -549,27 +591,28 @@
                 <td><input type="number" id="modal_est_fuel_cost" class="form-control form-control-sm border-0 bg-transparent text-end fw-bold" readonly value="0"></td>
                 <td></td>
             </tr>`;
-        
+
         currentDOInvoices = [];
         await initModalScripts();
-        
-        if(id) {
+
+        if (id) {
             document.getElementById('form_mode').value = 'edit';
             document.getElementById('edit_do_id').value = id;
             document.getElementById('modalTitle').innerText = 'Edit Delivery Order';
-            
+
             try {
                 // Fetch Fleet
-                const fleetRes = await fetch("{{ route('delivery-order-fleet-api.by-do', ':id') }}".replace(':id', id)).then(r => r.json());
-                if(fleetRes.success && fleetRes.data) {
+                const fleetRes = await fetch("{{ route('delivery-order-fleet-api.index', ':id') }}".replace(':id',
+                    id)).then(r => r.json());
+                if (fleetRes.success && fleetRes.data) {
                     const f = fleetRes.data;
                     document.getElementById('modal_fleet_id').value = f.fleet_id;
                     onFleetChange();
                     document.getElementById('modal_driver_id').value = f.driver_id;
                     document.getElementById('modal_est_distance').value = f.estimated_distance_km;
-                    
+
                     // Load Additional Costs
-                    if(f.additional_costs && Array.isArray(f.additional_costs)) {
+                    if (f.additional_costs && Array.isArray(f.additional_costs)) {
                         f.additional_costs.forEach(c => addCostRow(c.name, c.amount));
                     }
                     calculateFuelCost(); // Update fuel cost based on distance
@@ -578,31 +621,38 @@
                 // Fetch DO & Invoices
                 const doResponse = await fetch(`{{ url('api/delivery-order-api') }}/${id}`);
                 const doJson = await doResponse.json();
-                if(doJson.success) {
+                if (doJson.success) {
                     const d = doJson.data;
                     document.getElementById('modal_do_number').value = d.delivery_order_number;
                     document.getElementById('modal_delivery_date').value = d.delivery_date;
                     document.getElementById('modal_notes').value = d.notes;
-                    
+
                     // Load Invoices into TomSelect
-                    if(d.invoices && d.invoices.length > 0) {
+                    if (d.invoices && d.invoices.length > 0) {
                         const invIds = d.invoices.map(i => i.invoice_id.toString());
                         invoiceSelect.setValue(invIds);
-                        
+
                         // Store current state for diffing in Edit mode
-                        currentDOInvoices = d.invoices.map(i => ({ id: i.id, invoice_id: i.invoice_id }));
+                        currentDOInvoices = d.invoices.map(i => ({
+                            id: i.id,
+                            invoice_id: i.invoice_id
+                        }));
                     }
                 }
-            } catch(e) { console.error(e); }
+            } catch (e) {
+                console.error(e);
+            }
         } else {
             document.getElementById('form_mode').value = 'create';
             document.getElementById('modalTitle').innerText = 'Delivery Order Baru';
             // Clear TomSelect
-            if(invoiceSelect) invoiceSelect.clear();
+            if (invoiceSelect) invoiceSelect.clear();
         }
-        
+
         modal.show();
         // Resize map after modal show
-        setTimeout(() => { if(map) map.invalidateSize(); }, 500);
+        setTimeout(() => {
+            if (map) map.invalidateSize();
+        }, 500);
     }
 </script>
