@@ -15,6 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('delivery_order_id')->constrained()->cascadeOnDelete();
             $table->foreignId('invoice_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('chart_of_accounts_id')
+                ->references('id')
+                ->on('financial_accounts')
+                ->onDelete('restrict');;
+            $table->decimal('total_cost', 15, 2);
 
             $table->integer('delivery_queue')->default(1); // stop order
 

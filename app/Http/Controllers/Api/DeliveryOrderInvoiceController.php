@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\DeliveryOrderInvoice;
+use App\Models\FinancialAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Throwable;
@@ -27,20 +28,37 @@ class DeliveryOrderInvoiceController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
-    
+
     public function store(Request $request)
     {
         try {
+            $kas = FinancialAccount::where('office_id', session('active_office_id'))
+                ->where('code', '1101')
+                ->select('id')
+                ->first();
+
+            if (!$kas) {
+                return apiResponse(false, 'Akun Kas (1101) tidak ditemukan', null, null, 422);
+            }
+
             $validator = Validator::make($request->all(), [
                 'delivery_order_id' => 'required|exists:delivery_orders,id',
                 'invoice_id' => 'required|exists:invoices,id',
-                'delivery_sequence' => 'required|integer'
+                'delivery_sequence' => 'required|integer',
+                'total_cost' => 'nullable|numeric',
             ]);
 
             if ($validator->fails())
                 return apiResponse(false, 'Validation failed', null, $validator->errors(), 422);
 
-            $data = DeliveryOrderInvoice::create($request->all());
+            $data = DeliveryOrderInvoice::create([
+                'delivery_order_id' => $request->delivery_order_id,
+                'invoice_id' => $request->invoice_id,
+                'delivery_sequence' => $request->delivery_sequence,
+                'total_cost' => $request->total_cost ?? 0,
+                'chart_of_accounts_id' => $kas->id,
+            ]);
+
             return apiResponse(true, 'Added', $data);
         } catch (Throwable $e) {
             return apiResponse(false, 'Failed to add invoice', null, $e->getMessage(), 500);

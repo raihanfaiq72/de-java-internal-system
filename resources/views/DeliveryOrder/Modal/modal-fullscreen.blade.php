@@ -181,7 +181,7 @@
 </div>
 
 <script>
-    let fleetSelect, invoiceSelect, driverSelect;
+    let fleetSelect, invoiceSelect, driverSelect, estCost;
     let selectedFleetData = null;
     let currentDOInvoices = [];
     let map, routingControl;
@@ -453,6 +453,8 @@
             total += parseFloat(inp.value) || 0;
         });
 
+        estCost = total;
+
         document.getElementById('disp_total_cost').innerText = 'Rp ' + total.toLocaleString('id-ID');
     }
 
@@ -518,7 +520,8 @@
                     body: JSON.stringify({
                         delivery_order_id: doId,
                         invoice_id: invId,
-                        delivery_sequence: 1
+                        delivery_sequence: 1,
+                        total_cost: estCost || 0
                     })
                 });
                 const jsonInv = await resInv.json();
