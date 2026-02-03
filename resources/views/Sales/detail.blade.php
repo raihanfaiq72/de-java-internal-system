@@ -401,6 +401,8 @@
             document.getElementById('inv-due').textContent = formatDate(data.tgl_jatuh_tempo);
 
             // Items
+            let subTotal = 0;
+
             const tbody = document.getElementById('items-body');
             tbody.innerHTML = '';
             if (data.items) {
@@ -416,12 +418,15 @@
                         <td class="text-end pe-4 py-3 fw-bold text-dark">${formatIDR(item.total_harga_item)}</td>
                     </tr>
                 `;
+
+                    subTotal += parseFloat(item.total_harga_item);
                 });
+
             }
 
             // Totals
-            document.getElementById('val-subtotal').textContent = formatIDR(data.subtotal || data
-                .total_akhir); // Fallback if subtotal not calc in BE
+
+            document.getElementById('val-subtotal').textContent = formatIDR(subTotal);
             document.getElementById('val-discount').textContent = `- ${formatIDR(data.diskon_tambahan_nilai || 0)}`;
             document.getElementById('val-tax').textContent = formatIDR(data.pajak_ppn || 0);
             document.getElementById('val-total').textContent = formatIDR(data.total_akhir);
