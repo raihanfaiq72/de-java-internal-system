@@ -76,6 +76,7 @@
                                             <tr>
                                                 <th width="40" class="ps-3 text-center">#</th>
                                                 <th width="120">No. Mitra</th>
+                                                <th width="150">No. KTP/NPWP</th>
                                                 <th width="250">Nama Perusahaan</th>
                                                 <th width="100" class="text-center">Tipe</th>
                                                 <th width="200">Kontak Utama</th>
@@ -295,12 +296,14 @@
                 <tr class="clickable-row">
                     <td class="text-center ps-3 text-muted small">${index + 1}</td>
                     <td class="fw-bold text-dark font-monospace" style="font-size:12px;">${item.nomor_mitra || '-'}</td>
+                    <td class="font-monospace small text-muted">${item.ktp_npwp || '-'}</td>
                     <td>
                         <div class="fw-bold text-dark mb-0">${item.nama}</div>
                         <div class="small text-muted">${item.badan_usaha || 'Perorangan'}</div>
                     </td>
                     <td class="text-center">
                         <span class="f-badge ${typeClass}">${item.tipe_mitra}</span>
+                        ${item.is_cash_customer ? '<div class="mt-1"><span class="badge bg-success text-white" style="font-size:9px;">CASH</span></div>' : ''}
                     </td>
                     <td>
                         <div class="fw-bold text-dark small">${item.kontak_nama || '-'}</div>

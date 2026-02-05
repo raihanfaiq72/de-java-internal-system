@@ -32,7 +32,7 @@
                                 <div class="card-body p-4">
                                     <div class="mb-3">
                                         <label class="f-label">Tipe Mitra *</label>
-                                        <div class="d-flex gap-3 mt-1">
+                                        <div class="d-flex gap-3 mt-1 align-items-center flex-wrap">
                                             <div class="form-check">
                                                 <input class="form-check-input" type="radio" name="tipe_mitra" id="typeSupplier" value="Supplier" checked>
                                                 <label class="form-check-label small fw-bold" for="typeSupplier">Supplier / Vendor</label>
@@ -44,6 +44,15 @@
                                             <div class="form-check">
                                                 <input class="form-check-input" type="radio" name="tipe_mitra" id="typeBoth" value="Both">
                                                 <label class="form-check-label small fw-bold" for="typeBoth">Keduanya</label>
+                                            </div>
+                                        </div>
+                                        <div class="form-check mt-2 pt-1 border-top">
+                                            <input class="form-check-input" type="checkbox" id="modal_is_cash_customer">
+                                            <label class="form-check-label small fw-bold text-primary" for="modal_is_cash_customer">
+                                                Apakah Pelanggan Cash?
+                                            </label>
+                                            <div class="form-text x-small text-muted" style="font-size: 11px;">
+                                                Pelanggan cash membeli langsung (tanpa piutang/tempo).
                                             </div>
                                         </div>
                                     </div>
@@ -67,6 +76,11 @@
                                     <div class="mt-3">
                                         <label class="f-label">Nomor ID Mitra (Opsional)</label>
                                         <input type="text" id="modal_nomor_mitra" class="form-control f-input bg-light" placeholder="Auto-generated jika kosong">
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <label class="f-label">No. KTP / NPWP</label>
+                                        <input type="text" id="modal_ktp_npwp" class="form-control f-input" placeholder="Nomor Identitas (NIK / NPWP)">
                                     </div>
 
                                     <div class="mt-3">
@@ -163,9 +177,11 @@
                 if(json.success) {
                     const data = json.data;
                     document.querySelector(`input[name="tipe_mitra"][value="${data.tipe_mitra}"]`).checked = true;
+                    document.getElementById('modal_is_cash_customer').checked = data.is_cash_customer ? true : false;
                     document.getElementById('modal_badan_usaha').value = data.badan_usaha || 'PT';
                     document.getElementById('modal_nama').value = data.nama;
                     document.getElementById('modal_nomor_mitra').value = data.nomor_mitra || '';
+                    document.getElementById('modal_ktp_npwp').value = data.ktp_npwp || '';
                     document.getElementById('modal_alamat').value = data.alamat || '';
                     document.getElementById('modal_email').value = data.email || '';
                     document.getElementById('modal_no_hp').value = data.no_hp || '';
@@ -181,6 +197,8 @@
             document.getElementById('mitraModalTitle').innerText = 'Tambah Mitra Baru';
             document.getElementById('mitra_form_mode').value = 'create';
             document.getElementById('modal_nomor_mitra').value = '';
+            document.getElementById('modal_ktp_npwp').value = '';
+            document.getElementById('modal_is_cash_customer').checked = false;
             // Auto generate ID logic could be here on backend usually
         }
 
@@ -195,9 +213,11 @@
 
         const payload = {
             tipe_mitra: document.querySelector('input[name="tipe_mitra"]:checked').value,
+            is_cash_customer: document.getElementById('modal_is_cash_customer').checked ? 1 : 0,
             badan_usaha: document.getElementById('modal_badan_usaha').value,
             nama: document.getElementById('modal_nama').value,
             nomor_mitra: document.getElementById('modal_nomor_mitra').value,
+            ktp_npwp: document.getElementById('modal_ktp_npwp').value,
             alamat: document.getElementById('modal_alamat').value,
             email: document.getElementById('modal_email').value,
             no_hp: document.getElementById('modal_no_hp').value,
@@ -224,6 +244,8 @@
                 alert('Data Mitra berhasil disimpan.');
                 bootstrap.Modal.getInstance(document.getElementById('mitraModal')).hide();
                 if(typeof loadMitraData === 'function') loadMitraData();
+                // Trigger event for external listeners (like Sales page)
+                document.dispatchEvent(new CustomEvent('mitra-saved', { detail: result.data }));
             } else {
                 alert('Gagal: ' + (JSON.stringify(result.errors || result.message)));
             }

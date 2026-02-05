@@ -28,14 +28,16 @@ class DashboardPiutangController extends Controller
 
         // 2. Piutang Usaha (Invoice Penjualan)
         $piutangData = DB::table('invoices')
-            ->where('tipe_invoice', 'Sales')
-            ->where('office_id', $officeId)
-            ->whereNull('deleted_at')
+            ->join('mitras', 'invoices.mitra_id', '=', 'mitras.id')
+            ->where('invoices.tipe_invoice', 'Sales')
+            ->where('invoices.office_id', $officeId)
+            ->whereNull('invoices.deleted_at')
+            ->where('mitras.is_cash_customer', false)
             ->select(
-                DB::raw('SUM(total_akhir) as total_nilai'),
-                DB::raw("COUNT(CASE WHEN status_pembayaran = 'Unpaid' THEN 1 END) as count_unpaid"),
-                DB::raw("COUNT(CASE WHEN status_pembayaran = 'Partially Paid' THEN 1 END) as count_partial"),
-                DB::raw("COUNT(CASE WHEN status_pembayaran = 'Overdue' OR (tgl_jatuh_tempo < NOW() AND status_pembayaran != 'Paid') THEN 1 END) as count_overdue")
+                DB::raw('SUM(invoices.total_akhir) as total_nilai'),
+                DB::raw("COUNT(CASE WHEN invoices.status_pembayaran = 'Unpaid' THEN 1 END) as count_unpaid"),
+                DB::raw("COUNT(CASE WHEN invoices.status_pembayaran = 'Partially Paid' THEN 1 END) as count_partial"),
+                DB::raw("COUNT(CASE WHEN invoices.status_pembayaran = 'Overdue' OR (invoices.tgl_jatuh_tempo < NOW() AND invoices.status_pembayaran != 'Paid') THEN 1 END) as count_overdue")
             )->first();
 
         // 3. Utang Usaha (Invoice Pembelian)

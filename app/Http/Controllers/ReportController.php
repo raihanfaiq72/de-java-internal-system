@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Models\Invoice;
-use App\Models\Mitra;
+use App\Models\Partner;
 
 class ReportController extends Controller
 {
@@ -15,12 +15,18 @@ class ReportController extends Controller
     public function arAging(Request $request)
     {
         $officeId = session('active_office_id');
-        $mitras = Mitra::where('office_id', $officeId)->where('tipe_mitra', '!=', 'Vendor')->get();
+        $mitras = Partner::where('office_id', $officeId)
+            ->where('tipe_mitra', '!=', 'Vendor')
+            ->where('is_cash_customer', false)
+            ->get();
         
         $query = Invoice::where('tipe_invoice', 'Sales')
             ->where('office_id', $officeId)
             ->where('status_pembayaran', '!=', 'Paid')
             ->whereNull('deleted_at')
+            ->whereHas('mitra', function($q) {
+                $q->where('is_cash_customer', false);
+            })
             ->with(['mitra', 'payment']);
 
         if ($request->mitra_id) {

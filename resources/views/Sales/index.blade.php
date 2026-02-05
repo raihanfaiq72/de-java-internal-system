@@ -315,6 +315,7 @@
     @include('Sales.Modal.modal-fullscreen')
     @include('Sales.Modal.detail-modal')
     @include('Sales.Partials.invoice-templates')
+    @include('Mitra.Modal.modal-fullscreen')
 @endsection
 
 @push('js')

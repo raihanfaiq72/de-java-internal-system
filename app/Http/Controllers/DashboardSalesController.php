@@ -44,10 +44,10 @@ class DashboardSalesController extends Controller
 
         // Ambil Ringkasan & Rata-rata Aging menggunakan SQL (Biar Akurat)
         $summary = (clone $query)->select(
-            DB::raw('SUM(total_akhir) as total_sales'),
-            DB::raw('SUM(CASE WHEN status_pembayaran != "Paid" THEN total_akhir ELSE 0 END) as total_piutang'),
+            DB::raw('SUM(invoices.total_akhir) as total_sales'),
+            DB::raw('SUM(CASE WHEN invoices.status_pembayaran != "Paid" AND mitras.is_cash_customer = 0 THEN invoices.total_akhir ELSE 0 END) as total_piutang'),
             // Hitung rata-rata umur nota hanya untuk yang belum lunas
-            DB::raw('ROUND(AVG(CASE WHEN status_pembayaran != "Paid" THEN DATEDIFF(NOW(), tgl_invoice) ELSE NULL END)) as avg_aging')
+            DB::raw('ROUND(AVG(CASE WHEN invoices.status_pembayaran != "Paid" AND mitras.is_cash_customer = 0 THEN DATEDIFF(NOW(), invoices.tgl_invoice) ELSE NULL END)) as avg_aging')
         )->first();
 
         // Ambil Data Tabel dengan Pagination

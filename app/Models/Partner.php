@@ -19,7 +19,9 @@ class Partner extends Model
         'nama',
         'no_hp',
         'email',
+        'ktp_npwp',
         'tipe_mitra',
+        'is_cash_customer',
         'payment_terms',
         'identity_card',
         'alamat',
@@ -31,6 +33,10 @@ class Partner extends Model
         'akun_piutang_id',
         'latitude',
         'longitude',
+    ];
+
+    protected $casts = [
+        'is_cash_customer' => 'boolean',
     ];
 
     public function akunHutang()
