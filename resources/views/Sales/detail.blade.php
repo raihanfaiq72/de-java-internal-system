@@ -128,7 +128,8 @@
                                     <p class="text-muted small mb-0">Tandai sebagai invoice resmi</p>
                                 </div>
                                 <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" role="switch" id="toggle-kop" style="width: 3em; height: 1.5em; cursor: pointer;">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="toggle-kop"
+                                        style="width: 3em; height: 1.5em; cursor: pointer;">
                                 </div>
                             </div>
                         </div>
@@ -314,7 +315,8 @@
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 px-4 pb-4">
-                    <button type="button" class="btn btn-primary w-100 fw-bold shadow-sm" onclick="saveKopSettings()">Simpan Pengaturan</button>
+                    <button type="button" class="btn btn-primary w-100 fw-bold shadow-sm"
+                        onclick="saveKopSettings()">Simpan Pengaturan</button>
                 </div>
             </div>
         </div>
@@ -363,7 +365,7 @@
             // Setup Kop Toggle
             const toggleKop = document.getElementById('toggle-kop');
             toggleKop.checked = data.is_kop == 1;
-            
+
             // Setup Modal Preview
             const imgPreview = document.getElementById('kop-logo-preview').querySelector('img');
             const previewContainer = document.getElementById('kop-logo-preview');
@@ -377,7 +379,7 @@
             // Remove old listener if any (to avoid duplicates on re-render)
             const newToggle = toggleKop.cloneNode(true);
             toggleKop.parentNode.replaceChild(newToggle, toggleKop);
-            
+
             newToggle.addEventListener('change', function() {
                 updateKopStatus(this.checked);
             });
@@ -399,6 +401,8 @@
             document.getElementById('inv-due').textContent = formatDate(data.tgl_jatuh_tempo);
 
             // Items
+            let subTotal = 0;
+
             const tbody = document.getElementById('items-body');
             tbody.innerHTML = '';
             if (data.items) {
@@ -414,13 +418,16 @@
                         <td class="text-end pe-4 py-3 fw-bold text-dark">${formatIDR(item.total_harga_item)}</td>
                     </tr>
                 `;
+
+                    subTotal += parseFloat(item.total_harga_item);
                 });
+
             }
 
             // Totals
-            document.getElementById('val-subtotal').textContent = formatIDR(data.subtotal || data
-                .total_akhir); // Fallback if subtotal not calc in BE
-            document.getElementById('val-discount').textContent = `- ${formatIDR(data.diskon_global || 0)}`;
+
+            document.getElementById('val-subtotal').textContent = formatIDR(subTotal);
+            document.getElementById('val-discount').textContent = `- ${formatIDR(data.diskon_tambahan_nilai || 0)}`;
             document.getElementById('val-tax').textContent = formatIDR(data.pajak_ppn || 0);
             document.getElementById('val-total').textContent = formatIDR(data.total_akhir);
 
@@ -541,7 +548,7 @@
         async function saveKopSettings() {
             const fileInput = document.getElementById('kop-logo-input');
             const file = fileInput.files[0];
-            
+
             if (!file) {
                 // If no file, just close modal (assuming only file update for now)
                 // Or verify if logo already exists
@@ -558,7 +565,7 @@
             try {
                 // Using POST for FormData with _method: PUT
                 const response = await fetch(`${API_URL}/${invoiceId}`, {
-                    method: 'POST', 
+                    method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },

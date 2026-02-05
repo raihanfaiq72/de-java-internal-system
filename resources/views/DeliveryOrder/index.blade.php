@@ -275,7 +275,8 @@
 
         async function loadInvoiceData(url = DO_API_URL) {
             const tbody = document.getElementById('invoiceTableBody');
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-5"><div class="spinner-border spinner-border-sm text-primary"></div><p class="mt-2 text-muted small mb-0">Memuat data...</p></td></tr>';
+            tbody.innerHTML =
+                '<tr><td colspan="5" class="text-center p-5"><div class="spinner-border spinner-border-sm text-primary"></div><p class="mt-2 text-muted small mb-0">Memuat data...</p></td></tr>';
 
             try {
                 const searchVal = document.getElementById('filter-search').value;
@@ -296,7 +297,8 @@
                 }
             } catch (error) {
                 console.error(error);
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger p-4">Gagal memuat data.</td></tr>';
+                tbody.innerHTML =
+                    '<tr><td colspan="5" class="text-center text-danger p-4">Gagal memuat data.</td></tr>';
             }
         }
 
@@ -305,7 +307,8 @@
             tbody.innerHTML = '';
 
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-5 text-muted fst-italic">Belum ada Delivery Order.</td></tr>';
+                tbody.innerHTML =
+                    '<tr><td colspan="5" class="text-center p-5 text-muted fst-italic">Belum ada Delivery Order.</td></tr>';
                 return;
             }
 
@@ -377,7 +380,7 @@
                 // Only show if url is present
                 const onclick = l.url ? `onclick="loadInvoiceData('${l.url}')"` : '';
                 const disabled = !l.url ? 'disabled' : '';
-                
+
                 c.insertAdjacentHTML('beforeend',
                     `<li class="page-item ${disabled}"><a class="page-link border-0 mx-1 rounded shadow-sm fw-bold ${cls}" href="#" ${onclick}>${l.label}</a></li>`
                 );

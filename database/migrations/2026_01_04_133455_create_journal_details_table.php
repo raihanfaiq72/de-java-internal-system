@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('akun_id')->constrained('chart_of_accounts');
             $table->decimal('debit', 15, 2)->default(0);
             $table->decimal('kredit', 15, 2)->default(0);
+            $table->timestamps();
             $table->softDeletes();
         });
     }

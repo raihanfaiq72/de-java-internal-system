@@ -183,9 +183,8 @@
                                     <div class="d-flex justify-content-between mb-2 align-items-center">
                                         <span class="text-muted">Diskon Tambahan</span>
                                         <div style="width: 100px;">
-                                            <input type="number" id="modal_diskon_tambahan"
-                                                class="form-control form-control-sm text-end" value="0"
-                                                oninput="calculateInvoiceTotal()">
+                                            <input type="text" id="modal_diskon_tambahan"
+                                                class="form-control form-control-sm text-end" value="0">
                                         </div>
                                     </div>
                                     <!-- Tax could go here -->
@@ -288,12 +287,12 @@
             <span class="badge bg-light text-secondary border prod-unit-label">-</span>
         </td>
         <td class="py-3">
-            <input type="number" class="form-control form-control-sm text-end prod-price" value="0"
-                oninput="calculateInvoiceTotal()">
+            <input type="text" class="form-control form-control-sm text-end prod-price rupiah-input"
+                value="0">
         </td>
         <td class="py-3">
-            <input type="number" class="form-control form-control-sm text-end prod-disc" value="0"
-                oninput="calculateInvoiceTotal()">
+            <input type="text" class="form-control form-control-sm text-end prod-disc rupiah-input"
+                value="0">
         </td>
         <td class="py-3 text-end pe-4 fw-bold text-dark prod-subtotal">Rp 0</td>
         <td class="py-3 text-center">
@@ -405,6 +404,42 @@
         fpDue = null;
 
     let masterProduk = [];
+
+    function formatRupiah(angka) {
+        if (!angka) return '';
+
+        let number_string = String(angka).replace(/[^,\d]/g, '').toString();
+        let split = number_string.split(',');
+        let sisa = split[0].length % 3;
+        let rupiah = split[0].substr(0, sisa);
+        let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+        if (ribuan) {
+            let separator = sisa ? '.' : '';
+            rupiah += separator + ribuan.join('.');
+        }
+
+        return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+    }
+
+
+    function cleanNumber(angka) {
+        if (!angka) return 0;
+
+        return parseFloat(String(angka).replace(/\./g, '').replace(',', '.')) || 0;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const discInput = document.getElementById('modal_diskon_tambahan');
+        if (discInput) {
+            discInput.addEventListener('keyup', function(e) {
+                // 1. Format tampilan (tambah titik)
+                this.value = formatRupiah(this.value);
+                // 2. Hitung ulang total invoice
+                calculateInvoiceTotal();
+            });
+        }
+    });
 
     async function fetchMasterProduk() {
         try {
@@ -622,7 +657,8 @@
                     document.getElementById('modal_mitra_id').value = inv.mitra_id;
                     document.getElementById('modal_keterangan').value = inv.keterangan || '';
                     document.getElementById('modal_syarat').value = inv.syarat_ketentuan || '';
-                    document.getElementById('modal_diskon_tambahan').value = inv.diskon_tambahan_nilai || 0;
+                    document.getElementById('modal_diskon_tambahan').value = formatRupiah(Math.round(parseFloat(inv
+                        .diskon_tambahan_nilai || 0)));
 
 
                     if (inv.mitra_id && tomSelectMitraModal) {
@@ -696,6 +732,12 @@
     // --- Item Logic ---
     function addNewProductRow(data = null) {
         const tbody = document.getElementById('itemBodyList');
+
+        const emptyRow = tbody.querySelector('td[colspan="7"]');
+        if (emptyRow) {
+            tbody.innerHTML = '';
+        }
+
         const template = document.getElementById('productRowTemplate');
         const clone = template.content.cloneNode(true);
         const tr = clone.querySelector('tr');
@@ -751,12 +793,19 @@
         const unitLabel = tr.querySelector('.prod-unit-label');
         const descInput = tr.querySelector('.prod-desc');
 
+        [priceInput, discInput].forEach(el => {
+            el.addEventListener('keyup', function(e) {
+                this.value = formatRupiah(this.value);
+                calculateInvoiceTotal();
+            });
+        });
+
         const ts = new TomSelect(selectEl, {
             options: masterProduk.map(p => ({
-                id: p.id,
+                id: String(p.id),
                 nama: p.nama_produk,
                 sku: p.sku_kode,
-                harga: p.harga_jual,
+                harga: parseFloat(p.harga_jual),
                 unit: p.unit?.nama_unit || 'Pcs'
             })),
             valueField: 'id',
@@ -772,21 +821,67 @@
                 const selected = this.options[val];
                 if (selected) {
                     idInput.value = selected.id;
-                    priceInput.value = selected.harga;
+                    priceInput.value = formatRupiah(selected.harga);
                     unitLabel.innerText = selected.unit;
                     calculateInvoiceTotal();
                 }
             }
         });
 
+
         if (data) {
-            ts.setValue(data.product_id || data.id, true); // true agar tidak trigger onChange ganda
-            idInput.value = data.product_id || data.id;
-            qtyInput.value = data.qty || 1;
-            priceInput.value = data.harga_satuan || data.harga_jual || 0;
-            discInput.value = data.diskon_item || data.diskon_nilai || 0;
-            descInput.value = data.deskripsi_item || data.deskripsi_produk || '';
-            unitLabel.innerText = data.product?.unit?.nama_unit || data.unit || 'Pcs';
+            setTimeout(() => {
+                let rawId = data.produk_id || data.product_id;
+
+                if (!rawId) {
+                    if (data.nama_produk || data.sku_kode) {
+                        rawId = data.id;
+                    } else {
+                        rawId = data.id;
+                    }
+                }
+
+                const prodId = String(rawId);
+
+                if (ts.options[prodId]) {
+                    ts.setValue(prodId, true);
+                } else {
+                    ts.addOption({
+                        id: prodId,
+                        nama: data.nama_produk_manual || data.nama_produk || 'Produk',
+                        harga: 0
+                    });
+                    ts.setValue(prodId, true);
+                }
+
+                idInput.value = prodId;
+
+                qtyInput.value = parseFloat(data.qty) || 1;
+
+                const rawPrice = parseFloat(data.harga_satuan ?? data.harga_jual ?? 0);
+                const rawDisc = parseFloat(data.diskon_item ?? data.diskon_nilai ?? 0);
+
+                priceInput.value = formatRupiah(rawPrice);
+                discInput.value = formatRupiah(rawDisc);
+                descInput.value = data.deskripsi_item || data.deskripsi_produk || '';
+
+                let unitName = 'Pcs';
+                const masterItem = masterProduk.find(p => String(p.id) === prodId);
+
+                if (data.unit) {
+                    unitName = (typeof data.unit === 'object') ? data.unit.nama_unit : data.unit;
+                } else if (data.product && data.product.unit) {
+                    unitName = data.product.unit.nama_unit;
+                } else if (masterItem && masterItem.unit) {
+                    unitName = masterItem.unit.nama_unit;
+                }
+                unitLabel.innerText = unitName;
+
+                calculateInvoiceTotal();
+
+            }, 50);
+        } else {
+            calculateInvoiceTotal();
         }
 
         tr.querySelector('.btn-remove-row').onclick = () => {
@@ -817,8 +912,8 @@
             if (!qtyEl || !priceEl || !discEl) return;
 
             const qty = parseFloat(qtyEl.value) || 0;
-            const price = parseFloat(priceEl.value) || 0;
-            const disc = parseFloat(discEl.value) || 0;
+            const price = cleanNumber(priceEl.value);
+            const disc = cleanNumber(discEl.value);
 
             let lineTotal = (qty * price) - disc;
             if (lineTotal < 0) lineTotal = 0;
@@ -829,7 +924,7 @@
             subtotal += lineTotal;
         });
 
-        const extraDisc = parseFloat(document.getElementById('modal_diskon_tambahan').value) || 0;
+        const extraDisc = cleanNumber(document.getElementById('modal_diskon_tambahan').value);
         const grandTotal = Math.max(0, subtotal - extraDisc);
 
         document.getElementById('summary_subtotal').innerText = window.financeApp.formatIDR(subtotal);
@@ -847,27 +942,52 @@
 
         // Build Payload
         const items = [];
-        document.querySelectorAll('#itemBodyList tr').forEach(row => {
-            const qty = parseFloat(row.querySelector('.prod-qty').value) || 0;
-            const price = parseFloat(row.querySelector('.prod-price').value) || 0;
-            const disc = parseFloat(row.querySelector('.prod-disc').value) || 0;
-            const subtotal = Math.max(0, (qty * price) - disc);
+        const rows = document.querySelectorAll('#itemBodyList tr');
 
-            const productId = row.querySelector('.prod-id').value;
+        for (const row of rows) {
+            if (!row.querySelector('.prod-qty')) continue;
+
+            const qtyInput = row.querySelector('.prod-qty');
+            const priceInput = row.querySelector('.prod-price');
+            const discInput = row.querySelector('.prod-disc');
+            const idInput = row.querySelector('.prod-id');
+            const descInput = row.querySelector('.prod-desc');
+
+            const productId = idInput.value;
+            const qty = parseFloat(qtyInput.value) || 0;
+
+            // --- CLEAN DATA SEBELUM SAVE ---
+            const price = cleanNumber(priceInput.value);
+            const disc = cleanNumber(discInput.value);
+
+            let namaProduk = '';
 
             const productData = masterProduk.find(p => String(p.id) === String(productId));
-            const namaProduk = productData ? productData.nama_produk : '';
 
-            items.push({
-                produk_id: row.querySelector('.prod-id').value || null,
-                nama_produk_manual: namaProduk,
-                deskripsi_produk: row.querySelector('.prod-desc').value,
-                qty: qty,
-                harga_satuan: price,
-                diskon_nilai: disc,
-                total_harga_item: subtotal
-            });
-        });
+            if (productData) {
+                namaProduk = productData.nama_produk;
+            } else {
+                const tsElement = row.querySelector('.prod-select-item');
+                if (tsElement && tsElement.tomselect) {
+                    const ts = tsElement.tomselect;
+                    const val = ts.getValue();
+                    if (val && ts.options[val]) {
+                        namaProduk = ts.options[val].nama;
+                    }
+                }
+            }
+            if (namaProduk) {
+                items.push({
+                    produk_id: productId || null,
+                    nama_produk_manual: namaProduk,
+                    deskripsi_produk: row.querySelector('.prod-desc').value,
+                    qty: qty,
+                    harga_satuan: price,
+                    diskon_nilai: disc,
+                    total_harga_item: Math.max(0, (qty * price) - disc)
+                });
+            }
+        }
 
         const payload = {
             invoice: {
@@ -879,7 +999,7 @@
                 ref_no: document.getElementById('modal_ref_no').value,
                 keterangan: document.getElementById('modal_keterangan').value,
                 syarat_ketentuan: document.getElementById('modal_syarat').value,
-                diskon_tambahan_nilai: parseFloat(document.getElementById('modal_diskon_tambahan').value) || 0,
+                diskon_tambahan_nilai: cleanNumber(document.getElementById('modal_diskon_tambahan').value),
                 total_akhir: parseFloat(document.getElementById('summary_grand_total').innerText.replace(
                     /[^0-9,-]+/g, '').replace(',', '.')) || 0,
                 status_dok: 'Approved',
@@ -922,8 +1042,9 @@
             if (result.success) {
                 alert('Invoice berhasil disimpan!');
                 bootstrap.Modal.getInstance(document.getElementById('invoiceModal')).hide();
-                // Redirect to detail page
-                window.location.href = `{{ url('sales') }}/${result.data.invoice.id}`;
+                let invoiceId = result.data?.invoice?.id || result.data?.id;
+                // // Redirect to detail page
+                window.location.href = `{{ url('sales') }}/${invoiceId}`;
             } else {
                 if (result.errors) {
                     let errorMsg = "Terjadi kesalahan:\n";
@@ -988,7 +1109,7 @@
             clone.querySelector('.col-stock-sku').textContent = item.sku_kode || item.kode_produk || '-';
             clone.querySelector('.col-stock-kategori').textContent = item.category?.nama_kategori || '-';
             clone.querySelector('.col-stock-qty').textContent =
-                `${item.qty || 0} ${item.unit?.nama_unit || ''}`;
+                `${Number(item.qty || 0)} ${item.unit?.nama_unit || ''}`;
             clone.querySelector('.col-stock-harga').textContent = window.financeApp.formatIDR(item.harga_jual);
 
             const trackBadge = clone.querySelector('.col-stock-track');

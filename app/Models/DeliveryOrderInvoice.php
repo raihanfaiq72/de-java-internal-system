@@ -17,6 +17,8 @@ class DeliveryOrderInvoice extends Model
         'arrived_at',
         'delivery_notes',
         'proof_photo',
+        'chart_of_accounts_id',
+        'total_cost',
     ];
 
     protected $casts = [
