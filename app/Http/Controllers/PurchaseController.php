@@ -59,6 +59,6 @@ class PurchaseController extends Controller
             abort(404);
         }
 
-        return view($this->views . 'Nota.ReceiptNota', compact('payment'));
+        return view($this->views . 'Nota.ReceiptNota', compact('payment', 'id'));
     }
 }
