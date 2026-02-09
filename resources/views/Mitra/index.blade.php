@@ -101,9 +101,46 @@
                             </div>
 
                             <div class="tab-pane" id="mitra-deleted">
-                                <div class="text-center py-5 text-muted opacity-50">
-                                    <i class="fa fa-trash-can fa-3x mb-3"></i>
-                                    <p class="mb-0">Coming soon for Deleted Items.</p>
+                                <!-- Filter Section (Deleted) -->
+                                <div class="row g-2 mb-4 p-3 rounded-3 align-items-end bg-light border">
+                                    <div class="col-lg-4">
+                                        <label class="f-label">Pencarian</label>
+                                        <div class="input-group input-group-finance">
+                                            <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"></i></span>
+                                            <input type="text" id="filter-search-deleted" class="form-control border-start-0 ps-0 shadow-none" placeholder="Nama, No. Mitra, atau Email...">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6 text-end">
+                                        <button onclick="loadMitraData()" class="btn btn-dark fw-bold py-2 px-4 shadow-sm btn-sm">FILTER</button>
+                                        <button onclick="resetFilter()" class="btn btn-light border fw-bold text-dark py-2 btn-sm">RESET</button>
+                                    </div>
+                                </div>
+
+                                <!-- Table Structure (Deleted) -->
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0" id="mitraTableDeleted">
+                                        <thead class="bg-light text-uppercase text-secondary fw-bold" style="font-size: 11px; letter-spacing: 0.5px;">
+                                            <tr>
+                                                <th width="40" class="ps-3 text-center">#</th>
+                                                <th width="120">No. Mitra</th>
+                                                <th width="150">No. KTP/NPWP</th>
+                                                <th width="250">Nama Perusahaan</th>
+                                                <th width="100" class="text-center">Tipe</th>
+                                                <th width="200">Kontak Utama</th>
+                                                <th width="200">Email & Telepon</th>
+                                                <th width="100" class="text-end pe-3">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="mitraTableBodyDeleted" class="border-top-0"></tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Pagination (Deleted) -->
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top">
+                                    <span id="pagination-info-deleted" class="text-muted small fw-medium"></span>
+                                    <nav>
+                                        <ul class="pagination pagination-sm mb-0 shadow-sm" id="pagination-container-deleted"></ul>
+                                    </nav>
                                 </div>
                             </div>
                         </div>
@@ -231,6 +268,7 @@
         }
 
         let tsFilterType;
+        let activeTab = 'active'; // 'active' or 'deleted'
 
         function initFilters() {
             if (typeof TomSelect !== 'undefined') {
@@ -243,47 +281,79 @@
             }
         }
 
-        async function loadMitraData(url = '/api/mitra-api') {
-            const tbody = document.getElementById('mitraTableBody');
+        async function loadMitraData(url = '/api/mitra-api', type = null) {
+            // Determine type based on active tab if not provided
+            if (!type) type = activeTab;
+
+            // Fix for null URL
+            if (!url || url === 'null') url = '/api/mitra-api';
+            
+            const isDeleted = type === 'deleted';
+            const tbodyId = isDeleted ? 'mitraTableBodyDeleted' : 'mitraTableBody';
+            
+            const tbody = document.getElementById(tbodyId);
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" class="text-center p-5">
+                    <td colspan="8" class="text-center p-5">
                         <div class="spinner-border spinner-border-sm text-primary"></div>
                         <p class="mt-2 text-muted small mb-0">Memuat data mitra...</p>
                     </td>
                 </tr>`;
 
             try {
-                const searchVal = document.getElementById('filter-search').value;
-                const typeVal = document.getElementById('filter-type').value;
-
+                // Determine which filter inputs to use
+                const searchId = isDeleted ? 'filter-search-deleted' : 'filter-search';
+                const searchVal = document.getElementById(searchId).value;
+                
                 const fetchUrl = new URL(url, window.location.origin);
 
                 if (searchVal) fetchUrl.searchParams.append('search', searchVal);
-                if (typeVal) fetchUrl.searchParams.append('tipe_mitra', typeVal);
+                
+                // Only active tab has type filter
+                if (!isDeleted) {
+                    const typeVal = document.getElementById('filter-type').value;
+                    if (typeVal) fetchUrl.searchParams.append('tipe_mitra', typeVal);
+                } else {
+                    fetchUrl.searchParams.append('trashed', '1');
+                }
 
-                const response = await fetch(fetchUrl);
+                const response = await fetch(fetchUrl, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                // Handle HTTP errors (e.g., 401, 500)
+                if (!response.ok) {
+                    const errRes = await response.json().catch(() => ({}));
+                    throw new Error(errRes.message || `Server Error (${response.status})`);
+                }
+
                 const result = await response.json();
 
                 if (result.success) {
                     const items = result.data.data ? result.data.data : result.data;
-                    renderMitraList(items);
-                    renderPagination(result.data);
+                    renderMitraList(items, isDeleted);
+                    renderPagination(result.data, isDeleted);
+                } else {
+                    throw new Error(result.message || 'Unknown error');
                 }
             } catch (error) {
                 console.error("Gagal memuat data:", error);
                 tbody.innerHTML =
-                    '<tr><td colspan="7" class="text-center text-danger p-4">Terjadi kesalahan saat memuat data.</td></tr>';
+                    `<tr><td colspan="8" class="text-center text-danger p-4">Gagal memuat data: ${error.message}</td></tr>`;
             }
         }
 
-        function renderMitraList(data) {
-            const tbody = document.getElementById('mitraTableBody');
+        function renderMitraList(data, isDeleted) {
+            const tbodyId = isDeleted ? 'mitraTableBodyDeleted' : 'mitraTableBody';
+            const tbody = document.getElementById(tbodyId);
             tbody.innerHTML = '';
 
             if (!data || data.length === 0) {
                 tbody.innerHTML =
-                    '<tr><td colspan="7" class="text-center p-5 text-muted fst-italic">Data mitra tidak ditemukan.</td></tr>';
+                    '<tr><td colspan="8" class="text-center p-5 text-muted fst-italic">Data mitra tidak ditemukan.</td></tr>';
                 return;
             }
 
@@ -291,6 +361,34 @@
                 let typeClass = 'f-both';
                 if (item.tipe_mitra === 'Supplier') typeClass = 'f-supplier';
                 if (item.tipe_mitra === 'Client') typeClass = 'f-client';
+
+                let actionButtons = '';
+                
+                if (isDeleted) {
+                    // Actions for deleted items: Restore, Force Delete
+                    actionButtons = `
+                        <div class="dropdown">
+                             <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-muted" data-bs-toggle="dropdown"><i class="fa fa-ellipsis-h"></i></button>
+                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-finance">
+                                <li><a class="dropdown-item text-success" href="javascript:void(0)" onclick="restoreMitra(${item.id})"><i class="fa fa-undo me-2"></i> Pulihkan</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="forceDeleteMitra(${item.id})"><i class="fa fa-trash me-2"></i> Hapus Permanen</a></li>
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    // Actions for active items: Edit, Soft Delete
+                    actionButtons = `
+                        <div class="dropdown">
+                             <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-muted" data-bs-toggle="dropdown"><i class="fa fa-ellipsis-h"></i></button>
+                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-finance">
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="openMitraModal(${item.id})"><i class="fa fa-pencil text-primary me-2"></i> Edit Data</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="deleteMitra(${item.id})"><i class="fa fa-trash me-2"></i> Hapus</a></li>
+                            </ul>
+                        </div>
+                    `;
+                }
 
                 const tr = `
                 <tr class="clickable-row">
@@ -314,14 +412,7 @@
                         <div class="text-dark small mt-1"><i class="fa fa-phone me-1 text-muted"></i> ${item.no_hp || '-'}</div>
                     </td>
                     <td class="text-end pe-3">
-                        <div class="dropdown">
-                             <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-muted" data-bs-toggle="dropdown"><i class="fa fa-ellipsis-h"></i></button>
-                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-finance">
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="openMitraModal(${item.id})"><i class="fa fa-pencil text-primary me-2"></i> Edit Data</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="deleteMitra(${item.id})"><i class="fa fa-trash me-2"></i> Hapus</a></li>
-                            </ul>
-                        </div>
+                        ${actionButtons}
                     </td>
                 </tr>
             `;
@@ -330,7 +421,7 @@
         }
 
         async function deleteMitra(id) {
-            if (!confirm('Hapus mitra ini? Data yang dihapus tidak dapat dikembalikan.')) return;
+            if (!confirm('Hapus mitra ini? Data akan dipindahkan ke tab Mitra Terhapus dan dapat dipulihkan.')) return;
             try {
                 const res = await fetch(`/api/mitra-api/${id}`, {
                     method: 'DELETE',
@@ -341,43 +432,108 @@
                 });
                 const dat = await res.json();
                 if (dat.success) {
-                    alert('Berhasil dihapus');
-                    loadMitraData();
+                    // alert('Berhasil dihapus'); // Optional: show toast instead
+                    loadMitraData(); // Reload active list
                 } else alert(dat.message);
             } catch (e) {
                 alert('Gagal menghapus');
             }
         }
+        
+        async function restoreMitra(id) {
+            if (!confirm('Pulihkan data mitra ini?')) return;
+            try {
+                const res = await fetch(`/api/mitra-api/${id}/restore`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                });
+                const dat = await res.json();
+                if (dat.success) {
+                    loadMitraData(undefined, 'deleted'); // Reload deleted list
+                } else alert(dat.message);
+            } catch (e) {
+                alert('Gagal memulihkan mitra');
+            }
+        }
+        
+        async function forceDeleteMitra(id) {
+            if (!confirm('Hapus permanen mitra ini? Data TIDAK DAPAT dikembalikan.')) return;
+            try {
+                const res = await fetch(`/api/mitra-api/${id}/force-delete`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                });
+                const dat = await res.json();
+                if (dat.success) {
+                    loadMitraData(undefined, 'deleted'); // Reload deleted list
+                } else alert(dat.message);
+            } catch (e) {
+                alert('Gagal menghapus permanen');
+            }
+        }
 
-        function renderPagination(meta) {
-            const c = document.getElementById('pagination-container');
+        function renderPagination(meta, isDeleted) {
+            const containerId = isDeleted ? 'pagination-container-deleted' : 'pagination-container';
+            const infoId = isDeleted ? 'pagination-info-deleted' : 'pagination-info';
+            
+            const c = document.getElementById(containerId);
             c.innerHTML = '';
+            
             if (!meta || !meta.links) return;
 
-            document.getElementById('pagination-info').innerText = `${meta.from||0}-${meta.to||0} dari ${meta.total} data`;
+            document.getElementById(infoId).innerText = `${meta.from||0}-${meta.to||0} dari ${meta.total} data`;
+            
+            // Current type context for pagination clicks
+            const type = isDeleted ? 'deleted' : 'active';
+
             meta.links.forEach(l => {
                 const cls = l.active ? 'bg-primary text-white' : 'bg-white text-dark';
+                const onclick = l.url ? `onclick="loadMitraData('${l.url}', '${type}')"` : '';
+                const href = l.url ? '#' : 'javascript:void(0)';
+                
                 c.insertAdjacentHTML('beforeend',
-                    `<li class="page-item ${!l.url?'disabled':''}"><a class="page-link border-0 mx-1 rounded shadow-sm fw-bold ${cls}" href="#" onclick="loadMitraData('${l.url}')">${l.label}</a></li>`
+                    `<li class="page-item ${!l.url?'disabled':''}"><a class="page-link border-0 mx-1 rounded shadow-sm fw-bold ${cls}" href="${href}" ${onclick}>${l.label}</a></li>`
                 );
             });
         }
 
         function resetFilter() {
-            document.getElementById('filter-search').value = '';
-
-            if (tsFilterType) {
-                tsFilterType.setValue('');
+            if (activeTab === 'deleted') {
+                document.getElementById('filter-search-deleted').value = '';
             } else {
-                document.getElementById('filter-type').value = '';
+                document.getElementById('filter-search').value = '';
+                if (tsFilterType) {
+                    tsFilterType.setValue('');
+                } else {
+                    document.getElementById('filter-type').value = '';
+                }
             }
-
             loadMitraData();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             initFilters();
             loadMitraData();
+            
+            // Tab Change Listener
+            const tabEls = document.querySelectorAll('a[data-bs-toggle="tab"]');
+            tabEls.forEach(el => {
+                el.addEventListener('shown.bs.tab', function (event) {
+                    if (event.target.getAttribute('href') === '#mitra-deleted') {
+                        activeTab = 'deleted';
+                        loadMitraData(undefined, 'deleted');
+                    } else {
+                        activeTab = 'active';
+                        loadMitraData(undefined, 'active');
+                    }
+                });
+            });
         });
     </script>
 @endpush

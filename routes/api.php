@@ -41,6 +41,8 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::get('/{id}', [PartnerController::class, 'show'])->name('show');
             Route::put('/{id}', [PartnerController::class, 'update'])->name('update');
             Route::delete('/{id}', [PartnerController::class, 'destroy'])->name('destroy');
+            Route::post('/{id}/restore', [PartnerController::class, 'restore'])->name('restore');
+            Route::delete('/{id}/force-delete', [PartnerController::class, 'forceDestroy'])->name('force-delete');
             Route::get('/search/{value}', [PartnerController::class, 'search'])->name('search');
         });
 
