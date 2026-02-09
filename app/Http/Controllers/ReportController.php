@@ -247,6 +247,7 @@ class ReportController extends Controller
                 'products.id',
                 'products.nama_produk',
                 'products.sku_kode',
+                'products.satuan as nama_unit',
                 'product_categories.nama_kategori',
                 DB::raw("SUM(CASE 
                     WHEN stock_mutations.created_at < '$startDate' AND stock_mutations.type = 'IN' THEN stock_mutations.qty 
@@ -269,7 +270,7 @@ class ReportController extends Controller
                     WHEN stock_mutations.created_at BETWEEN '$startDate' AND '$endDate' AND stock_mutations.type = 'OUT' THEN stock_mutations.qty * stock_mutations.cost_price
                     ELSE 0 END) as value_out")
             )
-            ->groupBy('products.id', 'products.nama_produk', 'products.sku_kode', 'product_categories.nama_kategori');
+            ->groupBy('products.id', 'products.nama_produk', 'products.sku_kode', 'products.satuan', 'product_categories.nama_kategori');
 
         if ($request->category_id) {
             $query->where('products.product_category_id', $request->category_id);
