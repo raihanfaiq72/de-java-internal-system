@@ -1,12 +1,9 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr" data-startbar="dark" data-bs-theme="light">
 
-
 <head>
-
-
     <meta charset="utf-8" />
-    <title>Dashboard | Approx - Admin & Dashboard Template</title>
+    <title>De Java</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
     <meta content="" name="author" />
@@ -14,13 +11,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- App favicon -->
-    <link rel="shortcut icon" href="{{url('')}}/assets/images/favicon.ico">
+    <link rel="shortcut icon" href="{{ url('') }}/assets/images/favicon.ico">
 
     <!-- App css -->
-    <link href="{{url('')}}/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-    <link href="{{url('')}}/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
-    <link href="{{url('')}}/assets/css/app.min.css" rel="stylesheet" type="text/css" />
-    <link href="{{url('')}}/assets/css/custom.css" rel="stylesheet" type="text/css" />
+    <link href="{{ url('') }}/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="{{ url('') }}/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
+    <link href="{{ url('') }}/assets/css/app.min.css" rel="stylesheet" type="text/css" />
+    <link href="{{ url('') }}/assets/css/custom.css" rel="stylesheet" type="text/css" />
 
     <style>
         :root {
@@ -61,7 +58,7 @@
             padding: 20px 0;
             flex-shrink: 0;
         }
-        
+
         .startbar .brand .logo-lg h4 {
             color: #1d1d1f !important;
             font-weight: 700;
@@ -88,7 +85,8 @@
         }
 
         .startbar-menu .menu-label {
-            color: #6e6e73; /* Darker for readability */
+            color: #6e6e73;
+            /* Darker for readability */
             font-weight: 600;
             font-size: 11px;
             text-transform: uppercase;
@@ -97,12 +95,14 @@
         }
 
         .startbar-menu .nav-item .nav-link {
-            color: #1d1d1f !important; /* Apple Black */
+            color: #1d1d1f !important;
+            /* Apple Black */
             font-weight: 500;
             font-size: 14px;
             padding: 10px 12px;
             border-radius: 10px;
-            transition: background-color 0.2s, color 0.2s; /* Performance optimization */
+            transition: background-color 0.2s, color 0.2s;
+            /* Performance optimization */
             margin-bottom: 4px;
             display: flex;
             align-items: center;
@@ -115,24 +115,29 @@
             transition: color 0.2s;
         }
 
-        .startbar-menu .nav-item .nav-link:hover {
+        .startbar-menu .nav-item .nav-link:not(.active):not([aria-expanded="true"]):hover {
             background-color: rgba(0, 0, 0, 0.05);
             color: #000 !important;
         }
 
-        .startbar-menu .nav-item .nav-link:hover i {
-            color: #000;
+        .startbar-menu .nav-item .nav-link:not(.active):not([aria-expanded="true"]):hover i {
+            color: #86868b;
         }
 
-        /* Active State */
+        /* Active State - Strictly only for .active class */
         .startbar-menu .nav-item .nav-link.active {
             background-color: var(--apple-blue) !important;
             color: #fff !important;
             box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
         }
 
-        .startbar-menu .nav-item .nav-link.active i {
+        .startbar-menu .nav-item .nav-link.active i,
+        .startbar-menu .nav-item .nav-link.active span {
             color: #fff !important;
+        }
+
+        .startbar-menu .nav-item .nav-link[data-bs-toggle="collapse"].active::after {
+            filter: brightness(0) invert(1) !important;
         }
 
         /* Topbar Redesign */
@@ -142,18 +147,22 @@
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--glass-border);
             box-shadow: none !important;
-            position: fixed; /* Fixed as requested */
+            position: fixed;
+            /* Fixed as requested */
             top: 0;
             right: 0;
-            width: calc(100% - var(--sidebar-width)); /* Adjust for fixed sidebar */
+            width: calc(100% - var(--sidebar-width));
+            /* Adjust for fixed sidebar */
             z-index: 999;
             transition: width 0.3s ease;
         }
 
         /* Main Content Adjustment */
         .page-content {
-            margin-left: var(--sidebar-width) !important; /* Override default margin */
-            padding-top: 80px; /* Space for fixed topbar */
+            margin-left: var(--sidebar-width) !important;
+            /* Override default margin */
+            padding-top: 80px;
+            /* Space for fixed topbar */
             transition: margin-left 0.3s ease;
         }
 
@@ -200,15 +209,15 @@
             background-color: #0062cc;
             border-color: #0062cc;
         }
-        
+
         /* Table Styling */
         .table thead th {
             font-weight: 600;
             color: #86868b;
             font-size: 13px;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
         }
-        
+
         /* Collapse Menu Fix & Styling */
         .collapse .nav-link {
             padding-left: 44px !important;
@@ -243,14 +252,14 @@
         }
 
         .collapse .nav-link.active {
-            background-color: rgba(0, 122, 255, 0.08) !important;
-            color: var(--apple-blue) !important;
+            background-color: var(--apple-blue) !important;
+            color: #fff !important;
             box-shadow: none !important;
             font-weight: 600;
         }
 
         .collapse .nav-link.active::before {
-            background-color: var(--apple-blue);
+            background-color: #fff;
             transform: translateY(-50%) scale(1.5);
         }
 
@@ -260,30 +269,44 @@
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
             }
+
             .startbar.show {
                 transform: translateX(0);
             }
-            .page-content, .topbar {
+
+            .page-content,
+            .topbar {
                 margin-left: 0 !important;
             }
         }
 
         /* Dropdown Optimization */
         .dropdown-menu {
-            background: rgba(255, 255, 255, 0.95) !important; /* Less transparency for performance */
-            backdrop-filter: blur(10px); /* Reduced blur radius */
+            background: rgba(255, 255, 255, 0.95) !important;
+            /* Less transparency for performance */
+            backdrop-filter: blur(10px);
+            /* Reduced blur radius */
             -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(0,0,0,0.08) !important;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.12) !important;
+            border: 1px solid rgba(0, 0, 0, 0.08) !important;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12) !important;
             border-radius: 12px !important;
             padding: 6px !important;
-            animation: fadeInDropdown 0.15s ease-out; /* Faster animation */
-            will-change: opacity, transform; /* Hardware acceleration hint */
+            animation: fadeInDropdown 0.15s ease-out;
+            /* Faster animation */
+            will-change: opacity, transform;
+            /* Hardware acceleration hint */
         }
 
         @keyframes fadeInDropdown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .dropdown-item {
@@ -308,7 +331,7 @@
         /* Header Profile adjustments */
         .dropdown-menu .bg-secondary-subtle {
             background: transparent !important;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
             margin-bottom: 5px;
         }
 
@@ -317,16 +340,16 @@
             width: 8px;
             height: 8px;
         }
-        
+
         ::-webkit-scrollbar-track {
             background: transparent;
         }
-        
+
         ::-webkit-scrollbar-thumb {
             background: rgba(0, 0, 0, 0.2);
             border-radius: 4px;
         }
-        
+
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(0, 0, 0, 0.3);
         }
@@ -355,69 +378,69 @@
 <body>
 
     <!-- Top Bar Start -->
-    @unless(Request::is('select-your-outlet'))
-    <div class="topbar d-print-none">
-        <div class="container-fluid">
-            <nav class="topbar-custom d-flex justify-content-between" id="topbar-custom">
+    @unless (Request::is('select-your-outlet'))
+        <div class="topbar d-print-none">
+            <div class="container-fluid">
+                <nav class="topbar-custom d-flex justify-content-between" id="topbar-custom">
 
 
-                <ul class="topbar-item list-unstyled d-inline-flex align-items-center mb-0">
-                    <li>
-                        <button class="nav-link mobile-menu-btn nav-icon" id="togglemenu">
-                            <i class="iconoir-menu"></i>
-                        </button>
-                    </li>
-                    <li class="hide-phone app-search">
-                        <form role="search" action="#" method="get">
-                            <input type="search" name="search" class="form-control top-search mb-0"
-                                placeholder="Search here...">
-                            <button type="submit"><i class="iconoir-search"></i></button>
-                        </form>
-                    </li>
-                </ul>
-                <ul class="topbar-item list-unstyled d-inline-flex align-items-center mb-0">
+                    <ul class="topbar-item list-unstyled d-inline-flex align-items-center mb-0">
+                        <li>
+                            <button class="nav-link mobile-menu-btn nav-icon" id="togglemenu">
+                                <i class="iconoir-menu"></i>
+                            </button>
+                        </li>
+                        <li class="hide-phone app-search">
+                            <form role="search" action="#" method="get">
+                                <input type="search" name="search" class="form-control top-search mb-0"
+                                    placeholder="Search here...">
+                                <button type="submit"><i class="iconoir-search"></i></button>
+                            </form>
+                        </li>
+                    </ul>
+                    <ul class="topbar-item list-unstyled d-inline-flex align-items-center mb-0">
 
-                    @include('Layout._darkmode')
 
-                    @include('Layout._notification')
 
-                    @include('Layout._profile')
-                </ul>
-            </nav>
+                        @include('Layout._notification')
+
+                        @include('Layout._profile')
+                    </ul>
+                </nav>
+            </div>
         </div>
-    </div>
     @endunless
-    @unless(Request::is('select-your-outlet'))
-    <div class="startbar d-print-none">
-        <div class="brand text-center py-3">
-            <a href="{{ route('dashboard') }}" class="logo text-decoration-none d-block">
+    @unless (Request::is('select-your-outlet'))
+        <div class="startbar d-print-none">
+            <div class="brand text-center py-3">
+                <a href="{{ route('dashboard') }}" class="logo text-decoration-none d-block">
 
-                <span class="logo-sm fw-bold text-white">
-                    DJ
-                </span>
+                    <span class="logo-sm fw-bold text-white">
+                        DJ
+                    </span>
 
-                <span class="logo-lg d-block">
-                    <h4 class="mb-0 fw-bold text-white">Dejava</h4>
-                    <small class="text-muted">
-                        Outlet {{ session('outlet_name', 'Pusat') }}
-                    </small>
-                </span>
+                    <span class="logo-lg d-block">
+                        <h4 class="mb-0 fw-bold text-white">Dejava</h4>
+                        <small class="text-muted">
+                            Outlet {{ session('outlet_name', 'Pusat') }}
+                        </small>
+                    </span>
 
-            </a>
+                </a>
+            </div>
+            @include('Layout._sidebar')
         </div>
-        @include('Layout._sidebar')
-    </div>
-    <div class="startbar-overlay d-print-none"></div>
+        <div class="startbar-overlay d-print-none"></div>
     @endunless
     @yield('main')
 
     @include('Layout._alert_helper')
 
-    <script src="{{url('')}}/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="{{url('')}}/assets/libs/simplebar/simplebar.min.js"></script>
+    <script src="{{ url('') }}/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url('') }}/assets/libs/simplebar/simplebar.min.js"></script>
     @stack('js')
     <!-- App js -->
-    <script src="{{url('')}}/assets/js/app.js"></script>
+    <script src="{{ url('') }}/assets/js/app.js"></script>
 
     <!-- Force Sidebar Open Script -->
     <script>
@@ -446,7 +469,9 @@
                 });
             });
 
-            observer.observe(document.body, { attributes: true });
+            observer.observe(document.body, {
+                attributes: true
+            });
         });
     </script>
 </body>

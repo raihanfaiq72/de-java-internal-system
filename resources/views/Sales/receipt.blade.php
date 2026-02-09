@@ -94,7 +94,7 @@
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
                 <div class="modal-header">
-                    <h5 class="fw-bold mb-0">Terima Pembayaran untuk Invoice</h5>
+                    <h5 class="fw-bold mb-0 text-white">Terima Pembayaran untuk Invoice</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
