@@ -5,14 +5,16 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
-use App\Models\ActivityLog;
 use App\Services\JournalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Traits\LogsActivity;
 
 class ExpenseController extends Controller
 {
+    use LogsActivity;
+
     protected $journalService;
 
     public function __construct(JournalService $journalService)
@@ -231,20 +233,6 @@ class ExpenseController extends Controller
                     'data' => $monthlyData
                 ]
             ]
-        ]);
-    }
-
-    private function logActivity($tindakan, $tabel, $dataId, $before, $after)
-    {
-        ActivityLog::create([
-            'office_id' => session('active_office_id'),
-            'user_id' => auth()->id() ?? 1,
-            'tindakan' => $tindakan,
-            'tabel_terkait' => $tabel,
-            'data_id' => $dataId,
-            'data_sebelum' => $before,
-            'data_sesudah' => $after,
-            'ip_address' => request()->ip()
         ]);
     }
 }

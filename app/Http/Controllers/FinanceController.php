@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ActivityLog;
 use App\Models\COA;
 use App\Models\Expense;
 use App\Models\FinancialAccount;
@@ -12,9 +11,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Traits\LogsActivity;
 
 class FinanceController extends Controller
 {
+    use LogsActivity;
+
     public function index()
     {
         $office_id = session('active_office_id');
@@ -140,15 +142,7 @@ class FinanceController extends Controller
             $transaction = FinancialTransaction::create($input);
 
             // Log Activity
-            ActivityLog::create([
-                'office_id' => session('active_office_id'),
-                'user_id' => Auth::id(),
-                'tindakan' => 'create',
-                'tabel_terkait' => 'financial_transactions',
-                'data_id' => $transaction->id,
-                'data_sesudah' => $transaction->toArray(),
-                'ip_address' => $request->ip(),
-            ]);
+            $this->logActivity('create', 'financial_transactions', $transaction->id, null, $transaction->toArray());
 
             DB::commit();
 
@@ -216,15 +210,13 @@ class FinanceController extends Controller
             }
             
              // Log Activity
-            ActivityLog::create([
-                'office_id' => session('active_office_id'),
-                'user_id' => Auth::id(),
-                'tindakan' => $request->mode == 'new' ? 'create' : 'update',
-                'tabel_terkait' => 'financial_accounts',
-                'data_id' => $account->id,
-                'data_sesudah' => $account->toArray(),
-                'ip_address' => $request->ip(),
-            ]);
+            $this->logActivity(
+                $request->mode == 'new' ? 'create' : 'update',
+                'financial_accounts',
+                $account->id,
+                null,
+                $account->toArray()
+            );
             
             DB::commit();
             
@@ -294,15 +286,7 @@ class FinanceController extends Controller
             $account->delete();
 
             // Log Activity
-            ActivityLog::create([
-                'office_id' => session('active_office_id'),
-                'user_id' => Auth::id(),
-                'tindakan' => 'delete',
-                'tabel_terkait' => 'financial_accounts',
-                'data_id' => $id,
-                'data_sesudah' => null,
-                'ip_address' => request()->ip(),
-            ]);
+            $this->logActivity('delete', 'financial_accounts', $id);
 
             return response()->json([
                 'success' => true,
