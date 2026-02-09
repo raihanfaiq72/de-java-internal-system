@@ -43,7 +43,9 @@
                                                 <option value="">Cari Pelanggan...</option>
                                             </select>
                                             <div class="text-end mb-3">
-                                                <button type="button" class="btn btn-sm btn-link text-primary text-decoration-none fw-bold p-0" onclick="openMitraModal()">
+                                                <button type="button"
+                                                    class="btn btn-sm btn-link text-primary text-decoration-none fw-bold p-0"
+                                                    onclick="openMitraModal()">
                                                     <i class="fa fa-plus-circle me-1"></i> Tambah Mitra Baru
                                                 </button>
                                             </div>
@@ -118,7 +120,8 @@
                                             onclick="openStockModal()">
                                             <i class="fa fa-search me-1"></i> Cari Stok
                                         </button>
-                                        <button type="button" class="btn btn-primary btn-sm fw-bold px-3 rounded-pill"
+                                        <button type="button"
+                                            class="btn btn-primary btn-sm fw-bold px-3 rounded-pill"
                                             onclick="addNewProductRow()">
                                             <i class="fa fa-plus me-1"></i> Tambah Baris
                                         </button>
@@ -732,12 +735,6 @@
     // --- Item Logic ---
     function addNewProductRow(data = null) {
         const tbody = document.getElementById('itemBodyList');
-
-        const emptyRow = tbody.querySelector('td[colspan="7"]');
-        if (emptyRow) {
-            tbody.innerHTML = '';
-        }
-
         const template = document.getElementById('productRowTemplate');
         const clone = template.content.cloneNode(true);
         const tr = clone.querySelector('tr');
@@ -745,47 +742,6 @@
         const rowId = 'row_' + Date.now() + Math.random().toString(36).substr(2, 5);
         tr.id = rowId;
 
-        // Populate if data exists
-        if (data) {
-            // ... (rest of logic handled by subsequent code in main function if fully implemented, 
-            // but here we just need to ensure the row is added. 
-            // The actual population logic is likely inside the function or caller)
-        }
-        
-        // This is just a partial view of the function, assume the rest is correct.
-        // We will append the event listener at the end of the script block.
-    }
-
-    // Listen for new mitra creation from Mitra Modal
-    document.addEventListener('mitra-saved', (e) => {
-        const newMitra = e.detail;
-        if(newMitra) {
-            // Update masterMitra array if it exists
-            if(typeof masterMitra !== 'undefined') {
-                const exists = masterMitra.find(m => m.id == newMitra.id);
-                if(!exists) {
-                    masterMitra.push(newMitra);
-                } else {
-                    Object.assign(exists, newMitra);
-                }
-            }
-
-            // Update TomSelect
-            if(tomSelectMitraModal) {
-                const opt = {
-                    id: newMitra.id,
-                    nama: newMitra.nama,
-                    info: [newMitra.no_hp, newMitra.alamat].filter(Boolean).join(' • ') || ''
-                };
-                tomSelectMitraModal.addOption(opt);
-                tomSelectMitraModal.addItem(newMitra.id);
-            } else {
-                initTomSelectMitraModal(newMitra.id);
-            }
-        }
-    });
-</script>
-<script>
         const selectEl = tr.querySelector('.prod-select-item');
         const priceInput = tr.querySelector('.prod-price');
         const qtyInput = tr.querySelector('.prod-qty');
@@ -894,6 +850,35 @@
         tbody.appendChild(tr);
         calculateInvoiceTotal();
     }
+
+    // Listen for new mitra creation from Mitra Modal
+    document.addEventListener('mitra-saved', (e) => {
+        const newMitra = e.detail;
+        if (newMitra) {
+            // Update masterMitra array if it exists
+            if (typeof masterMitra !== 'undefined') {
+                const exists = masterMitra.find(m => m.id == newMitra.id);
+                if (!exists) {
+                    masterMitra.push(newMitra);
+                } else {
+                    Object.assign(exists, newMitra);
+                }
+            }
+
+            // Update TomSelect
+            if (tomSelectMitraModal) {
+                const opt = {
+                    id: newMitra.id,
+                    nama: newMitra.nama,
+                    info: [newMitra.no_hp, newMitra.alamat].filter(Boolean).join(' • ') || ''
+                };
+                tomSelectMitraModal.addOption(opt);
+                tomSelectMitraModal.addItem(newMitra.id);
+            } else {
+                initTomSelectMitraModal(newMitra.id);
+            }
+        }
+    });
 
     function removeProductRow(id) {
         const row = document.getElementById(`row_${id}`);
