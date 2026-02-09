@@ -88,12 +88,7 @@ class FinanceController extends Controller
             ->where('status', 'posted')
             ->sum('amount');
 
-        // 7. Delivery Orders (if applicable)
-        $deliveryOrderAmount = DB::table('delivery_order_invoices')
-            ->where('invoice_id', $accountId)
-            ->sum('total_cost');
-
-        return ($income + $transferIn + $otherIncome) - ($expense + $transferOut + $otherExpense + $deliveryOrderAmount);
+        return ($income + $transferIn + $otherIncome) - ($expense + $transferOut + $otherExpense);
     }
 
     private function calculateIncomeLain($accountId, $officeId)
