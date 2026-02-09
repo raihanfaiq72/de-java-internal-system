@@ -10,13 +10,31 @@ use Throwable;
 
 class PartnerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $data = Partner::with(['akunHutang', 'akunPiutang'])
-                ->where('office_id', session('active_office_id'))
-                ->latest()
-                ->paginate(10);
+            $query = Partner::with(['akunHutang', 'akunPiutang'])
+                ->where('office_id', session('active_office_id'));
+
+            if ($request->has('trashed') && $request->trashed == '1') {
+                $query->onlyTrashed();
+            }
+
+            if ($request->filled('search')) {
+                $value = $request->search;
+                $query->where(function ($q) use ($value) {
+                    $q->where('nama', 'LIKE', "%{$value}%")
+                        ->orWhere('nomor_mitra', 'LIKE', "%{$value}%")
+                        ->orWhere('email', 'LIKE', "%{$value}%")
+                        ->orWhere('no_hp', 'LIKE', "%{$value}%");
+                });
+            }
+
+            if ($request->filled('tipe_mitra')) {
+                $query->where('tipe_mitra', $request->tipe_mitra);
+            }
+
+            $data = $query->latest()->paginate(10);
 
             return apiResponse(true, 'Data mitra berhasil diambil', $data);
         } catch (Throwable $e) {
@@ -171,6 +189,44 @@ class PartnerController extends Controller
                 $e->getMessage(),
                 500
             );
+        }
+    }
+
+    public function restore($id)
+    {
+        try {
+            $mitra = Partner::onlyTrashed()
+                ->where('office_id', session('active_office_id'))
+                ->find($id);
+
+            if (!$mitra) {
+                return apiResponse(false, 'Mitra tidak ditemukan atau belum dihapus', null, null, 404);
+            }
+
+            $mitra->restore();
+
+            return apiResponse(true, 'Mitra berhasil dipulihkan');
+        } catch (Throwable $e) {
+            return apiResponse(false, 'Gagal memulihkan mitra', null, $e->getMessage(), 500);
+        }
+    }
+
+    public function forceDestroy($id)
+    {
+        try {
+            $mitra = Partner::onlyTrashed()
+                ->where('office_id', session('active_office_id'))
+                ->find($id);
+
+            if (!$mitra) {
+                return apiResponse(false, 'Mitra tidak ditemukan', null, null, 404);
+            }
+
+            $mitra->forceDelete();
+
+            return apiResponse(true, 'Mitra berhasil dihapus permanen');
+        } catch (Throwable $e) {
+            return apiResponse(false, 'Gagal menghapus mitra permanen', null, $e->getMessage(), 500);
         }
     }
 
