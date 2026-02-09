@@ -15,6 +15,13 @@ use Database\Seeders\TransactionSeeder;
 use Database\Seeders\PaymentSeeder;
 use Database\Seeders\InvoiceItemTaxSeeder;
 use Database\Seeders\UsersSeeder;
+use Database\Seeders\BrandSeeder;
+use Database\Seeders\ProductCategorySeeder;
+use Database\Seeders\TaxSeeder;
+use Database\Seeders\StockLocationSeeder;
+use Database\Seeders\ExpenseCategorySeeder;
+use Database\Seeders\FleetSeeder;
+use Database\Seeders\FinancialAccountSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -25,22 +32,38 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        // User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
-
-        $this->call(UsersSeeder::class);
+        // 1. Auth & Base Structure
+        $this->call(UsersSeeder::class); // Creates Users, Offices, Roles
+        
+        // 2. Finance Master Data
         $this->call(ChartOfAccountSeeder::class);
-        // $this->call(PermissionSeeder::class);
-        // $this->call(SuperAdminSeeder::class);
+        $this->call(TaxSeeder::class);
+        $this->call(FinancialAccountSeeder::class);
+        $this->call(ExpenseCategorySeeder::class);
+        
+        // 3. Inventory Master Data
+        $this->call(StockLocationSeeder::class);
+        $this->call(BrandSeeder::class);
+        $this->call(ProductCategorySeeder::class);
+        
+        // 4. Logistics
+        $this->call(FleetSeeder::class);
+
+        // 5. Partners
+        $this->call(MitraSeeder::class);
+
+        // 6. Products (Depends on Brand, Category, Mitra)
+        $this->call(ProductSeeder::class);
+
+        // 7. Transactions (Optional - Demo Data)
+        // Uncomment if you want transaction data
+        $this->call(TransactionSeeder::class);
+        $this->call(PaymentSeeder::class);
+        
+        // Others (Keep if valid)
+        // $this->call(PermissionSeeder::class); // UsersSeeder handles permissions? Yes
+        // $this->call(SuperAdminSeeder::class); // UsersSeeder handles admin? Yes
         // $this->call(AccountingLogSeeder::class);
-        // $this->call(MitraSeeder::class);
-        // $this->call(ProductSeeder::class);
-        // $this->call(TransactionSeeder::class);
-        // $this->call(PaymentSeeder::class);
         // $this->call(InvoiceItemTaxSeeder::class);
     }
 }

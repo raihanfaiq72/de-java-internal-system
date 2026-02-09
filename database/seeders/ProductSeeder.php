@@ -8,47 +8,64 @@ use Faker\Factory as Faker;
 
 class ProductSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $faker = Faker::create();
+        $faker = Faker::create('id_ID');
         
-        // Ambil atau buat ID yang diperlukan
-        $prodCatId = DB::table('product_categories')->insertGetId(['nama_kategori' => 'General', 'deskripsi' => 'Testing', 'office_id' => 1]);
-        $akunId = DB::table('chart_of_accounts')->first()->id ?? 1;
+        // Ensure dependencies exist
+        $categoryId = DB::table('product_categories')->first()->id ?? 1;
+        $brandId = DB::table('brands')->first()->id ?? 1;
+        $supplierId = DB::table('mitras')->where('tipe_mitra', 'Supplier')->first()->id ?? 1;
+        $coaId = DB::table('chart_of_accounts')->where('kode_akun', '1501')->value('id') ?? 1; // Persediaan
 
-        $totalData = 3000;
-        $batchSize = 500;
+        $categories = DB::table('product_categories')->pluck('id')->toArray();
+        $brands = DB::table('brands')->pluck('id')->toArray();
+        $suppliers = DB::table('mitras')->where('tipe_mitra', 'Supplier')->pluck('id')->toArray();
+
+        if (empty($categories) || empty($brands) || empty($suppliers)) {
+            $this->command->error('Categories, Brands, or Suppliers missing. Run their seeders first.');
+            return;
+        }
+
+        $totalData = 100; // Reduced from 3000 for speed
+        
+        // Get existing SKUs to avoid duplicates
+        $existingSkus = DB::table('products')->pluck('sku_kode')->flip()->toArray();
+
         $data = [];
+        $batchSize = 50;
 
         for ($i = 1; $i <= $totalData; $i++) {
+            $sku = 'PROD-' . str_pad($i, 5, '0', STR_PAD_LEFT);
+            
+            if (isset($existingSkus[$sku])) {
+                continue;
+            }
+
             $data[] = [
-                // MENGGUNAKAN PAD UNTUK MENJAMIN KEUNIKAN: PROD-00001, PROD-00002, dst.
                 'office_id' => 1,
-                'sku_kode' => 'PROD-' . str_pad($i, 5, '0', STR_PAD_LEFT), 
+                'sku_kode' => $sku, 
                 'nama_produk' => 'Produk Test ' . $i,
-                'product_category_id' => $prodCatId,
+                'product_category_id' => $faker->randomElement($categories),
+                'supplier_id' => $faker->randomElement($suppliers),
+                'brand_id' => $faker->randomElement($brands),
                 'harga_beli' => $faker->numberBetween(5000, 50000),
                 'harga_jual' => $faker->numberBetween(60000, 150000),
-                'qty' => $faker->numberBetween(100, 500),
-                'akun_penjualan_id' => $akunId,
-                'akun_pembelian_id' => $akunId,
-                'akun_diskon_penjualan_id' => $akunId,
-                'akun_diskon_pembelian_id' => $akunId,
+                'kemasan' => 1,
+                'satuan' => 'pcs',
+                'track_stock' => true,
+                'qty' => $faker->numberBetween(10, 100),
+                'coa_id' => $coaId,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
 
-            // Masukkan data per batch agar hemat memori
-            if ($i % $batchSize == 0) {
+            if (count($data) >= $batchSize) {
                 DB::table('products')->insert($data);
-                $data = []; // Reset array setelah insert
+                $data = [];
             }
         }
 
-        // Masukkan sisa data jika totalData tidak habis dibagi batchSize
         if (!empty($data)) {
             DB::table('products')->insert($data);
         }

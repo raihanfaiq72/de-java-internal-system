@@ -119,38 +119,58 @@ class ChartOfAccountSeeder extends Seeder
 
                 // ===== KELOMPOK =====
                 if (!isset($kelompokMap[$kelompokNama])) {
-                    $kelompokId = DB::table('coa_group')->insertGetId([
-                        'office_id' => $officeId,
-                        'kode_kelompok' => $kodeKelompokMap[$kelompokNama],
-                        'nama_kelompok' => $kelompokNama,
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ]);
-                    $kelompokMap[$kelompokNama] = $kelompokId;
+                    // Check if exists in DB
+                    $existingGroup = DB::table('coa_group')
+                        ->where('office_id', $officeId)
+                        ->where('nama_kelompok', $kelompokNama)
+                        ->first();
+
+                    if ($existingGroup) {
+                        $kelompokMap[$kelompokNama] = $existingGroup->id;
+                    } else {
+                        $kelompokId = DB::table('coa_group')->insertGetId([
+                            'office_id' => $officeId,
+                            'kode_kelompok' => $kodeKelompokMap[$kelompokNama],
+                            'nama_kelompok' => $kelompokNama,
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
+                        $kelompokMap[$kelompokNama] = $kelompokId;
+                    }
                 }
 
                 // ===== TIPE =====
                 $tipeKey = $kelompokNama . '|' . $tipeNama;
                 if (!isset($tipeMap[$tipeKey])) {
-                    $tipeId = DB::table('coa_type')->insertGetId([
-                        'kelompok_id' => $kelompokMap[$kelompokNama],
-                        'nama_tipe' => $tipeNama,
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ]);
-                    $tipeMap[$tipeKey] = $tipeId;
+                    $existingType = DB::table('coa_type')
+                        ->where('kelompok_id', $kelompokMap[$kelompokNama])
+                        ->where('nama_tipe', $tipeNama)
+                        ->first();
+
+                    if ($existingType) {
+                        $tipeMap[$tipeKey] = $existingType->id;
+                    } else {
+                        $tipeId = DB::table('coa_type')->insertGetId([
+                            'kelompok_id' => $kelompokMap[$kelompokNama],
+                            'nama_tipe' => $tipeNama,
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
+                        $tipeMap[$tipeKey] = $tipeId;
+                    }
                 }
 
                 // ===== COA =====
-                DB::table('chart_of_accounts')->insert([
-                    'office_id' => $officeId,
-                    'tipe_id' => $tipeMap[$tipeKey],
-                    'kode_akun' => $kode,
-                    'nama_akun' => $nama,
-                    'is_kas_bank' => $isKas,
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ]);
+                DB::table('chart_of_accounts')->updateOrInsert(
+                    ['office_id' => $officeId, 'kode_akun' => $kode],
+                    [
+                        'tipe_id' => $tipeMap[$tipeKey],
+                        'nama_akun' => $nama,
+                        'is_kas_bank' => $isKas,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]
+                );
             }
         });
     }
