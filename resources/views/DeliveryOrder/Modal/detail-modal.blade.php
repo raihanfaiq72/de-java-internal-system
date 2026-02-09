@@ -3,8 +3,8 @@
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 pb-0">
                 <div>
-                    <h5 class="modal-title fw-bold text-dark" id="detail_do_number">Loading...</h5>
-                    <span class="badge bg-light text-secondary border mt-2" id="detail_do_status">-</span>
+                    <h5 class="modal-title fw-bold text-white" id="detail_do_number">Loading...</h5>
+                    <span class="badge bg-light text-dark border mb-2" id="detail_do_status">-</span>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -88,8 +88,32 @@
             const data = json.data;
             
             // Header
+            // Status Badge Logic
+            const statusMap = {
+                'draft': { label: 'Draft', class: 'bg-secondary' },
+                'scheduled': { label: 'Scheduled', class: 'bg-info text-dark' },
+                'in_transit': { label: 'In Transit', class: 'bg-primary' },
+                'delivering': { label: 'Delivering', class: 'bg-warning text-dark' },
+                'partially_delivered': { label: 'Partially Delivered', class: 'text-white', style: 'background-color: #6f42c1' }, // Purple
+                'completed': { label: 'Completed', class: 'bg-success' },
+                'returned': { label: 'Returned', class: 'bg-danger' },
+                'cancelled': { label: 'Cancelled', class: 'bg-dark' }
+            };
+
+            const st = data.status || 'draft';
+            const map = statusMap[st] || { label: st, class: 'bg-secondary' };
+            
+            const badge = document.getElementById('detail_do_status');
+            badge.className = `badge ${map.class} border mb-2`;
+            if (map.style) {
+                badge.setAttribute('style', map.style);
+            } else {
+                badge.removeAttribute('style');
+            }
+            badge.innerText = map.label;
+            
+            // Header
             document.getElementById('detail_do_number').innerText = data.delivery_order_number;
-            document.getElementById('detail_do_status').innerText = data.status;
             document.getElementById('btn_print_do').href = `{{ url('delivery-order/print') }}/${data.id}`;
             
             // Info
