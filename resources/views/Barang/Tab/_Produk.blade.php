@@ -31,7 +31,6 @@
                     <th>Kategori</th>
                     <th>Kemasan</th>
                     <th>Satuan</th>
-                    <th>Qty</th>
                     <th>Harga Beli</th>
                     <th>Harga Jual</th>
                     <th>COA</th>
@@ -79,9 +78,6 @@
             <input type="text" class="form-control form-control-sm in-satuan">
         </td>
         <td>
-            <input type="number" class="form-control form-control-sm in-qty" value="0">
-        </td>
-        <td>
             <input type="text" class="form-control form-control-sm in-beli" value="0">
         </td>
         <td>
@@ -112,7 +108,6 @@
         <td class="col-kategori"></td>
         <td class="col-kemasan text-center"></td>
         <td class="col-satuan text-center"></td>
-        <td class="col-qty text-center"></td>
         <td class="col-beli text-end"></td>
         <td class="col-jual text-end"></td>
         <td class="col-coa text-start"></td>
@@ -315,7 +310,6 @@
                     product_category_id: tsProductKategori.getValue(),
                     kemasan: tr.querySelector('.in-kemasan').value,
                     satuan: tr.querySelector('.in-satuan').value,
-                    qty: tr.querySelector('.in-qty').value,
                     harga_beli: inBeli.value.replace(/\./g, ''),
                     harga_jual: inJual.value.replace(/\./g, ''),
                     track_stock: 1,
@@ -454,7 +448,6 @@
             editRow.querySelector('.in-nama').value = item.nama_produk;
             editRow.querySelector('.in-kemasan').value = item.kemasan || '';
             editRow.querySelector('.in-satuan').value = item.satuan || '';
-            editRow.querySelector('.in-qty').value = item.qty || 0;
             editRow.querySelector('.in-beli').value = item.harga_beli || 0;
             editRow.querySelector('.in-jual').value = item.harga_jual || 0;
 
@@ -489,7 +482,6 @@
                     product_category_id: tsKategori.getValue(),
                     kemasan: editRow.querySelector('.in-kemasan').value,
                     satuan: editRow.querySelector('.in-satuan').value,
-                    qty: editRow.querySelector('.in-qty').value,
                     harga_beli: inBeliEdit.value.replace(/\./g, ''),
                     harga_jual: inJualEdit.value.replace(/\./g, ''),
                     coa_id: tsCOA.getValue(),
@@ -586,7 +578,6 @@
                 clone.querySelector('.col-kategori').textContent = item.category?.nama_kategori || '-';
                 clone.querySelector('.col-kemasan').textContent = item.kemasan || '-';
                 clone.querySelector('.col-satuan').textContent = item.satuan || '-';
-                clone.querySelector('.col-qty').textContent = item.qty || 0;
                 clone.querySelector('.col-beli').textContent = formatIDR(item.harga_beli);
                 clone.querySelector('.col-jual').textContent = formatIDR(item.harga_jual);
                 clone.querySelector('.col-coa').textContent = coaName;
@@ -870,7 +861,6 @@
                     <td>${item.unit?.nama_unit ?? '-'}</td>
                     <td>${formatIDR(item.harga_beli) ?? '-'}</td>
                     <td>${formatIDR(item.harga_jual) ?? '-'}</td>
-                    <td>${item.qty ?? '-'}</td>
                     <td class="text-center">
                         <div class="dropdown">
                             <button class="btn btn-sm btn-light border dropdown-toggle"
