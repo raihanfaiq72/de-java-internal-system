@@ -57,6 +57,14 @@
             border-bottom: 1px solid var(--glass-border);
             padding: 20px 0;
             flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .startbar .brand .logo {
+            text-align: center;
+            width: 100%;
         }
 
         .startbar .brand .logo-lg h4 {
@@ -124,21 +132,19 @@
             color: #86868b;
         }
 
-        /* Active State - Strictly only for .active class */
-        .startbar-menu .nav-item .nav-link.active {
+        /* Active State - Only for child/leaf items */
+        .startbar-menu .nav-item .nav-link.active:not([data-bs-toggle="collapse"]) {
             background-color: var(--apple-blue) !important;
             color: #fff !important;
             box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
         }
 
-        .startbar-menu .nav-item .nav-link.active i,
-        .startbar-menu .nav-item .nav-link.active span {
+        .startbar-menu .nav-item .nav-link.active:not([data-bs-toggle="collapse"]) i,
+        .startbar-menu .nav-item .nav-link.active:not([data-bs-toggle="collapse"]) span {
             color: #fff !important;
         }
 
-        .startbar-menu .nav-item .nav-link[data-bs-toggle="collapse"].active::after {
-            filter: brightness(0) invert(1) !important;
-        }
+        /* Keep parent normal, but maybe just expanded style if needed (bootstrap handles this usually as collapsed class removal) */
 
         /* Topbar Redesign */
         .topbar {
