@@ -156,7 +156,7 @@ return [
         'id' => 'sidebarLaporan',
         'submenu' => [
             [
-                'title' => 'Laporan Invoice',
+                'title' => 'Laporan Invoice Penjualan',
                 'route' => 'report.invoice',
                 'icon' => 'iconoir-page-search',
             ],

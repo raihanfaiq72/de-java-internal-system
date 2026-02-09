@@ -8,222 +8,247 @@
     <div class="page-content py-4">
         <div class="container-fluid">
             
-            <!-- Header -->
-            <div class="row align-items-center mb-4">
-                <div class="col-md-7">
-                    <h4 class="fw-bold text-dark mb-1">Laporan Invoice</h4>
-                    <p class="text-muted small mb-0">Rekapitulasi invoice, pembayaran, dan piutang usaha.</p>
-                </div>
-                <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                    <button class="btn btn-white border fw-bold px-3 shadow-sm text-dark me-2">
-                        <i class="fa fa-print me-1"></i> Cetak Laporan
-                    </button>
-                </div>
-            </div>
-
-            <!-- Tabs -->
-            <ul class="nav nav-tabs nav-tabs-custom border-bottom-0 mb-4" id="reportTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active fw-bold px-4 py-2" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab" aria-selected="true">
-                        <i class="fa fa-chart-line me-2"></i> Rekap Umum
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link fw-bold px-4 py-2" id="payment-tab" data-bs-toggle="tab" data-bs-target="#payment" type="button" role="tab" aria-selected="false">
-                        <i class="fa fa-table me-2"></i> Rekap Pembayaran
-                    </button>
-                </li>
-            </ul>
-
-            <div class="tab-content" id="reportTabsContent">
-                
-                <!-- Tab: Rekap Umum -->
-                <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
-                    <div class="row g-4">
-                        <!-- Line Chart -->
-                        <div class="col-lg-8">
-                            <div class="card border-0 shadow-sm rounded-3 h-100">
-                                <div class="card-header bg-white border-0 pt-4 px-4">
-                                    <h6 class="fw-bold mb-0">Arus Kas (Pemasukan vs Pengeluaran)</h6>
-                                    <small class="text-muted">Berdasarkan pembayaran invoice Sales & Purchase 12 bulan terakhir</small>
+            <!-- Header & Filter -->
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <form action="{{ route('report.invoice') }}" method="GET" id="filterForm">
+                        <div class="row align-items-end g-3">
+                            <div class="col-md-4">
+                                <h4 class="fw-bold text-dark mb-1">Laporan Invoice Penjualan</h4>
+                                <p class="text-muted small mb-0">Monitor performa penjualan, piutang, dan penagihan.</p>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold small text-muted">Periode Invoice</label>
+                                <div class="input-group">
+                                    <input type="date" class="form-control" name="start_date" value="{{ request('start_date') }}">
+                                    <span class="input-group-text bg-white border-start-0 border-end-0">s/d</span>
+                                    <input type="date" class="form-control" name="end_date" value="{{ request('end_date') }}">
                                 </div>
-                                <div class="card-body p-4">
-                                    <div id="cashFlowChart"></div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold small text-muted">Pencarian</label>
+                                <input type="text" class="form-control" name="search" placeholder="Cari Nama Mitra / No. Invoice..." value="{{ request('search') }}">
+                            </div>
+                            <div class="col-md-2">
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary fw-bold shadow-sm">
+                                        <i class="fa fa-filter me-1"></i> Terapkan
+                                    </button>
                                 </div>
                             </div>
                         </div>
+                    </form>
+                </div>
+            </div>
 
-                        <!-- Pie Chart -->
-                        <div class="col-lg-4">
-                            <div class="card border-0 shadow-sm rounded-3 h-100">
-                                <div class="card-header bg-white border-0 pt-4 px-4">
-                                    <h6 class="fw-bold mb-0">Komposisi Piutang</h6>
-                                    <small class="text-muted">Top 5 Mitra dengan sisa tagihan Sales terbesar</small>
-                                </div>
-                                <div class="card-body p-4 d-flex align-items-center justify-content-center">
-                                    <div id="receivableChart" class="w-100"></div>
-                                </div>
+            <!-- 1. Summary Cards -->
+            <div class="row mb-4 g-3">
+                <!-- Total Penjualan -->
+                <div class="col-lg-3">
+                    <div class="card border-0 shadow-sm rounded-3 h-100">
+                        <div class="card-body p-4 border-start border-4 border-primary">
+                            <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px; letter-spacing: 1px;">Total Penjualan</label>
+                            <h4 class="fw-bold mb-0 text-dark">Rp {{ number_format($totalSales, 0, ',', '.') }}</h4>
+                            <small class="text-muted mt-2 d-block">Berdasarkan filter periode</small>
+                        </div>
+                    </div>
+                </div>
+                <!-- Total Piutang (AR) -->
+                <div class="col-lg-3">
+                    <div class="card border-0 shadow-sm rounded-3 h-100">
+                        <div class="card-body p-4 border-start border-4 border-warning">
+                            <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px; letter-spacing: 1px;">Total Piutang (AR)</label>
+                            <h4 class="fw-bold mb-0 text-dark">Rp {{ number_format($totalAR, 0, ',', '.') }}</h4>
+                            <small class="text-muted mt-2 d-block">Sisa tagihan belum terbayar</small>
+                        </div>
+                    </div>
+                </div>
+                <!-- Piutang Overdue -->
+                <div class="col-lg-3">
+                    <div class="card border-0 shadow-sm rounded-3 h-100">
+                        <div class="card-body p-4 border-start border-4 border-danger">
+                            <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px; letter-spacing: 1px;">Piutang Overdue</label>
+                            <h4 class="fw-bold mb-0 text-danger">Rp {{ number_format($totalOverdue, 0, ',', '.') }}</h4>
+                            <small class="text-danger fw-semibold mt-2 d-block"><i class="fa fa-exclamation-circle me-1"></i> Lewat Jatuh Tempo</small>
+                        </div>
+                    </div>
+                </div>
+                <!-- Rasio Penagihan -->
+                <div class="col-lg-3">
+                    <div class="card border-0 shadow-sm rounded-3 h-100">
+                        <div class="card-body p-4 border-start border-4 border-success">
+                            <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px; letter-spacing: 1px;">Rasio Penagihan</label>
+                            <h4 class="fw-bold mb-0 text-success">{{ number_format($collectionRatio, 1) }}%</h4>
+                            <div class="progress mt-2" style="height: 6px;">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ $collectionRatio }}%"></div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Tab: Rekap Pembayaran -->
-                <div class="tab-pane fade" id="payment" role="tabpanel" aria-labelledby="payment-tab">
-                    
-                    <!-- Filters -->
-                    <div class="card border-0 shadow-sm rounded-3 mb-4">
+            <div class="row mb-4 g-4">
+                <!-- 2. Grafik Tren Penjualan Bulanan -->
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm rounded-3 h-100">
+                        <div class="card-header bg-white border-0 pt-4 px-4">
+                            <h6 class="fw-bold mb-0">Tren Penjualan Bulanan</h6>
+                        </div>
                         <div class="card-body p-4">
-                            <form action="{{ route('report.invoice') }}" method="GET" id="filterForm">
-                                <input type="hidden" name="tab" value="payment">
-                                <div class="row g-3">
-                                    <div class="col-md-3">
-                                        <label class="form-label fw-bold small text-muted">Mitra</label>
-                                        <select class="form-select" name="mitra_id">
-                                            <option value="">Semua Mitra</option>
-                                            @foreach($mitras as $mitra)
-                                                <option value="{{ $mitra->id }}" {{ request('mitra_id') == $mitra->id ? 'selected' : '' }}>
-                                                    {{ $mitra->nama }} - {{ $mitra->nomor_mitra }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label fw-bold small text-muted">Periode</label>
-                                        <div class="input-group">
-                                            <input type="date" class="form-control" name="start_date" value="{{ request('start_date') }}">
-                                            <span class="input-group-text bg-white border-start-0 border-end-0">s/d</span>
-                                            <input type="date" class="form-control" name="end_date" value="{{ request('end_date') }}">
+                            <div id="salesTrendChart"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Top 5 Pelanggan -->
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm rounded-3 h-100">
+                        <div class="card-header bg-white border-0 pt-4 px-4">
+                            <h6 class="fw-bold mb-0">Top 5 Pelanggan</h6>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="list-group list-group-flush">
+                                @foreach($topClientLabels as $index => $label)
+                                    <div class="list-group-item px-0 border-0 d-flex align-items-center mb-2">
+                                        <div class="flex-shrink-0 me-3">
+                                            <span class="avatar-sm bg-light text-primary rounded fw-bold d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                {{ $index + 1 }}
+                                            </span>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0 text-dark small fw-bold">{{ $label }}</h6>
+                                            <div class="progress mt-1" style="height: 4px;">
+                                                @php 
+                                                    $max = $topClientSeries->max() ?: 1;
+                                                    $val = $topClientSeries[$index];
+                                                    $percent = ($val / $max) * 100;
+                                                @endphp
+                                                <div class="progress-bar bg-primary" style="width: {{ $percent }}%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="ms-3 text-end">
+                                            <span class="fw-bold text-dark small">Rp {{ number_format($topClientSeries[$index], 0, ',', '.') }}</span>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label fw-bold small text-muted">Pencarian</label>
-                                        <input type="text" class="form-control" name="search" placeholder="Cari No Invoice, No Pembayaran, Nama..." value="{{ request('search') }}">
-                                    </div>
-                                    <div class="col-md-2 d-flex align-items-end">
-                                        <button type="submit" class="btn btn-primary fw-bold w-100 shadow-sm">
-                                            <i class="fa fa-filter me-1"></i> Terapkan
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
+                                @endforeach
+                                @if(count($topClientLabels) == 0)
+                                    <div class="text-center text-muted py-4 small">Belum ada data penjualan</div>
+                                @endif
+                            </div>
                         </div>
                     </div>
-
-                    <!-- Table -->
-                    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-                        <div class="card-header bg-white border-bottom py-3 px-4">
-                            <h6 class="mb-0 fw-bold text-dark">Riwayat Pembayaran</h6>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="bg-light">
-                                    <tr>
-                                        <th class="px-4 py-3 text-muted small fw-bold text-uppercase" width="50">No</th>
-                                        <th class="py-3 text-muted small fw-bold text-uppercase">No. Pembayaran</th>
-                                        <th class="py-3 text-muted small fw-bold text-uppercase">Tanggal</th>
-                                        <th class="py-3 text-muted small fw-bold text-uppercase">Invoice</th>
-                                        <th class="py-3 text-muted small fw-bold text-uppercase">Mitra</th>
-                                        <th class="py-3 text-muted small fw-bold text-uppercase text-end">Jumlah Bayar</th>
-                                        <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-center">Metode</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($payments as $payment)
-                                        <tr>
-                                            <td class="px-4 text-muted">{{ $loop->iteration + ($payments->currentPage() - 1) * $payments->perPage() }}</td>
-                                            <td class="fw-bold text-primary">{{ $payment->nomor_pembayaran }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($payment->tgl_pembayaran)->format('d M Y') }}</td>
-                                            <td>
-                                                @if($payment->invoice)
-                                                    <span class="badge bg-soft-info text-info border border-info border-opacity-25 rounded-pill px-2">
-                                                        {{ $payment->invoice->nomor_invoice }}
-                                                    </span>
-                                                @else
-                                                    <span class="text-muted">-</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($payment->invoice && $payment->invoice->mitra)
-                                                    <div class="fw-bold text-dark">{{ $payment->invoice->mitra->nama }}</div>
-                                                    <div class="small text-muted">{{ $payment->invoice->mitra->nomor_mitra }}</div>
-                                                @else
-                                                    <span class="text-muted">-</span>
-                                                @endif
-                                            </td>
-                                            <td class="text-end fw-bold text-dark">Rp {{ number_format($payment->jumlah_bayar, 0, ',', '.') }}</td>
-                                            <td class="px-4 text-center">
-                                                <span class="badge bg-light text-dark border">{{ $payment->metode_pembayaran }}</span>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="6" class="text-center py-5 text-muted">
-                                                <div class="mb-2"><i class="fa fa-search fa-2x opacity-25"></i></div>
-                                                Tidak ada data pembayaran ditemukan.
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="card-footer bg-white border-top py-3">
-                            {{ $payments->links() }}
-                        </div>
-                    </div>
-
                 </div>
             </div>
+
+            <!-- 4. Daftar Invoice Terhutang -->
+            <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-dark">Daftar Invoice Terhutang (Piutang)</h6>
+                    <button class="btn btn-white border btn-sm shadow-sm fw-bold text-dark" onclick="window.print()">
+                        <i class="fa fa-file-pdf me-1 text-danger"></i> Export PDF
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="px-4 py-3 text-muted small fw-bold text-uppercase">Nomor Invoice</th>
+                                <th class="py-3 text-muted small fw-bold text-uppercase">Pelanggan</th>
+                                <th class="py-3 text-muted small fw-bold text-uppercase">Tgl Invoice</th>
+                                <th class="py-3 text-muted small fw-bold text-uppercase">Jatuh Tempo</th>
+                                <th class="py-3 text-muted small fw-bold text-uppercase text-end">Nilai Total</th>
+                                <th class="py-3 text-muted small fw-bold text-uppercase text-end">Sisa Piutang</th>
+                                <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($invoices as $inv)
+                                @php
+                                    $paid = $inv->payment->sum('jumlah_bayar');
+                                    $balance = $inv->total_akhir - $paid;
+                                    $isOverdue = \Carbon\Carbon::parse($inv->tgl_jatuh_tempo)->isPast() && $balance > 0;
+                                @endphp
+                                <tr>
+                                    <td class="px-4 fw-bold text-primary">{{ $inv->nomor_invoice }}</td>
+                                    <td>
+                                        <div class="fw-bold text-dark">{{ $inv->mitra->nama ?? '-' }}</div>
+                                    </td>
+                                    <td>{{ \Carbon\Carbon::parse($inv->tgl_invoice)->format('d M Y') }}</td>
+                                    <td>
+                                        <span class="{{ $isOverdue ? 'text-danger fw-bold' : '' }}">
+                                            {{ \Carbon\Carbon::parse($inv->tgl_jatuh_tempo)->format('d M Y') }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end fw-bold">Rp {{ number_format($inv->total_akhir, 0, ',', '.') }}</td>
+                                    <td class="text-end fw-bold text-danger">Rp {{ number_format($balance, 0, ',', '.') }}</td>
+                                    <td class="px-4 text-center">
+                                        @if($isOverdue)
+                                            <span class="badge bg-soft-danger text-danger border border-danger border-opacity-25 rounded-pill px-3">Overdue</span>
+                                        @elseif($paid > 0)
+                                            <span class="badge bg-soft-warning text-warning border border-warning border-opacity-25 rounded-pill px-3">Partially Paid</span>
+                                        @else
+                                            <span class="badge bg-soft-secondary text-secondary border border-secondary border-opacity-25 rounded-pill px-3">Unpaid</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="text-center py-5">
+                                        <div class="mb-3"><i class="fa fa-check-circle fa-3x text-success opacity-50"></i></div>
+                                        <h6 class="fw-bold text-dark">Semua piutang telah lunas!</h6>
+                                        <p class="text-muted small mb-0">Tidak ada invoice penjualan dengan sisa tagihan saat ini.</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-white border-top py-3">
+                    {{ $invoices->links() }}
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Activate correct tab if present in URL
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('tab') === 'payment' || urlParams.get('mitra_id') || urlParams.get('search')) {
-            const triggerEl = document.querySelector('#payment-tab');
-            const tab = new bootstrap.Tab(triggerEl);
-            tab.show();
-        }
-
-        // Line Chart: Income vs Expense
-        var optionsCashFlow = {
+        // Sales Trend Chart
+        var optionsTrend = {
             series: [{
-                name: 'Pemasukan (Sales)',
-                data: @json($incomes)
-            }, {
-                name: 'Pengeluaran (Purchase)',
-                data: @json($expenses)
+                name: 'Total Penjualan',
+                data: @json($trendSeries)
             }],
             chart: {
-                type: 'area',
-                height: 350,
+                type: 'bar',
+                height: 320,
                 toolbar: { show: false },
                 fontFamily: 'Inter, sans-serif'
             },
-            colors: ['#00E396', '#FF4560'],
+            colors: ['#007AFF'],
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    columnWidth: '40%',
+                }
+            },
             dataLabels: { enabled: false },
-            stroke: { curve: 'smooth', width: 2 },
             xaxis: {
-                categories: @json($months),
+                categories: @json($trendLabels),
+                axisBorder: { show: false },
+                axisTicks: { show: false }
             },
             yaxis: {
                 labels: {
                     formatter: function (value) {
-                        return "Rp " + new Intl.NumberFormat('id-ID').format(value);
+                        return "Rp " + new Intl.NumberFormat('id-ID', { notation: "compact", compactDisplay: "short" }).format(value);
                     }
                 }
             },
-            fill: {
-                type: 'gradient',
-                gradient: {
-                    shadeIntensity: 1,
-                    opacityFrom: 0.7,
-                    opacityTo: 0.2,
-                    stops: [0, 90, 100]
-                }
+            grid: {
+                strokeDashArray: 4,
+                yaxis: { lines: { show: true } }
             },
             tooltip: {
                 y: {
@@ -234,70 +259,18 @@
             }
         };
 
-        var chartCashFlow = new ApexCharts(document.querySelector("#cashFlowChart"), optionsCashFlow);
-        chartCashFlow.render();
-
-        // Pie Chart: Receivables
-        var optionsPie = {
-            series: @json($pieSeries),
-            labels: @json($pieLabels),
-            chart: {
-                type: 'donut',
-                height: 350,
-                fontFamily: 'Inter, sans-serif'
-            },
-            colors: ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0'],
-            plotOptions: {
-                pie: {
-                    donut: {
-                        size: '65%',
-                        labels: {
-                            show: true,
-                            total: {
-                                show: true,
-                                label: 'Total Piutang',
-                                formatter: function (w) {
-                                    const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
-                                    return "Rp " + new Intl.NumberFormat('id-ID', { notation: "compact", compactDisplay: "short" }).format(total);
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            dataLabels: { enabled: false },
-            legend: { position: 'bottom' },
-            tooltip: {
-                y: {
-                    formatter: function (val) {
-                        return "Rp " + new Intl.NumberFormat('id-ID').format(val)
-                    }
-                }
-            }
-        };
-
-        var chartPie = new ApexCharts(document.querySelector("#receivableChart"), optionsPie);
-        chartPie.render();
+        var chartTrend = new ApexCharts(document.querySelector("#salesTrendChart"), optionsTrend);
+        chartTrend.render();
     });
 </script>
 
 <style>
-    .nav-tabs-custom .nav-link {
-        color: #6c757d;
-        border: none;
-        border-bottom: 2px solid transparent;
-        transition: all 0.2s;
-    }
-    .nav-tabs-custom .nav-link:hover {
-        color: #0d6efd;
-    }
-    .nav-tabs-custom .nav-link.active {
-        color: #0d6efd;
-        background: transparent;
-        border-bottom: 2px solid #0d6efd;
-    }
-    .badge.bg-soft-info {
-        background-color: rgba(13, 202, 240, 0.1) !important;
-    }
+    .bg-soft-primary { background-color: rgba(0, 122, 255, 0.1) !important; }
+    .bg-soft-success { background-color: rgba(40, 167, 69, 0.1) !important; }
+    .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1) !important; }
+    .bg-soft-danger { background-color: rgba(220, 53, 69, 0.1) !important; }
+    .bg-soft-secondary { background-color: rgba(108, 117, 125, 0.1) !important; }
+    
+    .avatar-sm { width: 32px; height: 32px; font-size: 12px; }
 </style>
 @endsection
