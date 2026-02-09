@@ -75,7 +75,7 @@ Route::middleware(['auth'])->group(function () {
         // Reports
         Route::get('report/invoice', [App\Http\Controllers\Report\InvoiceReportController::class, 'index'])->name('report.invoice');
         Route::get('report/sales', [ReportController::class, 'salesReport'])->name('report.sales');
-        Route::get('report/purchase', [ReportController::class, 'purchaseReport'])->name('report.purchase');
+        Route::get('report/purchase', [App\Http\Controllers\Report\PurchaseReportController::class, 'index'])->name('report.purchase');
         Route::get('report/stock', [ReportController::class, 'stockReport'])->name('report.stock');
         Route::get('report/stock/export', [ReportController::class, 'stockReportExport'])->name('report.stock.export');
         Route::get('report/ar-aging', [ReportController::class, 'arAging'])->name('report.ar-aging');

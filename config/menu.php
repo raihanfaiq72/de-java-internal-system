@@ -166,7 +166,7 @@ return [
                 'icon' => 'iconoir-graph-up',
             ],
             [
-                'title' => 'Laporan Pembelian',
+                'title' => 'Laporan Invoice Pembelian',
                 'route' => 'report.purchase',
                 'icon' => 'iconoir-reports',
             ],
