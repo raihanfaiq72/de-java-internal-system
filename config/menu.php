@@ -137,19 +137,7 @@ return [
         'type' => 'item',
         'title' => 'Keuangan',
         'icon' => 'iconoir-coins',
-        'id' => 'sidebarKeuangan',
-        'submenu' => [
-            [
-                'title' => 'Dashboard',
-                'route' => 'finance.index',
-                'icon' => 'iconoir-dashboard',
-            ],
-            [
-                'title' => 'Transaksi',
-                'route' => 'finance.index',
-                'icon' => 'iconoir-list',
-            ],
-        ],
+        'route' => 'finance.index'
     ],
     [
         'type' => 'item',

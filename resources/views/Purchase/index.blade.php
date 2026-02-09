@@ -309,123 +309,148 @@
     @include('Purchase.Modal.modal-fullscreen')
     @include('Purchase.Modal.detail-modal')
     @include('Purchase.Partials.invoice-templates')
+
+    <div class="modal fade" id="modalPrintPreview" tabindex="-1" aria-labelledby="modalPrintPreviewLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0 rounded-4">
+                <div class="modal-header border-bottom-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold" id="modalPrintPreviewLabel">
+                        <i class="fa fa-print text-primary me-2"></i> Preview Cetak Invoice
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="ratio ratio-16x9 border rounded bg-light" style="min-height: 70vh;">
+                        <iframe id="print-iframe" src="" allowfullscreen></iframe>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light fw-bold px-4" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm" onclick="triggerPrint()">
+                        <i class="fa fa-print me-1"></i> Cetak Sekarang
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 {{-- @push('css')
-    <style>
-        .f-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            font-weight: 700;
-            color: #64748b;
-            margin-bottom: 5px;
-            display: block;
-        }
+<style>
+    .f-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 5px;
+        display: block;
+    }
 
-        .f-mono {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-        }
+    .f-mono {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+    }
 
-        /* Table Styling */
-        #invoiceTable thead th {
-            border-bottom: 1px solid #e2e8f0;
-            border-top: 1px solid #e2e8f0;
-            background: #f8fafc;
-            padding-top: 12px;
-            padding-bottom: 12px;
-        }
+    /* Table Styling */
+    #invoiceTable thead th {
+        border-bottom: 1px solid #e2e8f0;
+        border-top: 1px solid #e2e8f0;
+        background: #f8fafc;
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
 
-        #invoiceTable tbody td {
-            font-size: 13px;
-            color: #334155;
-            padding-top: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #f1f5f9;
-        }
+    #invoiceTable tbody td {
+        font-size: 13px;
+        color: #334155;
+        padding-top: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f1f5f9;
+    }
 
-        .clickable-row {
-            cursor: pointer;
-            transition: background-color 0.1s;
-        }
+    .clickable-row {
+        cursor: pointer;
+        transition: background-color 0.1s;
+    }
 
-        .clickable-row:hover {
-            background-color: #f1f5f9 !important;
-        }
+    .clickable-row:hover {
+        background-color: #f1f5f9 !important;
+    }
 
-        /* Nested Detail Row */
-        .detail-row td {
-            padding: 0 !important;
-            border-bottom: 0 !important;
-        }
+    /* Nested Detail Row */
+    .detail-row td {
+        padding: 0 !important;
+        border-bottom: 0 !important;
+    }
 
-        .detail-wrapper {
-            background: #f8fafc;
-            border-bottom: 2px solid #e2e8f0;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
-        }
+    .detail-wrapper {
+        background: #f8fafc;
+        border-bottom: 2px solid #e2e8f0;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
 
-        /* Badges */
-        .f-badge {
-            font-size: 10px;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: inline-block;
-        }
+    /* Badges */
+    .f-badge {
+        font-size: 10px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-block;
+    }
 
-        .f-paid {
-            background: #dcfce7;
-            color: #166534;
-        }
+    .f-paid {
+        background: #dcfce7;
+        color: #166534;
+    }
 
-        .f-unpaid {
-            background: #fee2e2;
-            color: #991b1b;
-        }
+    .f-unpaid {
+        background: #fee2e2;
+        color: #991b1b;
+    }
 
-        .f-partial {
-            background: #fef3c7;
-            color: #92400e;
-        }
+    .f-partial {
+        background: #fef3c7;
+        color: #92400e;
+    }
 
-        /* Chevron */
-        .chevron-icon {
-            transition: transform 0.2s;
-            color: #cbd5e1;
-            font-size: 10px;
-            margin-right: 2px;
-        }
+    /* Chevron */
+    .chevron-icon {
+        transition: transform 0.2s;
+        color: #cbd5e1;
+        font-size: 10px;
+        margin-right: 2px;
+    }
 
-        .clickable-row[aria-expanded="true"] .chevron-icon {
-            transform: rotate(90deg);
-            color: #3b82f6;
-        }
+    .clickable-row[aria-expanded="true"] .chevron-icon {
+        transform: rotate(90deg);
+        color: #3b82f6;
+    }
 
-        /* Dropdown */
-        .dropdown-menu-finance {
-            border: none;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            min-width: 140px;
-            border-top: 3px solid #3b82f6;
-        }
+    /* Dropdown */
+    .dropdown-menu-finance {
+        border: none;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        min-width: 140px;
+        border-top: 3px solid #3b82f6;
+    }
 
-        .dropdown-menu-finance .dropdown-item {
-            font-size: 13px;
-            font-weight: 600;
-            color: #475569;
-            padding: 6px 12px;
-        }
+    .dropdown-menu-finance .dropdown-item {
+        font-size: 13px;
+        font-weight: 600;
+        color: #475569;
+        padding: 6px 12px;
+    }
 
-        .dropdown-menu-finance .dropdown-item:hover {
-            background-color: #f1f5f9;
-            color: #3b82f6;
-        }
-    </style>
+    .dropdown-menu-finance .dropdown-item:hover {
+        background-color: #f1f5f9;
+        color: #3b82f6;
+    }
+</style>
 @endpush --}}
 
 @push('js')
@@ -468,7 +493,7 @@
         };
 
         document.querySelectorAll('.nav-tabs-finance .nav-link').forEach(tab => {
-            tab.addEventListener('shown.bs.tab', function(event) {
+            tab.addEventListener('shown.bs.tab', function (event) {
                 const targetId = event.target.getAttribute('href');
 
                 if (targetId === '#invoice-archive') {
@@ -567,14 +592,14 @@
                 const tr = document.createElement('tr');
                 tr.classList.add('border-bottom', 'border-light');
                 tr.innerHTML = `
-                    <td class="ps-3 py-3">
-                        <div class="fw-bold text-dark">${it.nama_produk_manual || it.product?.nama_produk || '-'}</div>
-                        <div class="small text-muted">${it.product?.kode_produk || '-'}</div>
-                    </td>
-                    <td class="text-center py-3">${parseFloat(it.qty)} ${it.product?.unit?.nama_unit || ''}</td>
-                    <td class="text-end py-3">${window.financeApp.formatIDR(it.harga_satuan)}</td>
-                    <td class="text-end pe-3 py-3">${window.financeApp.formatIDR(it.total_harga_item)}</td>
-                `;
+                                                <td class="ps-3 py-3">
+                                                    <div class="fw-bold text-dark">${it.nama_produk_manual || it.product?.nama_produk || '-'}</div>
+                                                    <div class="small text-muted">${it.product?.kode_produk || '-'}</div>
+                                                </td>
+                                                <td class="text-center py-3">${parseFloat(it.qty)} ${it.product?.unit?.nama_unit || ''}</td>
+                                                <td class="text-end py-3">${window.financeApp.formatIDR(it.harga_satuan)}</td>
+                                                <td class="text-end pe-3 py-3">${window.financeApp.formatIDR(it.total_harga_item)}</td>
+                                            `;
                 tbody.appendChild(tr);
             });
 
@@ -593,10 +618,44 @@
                     deleteInvoice(item.id);
                 }
             };
-            document.getElementById('btnDetailPrint').href = `{{ url('purchase/print') }}/${item.id}`;
+            const btnDetailPrint = document.getElementById('btnDetailPrint');
+            btnDetailPrint.href = 'javascript:void(0)';
+            btnDetailPrint.onclick = () => openPrintPreview(item.id);
 
             // Show Modal
             new bootstrap.Modal(document.getElementById('detailInvoiceModal')).show();
+        }
+
+        function openPrintPreview(id) {
+            const printUrl = `{{ url('purchase/print') }}/${id}`;
+
+            const modalContainer = document.getElementById('modalPrintPreview');
+
+            if (!modalContainer) {
+                console.error('Modal container tidak ditemukan di halaman ini.');
+                return;
+            }
+
+            const iframe = modalContainer.querySelector('iframe');
+
+            if (!iframe) {
+                console.error('Elemen iframe tidak ditemukan di dalam modal.');
+                alert('Gagal memuat preview cetak.');
+                return;
+            }
+
+            iframe.src = printUrl;
+
+            const bModal = bootstrap.Modal.getOrCreateInstance(modalContainer);
+            bModal.show();
+        }
+
+        function triggerPrint() {
+            const iframe = document.getElementById('print-iframe');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            }
         }
 
         function renderInvoiceList(data) {
@@ -677,7 +736,9 @@
 
                 row.querySelector('.btn-edit').onclick = () => openInvoiceModal(item.id, null, 'edit');
                 row.querySelector('.btn-delete').onclick = () => deleteInvoice(item.id);
-                row.querySelector('.btn-print').href = `{{ url('purchase/print') }}/${item.id}`;
+                const btnPrint = row.querySelector('.btn-print');
+                btnPrint.href = 'javascript:void(0)';
+                btnPrint.onclick = () => openPrintPreview(item.id);
 
                 // Remove chevron
                 const chevron = row.querySelector('.chevron-icon');
@@ -739,11 +800,11 @@
             /* reusing prev logic or simplified */
             const c = document.getElementById('pagination-container');
             c.innerHTML = '';
-            document.getElementById('pagination-info').innerText = `${meta.from||0}-${meta.to||0} dari ${meta.total}`;
+            document.getElementById('pagination-info').innerText = `${meta.from || 0}-${meta.to || 0} dari ${meta.total}`;
             meta.links.forEach(l => {
                 const cls = l.active ? 'bg-primary text-white' : 'bg-white text-dark';
                 c.insertAdjacentHTML('beforeend',
-                    `<li class="page-item ${!l.url?'disabled':''}"><a class="page-link border-0 mx-1 rounded shadow-sm fw-bold ${cls}" href="#" onclick="loadInvoiceData('${l.url}')">${l.label}</a></li>`
+                    `<li class="page-item ${!l.url ? 'disabled' : ''}"><a class="page-link border-0 mx-1 rounded shadow-sm fw-bold ${cls}" href="#" onclick="loadInvoiceData('${l.url}')">${l.label}</a></li>`
                 );
             });
         }
@@ -789,7 +850,7 @@
 
             const searchInput = document.getElementById('filter-search');
             if (searchInput) {
-                searchInput.addEventListener('keypress', function(e) {
+                searchInput.addEventListener('keypress', function (e) {
                     if (e.key === 'Enter') {
                         e.preventDefault();
                         loadInvoiceData();

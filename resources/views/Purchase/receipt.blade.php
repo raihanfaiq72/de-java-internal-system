@@ -90,7 +90,7 @@
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header">
-                <h5 class="fw-bold mb-0">Catat Pembayaran untuk Invoice Pembelian</h5>
+                <h5 class="fw-bold mb-0 text-white">Catat Pembayaran untuk Invoice Pembelian</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">

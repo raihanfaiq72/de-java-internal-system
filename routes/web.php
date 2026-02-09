@@ -34,6 +34,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
 
+    // Notifications
+    Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/{id}', [App\Http\Controllers\NotificationController::class, 'show'])->name('notifications.show');
+    Route::post('/notifications/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
+
     Route::middleware(['module.access'])->group(function () {
 
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -98,17 +103,18 @@ Route::middleware(['auth'])->group(function () {
 
             // User Plots
             Route::get('/user-plots', [UserPlotController::class, 'index'])->name('user_plots.index');
-            Route::post('/user-plots', [UserPlotController::class, 'store'])->name('user_plots.store');
-            Route::get('/user-plots/{id}', [UserPlotController::class, 'show'])->name('user_plots.show');
-            Route::put('/user-plots/{id}', [UserPlotController::class, 'update'])->name('user_plots.update');
-            Route::delete('/user-plots/{id}', [UserPlotController::class, 'destroy'])->name('user_plots.destroy');
+            
+            // Test Notification Route
+            Route::get('/test-notification', function () {
+                App\Services\NotificationService::notifyByPermission(
+                    'dashboard', // Assuming this permission exists
+                    'Test Notification',
+                    'Ini adalah notifikasi test sistem',
+                    url('/dashboard'),
+                    'success'
+                );
+                return 'Notification sent!';
+            });
         });
     });
-});
-
-Route::fallback(function () {
-    if (!Auth::check()) {
-        return redirect()->route('login');
-    }
-    abort(404);
 });
