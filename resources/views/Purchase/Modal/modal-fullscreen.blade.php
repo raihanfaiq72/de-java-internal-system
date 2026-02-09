@@ -44,6 +44,13 @@
                                                 onchange="renderMitraDetail()">
                                                 <option value="">Cari Supplier...</option>
                                             </select>
+                                            <div class="text-end mb-3">
+                                                <button type="button"
+                                                    class="btn btn-sm btn-link text-primary text-decoration-none fw-bold p-0"
+                                                    onclick="openMitraModal()">
+                                                    <i class="fa fa-plus-circle me-1"></i> Tambah Supplier Baru
+                                                </button>
+                                            </div>
                                             <div id="mitra_detail_display" class="d-none bg-light p-3 rounded border">
                                                 <div class="d-flex align-items-center mb-2">
                                                     <div class="fw-bold text-dark" id="disp_mitra_nama">-</div>
@@ -157,7 +164,7 @@
                                         </div>
                                         <div class="col-md-6">
                                             <label class="f-label mb-2">Syarat & Ketentuan</label>
-                                            <textarea id="modal_syarat" class="form-control f-text bg-light border-0" rows="3">1. Pembayaran ditujukan ke rekening perusahaan.&#10;2. Barang yang dibeli tidak dapat dikembalikan.</textarea>
+                                            <textarea id="modal_syarat" class="form-control f-text bg-light border-0" rows="3">1. Pastikan barang yang di-input sudah benar</textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -179,9 +186,10 @@
                                     <div class="d-flex justify-content-between mb-2 align-items-center">
                                         <span class="text-muted">Potongan Lumpsum</span>
                                         <div style="width: 120px;">
-                                            <input type="number" id="modal_diskon_tambahan"
+                                            <input type="text" id="modal_diskon_tambahan"
                                                 class="form-control form-control-sm text-end fw-bold" value="0"
-                                                oninput="if(this.value<0)this.value=0; calculateInvoiceTotal()">
+                                                onkeyup="this.value=formatRupiah(this.value); calculateInvoiceTotal()"
+                                                oninput="calculateInvoiceTotal()">
                                         </div>
                                     </div>
                                 </div>
@@ -282,11 +290,11 @@
             <span class="badge bg-light text-secondary border prod-unit-label">-</span>
         </td>
         <td class="py-3">
-            <input type="number" class="form-control form-control-sm text-end prod-price" value="0"
+            <input type="text" class="form-control form-control-sm text-end prod-price" value="0"
                 oninput="calculateInvoiceTotal()">
         </td>
         <td class="py-3">
-            <input type="number" class="form-control form-control-sm text-end prod-disc" value="0"
+            <input type="text" class="form-control form-control-sm text-end prod-disc" value="0"
                 oninput="calculateInvoiceTotal()">
         </td>
         <td class="py-3 text-end pe-4 fw-bold text-dark prod-subtotal">Rp 0</td>
@@ -517,7 +525,7 @@
     function initTomSelectMitraModal(selectedId = null) {
         if (!window.TomSelect) {
             const sel = document.getElementById('modal_mitra_id');
-            sel.innerHTML = '<option value="">Cari Pelanggan...</option>';
+            sel.innerHTML = '<option value="">Cari Supplier...</option>';
             masterMitra.forEach(m => sel.insertAdjacentHTML('beforeend', `<option value="${m.id}">${m.nama}</option>`));
             if (selectedId) sel.value = selectedId;
             return;
@@ -545,7 +553,7 @@
             labelField: 'nama',
             searchField: ['nama', 'info'],
             allowEmptyOption: true,
-            placeholder: 'Cari Pelanggan...',
+            placeholder: 'Cari Supplier...',
             maxOptions: 1000,
             create: false,
             dropdownParent: 'body',
@@ -594,12 +602,22 @@
         const unitLabel = tr.querySelector('.prod-unit-label');
         const descInput = tr.querySelector('.prod-desc');
 
+        // Event Listeners for Calculation
+        [priceInput, discInput].forEach(el => {
+            el.addEventListener('keyup', function(e) {
+                this.value = formatRupiah(this.value);
+                calculateInvoiceTotal();
+            });
+        });
+
+        qtyInput.addEventListener('input', calculateInvoiceTotal);
+
         const ts = new TomSelect(selectEl, {
             options: masterProduk.map(p => ({
-                id: p.id,
+                id: String(p.id),
                 nama: p.nama_produk,
                 sku: p.sku_kode,
-                harga: p.harga_jual,
+                harga: parseFloat(p.harga_beli || 0),
                 unit: p.unit?.nama_unit || 'Pcs'
             })),
             valueField: 'id',
@@ -615,7 +633,7 @@
                 const selected = this.options[val];
                 if (selected) {
                     idInput.value = selected.id;
-                    priceInput.value = selected.harga;
+                    priceInput.value = formatRupiah(selected.harga);
                     unitLabel.innerText = selected.unit;
                     calculateInvoiceTotal();
                 }
@@ -623,13 +641,59 @@
         });
 
         if (data) {
-            ts.setValue(data.product_id || data.id, true); // true agar tidak trigger onChange ganda
-            idInput.value = data.product_id || data.id;
-            qtyInput.value = data.qty || 1;
-            priceInput.value = data.harga_satuan || data.harga_jual || 0;
-            discInput.value = data.diskon_item || data.diskon_nilai || 0;
-            descInput.value = data.deskripsi_item || data.deskripsi_produk || '';
-            unitLabel.innerText = data.product?.unit?.nama_unit || data.unit || 'Pcs';
+            setTimeout(() => {
+                let rawId = data.produk_id || data.product_id;
+
+                if (!rawId) {
+                    if (data.nama_produk || data.sku_kode) {
+                        // Try to find by name/sku if id missing? 
+                        // For now assume rawId found or logic below handles text
+                        rawId = data.id;
+                    } else {
+                        rawId = data.id;
+                    }
+                }
+
+                const prodId = String(rawId);
+
+                if (ts.options[prodId]) {
+                    ts.setValue(prodId, true);
+                } else {
+                    ts.addOption({
+                        id: prodId,
+                        nama: data.nama_produk_manual || data.nama_produk || 'Produk',
+                        harga: 0
+                    });
+                    ts.setValue(prodId, true);
+                }
+
+                idInput.value = prodId;
+                qtyInput.value = parseFloat(data.qty) || 1;
+
+                const rawPrice = parseFloat(data.harga_satuan ?? data.harga_beli ?? data.harga_jual ?? 0);
+                const rawDisc = parseFloat(data.diskon_item ?? data.diskon_nilai ?? 0);
+
+                priceInput.value = formatRupiah(rawPrice);
+                discInput.value = formatRupiah(rawDisc);
+                descInput.value = data.deskripsi_item || data.deskripsi_produk || '';
+
+                let unitName = 'Pcs';
+                const masterItem = masterProduk.find(p => String(p.id) === prodId);
+
+                if (data.unit) {
+                    unitName = (typeof data.unit === 'object') ? data.unit.nama_unit : data.unit;
+                } else if (data.product && data.product.unit) {
+                    unitName = data.product.unit.nama_unit;
+                } else if (masterItem && masterItem.unit) {
+                    unitName = masterItem.unit.nama_unit;
+                }
+                unitLabel.innerText = unitName;
+
+                calculateInvoiceTotal();
+
+            }, 50);
+        } else {
+            calculateInvoiceTotal();
         }
 
         tr.querySelector('.btn-remove-row').onclick = () => {
@@ -646,6 +710,27 @@
         const row = document.getElementById(`row_${id}`);
         if (row) row.remove();
         calculateInvoiceTotal();
+    }
+
+    function formatRupiah(angka) {
+        if (!angka) return '';
+        let number_string = String(angka).replace(/[^,\d]/g, '').toString();
+        let split = number_string.split(',');
+        let sisa = split[0].length % 3;
+        let rupiah = split[0].substr(0, sisa);
+        let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+        if (ribuan) {
+            let separator = sisa ? '.' : '';
+            rupiah += separator + ribuan.join('.');
+        }
+
+        return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+    }
+
+    function cleanNumber(angka) {
+        if (!angka) return 0;
+        return parseFloat(String(angka).replace(/\./g, '').replace(',', '.')) || 0;
     }
 
     const _origOpenModal = openInvoiceModal;
@@ -700,14 +785,13 @@
         document.getElementById('summary_subtotal').innerText = 'Rp 0';
         document.getElementById('summary_grand_total').innerText = 'Rp 0';
 
-        // Load Master Data if empty
         if (masterProduk.length === 0) await fetchMasterProduk();
-        if (masterMitra.length === 0) await initializeMasterData();
+        if (masterMitra.length === 0) await initializeInvoiceData();
 
         initTomSelectMitraModal();
 
         if (mode === 'edit' && id) {
-            document.getElementById('modalTitle').innerText = 'Edit Invoice Penjualan';
+            document.getElementById('modalTitle').innerText = 'Edit Invoice Pembelian';
             document.getElementById('form_mode').value = 'edit';
             document.getElementById('edit_invoice_id').value = id;
 
@@ -745,7 +829,7 @@
             }
 
         } else {
-            document.getElementById('modalTitle').innerText = 'Invoice Penjualan Baru';
+            document.getElementById('modalTitle').innerText = 'Invoice Pembelian Baru';
             document.getElementById('form_mode').value = 'create';
             document.getElementById('modal_tgl_invoice').value = new Date().toISOString().split('T')[0];
             // Set default due date (e.g. +30 days)
@@ -795,8 +879,8 @@
             if (!qtyEl || !priceEl || !discEl) return;
 
             const qty = parseFloat(qtyEl.value) || 0;
-            const price = parseFloat(priceEl.value) || 0;
-            const disc = parseFloat(discEl.value) || 0;
+            const price = cleanNumber(priceEl.value);
+            const disc = cleanNumber(discEl.value);
 
             let lineTotal = (qty * price) - disc;
             if (lineTotal < 0) lineTotal = 0;
@@ -807,7 +891,7 @@
             subtotal += lineTotal;
         });
 
-        const extraDisc = parseFloat(document.getElementById('modal_diskon_tambahan').value) || 0;
+        const extraDisc = cleanNumber(document.getElementById('modal_diskon_tambahan').value);
         const grandTotal = Math.max(0, subtotal - extraDisc);
 
         document.getElementById('summary_subtotal').innerText = window.financeApp.formatIDR(subtotal);
@@ -861,27 +945,53 @@
 
         // Build Payload
         const items = [];
-        document.querySelectorAll('#itemBodyList tr').forEach(row => {
-            const qty = parseFloat(row.querySelector('.prod-qty').value) || 0;
-            const price = parseFloat(row.querySelector('.prod-price').value) || 0;
-            const disc = parseFloat(row.querySelector('.prod-disc').value) || 0;
-            const subtotal = Math.max(0, (qty * price) - disc);
+        const rows = document.querySelectorAll('#itemBodyList tr');
 
-            const productId = row.querySelector('.prod-id').value;
+        for (const row of rows) {
+            if (!row.querySelector('.prod-qty')) continue;
+
+            const qtyInput = row.querySelector('.prod-qty');
+            const priceInput = row.querySelector('.prod-price');
+            const discInput = row.querySelector('.prod-disc');
+            const idInput = row.querySelector('.prod-id');
+            const descInput = row.querySelector('.prod-desc');
+
+            const productId = idInput.value;
+            const qty = parseFloat(qtyInput.value) || 0;
+
+            // --- CLEAN DATA SEBELUM SAVE ---
+            const price = cleanNumber(priceInput.value);
+            const disc = cleanNumber(discInput.value);
+
+            let namaProduk = '';
 
             const productData = masterProduk.find(p => String(p.id) === String(productId));
-            const namaProduk = productData ? productData.nama_produk : '';
 
-            items.push({
-                produk_id: row.querySelector('.prod-id').value || null,
-                nama_produk_manual: namaProduk,
-                deskripsi_produk: row.querySelector('.prod-desc').value,
-                qty: qty,
-                harga_satuan: price,
-                diskon_nilai: disc,
-                total_harga_item: subtotal
-            });
-        });
+            if (productData) {
+                namaProduk = productData.nama_produk;
+            } else {
+                const tsElement = row.querySelector('.prod-select-item');
+                if (tsElement && tsElement.tomselect) {
+                    const ts = tsElement.tomselect;
+                    const val = ts.getValue();
+                    if (val && ts.options[val]) {
+                        namaProduk = ts.options[val].nama;
+                    }
+                }
+            }
+
+            if (namaProduk) {
+                items.push({
+                    produk_id: productId || null,
+                    nama_produk_manual: namaProduk,
+                    deskripsi_produk: descInput.value,
+                    qty: qty,
+                    harga_satuan: price,
+                    diskon_nilai: disc,
+                    total_harga_item: Math.max(0, (qty * price) - disc)
+                });
+            }
+        }
 
         const payload = {
             invoice: {
@@ -893,7 +1003,7 @@
                 ref_no: document.getElementById('modal_ref_no').value,
                 keterangan: document.getElementById('modal_keterangan').value,
                 syarat_ketentuan: document.getElementById('modal_syarat').value,
-                diskon_tambahan_nilai: parseFloat(document.getElementById('modal_diskon_tambahan').value) || 0,
+                diskon_tambahan_nilai: cleanNumber(document.getElementById('modal_diskon_tambahan').value),
                 total_akhir: parseFloat(document.getElementById('summary_grand_total').innerText.replace(
                     /[^0-9,-]+/g, '').replace(',', '.')) || 0,
                 status_dok: 'Approved',
@@ -906,7 +1016,7 @@
 
         // Basic Validation
         if (!payload.invoice.mitra_id) {
-            alert('Harap pilih Pelanggan/Mitra!');
+            alert('Harap pilih Supplier/Mitra!');
             return;
         }
         if (!payload.invoice.tgl_invoice) {
@@ -936,8 +1046,9 @@
             if (result.success) {
                 alert('Invoice berhasil disimpan!');
                 bootstrap.Modal.getInstance(document.getElementById('invoiceModal')).hide();
+                let invoiceId = result.data?.invoice?.id || result.data?.id;
                 // Redirect to detail page
-                window.location.href = `{{ url('purchase') }}/${result.data.invoice.id}`;
+                window.location.href = `{{ url('purchase') }}/${invoiceId}`;
             } else {
                 if (result.errors) {
                     let errorMsg = "Terjadi kesalahan:\n";
@@ -1056,5 +1167,26 @@
         });
 
         bootstrap.Modal.getInstance(document.getElementById('stockModal')).hide();
+    }
+
+    function openMitraModal() {
+        // Check if mitra modal exists in parent/global scope or needs to be included
+        // Assuming there is a global function or modal for creating mitra
+        if (typeof window.openMitraModalGlobal === 'function') {
+            window.openMitraModalGlobal('Supplier');
+        } else {
+            // Fallback if no global helper, try to find the modal directly
+            const mitraModal = document.getElementById('mitraModal');
+            if (mitraModal) {
+                 const modal = new bootstrap.Modal(mitraModal);
+                 // Reset form if check
+                 document.getElementById('mitraForm')?.reset();
+                 const typeInput = document.getElementById('mitra_tipe');
+                 if(typeInput) typeInput.value = 'Supplier';
+                 modal.show();
+            } else {
+                alert('Fitur Tambah Mitra belum terhubung. Pastikan Modal Mitra dimuat.');
+            }
+        }
     }
 </script>

@@ -54,7 +54,6 @@ class ProductSeeder extends Seeder
                 'kemasan' => 1,
                 'satuan' => 'pcs',
                 'track_stock' => true,
-                'qty' => $faker->numberBetween(10, 100),
                 'coa_id' => $coaId,
                 'created_at' => now(),
                 'updated_at' => now(),

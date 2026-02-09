@@ -40,17 +40,17 @@ class DatabaseSeeder extends Seeder
         $this->call(TaxSeeder::class);
         $this->call(FinancialAccountSeeder::class);
         $this->call(ExpenseCategorySeeder::class);
-        
-        // 3. Inventory Master Data
+
+        // 3. Partners
+        $this->call(MitraSeeder::class);
+
+        // 4. Inventory Master Data
         $this->call(StockLocationSeeder::class);
         $this->call(BrandSeeder::class);
         $this->call(ProductCategorySeeder::class);
         
-        // 4. Logistics
+        // 5. Logistics
         $this->call(FleetSeeder::class);
-
-        // 5. Partners
-        $this->call(MitraSeeder::class);
 
         // 6. Products (Depends on Brand, Category, Mitra)
         $this->call(ProductSeeder::class);
