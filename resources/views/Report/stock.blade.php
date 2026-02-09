@@ -185,7 +185,7 @@
                                             <td class="ps-4 fw-bold text-dark">{{ $product->sku_kode }}</td>
                                             <td class="fw-bold">{{ $product->nama_produk }}</td>
                                             <td>{{ $product->nama_kategori }}</td>
-                                            <td>{{ $product->nama_unit }}</td>
+                                            <td>{{ $product->satuan }}</td>
 
                                             <td class="text-end">{{ number_format($product->opening_qty, 2) }}</td>
                                             <td class="text-end text-success">{{ number_format($product->qty_in, 2) }}

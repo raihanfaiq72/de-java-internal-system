@@ -247,7 +247,7 @@ class ReportController extends Controller
                 'products.id',
                 'products.nama_produk',
                 'products.sku_kode',
-                'products.satuan as nama_unit',
+                'products.satuan',
                 'product_categories.nama_kategori',
                 DB::raw("SUM(CASE 
                     WHEN stock_mutations.created_at < '$startDate' AND stock_mutations.type = 'IN' THEN stock_mutations.qty 
@@ -338,7 +338,7 @@ class ReportController extends Controller
             foreach ($products as $product) {
                 $row['Produk'] = $product->nama_produk . ($product->sku_kode ? ' (' . $product->sku_kode . ')' : '');
                 $row['Kategori'] = $product->nama_kategori;
-                $row['Unit'] = $product->nama_unit;
+                $row['Unit'] = $product->satuan;
                 $row['Qty Awal'] = $product->opening_qty;
                 $row['Qty Masuk'] = $product->qty_in;
                 $row['Qty Keluar'] = $product->qty_out;
