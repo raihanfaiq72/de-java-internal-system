@@ -282,7 +282,6 @@
                                         <th width="150" class="text-end">Jumlah</th>
                                         <th width="150" class="text-end">Terhutang</th>
                                         <th width="120" class="text-center">Tgl. Invoice</th>
-                                        <th width="80" class="text-center">Att</th>
                                         <th width="80" class="text-end pe-3">Tindakan</th>
                                     </tr>
                                 </thead>
@@ -497,14 +496,14 @@
                 const tr = document.createElement('tr');
                 tr.classList.add('border-bottom', 'border-light');
                 tr.innerHTML = `
-                                                                    <td class="ps-3 py-3">
-                                                                        <div class="fw-bold text-dark">${it.nama_produk_manual || it.product?.nama_produk || '-'}</div>
-                                                                        <div class="small text-muted">${it.product?.kode_produk || '-'}</div>
-                                                                    </td>
-                                                                    <td class="text-center py-3">${parseFloat(it.qty)} ${it.product?.unit?.nama_unit || ''}</td>
-                                                                    <td class="text-end py-3">${window.financeApp.formatIDR(it.harga_satuan)}</td>
-                                                                    <td class="text-end pe-3 py-3">${window.financeApp.formatIDR(it.total_harga_item)}</td>
-                                                                `;
+                                                                            <td class="ps-3 py-3">
+                                                                                <div class="fw-bold text-dark">${it.nama_produk_manual || it.product?.nama_produk || '-'}</div>
+                                                                                <div class="small text-muted">${it.product?.kode_produk || '-'}</div>
+                                                                            </td>
+                                                                            <td class="text-center py-3">${parseFloat(it.qty)} ${it.product?.unit?.nama_unit || ''}</td>
+                                                                            <td class="text-end py-3">${window.financeApp.formatIDR(it.harga_satuan)}</td>
+                                                                            <td class="text-end pe-3 py-3">${window.financeApp.formatIDR(it.total_harga_item)}</td>
+                                                                        `;
                 tbody.appendChild(tr);
             });
 

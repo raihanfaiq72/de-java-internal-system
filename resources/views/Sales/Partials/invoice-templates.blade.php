@@ -24,7 +24,6 @@
             <div class="text-dark fw-medium small row-tgl"></div>
             <div class="text-danger row-jatuh-tempo" style="font-size: 10px;"></div>
         </td>
-        <td class="text-center text-muted"><i class="fa fa-paperclip"></i></td>
         <td class="text-end pe-3" onclick="event.stopPropagation()">
             <div class="dropdown">
                 <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-muted" data-bs-toggle="dropdown">
