@@ -402,10 +402,34 @@
                                 <td>${item.name}</td>
                                 <td><span class="badge bg-info-subtle text-info">${item.type}</span></td>
                                 <td class="text-center">
-                                    <button class="btn btn-xs btn-outline-primary me-1" onclick="showEditLocationModal(${item.id})"><i class="iconoir-edit-pencil"></i> Ubah</button>
-                                    <button class="btn btn-xs btn-outline-danger me-1" onclick="deleteLocation(${item.id})"><i class="iconoir-trash"></i> Hapus</button>
-                                    <button class="btn btn-xs btn-outline-success me-1" onclick="showOpeningStockModal(${item.id}, '${item.name}')"><i class="iconoir-page"></i> Persediaan Awal</button>
-                                    <button class="btn btn-xs btn-outline-dark" onclick="showStockOpnameModal(${item.id}, '${item.name}')"><i class="iconoir-page"></i> Stok Opname</button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Aksi
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item" href="javascript:void(0)" onclick="showEditLocationModal(${item.id})">
+                                                    <i class="iconoir-edit-pencil me-1"></i> Ubah
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="javascript:void(0)" onclick="showOpeningStockModal(${item.id}, '${item.name}')">
+                                                    <i class="iconoir-page me-1"></i> Persediaan Awal
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="javascript:void(0)" onclick="showStockOpnameModal(${item.id}, '${item.name}')">
+                                                    <i class="iconoir-page me-1"></i> Stok Opname
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="javascript:void(0)" onclick="deleteLocation(${item.id})">
+                                                    <i class="iconoir-trash me-1"></i> Hapus
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </td>
                             </tr>
                         `);
@@ -777,15 +801,28 @@
                         <span class="badge ${stockBadge}">${qty}</span>
                     </td>
                     <td class="text-center">
-                        <button class="btn btn-xs btn-outline-info me-1" title="Lihat FIFO" onclick="viewFifo(${item.id})">
-                             Lihat FIFO
-                        </button>
-                        <button class="btn btn-xs btn-outline-warning me-1" title="Stok" onclick="quickStockOpname(${item.id}, ${qty})">
-                            <i class="iconoir-archive"></i> Stok
-                        </button>
-                        <button class="btn btn-xs btn-outline-primary" title="Penyesuaian Stok" onclick="adjustStock(${item.id}, ${qty})">
-                            <i class="iconoir-settings"></i> Adj
-                        </button>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Aksi
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="javascript:void(0)" onclick="viewFifo(${item.id})">
+                                        <i class="iconoir-list me-1"></i> Lihat FIFO
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="javascript:void(0)" onclick="quickStockOpname(${item.id}, ${qty})">
+                                        <i class="iconoir-archive me-1"></i> Stok Opname
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="javascript:void(0)" onclick="adjustStock(${item.id}, ${qty})">
+                                        <i class="iconoir-settings me-1"></i> Penyesuaian Stok
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </td>
                 </tr>
             `);
