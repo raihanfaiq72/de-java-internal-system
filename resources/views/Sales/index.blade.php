@@ -316,6 +316,31 @@
     @include('Sales.Modal.detail-modal')
     @include('Sales.Partials.invoice-templates')
     @include('Mitra.Modal.modal-fullscreen')
+
+    <div class="modal fade" id="modalPrintPreview" tabindex="-1" aria-labelledby="modalPrintPreviewLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0 rounded-4">
+                <div class="modal-header border-bottom-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold" id="modalPrintPreviewLabel">
+                        <i class="fa fa-print text-primary me-2"></i> Preview Cetak Nota
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="ratio ratio-16x9 border rounded bg-light" style="min-height: 70vh;">
+                        <iframe id="print-iframe" src="" allowfullscreen></iframe>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light fw-bold px-4" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm" onclick="triggerPrint()">
+                        <i class="fa fa-print me-1"></i> Cetak Sekarang
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('js')
@@ -358,7 +383,7 @@
         };
 
         document.querySelectorAll('.nav-tabs-finance .nav-link').forEach(tab => {
-            tab.addEventListener('shown.bs.tab', function(event) {
+            tab.addEventListener('shown.bs.tab', function (event) {
                 const targetId = event.target.getAttribute('href');
 
                 if (targetId === '#invoice-archive') {
@@ -472,14 +497,14 @@
                 const tr = document.createElement('tr');
                 tr.classList.add('border-bottom', 'border-light');
                 tr.innerHTML = `
-                    <td class="ps-3 py-3">
-                        <div class="fw-bold text-dark">${it.nama_produk_manual || it.product?.nama_produk || '-'}</div>
-                        <div class="small text-muted">${it.product?.kode_produk || '-'}</div>
-                    </td>
-                    <td class="text-center py-3">${parseFloat(it.qty)} ${it.product?.unit?.nama_unit || ''}</td>
-                    <td class="text-end py-3">${window.financeApp.formatIDR(it.harga_satuan)}</td>
-                    <td class="text-end pe-3 py-3">${window.financeApp.formatIDR(it.total_harga_item)}</td>
-                `;
+                                                                    <td class="ps-3 py-3">
+                                                                        <div class="fw-bold text-dark">${it.nama_produk_manual || it.product?.nama_produk || '-'}</div>
+                                                                        <div class="small text-muted">${it.product?.kode_produk || '-'}</div>
+                                                                    </td>
+                                                                    <td class="text-center py-3">${parseFloat(it.qty)} ${it.product?.unit?.nama_unit || ''}</td>
+                                                                    <td class="text-end py-3">${window.financeApp.formatIDR(it.harga_satuan)}</td>
+                                                                    <td class="text-end pe-3 py-3">${window.financeApp.formatIDR(it.total_harga_item)}</td>
+                                                                `;
                 tbody.appendChild(tr);
             });
 
@@ -498,10 +523,45 @@
                     deleteInvoice(item.id);
                 }
             };
-            document.getElementById('btnDetailPrint').href = `{{ url('sales/print') }}/${item.id}`;
+
+            const btnDetailPrint = document.getElementById('btnDetailPrint');
+            btnDetailPrint.href = 'javascript:void(0)';
+            btnDetailPrint.onclick = () => openPrintPreview(item.id);
 
             // Show Modal
             new bootstrap.Modal(document.getElementById('detailInvoiceModal')).show();
+        }
+
+        function openPrintPreview(id) {
+            const printUrl = `{{ url('sales/print') }}/${id}`;
+
+            const modalContainer = document.getElementById('modalPrintPreview');
+
+            if (!modalContainer) {
+                console.error('Modal container tidak ditemukan di halaman ini.');
+                return;
+            }
+
+            const iframe = modalContainer.querySelector('iframe');
+
+            if (!iframe) {
+                console.error('Elemen iframe tidak ditemukan di dalam modal.');
+                alert('Gagal memuat preview cetak.');
+                return;
+            }
+
+            iframe.src = printUrl;
+
+            const bModal = bootstrap.Modal.getOrCreateInstance(modalContainer);
+            bModal.show();
+        }
+
+        function triggerPrint() {
+            const iframe = document.getElementById('print-iframe');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            }
         }
 
         function renderInvoiceList(data) {
@@ -582,7 +642,9 @@
 
                 row.querySelector('.btn-edit').onclick = () => openInvoiceModal(item.id, null, 'edit');
                 row.querySelector('.btn-delete').onclick = () => deleteInvoice(item.id);
-                row.querySelector('.btn-print').href = `{{ url('sales/print') }}/${item.id}`;
+                const btnPrint = row.querySelector('.btn-print');
+                btnPrint.href = 'javascript:void(0)';
+                btnPrint.onclick = () => openPrintPreview(item.id);
 
                 // Remove chevron
                 const chevron = row.querySelector('.chevron-icon');
@@ -643,11 +705,11 @@
         function renderPagination(meta) {
             const c = document.getElementById('pagination-container');
             c.innerHTML = '';
-            document.getElementById('pagination-info').innerText = `${meta.from||0}-${meta.to||0} dari ${meta.total}`;
+            document.getElementById('pagination-info').innerText = `${meta.from || 0}-${meta.to || 0} dari ${meta.total}`;
             meta.links.forEach(l => {
                 const cls = l.active ? 'bg-primary text-white' : 'bg-white text-dark';
                 c.insertAdjacentHTML('beforeend',
-                    `<li class="page-item ${!l.url?'disabled':''}"><a class="page-link border-0 mx-1 rounded shadow-sm fw-bold ${cls}" href="#" onclick="loadInvoiceData('${l.url}')">${l.label}</a></li>`
+                    `<li class="page-item ${!l.url ? 'disabled' : ''}"><a class="page-link border-0 mx-1 rounded shadow-sm fw-bold ${cls}" href="#" onclick="loadInvoiceData('${l.url}')">${l.label}</a></li>`
                 );
             });
         }
@@ -693,7 +755,7 @@
 
             const searchInput = document.getElementById('filter-search');
             if (searchInput) {
-                searchInput.addEventListener('keypress', function(e) {
+                searchInput.addEventListener('keypress', function (e) {
                     if (e.key === 'Enter') {
                         e.preventDefault();
                         loadInvoiceData();

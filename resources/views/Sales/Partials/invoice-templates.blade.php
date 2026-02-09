@@ -51,8 +51,8 @@
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item btn-print" href="" target="_blank"><i
-                                class="fa fa-print text-dark me-2"></i> Cetak Nota</a>
+                        <a class="dropdown-item btn-print" href=""><i class="fa fa-print text-dark me-2"></i> Cetak
+                            Nota</a>
                     </li>
                     <li>
                         <hr class="dropdown-divider">
