@@ -35,7 +35,7 @@ class PaymentController extends Controller
 
     public function show($id)
     {
-        $data = Payment::with(['invoice.mitra', 'invoice.items.product.unit', 'akun_keuangan'])
+        $data = Payment::with(['invoice.mitra', 'akun_keuangan'])
             ->where('office_id', session('active_office_id'))
             ->find($id);
         if (!$data) {
