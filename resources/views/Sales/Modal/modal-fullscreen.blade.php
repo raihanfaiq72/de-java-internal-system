@@ -785,6 +785,7 @@
         }
     });
 </script>
+<script>
         const selectEl = tr.querySelector('.prod-select-item');
         const priceInput = tr.querySelector('.prod-price');
         const qtyInput = tr.querySelector('.prod-qty');
