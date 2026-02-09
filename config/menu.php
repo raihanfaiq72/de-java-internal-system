@@ -156,6 +156,11 @@ return [
         'id' => 'sidebarLaporan',
         'submenu' => [
             [
+                'title' => 'Laporan Invoice',
+                'route' => 'report.invoice',
+                'icon' => 'iconoir-page-search',
+            ],
+            [
                 'title' => 'Laporan Penjualan',
                 'route' => 'report.sales',
                 'icon' => 'iconoir-graph-up',

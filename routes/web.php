@@ -73,6 +73,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('users', fn() => view('Users.index'))->name('users.index');
 
         // Reports
+        Route::get('report/invoice', [App\Http\Controllers\Report\InvoiceReportController::class, 'index'])->name('report.invoice');
         Route::get('report/sales', [ReportController::class, 'salesReport'])->name('report.sales');
         Route::get('report/purchase', [ReportController::class, 'purchaseReport'])->name('report.purchase');
         Route::get('report/stock', [ReportController::class, 'stockReport'])->name('report.stock');
