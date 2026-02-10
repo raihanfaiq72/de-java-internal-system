@@ -259,6 +259,10 @@
                                 </div>
 
                                 <div id="bulk-action-area" class="d-none flex-shrink-0 ms-2 border-start ps-2">
+                                    <button class="btn btn-outline-primary fw-bold btn-sm px-3 me-1"
+                                        onclick="initBulkEdit()">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
                                     <button class="btn btn-outline-danger fw-bold btn-sm px-3" onclick="bulkDelete()">
                                         <i class="fa fa-trash-can"></i>
                                     </button>
@@ -340,6 +344,8 @@
             </div>
         </div>
     </div>
+
+    @include('Sales.Modal.modal-bulk-edit')
 @endsection
 
 @push('js')
@@ -513,14 +519,14 @@
                 const tr = document.createElement('tr');
                 tr.classList.add('border-bottom', 'border-light');
                 tr.innerHTML = `
-                                    <td class="ps-3 py-3">
-                                        <div class="fw-bold text-dark">${it.nama_produk_manual || it.product?.nama_produk || '-'}</div>
-                                        <div class="small text-muted">${it.product?.kode_produk || '-'}</div>
-                                    </td>
-                                    <td class="text-center py-3">${parseFloat(it.qty)} ${it.product?.unit?.nama_unit || ''}</td>
-                                    <td class="text-end py-3">${window.financeApp.formatIDR(it.harga_satuan)}</td>
-                                    <td class="text-end pe-3 py-3">${window.financeApp.formatIDR(it.total_harga_item)}</td>
-                                `;
+                                                                                <td class="ps-3 py-3">
+                                                                                    <div class="fw-bold text-dark">${it.nama_produk_manual || it.product?.nama_produk || '-'}</div>
+                                                                                    <div class="small text-muted">${it.product?.kode_produk || '-'}</div>
+                                                                                </td>
+                                                                                <td class="text-center py-3">${parseFloat(it.qty)} ${it.product?.unit?.nama_unit || ''}</td>
+                                                                                <td class="text-end py-3">${window.financeApp.formatIDR(it.harga_satuan)}</td>
+                                                                                <td class="text-end pe-3 py-3">${window.financeApp.formatIDR(it.total_harga_item)}</td>
+                                                                            `;
                 tbody.appendChild(tr);
             });
 
@@ -724,7 +730,7 @@
 
             if (!confirm(`Yakin ingin menghapus ${count} data?`)) return;
 
-            const btn = document.querySelector('#bulk-action-area button');
+            const btn = document.querySelector('#bulk-action-area button.btn-outline-danger');
             const originalContent = btn.innerHTML;
             btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
             btn.disabled = true;
