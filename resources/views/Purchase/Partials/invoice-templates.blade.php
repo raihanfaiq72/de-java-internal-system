@@ -1,6 +1,6 @@
 <template id="row-template">
     <tr class="clickable-row">
-        <td class="ps-3" onclick="event.stopPropagation()">
+        <td class="ps-3" onclick="event.stopPropagation(); updateSelection()">
             <input type="checkbox" class="form-check-input invoice-checkbox">
         </td>
         <td class="text-center small text-muted">
