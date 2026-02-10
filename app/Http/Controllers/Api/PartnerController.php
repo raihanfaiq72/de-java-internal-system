@@ -69,6 +69,8 @@ class PartnerController extends Controller
                 'nomor_mitra' => 'nullable|unique:mitras,nomor_mitra',
                 'payment_terms' => 'nullable|string|max:50',
                 'identity_card' => 'nullable|string|max:50',
+                'latitude' => 'nullable|numeric|between:-90,90',
+                'longitude' => 'nullable|numeric|between:-180,180',
             ]);
 
             if ($validator->fails()) {
@@ -113,6 +115,8 @@ class PartnerController extends Controller
                 'nomor_mitra' => 'nullable|unique:mitras,nomor_mitra,' . $id,
                 'payment_terms' => 'nullable|string|max:50',
                 'identity_card' => 'nullable|string|max:50',
+                'latitude' => 'nullable|numeric|between:-90,90',
+                'longitude' => 'nullable|numeric|between:-180,180',
             ]);
 
             if ($validator->fails()) {

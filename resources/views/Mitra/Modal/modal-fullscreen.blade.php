@@ -86,6 +86,29 @@
                                     <div class="mt-3">
                                         <label class="f-label">Alamat Lengkap</label>
                                         <textarea id="modal_alamat" class="form-control f-input" rows="3" placeholder="Alamat kantor / gudang..."></textarea>
+                                        <div class="form-text text-muted small mt-1">
+                                            <i class="fa fa-info-circle me-1"></i>
+                                            Tips: Gunakan format <b>Nama Jalan, Kota, Provinsi</b> (contoh: <i>Jl. Jend. Sudirman No. 1, Jakarta Pusat, DKI Jakarta</i>) agar lokasi peta lebih akurat.
+                                        </div>
+                                        
+                                        <!-- Map Section -->
+                                        <div class="mt-3">
+                                            <label class="f-label d-flex justify-content-between align-items-center">
+                                                <span>Lokasi Peta</span>
+                                                <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 fw-bold" onclick="geocodeAddress()" style="font-size: 11px;">
+                                                    <i class="fa fa-search-location me-1"></i>Cari dari Alamat
+                                                </button>
+                                            </label>
+                                            <div id="mitraMap" class="w-100 rounded-3 border" style="height: 250px; z-index: 0;"></div>
+                                            <div class="row g-2 mt-2">
+                                                <div class="col-6">
+                                                    <input type="text" id="modal_latitude" class="form-control f-input bg-light" placeholder="Latitude" readonly>
+                                                </div>
+                                                <div class="col-6">
+                                                    <input type="text" id="modal_longitude" class="form-control f-input bg-light" placeholder="Longitude" readonly>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div class="row g-3 mt-1">
@@ -162,10 +185,90 @@
 </style>
 
 <script>
+    let mitraMap = null;
+    let mitraMarker = null;
+
+    function initMitraMap(lat = -6.200000, lng = 106.816666) {
+        // Ensure container exists
+        if (!document.getElementById('mitraMap')) return;
+
+        if (!mitraMap) {
+            mitraMap = L.map('mitraMap').setView([lat, lng], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(mitraMap);
+            
+            mitraMap.on('click', function(e) {
+                updateMarker(e.latlng.lat, e.latlng.lng);
+            });
+        } else {
+            mitraMap.setView([lat, lng], 13);
+        }
+
+        updateMarker(lat, lng);
+        
+        // Fix Leaflet sizing issue in modal
+        setTimeout(() => {
+            mitraMap.invalidateSize();
+        }, 500);
+    }
+
+    function updateMarker(lat, lng) {
+        if (mitraMarker) {
+            mitraMarker.setLatLng([lat, lng]);
+        } else {
+            mitraMarker = L.marker([lat, lng], {draggable: true}).addTo(mitraMap);
+            mitraMarker.on('dragend', function(e) {
+                const position = e.target.getLatLng();
+                document.getElementById('modal_latitude').value = position.lat.toFixed(8);
+                document.getElementById('modal_longitude').value = position.lng.toFixed(8);
+            });
+        }
+        document.getElementById('modal_latitude').value = parseFloat(lat).toFixed(8);
+        document.getElementById('modal_longitude').value = parseFloat(lng).toFixed(8);
+    }
+
+    async function geocodeAddress() {
+        const address = document.getElementById('modal_alamat').value;
+        if (!address) {
+            alert('Mohon isi alamat terlebih dahulu');
+            return;
+        }
+
+        const btn = document.querySelector('button[onclick="geocodeAddress()"]');
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i>Mencari...';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`);
+            const data = await response.json();
+
+            if (data && data.length > 0) {
+                const lat = parseFloat(data[0].lat);
+                const lon = parseFloat(data[0].lon);
+                mitraMap.setView([lat, lon], 16);
+                updateMarker(lat, lon);
+            } else {
+                alert('Lokasi tidak ditemukan. Silakan geser marker secara manual.');
+            }
+        } catch (error) {
+            console.error('Geocoding error:', error);
+            alert('Gagal koneksi ke layanan peta.');
+        } finally {
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+        }
+    }
+
     async function openMitraModal(id = null) {
         const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('mitraModal'));
         document.getElementById('mitraForm').reset();
         
+        // Default Jakarta
+        let lat = -6.200000;
+        let lng = 106.816666;
+
         if (id) {
             document.getElementById('mitraModalTitle').innerText = 'Edit Data Mitra';
             document.getElementById('mitra_form_mode').value = 'edit';
@@ -190,6 +293,11 @@
                     document.getElementById('modal_kontak_jabatan').value = data.kontak_jabatan || '';
                     document.getElementById('modal_kontak_no_hp').value = data.kontak_no_hp || '';
                     document.getElementById('modal_kontak_email').value = data.kontak_email || '';
+
+                    if (data.latitude && data.longitude) {
+                        lat = parseFloat(data.latitude);
+                        lng = parseFloat(data.longitude);
+                    }
                 }
             } catch(e) { console.error(e); alert('Gagal load data mitra'); return; }
 
@@ -199,10 +307,17 @@
             document.getElementById('modal_nomor_mitra').value = '';
             document.getElementById('modal_ktp_npwp').value = '';
             document.getElementById('modal_is_cash_customer').checked = false;
-            // Auto generate ID logic could be here on backend usually
         }
 
         modal.show();
+        
+        // Initialize map after modal show
+        document.getElementById('mitraModal').addEventListener('shown.bs.modal', function () {
+            initMitraMap(lat, lng);
+        }, { once: true });
+        
+        // Also call it immediately if modal is already shown (edge case) or use timeout
+        setTimeout(() => initMitraMap(lat, lng), 200);
     }
 
     async function saveMitra() {
@@ -224,7 +339,9 @@
             kontak_nama: document.getElementById('modal_kontak_nama').value,
             kontak_jabatan: document.getElementById('modal_kontak_jabatan').value,
             kontak_no_hp: document.getElementById('modal_kontak_no_hp').value,
-            kontak_email: document.getElementById('modal_kontak_email').value
+            kontak_email: document.getElementById('modal_kontak_email').value,
+            latitude: document.getElementById('modal_latitude').value,
+            longitude: document.getElementById('modal_longitude').value
         };
 
         if(!payload.nama) { alert('Nama Mitra wajib diisi!'); return; }
