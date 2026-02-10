@@ -104,6 +104,10 @@ Route::middleware(['auth'])->group(function () {
 
             // User Plots
             Route::get('/user-plots', [UserPlotController::class, 'index'])->name('user_plots.index');
+            Route::post('/user-plots', [UserPlotController::class, 'store'])->name('user_plots.store');
+            Route::get('/user-plots/{id}', [UserPlotController::class, 'show'])->name('user_plots.show');
+            Route::put('/user-plots/{id}', [UserPlotController::class, 'update'])->name('user_plots.update');
+            Route::delete('/user-plots/{id}', [UserPlotController::class, 'destroy'])->name('user_plots.destroy');
             
             // Test Notification Route
             Route::get('/test-notification', function () {
