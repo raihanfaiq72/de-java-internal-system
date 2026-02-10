@@ -140,7 +140,7 @@
                                                 </button>
                                                 <form action="{{ route('roles.destroy', $role->id) }}" method="POST"
                                                     class="d-inline"
-                                                    onsubmit="event.preventDefault(); const form = this; (async () => { if (await macConfirm('Hapus role{{ $role->name }}? User yang menggunakan role ini akan kehilangan akses.')) form.submit() })();">
+                                                    onsubmit="event.preventDefault(); const form = this; (async () => { if (await macConfirm('Hapus role {{ $role->name }}? User yang menggunakan role ini akan kehilangan akses.')) form.submit() })();">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
@@ -227,27 +227,31 @@
                             <div class="card border-0 shadow-sm rounded-3">
                                 <div class="card-body p-4">
                                     <div class="row g-4">
-                                        @php 
-                                            $prefixes = \App\Models\Prefix::with('permissions')->orderBy('name')->get(); 
+                                        @php
+                                            $prefixes = \App\Models\Prefix::with('permissions')->orderBy('name')->get();
                                         @endphp
-                                        @foreach($prefixes as $prefix)
+                                        @foreach ($prefixes as $prefix)
                                             <div class="col-md-6 permission-group">
-                                                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
-                                                    <h6 class="mb-0 text-primary">{{ $prefix->name }}</
-                                               h            6>
+                                                <div
+                                                    class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                                                    <h6 class="mb-0 text-primary">{{ $prefix->name }}</h6>
 
-                                                                                                       <div class="form-check form-switch">
+                                                    <div class="form-check form-switch">
 
-                                                                                                           <input class="form-check-input" type="checkbox" id="check-all-{{ $prefix->id }}" onchange="toggleGroup('{{ $prefix->id }}', this)">
-                                                        <label class="form-check-label small text-muted" for="check-all-{{ $prefix->id }}">All</label>
+                                                        <input class="form-check-input" type="checkbox"
+                                                            id="check-all-{{ $prefix->id }}"
+                                                            onchange="toggleGroup('{{ $prefix->id }}', this)">
+                                                        <label class="form-check-label small text-muted"
+                                                            for="check-all-{{ $prefix->id }}">All</label>
                                                     </div>
                                                 </div>
                                                 <div class="d-flex flex-wrap gap-2">
-                                                    @foreach($prefix->permissions as $perm)
-
-
-                                                                                                           <div class="form-check me-2 mb-1">
-                                                            <input class="form-check-input permission-checkbox group-{{ $prefix->id }}" type="checkbox" name="permissions[]" value="{{ $perm->id }}" id="perm-{{ $perm->id }}">
+                                                    @foreach ($prefix->permissions as $perm)
+                                                        <div class="form-check me-2 mb-1">
+                                                            <input
+                                                                class="form-check-input permission-checkbox group-{{ $prefix->id }}"
+                                                                type="checkbox" name="permissions[]" value="{{ $perm->id }}"
+                                                                id="perm-{{ $perm->id }}">
                                                             <label class="form-check-label small" for="perm-{{ $perm->id }}">
                                                                 {{ $perm->description ?: $perm->name }}
                                                             </label>
@@ -265,68 +269,72 @@
             </form>
         </div>
     </div>
+@endsection
 
-    @push('js')
-        <script>
-            async function openRoleModal(id = null) {
-                const form = document.getElementById('roleForm');
-        const modalTitle = document.getElementById('roleModalTitle');
-                const methodInput = document.getElementById('formMethod');
+@push('js')
+    <script>
+        async function openRoleModal(id = null) {
+            const form = document.getElementById('roleForm');
+            const modalTitle = document.getElementById('roleModalTitle');
+            const methodInput = document.getElementById('formMethod');
 
-        form.reset();
-                document.querySelectorAll('.permission-checkbox').forEach(c => c.checked = false);
+            form.reset();
+            document.querySelectorAll('.permission-checkbox').forEach(c => c.checked = false);
 
-                if (id) {
-                    modalTitle.innerText = 'Edit Data Role';
-                    form.action = `/admin/roles/${id}`; 
-                    methodInput.value = 'PUT';
+            if (id) {
+                modalTitle.innerText = 'Edit Data Role';
+                form.action = `/admin/roles/${id}`;
+                methodInput.value = 'PUT';
 
-                    // Fetch data
-                    try {
-                        const res = await fetch(`/admin/roles/${id}`, {
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest',
-                               'Accept': 'application/json'
-                            }
-                        }) ; 
-                        const json = await res.json();
-                        if(json.success) {
-        document.getElementById('roleName').value = json.data.name;
-                            document.getElementById('roleDesc').value = json.data.description || '';
-
-                            // Check permissions
-                            json.p ermissions.forEach(pId => {
-                                const chk = document.getElementById(`perm-${pId}`);
-                                if(chk) chk.checked = true;
-                             });
+                // Fetch data
+                try {
+                    const res = await fetch(`/admin/roles/${id}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
                         }
-                    } catch(e) { console.error(e); alert('Error loading role data'); return; }
+                    });
+                    const json = await res.json();
+                    if (json.success) {
+                        document.getElementById('roleName').value = json.data.name;
+                        document.getElementById('roleDesc').value = json.data.description || '';
 
-                } else {
-                    modalTitle.innerText = 'Buat Role Baru';
-                    form.action = "{{ route('roles.store') }}";
-                    methodInput.value = 'POST';
+                        // Check permissions
+                        json.permissions.forEach(pId => {
+                            const chk = document.getElementById(`perm-${pId}`);
+                            if (chk) chk.checked = true;
+                        });
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Error loading role data');
+                    return;
                 }
 
-                const modal = new bootstrap.Modal(document.getElementById('roleModal'));
-                modal.show();
+            } else {
+                modalTitle.innerText = 'Buat Role Baru';
+                form.action = "{{ route('roles.store') }}";
+                methodInput.value = 'POST';
             }
 
-            function toggleAllPermissions() {
-                const checkboxes = document.querySelectorAll('.permission-checkbox');
-        const allChecked = Array.from(checkboxes).every(c => c.checked);
-                checkboxes.forEach(c => c.checked = !allChecked);
+            const modal = new bootstrap.Modal(document.getElementById('roleModal'));
+            modal.show();
+        }
 
-                // Update group toggles
-                document.querySelectorAll('input[id^="check-all-"]').forEach(chk => {
-                    chk.checked = !allChecked;
-                });
-            }
+        function toggleAllPermissions() {
+            const checkboxes = document.querySelectorAll('.permission-checkbox');
+            const allChecked = Array.from(checkboxes).every(c => c.checked);
+            checkboxes.forEach(c => c.checked = !allChecked);
 
-            function toggleGroup(prefixId, toggle) {
-                const checkboxes = document.querySelectorAll(`.group-${prefixId}`);
-                checkboxes.forEach(c => c.checked = toggle.checked);
-            }
-        </script>
-    @endpush
-@endsection
+            // Update group toggles
+            document.querySelectorAll('input[id^="check-all-"]').forEach(chk => {
+                chk.checked = !allChecked;
+            });
+        }
+
+        function toggleGroup(prefixId, toggle) {
+            const checkboxes = document.querySelectorAll(`.group-${prefixId}`);
+            checkboxes.forEach(c => c.checked = toggle.checked);
+        }
+    </script>
+@endpush
