@@ -40,18 +40,18 @@
                                             {{-- LEVEL 2: TIPE --}}
                                             <div class="accordion accordion-flush" id="accordionTipe-{{ $kelompokId }}">
                                                 @foreach ($tipeGroups as $tipe => $accounts)
-                                                    @php $tipeId = Str::slug($tipe, '_') . '-' . rand(100,999); @endphp
+                                                    @php $tipeId = Str::slug($tipe, '_') . '-' . rand(100, 999); @endphp
                                                     <div class="accordion-item">
                                                         <h2 class="accordion-header">
-                                                            <button class="accordion-button collapsed ps-4 fw-semibold text-secondary" type="button"
-                                                                data-bs-toggle="collapse"
+                                                            <button
+                                                                class="accordion-button collapsed ps-4 fw-semibold text-secondary"
+                                                                type="button" data-bs-toggle="collapse"
                                                                 data-bs-target="#collapse-{{ $tipeId }}">
                                                                 {{ $tipe }}
                                                             </button>
                                                         </h2>
 
-                                                        <div id="collapse-{{ $tipeId }}"
-                                                            class="accordion-collapse collapse"
+                                                        <div id="collapse-{{ $tipeId }}" class="accordion-collapse collapse"
                                                             data-bs-parent="#accordionTipe-{{ $kelompokId }}">
 
                                                             <div class="accordion-body p-0">
@@ -67,8 +67,10 @@
                                                                             @foreach ($accounts as $acc)
                                                                                 <tr>
                                                                                     <td class="ps-5">
-                                                                                        <span class="badge bg-light text-dark font-monospace border me-2">{{ $acc->kode_akun }}</span>
-                                                                                        <span class="fw-medium">{{ $acc->nama_akun }}</span>
+                                                                                        <span
+                                                                                            class="badge bg-light text-dark font-monospace border me-2">{{ $acc->kode_akun }}</span>
+                                                                                        <span
+                                                                                            class="fw-medium">{{ $acc->nama_akun }}</span>
                                                                                     </td>
                                                                                     <td class="text-center">
                                                                                         <button
@@ -181,12 +183,12 @@
         }
 
         // Filter Tipe based on Kelompok
-        $('#kelompok_akun_id').change(function() {
+        $('#kelompok_akun_id').change(function () {
             let groupId = $(this).val();
             let $typeSelect = $('#tipe_akun_id');
-            
+
             $typeSelect.empty();
-            
+
             if (!groupId) {
                 $typeSelect.append('<option value="">-- Pilih Kelompok Terlebih Dahulu --</option>');
                 $typeSelect.prop('disabled', true);
@@ -195,15 +197,15 @@
 
             $typeSelect.prop('disabled', false);
             $typeSelect.append('<option value="">-- Pilih Tipe --</option>');
-            
+
             let filteredTypes = allTypes.filter(t => t.kelompok_id == groupId);
-            
+
             filteredTypes.forEach(t => {
                 $typeSelect.append(`<option value="${t.id}">${t.nama_tipe}</option>`);
             });
         });
 
-        $('#coaForm').submit(function(e) {
+        $('#coaForm').submit(function (e) {
             e.preventDefault();
 
             let id = $('#coa_id').val();
@@ -226,12 +228,12 @@
                     tipe_akun_id: $('#tipe_akun_id').val(),
                     is_kas_bank: $('#is_kas_bank').is(':checked') ? 1 : 0
                 },
-                success: function(res) {
+                success: function (res) {
                     $('#coaModal').modal('hide');
                     // Show toast or alert? Reload for now
                     location.reload();
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     $btn.prop('disabled', false).text(originalText);
                     let msg = 'Terjadi kesalahan';
                     if (xhr.responseJSON && xhr.responseJSON.message) {
@@ -247,14 +249,14 @@
             });
         });
 
-        $(document).on('click', '.edit-coa', function() {
+        $(document).on('click', '.edit-coa', function () {
             let id = $(this).data('id');
-            $.get(`/api/coa-api/${id}`, function(data) {
+            $.get(`/api/coa-api/${id}`, function (data) {
                 $('#coa_id').val(data.id);
                 $('#kode_akun').val(data.kode_akun);
                 $('#nama_akun').val(data.nama_akun);
                 $('#is_kas_bank').prop('checked', data.is_kas_bank);
-                
+
                 // Find group from type
                 let type = allTypes.find(t => t.id == data.tipe_id);
                 if (type) {
@@ -264,15 +266,15 @@
                         $('#tipe_akun_id').val(data.tipe_id);
                     }, 0);
                 }
-                
+
                 $('#modalTitle').text('Edit COA');
                 $('#coaModal').modal('show');
             });
         });
 
-        $(document).on('click', '.delete-coa', function() {
-            if (!confirm('Yakin hapus COA ini?')) return;
-            
+        $(document).on('click', '.delete-coa', async function () {
+            if (!await macConfirm('Hapus COA', 'Yakin hapus COA ini?')) return;
+
             let id = $(this).data('id');
             let $btn = $(this);
             $btn.prop('disabled', true);
@@ -281,10 +283,10 @@
                 url: `/api/coa-api/${id}`,
                 method: 'DELETE',
                 data: { _token: "{{ csrf_token() }}" },
-                success: function() { 
-                    location.reload(); 
+                success: function () {
+                    location.reload();
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     $btn.prop('disabled', false);
                     let msg = 'Gagal menghapus';
                     if (xhr.responseJSON && xhr.responseJSON.message) {

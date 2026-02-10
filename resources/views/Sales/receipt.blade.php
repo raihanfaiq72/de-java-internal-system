@@ -337,6 +337,19 @@
                 return;
             }
 
+            // Get Mitra Name for Search
+            let mitraName = '';
+            if (tomMitra) {
+                const options = tomMitra.options;
+                if (options[mitraId]) {
+                    mitraName = options[mitraId].text;
+                } else {
+                    const item = tomMitra.getItem(mitraId);
+                    if (item) mitraName = item.textContent;
+                }
+            }
+            mitraName = mitraName.trim();
+
             const container = document.getElementById('selection-list-container');
             container.innerHTML = '<div class="text-center"><div class="spinner-border"></div></div>';
 
@@ -344,18 +357,8 @@
             modal.show();
 
             try {
-                // Fetch UNPAID invoices for this mitra
-                // Assuming API supports filtering by mitra_id and status
-                // We might need to adjust API InvoiceController to support this specific filter if not exists
-                // For now assuming we can filter by search or similar, but ideally we need specific endpoint
-                // Let's try fetching all for mitra and filtering client side if API limit is small, 
-                // or assume backend supports status_pembayaran param.
-
-                const url = `${API_INVOICE}?search=${mitraId}&status_pembayaran=Unpaid&per_page=100`;
-                // Note: The search param in InvoiceController searches 'nomor_invoice', 'ref_no' OR 'mitra.nama'. 
-                // It doesn't strictly filter by mitra_id. 
-                // Ideally we should add 'mitra_id' filter to InvoiceController. 
-                // But for now let's use what we have or client-side filter.
+                // Use Mitra Name for search
+                const url = `${API_INVOICE}?search=${encodeURIComponent(mitraName)}&tipe_invoice=Sales&status_pembayaran=Unpaid&per_page=100`;
 
                 const res = await fetch(url);
                 const result = await res.json();
@@ -377,23 +380,23 @@
                         const sisa = inv.total_akhir - (inv.payment_sum_jumlah_bayar || 0);
 
                         html += `
-                                                                                                <label class="list-group-item d-flex gap-3">
-                                                                                                    <input class="form-check-input flex-shrink-0" type="checkbox" 
-                                                                                                        value="${inv.id}" 
-                                                                                                        data-json='${JSON.stringify(inv).replace(/'/g, "&apos;")}' 
-                                                                                                        ${isSelected}>
-                                                                                                    <span class="pt-1 form-checked-content w-100">
-                                                                                                        <div class="d-flex justify-content-between w-100">
-                                                                                                            <strong>${inv.nomor_invoice}</strong>
-                                                                                                            <small class="text-muted">${inv.tgl_invoice}</small>
-                                                                                                        </div>
-                                                                                                        <div class="d-flex justify-content-between w-100 small">
-                                                                                                            <span>Total: ${formatIDR(inv.total_akhir)}</span>
-                                                                                                            <span class="text-danger fw-bold">Sisa: ${formatIDR(sisa)}</span>
-                                                                                                        </div>
-                                                                                                    </span>
-                                                                                                </label>
-                                                                                            `;
+                                                                                                                <label class="list-group-item d-flex gap-3">
+                                                                                                                    <input class="form-check-input flex-shrink-0" type="checkbox" 
+                                                                                                                        value="${inv.id}" 
+                                                                                                                        data-json='${JSON.stringify(inv).replace(/'/g, "&apos;")}' 
+                                                                                                                        ${isSelected}>
+                                                                                                                    <span class="pt-1 form-checked-content w-100">
+                                                                                                                        <div class="d-flex justify-content-between w-100">
+                                                                                                                            <strong>${inv.nomor_invoice}</strong>
+                                                                                                                            <small class="text-muted">${inv.tgl_invoice}</small>
+                                                                                                                        </div>
+                                                                                                                        <div class="d-flex justify-content-between w-100 small">
+                                                                                                                            <span>Total: ${formatIDR(inv.total_akhir)}</span>
+                                                                                                                            <span class="text-danger fw-bold">Sisa: ${formatIDR(sisa)}</span>
+                                                                                                                        </div>
+                                                                                                                    </span>
+                                                                                                                </label>
+                                                                                                            `;
                     });
                     html += '</div>';
                     container.innerHTML = html;
@@ -440,24 +443,24 @@
             selectedInvoices.forEach((inv, index) => {
                 totalBayar += parseFloat(inv.bayar);
                 tbody.innerHTML += `
-                                                                                        <tr>
-                                                                                            <td>${inv.nomor_invoice}</td>
-                                                                                            <td>${inv.pelanggan}</td>
-                                                                                            <td class="text-center">${inv.tgl}</td>
-                                                                                            <td class="text-end">${formatNumber(inv.total)}</td>
-                                                                                            <td class="text-end">${formatNumber(inv.tertagih)}</td>
-                                                                                            <td class="text-end pe-3">
-                                                                                                <div class="input-group input-group-sm">
-                                                                                                    <span class="input-group-text">Rp</span>
-                                                                                                    <input type="text" class="form-control text-end" 
-                                                                                                        value="${formatRupiahSimple(inv.bayar)}" 
-                                                                                                        onkeyup="formatRupiahInput(this); updateBayar(${index}, this.value)"
-                                                                                                        >
-                                                                                                    <button class="btn btn-outline-danger" onclick="removeInvoice(${index})"><i class="fa fa-times"></i></button>
-                                                                                                </div>
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                    `;
+                                                                                                        <tr>
+                                                                                                            <td>${inv.nomor_invoice}</td>
+                                                                                                            <td>${inv.pelanggan}</td>
+                                                                                                            <td class="text-center">${inv.tgl}</td>
+                                                                                                            <td class="text-end">${formatNumber(inv.total)}</td>
+                                                                                                            <td class="text-end">${formatNumber(inv.tertagih)}</td>
+                                                                                                            <td class="text-end pe-3">
+                                                                                                                <div class="input-group input-group-sm">
+                                                                                                                    <span class="input-group-text">Rp</span>
+                                                                                                                    <input type="text" class="form-control text-end" 
+                                                                                                                        value="${formatRupiahSimple(inv.bayar)}" 
+                                                                                                                        onkeyup="formatRupiahInput(this); updateBayar(${index}, this.value)"
+                                                                                                                        >
+                                                                                                                    <button class="btn btn-outline-danger" onclick="removeInvoice(${index})"><i class="fa fa-times"></i></button>
+                                                                                                                </div>
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                    `;
             });
 
             document.getElementById('total-payment-display').innerText = formatIDR(totalBayar);
@@ -584,72 +587,72 @@
                 const account = item.akun_keuangan || {};
 
                 html += `
-                                                                                    <div class="accordion-item shadow-sm border-0 overflow-hidden mb-3">
-                                                                                        <h2 class="accordion-header" id="heading${item.id}">
-                                                                                            <button class="accordion-button collapsed bg-white py-3" type="button" data-bs-toggle="collapse"
-                                                                                                data-bs-target="#collapse${item.id}">
-                                                                                                <div class="d-flex align-items-center w-100">
-                                                                                                    <div class="col-fixed-check text-center fw-bold text-muted">${index + 1}</div>
-                                                                                                    <div class="row flex-grow-1 m-0 align-items-center">
-                                                                                                        <div class="col-3">
-                                                                                                            <div class="fw-bold text-dark">${item.nomor_pembayaran}</div>
-                                                                                                            <div class="small text-muted text-uppercase">${mitra.nama || '-'}</div>
+                                                                                                    <div class="accordion-item shadow-sm border-0 overflow-hidden mb-3">
+                                                                                                        <h2 class="accordion-header" id="heading${item.id}">
+                                                                                                            <button class="accordion-button collapsed bg-white py-3" type="button" data-bs-toggle="collapse"
+                                                                                                                data-bs-target="#collapse${item.id}">
+                                                                                                                <div class="d-flex align-items-center w-100">
+                                                                                                                    <div class="col-fixed-check text-center fw-bold text-muted">${index + 1}</div>
+                                                                                                                    <div class="row flex-grow-1 m-0 align-items-center">
+                                                                                                                        <div class="col-3">
+                                                                                                                            <div class="fw-bold text-dark">${item.nomor_pembayaran}</div>
+                                                                                                                            <div class="small text-muted text-uppercase">${mitra.nama || '-'}</div>
+                                                                                                                        </div>
+                                                                                                                        <div class="col-2">
+                                                                                                                            <div class="badge bg-light text-dark border px-2 py-1">${item.metode_pembayaran}</div>
+                                                                                                                            <div class="small text-muted mt-1">${account.nama_akun || '-'}</div>
+                                                                                                                        </div>
+                                                                                                                        <div class="col-2">
+                                                                                                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">
+                                                                                                                                SETTLED
+                                                                                                                            </span>
+                                                                                                                        </div>
+                                                                                                                        <div class="col-2 small text-muted">
+                                                                                                                            <i class="fa fa-calendar-alt me-1"></i> ${item.tgl_pembayaran}
+                                                                                                                        </div>
+                                                                                                                        <div class="col-3 text-end pe-4">
+                                                                                                                            <div class="fw-bold text-dark" style="font-size: 1.1em;">${formatIDR(item.jumlah_bayar)}</div>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <div class="col-fixed-aksi text-center">
+                                                                                                                        <a href="{{ url('sales-receipt') }}/${item.id}" class="btn btn-sm btn-light border text-primary rounded-circle shadow-sm"
+                                                                                                                            title="Lihat Detail" target="_blank">
+                                                                                                                            <i class="fa fa-arrow-right"></i>
+                                                                                                                        </a>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            </button>
+                                                                                                        </h2>
+                                                                                                        <div id="collapse${item.id}" class="accordion-collapse collapse" data-bs-parent="#receiptAccordion">
+                                                                                                            <div class="accordion-body bg-light border-top p-4">
+                                                                                                                <div class="row">
+                                                                                                                    <div class="col-md-6">
+                                                                                                                        <h6 class="fw-bold text-muted mb-3">Informasi Invoice</h6>
+                                                                                                                        <table class="table table-sm table-borderless mb-0">
+                                                                                                                            <tr>
+                                                                                                                                <td class="text-muted" width="120">No. Invoice</td>
+                                                                                                                                <td class="fw-bold">: ${invoice.nomor_invoice || '-'}</td>
+                                                                                                                            </tr>
+                                                                                                                            <tr>
+                                                                                                                                <td class="text-muted">Total Tagihan</td>
+                                                                                                                                <td class="fw-bold">: ${formatIDR(invoice.total_akhir)}</td>
+                                                                                                                            </tr>
+                                                                                                                            <tr>
+                                                                                                                                <td class="text-muted">Catatan</td>
+                                                                                                                                <td>: ${item.catatan || '-'}</td>
+                                                                                                                            </tr>
+                                                                                                                        </table>
+                                                                                                                    </div>
+                                                                                                                    <div class="col-md-6 text-end">
+                                                                                                                        <a href="javascript:void(0)" onclick="openPrintPreview(${item.id})"
+                                                                                                                           class="btn btn-outline-dark btn-sm fw-bold">
+                                                                                                                            <i class="fa fa-print me-1"></i> CETAK KUITANSI
+                                                                                                                        </a>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            </div>
                                                                                                         </div>
-                                                                                                        <div class="col-2">
-                                                                                                            <div class="badge bg-light text-dark border px-2 py-1">${item.metode_pembayaran}</div>
-                                                                                                            <div class="small text-muted mt-1">${account.nama_akun || '-'}</div>
-                                                                                                        </div>
-                                                                                                        <div class="col-2">
-                                                                                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">
-                                                                                                                SETTLED
-                                                                                                            </span>
-                                                                                                        </div>
-                                                                                                        <div class="col-2 small text-muted">
-                                                                                                            <i class="fa fa-calendar-alt me-1"></i> ${item.tgl_pembayaran}
-                                                                                                        </div>
-                                                                                                        <div class="col-3 text-end pe-4">
-                                                                                                            <div class="fw-bold text-dark" style="font-size: 1.1em;">${formatIDR(item.jumlah_bayar)}</div>
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                    <div class="col-fixed-aksi text-center">
-                                                                                                        <a href="{{ url('sales-receipt') }}/${item.id}" class="btn btn-sm btn-light border text-primary rounded-circle shadow-sm"
-                                                                                                            title="Lihat Detail" target="_blank">
-                                                                                                            <i class="fa fa-arrow-right"></i>
-                                                                                                        </a>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </button>
-                                                                                        </h2>
-                                                                                        <div id="collapse${item.id}" class="accordion-collapse collapse" data-bs-parent="#receiptAccordion">
-                                                                                            <div class="accordion-body bg-light border-top p-4">
-                                                                                                <div class="row">
-                                                                                                    <div class="col-md-6">
-                                                                                                        <h6 class="fw-bold text-muted mb-3">Informasi Invoice</h6>
-                                                                                                        <table class="table table-sm table-borderless mb-0">
-                                                                                                            <tr>
-                                                                                                                <td class="text-muted" width="120">No. Invoice</td>
-                                                                                                                <td class="fw-bold">: ${invoice.nomor_invoice || '-'}</td>
-                                                                                                            </tr>
-                                                                                                            <tr>
-                                                                                                                <td class="text-muted">Total Tagihan</td>
-                                                                                                                <td class="fw-bold">: ${formatIDR(invoice.total_akhir)}</td>
-                                                                                                            </tr>
-                                                                                                            <tr>
-                                                                                                                <td class="text-muted">Catatan</td>
-                                                                                                                <td>: ${item.catatan || '-'}</td>
-                                                                                                            </tr>
-                                                                                                        </table>
-                                                                                                    </div>
-                                                                                                    <div class="col-md-6 text-end">
-                                                                                                        <a href="javascript:void(0)" onclick="openPrintPreview(${item.id})"
-                                                                                                           class="btn btn-outline-dark btn-sm fw-bold">
-                                                                                                            <i class="fa fa-print me-1"></i> CETAK KUITANSI
-                                                                                                        </a>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>`;
+                                                                                                    </div>`;
             });
             accordion.innerHTML = html;
         }
@@ -667,12 +670,12 @@
                 const activeClass = link.active ? 'active' : '';
                 const disabledClass = link.url ? '' : 'disabled';
                 html += `
-                                                                                        <li class="page-item ${activeClass} ${disabledClass}">
-                                                                                            <button class="page-link" onclick="loadReceiptData('${link.url}')" ${!link.url ? 'disabled' : ''}>
-                                                                                                ${link.label}
-                                                                                            </button>
-                                                                                        </li>
-                                                                                    `;
+                                                                                                        <li class="page-item ${activeClass} ${disabledClass}">
+                                                                                                            <button class="page-link" onclick="loadReceiptData('${link.url}')" ${!link.url ? 'disabled' : ''}>
+                                                                                                                ${link.label}
+                                                                                                            </button>
+                                                                                                        </li>
+                                                                                                    `;
             });
             container.innerHTML = html;
         }

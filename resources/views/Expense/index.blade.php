@@ -200,7 +200,8 @@
                                     <option value="">-- Pilih Kas / Bank --</option>
                                     @foreach ($financialAccounts as $acc)
                                         <option value="{{ $acc->id }}">{{ $acc->code }} -
-                                            {{ $acc->name }}</option>
+                                            {{ $acc->name }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -223,8 +224,7 @@
                             <!-- Nama Vendor (Optional) -->
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small">Nama Vendor</label>
-                                <input type="text" class="form-control" name="nama_vendor"
-                                    placeholder="Nama Toko / Vendor">
+                                <input type="text" class="form-control" name="nama_vendor" placeholder="Nama Toko / Vendor">
                             </div>
 
                             <!-- Kategori Biaya (Dynamic Master) -->
@@ -249,7 +249,8 @@
                                     <option value="">-- Pilih Akun Beban --</option>
                                     @foreach ($expenseAccounts as $acc)
                                         <option value="{{ $acc->id }}">{{ $acc->kode_akun }} -
-                                            {{ $acc->nama_akun }}</option>
+                                            {{ $acc->nama_akun }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -258,14 +259,15 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small">Jumlah (Rp) <span
                                         class="text-danger">*</span></label>
-                                <input type="number" class="form-control" name="jumlah" step="0.01" min="0"
-                                    placeholder="0" required>
+                                <input type="number" class="form-control" name="jumlah" step="0.01" min="0" placeholder="0"
+                                    required>
                             </div>
 
                             <!-- Keterangan -->
                             <div class="col-12">
                                 <label class="form-label fw-bold small">Keterangan Biaya</label>
-                                <textarea class="form-control" name="keterangan" rows="2" placeholder="Detail tambahan..."></textarea>
+                                <textarea class="form-control" name="keterangan" rows="2"
+                                    placeholder="Detail tambahan..."></textarea>
                             </div>
 
                             <!-- Lampiran -->
@@ -377,13 +379,13 @@
         <script src="{{ url('assets/libs/apexcharts/apexcharts.min.js') }}"></script>
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
         <script>
-            $(document).ready(function() {
+            $(document).ready(function () {
                 console.log("Expense script loaded");
                 loadExpenses();
                 initCharts();
 
                 // Reset Modal on Close
-                $('#modalExpense').on('hidden.bs.modal', function() {
+                $('#modalExpense').on('hidden.bs.modal', function () {
                     $('#formExpense')[0].reset();
                     $('#expense_id').val('');
                     $('#modalExpenseLabel').text('Catat Biaya Baru');
@@ -491,7 +493,7 @@
                     tgl_selesai: $('#filter_end_date_pie').val(),
                     kategori_biaya: $('#filter_category_pie').val()
                 };
-                $.get("{{ route('expense-api.analytics-summary') }}", params, function(res) {
+                $.get("{{ route('expense-api.analytics-summary') }}", params, function (res) {
                     if (res.success) {
                         chartPie.updateOptions({
                             labels: res.data.labels
@@ -507,7 +509,7 @@
                     tgl_selesai: $('#filter_end_date_bar').val(),
                     kategori_biaya: $('#filter_category_bar').val()
                 };
-                $.get("{{ route('expense-api.analytics-summary') }}", params, function(res) {
+                $.get("{{ route('expense-api.analytics-summary') }}", params, function (res) {
                     if (res.success) {
                         chartBar.updateOptions({
                             xaxis: {
@@ -526,7 +528,7 @@
                 let params = {
                     year: $('#filter_year').val()
                 };
-                $.get("{{ route('expense-api.analytics-trend') }}", params, function(res) {
+                $.get("{{ route('expense-api.analytics-trend') }}", params, function (res) {
                     if (res.success) {
                         chartTrend.updateOptions({
                             xaxis: {
@@ -564,11 +566,11 @@
                 $.ajax({
                     url: "{{ route('expense-api.index') }}?page=" + page,
                     method: 'GET',
-                    success: function(response) {
+                    success: function (response) {
                         if (typeof response === 'string') {
                             $('#expenseList').html(
                                 '<tr><td colspan="8" class="text-center text-danger">Sesi mungkin telah berakhir.</td></tr>'
-                                );
+                            );
                             return;
                         }
 
@@ -577,29 +579,29 @@
                             if (response.data && response.data.data && Array.isArray(response.data.data)) {
                                 response.data.data.forEach(item => {
                                     rows += `
-                                    <tr>
-                                        <td>${item.tgl_biaya}</td>
-                                        <td class="fw-bold text-dark">${item.nama_biaya}</td>
-                                        <td><span class="badge bg-light text-dark border">${item.kategori_biaya || '-'}</span></td>
-                                        <td>${item.nama_vendor || '-'}</td>
-                                        <td>${item.akun_keuangan?.nama_akun || item.akun_keuangan_id || '-'}</td>
-                                        <td>${item.akun_beban?.nama_akun || item.akun_beban_id || '-'}</td>
-                                        <td class="text-end fw-bold">Rp ${parseFloat(item.jumlah).toLocaleString('id-ID')}</td>
-                                        <td class="text-end">
-                                            <div class="btn-group btn-group-sm">
-                                                <button class="btn btn-light border text-info" onclick="showExpense(${item.id})">
-                                                    <i class="fa fa-eye"></i>
-                                                </button>
-                                                <button class="btn btn-light border text-primary" onclick="editExpense(${item.id})">
-                                                    <i class="fa fa-edit"></i>
-                                                </button>
-                                                <button class="btn btn-light border text-danger" onclick="deleteExpense(${item.id})">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                `;
+                                                                            <tr>
+                                                                                <td>${item.tgl_biaya}</td>
+                                                                                <td class="fw-bold text-dark">${item.nama_biaya}</td>
+                                                                                <td><span class="badge bg-light text-dark border">${item.kategori_biaya || '-'}</span></td>
+                                                                                <td>${item.nama_vendor || '-'}</td>
+                                                                                <td>${item.akun_keuangan?.nama_akun || item.akun_keuangan_id || '-'}</td>
+                                                                                <td>${item.akun_beban?.nama_akun || item.akun_beban_id || '-'}</td>
+                                                                                <td class="text-end fw-bold">Rp ${parseFloat(item.jumlah).toLocaleString('id-ID')}</td>
+                                                                                <td class="text-end">
+                                                                                    <div class="btn-group btn-group-sm">
+                                                                                        <button class="btn btn-light border text-info" onclick="showExpense(${item.id})">
+                                                                                            <i class="fa fa-eye"></i>
+                                                                                        </button>
+                                                                                        <button class="btn btn-light border text-primary" onclick="editExpense(${item.id})">
+                                                                                            <i class="fa fa-edit"></i>
+                                                                                        </button>
+                                                                                        <button class="btn btn-light border text-danger" onclick="deleteExpense(${item.id})">
+                                                                                            <i class="fa fa-trash"></i>
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </td>
+                                                                            </tr>
+                                                                        `;
                                 });
 
                                 if (response.data.data.length === 0) {
@@ -612,7 +614,7 @@
                             }
                         }
                     },
-                    error: function(xhr) {
+                    error: function (xhr) {
                         console.error("AJAX Error:", xhr);
                         $('#expenseList').html(
                             '<tr><td colspan="8" class="text-center text-danger">Gagal memuat data.</td></tr>');
@@ -639,7 +641,7 @@
                     data: formData,
                     processData: false, // Important for FormData
                     contentType: false, // Important for FormData
-                    success: function(response) {
+                    success: function (response) {
                         if (response.success) {
                             var modalEl = document.getElementById('modalExpense');
                             var modal = bootstrap.Modal.getInstance(modalEl);
@@ -654,7 +656,7 @@
                             alert('Biaya berhasil disimpan!');
                         }
                     },
-                    error: function(xhr) {
+                    error: function (xhr) {
                         let errors = xhr.responseJSON?.errors;
                         let msg = 'Gagal menyimpan.';
                         if (errors) {
@@ -666,7 +668,7 @@
             }
 
             function editExpense(id) {
-                $.get("{{ url('api/expense-api') }}/" + id, function(res) {
+                $.get("{{ url('api/expense-api') }}/" + id, function (res) {
                     if (res.success) {
                         let d = res.data;
                         $('#expense_id').val(d.id);
@@ -688,7 +690,7 @@
             }
 
             function showExpense(id) {
-                $.get("{{ url('api/expense-api') }}/" + id, function(res) {
+                $.get("{{ url('api/expense-api') }}/" + id, function (res) {
                     if (res.success) {
                         let d = res.data;
                         $('#show_tgl_biaya').text(d.tgl_biaya);
@@ -712,18 +714,18 @@
                         if (d.lampiran) {
                             let url = "{{ asset('storage') }}/" + d.lampiran;
                             lampiranHtml = `
-                                <div class="d-flex align-items-center justify-content-between p-2 border rounded bg-white">
-                                    <div class="d-flex align-items-center text-truncate me-2">
-                                        <i class="fa fa-file-alt text-primary fs-4 me-2"></i>
-                                        <div class="small text-truncate" style="max-width: 150px;">
-                                            ${d.lampiran.split('/').pop()}
-                                        </div>
-                                    </div>
-                                    <a href="${url}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                        <i class="fa fa-download"></i> Unduh
-                                    </a>
-                                </div>
-                            `;
+                                                                        <div class="d-flex align-items-center justify-content-between p-2 border rounded bg-white">
+                                                                            <div class="d-flex align-items-center text-truncate me-2">
+                                                                                <i class="fa fa-file-alt text-primary fs-4 me-2"></i>
+                                                                                <div class="small text-truncate" style="max-width: 150px;">
+                                                                                    ${d.lampiran.split('/').pop()}
+                                                                                </div>
+                                                                            </div>
+                                                                            <a href="${url}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                                                <i class="fa fa-download"></i> Unduh
+                                                                            </a>
+                                                                        </div>
+                                                                    `;
                         }
                         $('#show_lampiran_container').html(lampiranHtml);
 
@@ -733,19 +735,19 @@
                 });
             }
 
-            function deleteExpense(id) {
-                if (!confirm('Hapus biaya ini?')) return;
+            async function deleteExpense(id) {
+                if (!await macConfirm('Hapus biaya', 'Yakin ingin menghapus biaya ini?')) return;
 
                 $.ajax({
                     url: "{{ url('api/expense-api') }}/" + id,
                     method: 'DELETE',
-                    success: function(response) {
+                    success: function (response) {
                         loadExpenses();
                         loadPieChart();
                         loadBarChart();
                         loadTrendChart();
                     },
-                    error: function(xhr) {
+                    error: function (xhr) {
                         alert('Gagal menghapus.');
                     }
                 });

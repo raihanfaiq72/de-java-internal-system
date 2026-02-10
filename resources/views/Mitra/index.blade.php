@@ -107,20 +107,26 @@
                                     <div class="col-lg-4">
                                         <label class="f-label">Pencarian</label>
                                         <div class="input-group input-group-finance">
-                                            <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"></i></span>
-                                            <input type="text" id="filter-search-deleted" class="form-control border-start-0 ps-0 shadow-none" placeholder="Nama, No. Mitra, atau Email...">
+                                            <span class="input-group-text bg-white border-end-0"><i
+                                                    class="fa fa-search text-muted"></i></span>
+                                            <input type="text" id="filter-search-deleted"
+                                                class="form-control border-start-0 ps-0 shadow-none"
+                                                placeholder="Nama, No. Mitra, atau Email...">
                                         </div>
                                     </div>
                                     <div class="col-lg-6 text-end">
-                                        <button onclick="loadMitraData()" class="btn btn-dark fw-bold py-2 px-4 shadow-sm btn-sm">FILTER</button>
-                                        <button onclick="resetFilter()" class="btn btn-light border fw-bold text-dark py-2 btn-sm">RESET</button>
+                                        <button onclick="loadMitraData()"
+                                            class="btn btn-dark fw-bold py-2 px-4 shadow-sm btn-sm">FILTER</button>
+                                        <button onclick="resetFilter()"
+                                            class="btn btn-light border fw-bold text-dark py-2 btn-sm">RESET</button>
                                     </div>
                                 </div>
 
                                 <!-- Table Structure (Deleted) -->
                                 <div class="table-responsive">
                                     <table class="table table-hover align-middle mb-0" id="mitraTableDeleted">
-                                        <thead class="bg-light text-uppercase text-secondary fw-bold" style="font-size: 11px; letter-spacing: 0.5px;">
+                                        <thead class="bg-light text-uppercase text-secondary fw-bold"
+                                            style="font-size: 11px; letter-spacing: 0.5px;">
                                             <tr>
                                                 <th width="40" class="ps-3 text-center">#</th>
                                                 <th width="120">No. Mitra</th>
@@ -137,10 +143,12 @@
                                 </div>
 
                                 <!-- Pagination (Deleted) -->
-                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top">
+                                <div
+                                    class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top">
                                     <span id="pagination-info-deleted" class="text-muted small fw-medium"></span>
                                     <nav>
-                                        <ul class="pagination pagination-sm mb-0 shadow-sm" id="pagination-container-deleted"></ul>
+                                        <ul class="pagination pagination-sm mb-0 shadow-sm"
+                                            id="pagination-container-deleted"></ul>
                                     </nav>
                                 </div>
                             </div>
@@ -289,28 +297,28 @@
 
             // Fix for null URL
             if (!url || url === 'null') url = '/api/mitra-api';
-            
+
             const isDeleted = type === 'deleted';
             const tbodyId = isDeleted ? 'mitraTableBodyDeleted' : 'mitraTableBody';
-            
+
             const tbody = document.getElementById(tbodyId);
             tbody.innerHTML = `
-                <tr>
-                    <td colspan="8" class="text-center p-5">
-                        <div class="spinner-border spinner-border-sm text-primary"></div>
-                        <p class="mt-2 text-muted small mb-0">Memuat data mitra...</p>
-                    </td>
-                </tr>`;
+                                            <tr>
+                                                <td colspan="8" class="text-center p-5">
+                                                    <div class="spinner-border spinner-border-sm text-primary"></div>
+                                                    <p class="mt-2 text-muted small mb-0">Memuat data mitra...</p>
+                                                </td>
+                                            </tr>`;
 
             try {
                 // Determine which filter inputs to use
                 const searchId = isDeleted ? 'filter-search-deleted' : 'filter-search';
                 const searchVal = document.getElementById(searchId).value;
-                
+
                 const fetchUrl = new URL(url, window.location.origin);
 
                 if (searchVal) fetchUrl.searchParams.append('search', searchVal);
-                
+
                 // Only active tab has type filter
                 if (!isDeleted) {
                     const typeVal = document.getElementById('filter-type').value;
@@ -365,65 +373,65 @@
                 if (item.tipe_mitra === 'Client') typeClass = 'f-client';
 
                 let actionButtons = '';
-                
+
                 if (isDeleted) {
                     // Actions for deleted items: Restore, Force Delete
                     actionButtons = `
-                        <div class="dropdown">
-                             <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-muted" data-bs-toggle="dropdown"><i class="fa fa-ellipsis-h"></i></button>
-                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-finance">
-                                <li><a class="dropdown-item text-success" href="javascript:void(0)" onclick="restoreMitra(${item.id})"><i class="fa fa-undo me-2"></i> Pulihkan</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="forceDeleteMitra(${item.id})"><i class="fa fa-trash me-2"></i> Hapus Permanen</a></li>
-                            </ul>
-                        </div>
-                    `;
+                                                    <div class="dropdown">
+                                                         <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-muted" data-bs-toggle="dropdown"><i class="fa fa-ellipsis-h"></i></button>
+                                                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-finance">
+                                                            <li><a class="dropdown-item text-success" href="javascript:void(0)" onclick="restoreMitra(${item.id})"><i class="fa fa-undo me-2"></i> Pulihkan</a></li>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="forceDeleteMitra(${item.id})"><i class="fa fa-trash me-2"></i> Hapus Permanen</a></li>
+                                                        </ul>
+                                                    </div>
+                                                `;
                 } else {
                     // Actions for active items: Edit, Soft Delete
                     actionButtons = `
-                        <div class="dropdown">
-                             <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-muted" data-bs-toggle="dropdown"><i class="fa fa-ellipsis-h"></i></button>
-                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-finance">
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="openMitraModal(${item.id})"><i class="fa fa-pencil text-primary me-2"></i> Edit Data</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="deleteMitra(${item.id})"><i class="fa fa-trash me-2"></i> Hapus</a></li>
-                            </ul>
-                        </div>
-                    `;
+                                                    <div class="dropdown">
+                                                         <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-muted" data-bs-toggle="dropdown"><i class="fa fa-ellipsis-h"></i></button>
+                                                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-finance">
+                                                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="openMitraModal(${item.id})"><i class="fa fa-pencil text-primary me-2"></i> Edit Data</a></li>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="deleteMitra(${item.id})"><i class="fa fa-trash me-2"></i> Hapus</a></li>
+                                                        </ul>
+                                                    </div>
+                                                `;
                 }
 
                 const tr = `
-                <tr class="clickable-row">
-                    <td class="text-center ps-3 text-muted small">${index + 1}</td>
-                    <td class="fw-bold text-dark font-monospace" style="font-size:12px;">${item.nomor_mitra || '-'}</td>
-                    <td class="font-monospace small text-muted">${item.ktp_npwp || '-'}</td>
-                    <td>
-                        <div class="fw-bold text-dark mb-0">${item.nama}</div>
-                        <div class="small text-muted">${item.badan_usaha || 'Perorangan'}</div>
-                    </td>
-                    <td class="text-center">
-                        <span class="f-badge ${typeClass}">${item.tipe_mitra}</span>
-                        ${item.is_cash_customer ? '<div class="mt-1"><span class="badge bg-success text-white" style="font-size:9px;">CASH</span></div>' : ''}
-                    </td>
-                    <td>
-                        <div class="fw-bold text-dark small">${item.kontak_nama || '-'}</div>
-                        <div class="small text-muted">${item.kontak_jabatan || ''}</div>
-                    </td>
-                    <td>
-                        <div class="text-dark small"><i class="fa fa-envelope me-1 text-muted"></i> ${item.email || '-'}</div>
-                        <div class="text-dark small mt-1"><i class="fa fa-phone me-1 text-muted"></i> ${item.no_hp || '-'}</div>
-                    </td>
-                    <td class="text-end pe-3">
-                        ${actionButtons}
-                    </td>
-                </tr>
-            `;
+                                            <tr class="clickable-row">
+                                                <td class="text-center ps-3 text-muted small">${index + 1}</td>
+                                                <td class="fw-bold text-dark font-monospace" style="font-size:12px;">${item.nomor_mitra || '-'}</td>
+                                                <td class="font-monospace small text-muted">${item.ktp_npwp || '-'}</td>
+                                                <td>
+                                                    <div class="fw-bold text-dark mb-0">${item.nama}</div>
+                                                    <div class="small text-muted">${item.badan_usaha || 'Perorangan'}</div>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="f-badge ${typeClass}">${item.tipe_mitra}</span>
+                                                    ${item.is_cash_customer ? '<div class="mt-1"><span class="badge bg-success text-white" style="font-size:9px;">CASH</span></div>' : ''}
+                                                </td>
+                                                <td>
+                                                    <div class="fw-bold text-dark small">${item.kontak_nama || '-'}</div>
+                                                    <div class="small text-muted">${item.kontak_jabatan || ''}</div>
+                                                </td>
+                                                <td>
+                                                    <div class="text-dark small"><i class="fa fa-envelope me-1 text-muted"></i> ${item.email || '-'}</div>
+                                                    <div class="text-dark small mt-1"><i class="fa fa-phone me-1 text-muted"></i> ${item.no_hp || '-'}</div>
+                                                </td>
+                                                <td class="text-end pe-3">
+                                                    ${actionButtons}
+                                                </td>
+                                            </tr>
+                                        `;
                 tbody.insertAdjacentHTML('beforeend', tr);
             });
         }
 
         async function deleteMitra(id) {
-            if (!confirm('Hapus mitra ini? Data akan dipindahkan ke tab Mitra Terhapus dan dapat dipulihkan.')) return;
+            if (!await macConfirm('Hapus mitra', 'Hapus mitra ini? Data akan dipindahkan ke tab Mitra Terhapus dan dapat dipulihkan.')) return;
             try {
                 const res = await fetch(`/api/mitra-api/${id}`, {
                     method: 'DELETE',
@@ -441,9 +449,9 @@
                 alert('Gagal menghapus');
             }
         }
-        
+
         async function restoreMitra(id) {
-            if (!confirm('Pulihkan data mitra ini?')) return;
+            if (!await macConfirm('Pulihkan data mitra', 'Pulihkan data mitra ini?')) return;
             try {
                 const res = await fetch(`/api/mitra-api/${id}/restore`, {
                     method: 'POST',
@@ -460,9 +468,9 @@
                 alert('Gagal memulihkan mitra');
             }
         }
-        
+
         async function forceDeleteMitra(id) {
-            if (!confirm('Hapus permanen mitra ini? Data TIDAK DAPAT dikembalikan.')) return;
+            if (!await macConfirm('Hapus Permanen', 'Hapus permanen mitra ini? Data TIDAK DAPAT dikembalikan.')) return;
             try {
                 const res = await fetch(`/api/mitra-api/${id}/force-delete`, {
                     method: 'DELETE',
@@ -483,14 +491,14 @@
         function renderPagination(meta, isDeleted) {
             const containerId = isDeleted ? 'pagination-container-deleted' : 'pagination-container';
             const infoId = isDeleted ? 'pagination-info-deleted' : 'pagination-info';
-            
+
             const c = document.getElementById(containerId);
             c.innerHTML = '';
-            
+
             if (!meta || !meta.links) return;
 
-            document.getElementById(infoId).innerText = `${meta.from||0}-${meta.to||0} dari ${meta.total} data`;
-            
+            document.getElementById(infoId).innerText = `${meta.from || 0}-${meta.to || 0} dari ${meta.total} data`;
+
             // Current type context for pagination clicks
             const type = isDeleted ? 'deleted' : 'active';
 
@@ -498,9 +506,9 @@
                 const cls = l.active ? 'bg-primary text-white' : 'bg-white text-dark';
                 const onclick = l.url ? `onclick="loadMitraData('${l.url}', '${type}')"` : '';
                 const href = l.url ? '#' : 'javascript:void(0)';
-                
+
                 c.insertAdjacentHTML('beforeend',
-                    `<li class="page-item ${!l.url?'disabled':''}"><a class="page-link border-0 mx-1 rounded shadow-sm fw-bold ${cls}" href="${href}" ${onclick}>${l.label}</a></li>`
+                    `<li class="page-item ${!l.url ? 'disabled' : ''}"><a class="page-link border-0 mx-1 rounded shadow-sm fw-bold ${cls}" href="${href}" ${onclick}>${l.label}</a></li>`
                 );
             });
         }
@@ -522,7 +530,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             initFilters();
             loadMitraData();
-            
+
             // Tab Change Listener
             const tabEls = document.querySelectorAll('a[data-bs-toggle="tab"]');
             tabEls.forEach(el => {

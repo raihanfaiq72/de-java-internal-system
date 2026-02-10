@@ -519,14 +519,14 @@
                 const tr = document.createElement('tr');
                 tr.classList.add('border-bottom', 'border-light');
                 tr.innerHTML = `
-                                                                                <td class="ps-3 py-3">
-                                                                                    <div class="fw-bold text-dark">${it.nama_produk_manual || it.product?.nama_produk || '-'}</div>
-                                                                                    <div class="small text-muted">${it.product?.kode_produk || '-'}</div>
-                                                                                </td>
-                                                                                <td class="text-center py-3">${parseFloat(it.qty)} ${it.product?.unit?.nama_unit || ''}</td>
-                                                                                <td class="text-end py-3">${window.financeApp.formatIDR(it.harga_satuan)}</td>
-                                                                                <td class="text-end pe-3 py-3">${window.financeApp.formatIDR(it.total_harga_item)}</td>
-                                                                            `;
+                                                                                                                                                                <td class="ps-3 py-3">
+                                                                                                                                                                    <div class="fw-bold text-dark">${it.nama_produk_manual || it.product?.nama_produk || '-'}</div>
+                                                                                                                                                                    <div class="small text-muted">${it.product?.kode_produk || '-'}</div>
+                                                                                                                                                                </td>
+                                                                                                                                                                <td class="text-center py-3">${parseFloat(it.qty)} ${it.product?.unit?.nama_unit || ''}</td>
+                                                                                                                                                                <td class="text-end py-3">${window.financeApp.formatIDR(it.harga_satuan)}</td>
+                                                                                                                                                                <td class="text-end pe-3 py-3">${window.financeApp.formatIDR(it.total_harga_item)}</td>
+                                                                                                                                                            `;
                 tbody.appendChild(tr);
             });
 
@@ -539,8 +539,8 @@
                 bootstrap.Modal.getInstance(document.getElementById('detailInvoiceModal')).hide();
                 openInvoiceModal(item.id, null, 'edit');
             };
-            document.getElementById('btnDetailDelete').onclick = () => {
-                if (confirm('Hapus invoice ini?')) {
+            document.getElementById('btnDetailDelete').onclick = async () => {
+                if (await macConfirm('Hapus invoice', 'Yakin ingin menghapus invoice ini?')) {
                     bootstrap.Modal.getInstance(document.getElementById('detailInvoiceModal')).hide();
                     deleteInvoice(item.id);
                 }
@@ -705,7 +705,7 @@
         }
 
         async function deleteInvoice(id) {
-            if (!confirm('Hapus invoice ini?')) return;
+            if (!await macConfirm('Hapus invoice', 'Yakin ingin menghapus invoice ini?')) return;
             try {
                 const res = await fetch(`${window.financeApp.API_URL}/${id}`, {
                     method: 'DELETE',
@@ -728,7 +728,7 @@
             const count = window.financeApp.selectedIds.length;
             if (count === 0) return;
 
-            if (!confirm(`Yakin ingin menghapus ${count} data?`)) return;
+            if (!await macConfirm('Hapus invoice', `Yakin ingin menghapus ${count} data?`)) return;
 
             const btn = document.querySelector('#bulk-action-area button.btn-outline-danger');
             const originalContent = btn.innerHTML;

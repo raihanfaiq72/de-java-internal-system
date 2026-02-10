@@ -590,8 +590,8 @@
                 myModal.show();
             }
 
-            function deleteAccount(id) {
-                if (!confirm('Apakah Anda yakin ingin menghapus akun ini?')) return;
+            async function deleteAccount(id) {
+                if (!await macConfirm('Hapus akun', 'Yakin ingin menghapus akun ini?')) return;
 
                 $.ajax({
                     url: "{{ url('finance/account') }}/" + id,

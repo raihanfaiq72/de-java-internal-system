@@ -125,7 +125,8 @@
                                                     <i class="fa fa-pencil"></i>
                                                 </button>
                                                 <form action="{{ route('user_plots.destroy', $p->id) }}" method="POST"
-                                                    class="d-inline" onsubmit="return confirm('Hapus akses plotting ini?')">
+                                                    class="d-inline"
+                                                    onsubmit="event.preventDefault(); const form = this; (async () => { if (await macConfirm('Hapus akses plotting ini?')) form.submit() })();">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
@@ -210,7 +211,7 @@
         <script>
             let tomUser, tomOffice, tomRole;
 
-            document.addEventListener("DOMContentLoaded", function() {
+            document.addEventListener("DOMContentLoaded", function () {
                 tomUser = new TomSelect("#select-user", {
                     create: false,
                     sortField: {
