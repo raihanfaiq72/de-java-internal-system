@@ -411,7 +411,7 @@
                         position: 'bottom'
                     },
                     noData: {
-                        text: 'Loading...'
+                        text: 'Tidak ada data'
                     }
                 };
                 chartPie = new ApexCharts(document.querySelector("#chartRincian"), optionsPie);
@@ -441,7 +441,7 @@
                     },
                     colors: ['#0d6efd'],
                     noData: {
-                        text: 'Loading...'
+                        text: 'Tidak ada data'
                     }
                 };
                 chartBar = new ApexCharts(document.querySelector("#chartJumlah"), optionsBar);
@@ -473,7 +473,7 @@
                     },
                     colors: ['#0d6efd'],
                     noData: {
-                        text: 'Loading...'
+                        text: 'Tidak ada data'
                     }
                 };
                 chartTrend = new ApexCharts(document.querySelector("#chartTren"), optionsTrend);
