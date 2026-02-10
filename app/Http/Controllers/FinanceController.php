@@ -90,7 +90,7 @@ class FinanceController extends Controller
 
         // 7. Delivery Orders
         $deliveryOrderAmount = DB::table('delivery_order_invoices')
-            ->where('invoice_id', $accountId)
+            ->where('chart_of_accounts_id', $accountId)
             ->sum('total_cost');
 
         return ($income + $transferIn + $otherIncome) - ($expense + $transferOut + $otherExpense + $deliveryOrderAmount);
@@ -143,7 +143,7 @@ class FinanceController extends Controller
 
         // 4. Delivery Orders
         $deliveryOrderAmount = DB::table('delivery_order_invoices')
-            ->where('invoice_id', $accountId)
+            ->where('chart_of_accounts_id', $accountId)
             ->sum('total_cost');
 
         return ($expense + $transferOut + $otherExpense + $deliveryOrderAmount);
