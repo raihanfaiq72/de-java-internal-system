@@ -61,8 +61,8 @@
                                     <div class="col-md-6 text-md-end">
                                         <label class="text-uppercase text-muted fw-bold small mb-2">Detail
                                             Pengiriman:</label>
-                                        <p class="mb-1"><span class="text-muted">Salesman/Ref:</span> <span
-                                                class="fw-bold" id="inv-ref">-</span></p>
+                                        <p class="mb-1"><span class="text-muted">Salesman/Ref:</span> <span class="fw-bold"
+                                                id="inv-ref">-</span></p>
                                         <p class="mb-1"><span class="text-muted">Jatuh Tempo:</span> <span
                                                 class="fw-bold text-danger" id="inv-due">-</span></p>
                                     </div>
@@ -188,9 +188,8 @@
                                                 </small>
                                             </div>
                                         </div>
-                                        <button class="btn btn-sm btn-light border" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#payment-history"><i
-                                                class="fa fa-chevron-down"></i></button>
+                                        <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="collapse"
+                                            data-bs-target="#payment-history"><i class="fa fa-chevron-down"></i></button>
                                     </div>
 
                                     <div class="collapse bg-light" id="payment-history">
@@ -211,9 +210,8 @@
                                                     Otomatis</small>
                                             </div>
                                         </div>
-                                        <button class="btn btn-sm btn-light border" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#journal-entries"><i
-                                                class="fa fa-chevron-down"></i></button>
+                                        <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="collapse"
+                                            data-bs-target="#journal-entries"><i class="fa fa-chevron-down"></i></button>
                                     </div>
 
                                     <div class="collapse bg-light" id="journal-entries">
@@ -315,8 +313,8 @@
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 px-4 pb-4">
-                    <button type="button" class="btn btn-primary w-100 fw-bold shadow-sm"
-                        onclick="saveKopSettings()">Simpan Pengaturan</button>
+                    <button type="button" class="btn btn-primary w-100 fw-bold shadow-sm" onclick="saveKopSettings()">Simpan
+                        Pengaturan</button>
                 </div>
             </div>
         </div>
@@ -352,10 +350,9 @@
 
             const badge = document.getElementById('header-status-badge');
             badge.textContent = data.status_pembayaran;
-            badge.className = `badge fs-6 px-3 py-2 rounded-pill me-2 ${
-            data.status_pembayaran === 'Paid' ? 'bg-success' : 
-            (data.status_pembayaran === 'Unpaid' ? 'bg-danger' : 'bg-warning')
-            } `;
+            badge.className = `badge fs-6 px-3 py-2 rounded-pill me-2 ${data.status_pembayaran === 'Paid' ? 'bg-success' :
+                    (data.status_pembayaran === 'Unpaid' ? 'bg-danger' : 'bg-warning')
+                } `;
 
             const btnPrint = document.getElementById('btn-print');
             btnPrint.href = 'javascript:void(0)';
@@ -380,7 +377,7 @@
             const newToggle = toggleKop.cloneNode(true);
             toggleKop.parentNode.replaceChild(newToggle, toggleKop);
 
-            newToggle.addEventListener('change', function() {
+            newToggle.addEventListener('change', function () {
                 updateKopStatus(this.checked);
             });
 
@@ -408,16 +405,16 @@
             if (data.items) {
                 data.items.forEach(item => {
                     tbody.innerHTML += `
-                    <tr class="border-bottom border-light">
-                        <td class="ps-4 py-3">
-                            <div class="fw-bold text-dark">${item.product?.nama_produk || item.nama_produk_manual || '-'}</div>
-                            <div class="small text-muted">${item.product?.kode_produk || '-'}</div>
-                        </td>
-                        <td class="text-center py-3">${parseFloat(item.qty)} ${item.product?.unit?.nama_unit || ''}</td>
-                        <td class="text-end py-3">${formatIDR(item.harga_satuan)}</td>
-                        <td class="text-end pe-4 py-3 fw-bold text-dark">${formatIDR(item.total_harga_item)}</td>
-                    </tr>
-                `;
+                        <tr class="border-bottom border-light">
+                            <td class="ps-4 py-3">
+                                <div class="fw-bold text-dark">${item.product?.nama_produk || item.nama_produk_manual || '-'}</div>
+                                <div class="small text-muted">${item.product?.kode_produk || '-'}</div>
+                            </td>
+                            <td class="text-center py-3">${parseFloat(item.qty)} ${item.product?.unit?.nama_unit || ''}</td>
+                            <td class="text-end py-3">${formatIDR(item.harga_satuan)}</td>
+                            <td class="text-end pe-4 py-3 fw-bold text-dark">${formatIDR(item.total_harga_item)}</td>
+                        </tr>
+                    `;
 
                     subTotal += parseFloat(item.total_harga_item);
                 });
@@ -449,14 +446,14 @@
                 payList.innerHTML = '';
                 data.payment.forEach(pay => {
                     payList.innerHTML += `
-                    <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
-                        <div>
-                            <div class="fw-bold small text-dark">${pay.nomor_pembayaran || '-'}</div>
-                            <div class="text-muted" style="font-size: 10px;">${formatDate(pay.tgl_bayar)}</div>
+                        <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                            <div>
+                                <div class="fw-bold small text-dark">${pay.nomor_pembayaran || '-'}</div>
+                                <div class="text-muted" style="font-size: 10px;">${formatDate(pay.tgl_bayar)}</div>
+                            </div>
+                            <div class="fw-bold text-success small">${formatIDR(pay.jumlah_bayar)}</div>
                         </div>
-                        <div class="fw-bold text-success small">${formatIDR(pay.jumlah_bayar)}</div>
-                    </div>
-                `;
+                    `;
                 });
             }
 
@@ -589,6 +586,15 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             loadInvoiceDetail();
+
+            // Check for success flag
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('action') === 'created') {
+                alert('Invoice berhasil disimpan!');
+                // Optional: Clean URL
+                const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                window.history.replaceState({ path: newUrl }, '', newUrl);
+            }
         });
     </script>
 @endpush

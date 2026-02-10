@@ -1045,11 +1045,10 @@
 
             const result = await res.json();
             if (result.success) {
-                alert('Invoice berhasil disimpan!');
                 bootstrap.Modal.getInstance(document.getElementById('invoiceModal')).hide();
                 let invoiceId = result.data?.invoice?.id || result.data?.id;
-                // Redirect to detail page
-                window.location.href = `{{ url('purchase') }}/${invoiceId}`;
+                // Redirect to detail page with flag
+                window.location.href = `{{ url('purchase') }}/${invoiceId}?action=created`;
             } else {
                 if (result.errors) {
                     let errorMsg = "Terjadi kesalahan:\n";
