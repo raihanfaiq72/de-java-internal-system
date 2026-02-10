@@ -2,6 +2,7 @@
 
 @section('main')
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 
     <div class="page-wrapper">
         <div class="page-content">
@@ -103,7 +104,7 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold text-muted small">Pembayaran Dari</label>
                                 <select id="mitra_id" name="mitra_id" class="tom-select-init"
-                                    placeholder="Loading clients...">
+                                    placeholder="Pilih Pelanggan...">
                                     <option value="">Loading...</option>
                                 </select>
                             </div>
@@ -298,7 +299,8 @@
 @endpush
 
 @push('js')
-    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    {{--
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script> --}}
     <script>
         const API_PAYMENT = '{{ url('api/payment-api') }}';
         const API_INVOICE = '{{ url('api/invoice-api') }}';
@@ -375,23 +377,23 @@
                         const sisa = inv.total_akhir - (inv.payment_sum_jumlah_bayar || 0);
 
                         html += `
-                                                                <label class="list-group-item d-flex gap-3">
-                                                                    <input class="form-check-input flex-shrink-0" type="checkbox" 
-                                                                        value="${inv.id}" 
-                                                                        data-json='${JSON.stringify(inv).replace(/'/g, "&apos;")}' 
-                                                                        ${isSelected}>
-                                                                    <span class="pt-1 form-checked-content w-100">
-                                                                        <div class="d-flex justify-content-between w-100">
-                                                                            <strong>${inv.nomor_invoice}</strong>
-                                                                            <small class="text-muted">${inv.tgl_invoice}</small>
-                                                                        </div>
-                                                                        <div class="d-flex justify-content-between w-100 small">
-                                                                            <span>Total: ${formatIDR(inv.total_akhir)}</span>
-                                                                            <span class="text-danger fw-bold">Sisa: ${formatIDR(sisa)}</span>
-                                                                        </div>
-                                                                    </span>
-                                                                </label>
-                                                            `;
+                                                                                <label class="list-group-item d-flex gap-3">
+                                                                                    <input class="form-check-input flex-shrink-0" type="checkbox" 
+                                                                                        value="${inv.id}" 
+                                                                                        data-json='${JSON.stringify(inv).replace(/'/g, "&apos;")}' 
+                                                                                        ${isSelected}>
+                                                                                    <span class="pt-1 form-checked-content w-100">
+                                                                                        <div class="d-flex justify-content-between w-100">
+                                                                                            <strong>${inv.nomor_invoice}</strong>
+                                                                                            <small class="text-muted">${inv.tgl_invoice}</small>
+                                                                                        </div>
+                                                                                        <div class="d-flex justify-content-between w-100 small">
+                                                                                            <span>Total: ${formatIDR(inv.total_akhir)}</span>
+                                                                                            <span class="text-danger fw-bold">Sisa: ${formatIDR(sisa)}</span>
+                                                                                        </div>
+                                                                                    </span>
+                                                                                </label>
+                                                                            `;
                     });
                     html += '</div>';
                     container.innerHTML = html;
@@ -438,32 +440,43 @@
             selectedInvoices.forEach((inv, index) => {
                 totalBayar += parseFloat(inv.bayar);
                 tbody.innerHTML += `
-                                                        <tr>
-                                                            <td>${inv.nomor_invoice}</td>
-                                                            <td>${inv.pelanggan}</td>
-                                                            <td class="text-center">${inv.tgl}</td>
-                                                            <td class="text-end">${formatNumber(inv.total)}</td>
-                                                            <td class="text-end">${formatNumber(inv.tertagih)}</td>
-                                                            <td class="text-end pe-3">
-                                                                <div class="input-group input-group-sm">
-                                                                    <span class="input-group-text">Rp</span>
-                                                                    <input type="number" class="form-control text-end" 
-                                                                        value="${inv.bayar}" 
-                                                                        onchange="updateBayar(${index}, this.value)"
-                                                                        min="0" max="${inv.tertagih}">
-                                                                    <button class="btn btn-outline-danger" onclick="removeInvoice(${index})"><i class="fa fa-times"></i></button>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    `;
+                                                                        <tr>
+                                                                            <td>${inv.nomor_invoice}</td>
+                                                                            <td>${inv.pelanggan}</td>
+                                                                            <td class="text-center">${inv.tgl}</td>
+                                                                            <td class="text-end">${formatNumber(inv.total)}</td>
+                                                                            <td class="text-end">${formatNumber(inv.tertagih)}</td>
+                                                                            <td class="text-end pe-3">
+                                                                                <div class="input-group input-group-sm">
+                                                                                    <span class="input-group-text">Rp</span>
+                                                                                    <input type="text" class="form-control text-end" 
+                                                                                        value="${formatRupiahSimple(inv.bayar)}" 
+                                                                                        onkeyup="formatRupiahInput(this); updateBayar(${index}, this.value)"
+                                                                                        >
+                                                                                    <button class="btn btn-outline-danger" onclick="removeInvoice(${index})"><i class="fa fa-times"></i></button>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    `;
             });
 
             document.getElementById('total-payment-display').innerText = formatIDR(totalBayar);
         }
 
         function updateBayar(index, val) {
-            selectedInvoices[index].bayar = val;
-            renderSelectedTable();
+            // Remove dots to get raw number
+            const rawValue = val.replace(/\./g, '');
+            selectedInvoices[index].bayar = rawValue;
+            renderSelectedTableCountOnly(); // Don't re-render whole table or we lose focus/cursor
+        }
+
+        // Optimized render for total only, to avoid input focus loss
+        function renderSelectedTableCountOnly() {
+            let totalBayar = 0;
+            selectedInvoices.forEach(inv => {
+                totalBayar += parseFloat(inv.bayar || 0);
+            });
+            document.getElementById('total-payment-display').innerText = formatIDR(totalBayar);
         }
 
         function removeInvoice(index) {
@@ -571,72 +584,72 @@
                 const account = item.akun_keuangan || {};
 
                 html += `
-                                                    <div class="accordion-item shadow-sm border-0 overflow-hidden mb-3">
-                                                        <h2 class="accordion-header" id="heading${item.id}">
-                                                            <button class="accordion-button collapsed bg-white py-3" type="button" data-bs-toggle="collapse"
-                                                                data-bs-target="#collapse${item.id}">
-                                                                <div class="d-flex align-items-center w-100">
-                                                                    <div class="col-fixed-check text-center fw-bold text-muted">${index + 1}</div>
-                                                                    <div class="row flex-grow-1 m-0 align-items-center">
-                                                                        <div class="col-3">
-                                                                            <div class="fw-bold text-dark">${item.nomor_pembayaran}</div>
-                                                                            <div class="small text-muted text-uppercase">${mitra.nama || '-'}</div>
+                                                                    <div class="accordion-item shadow-sm border-0 overflow-hidden mb-3">
+                                                                        <h2 class="accordion-header" id="heading${item.id}">
+                                                                            <button class="accordion-button collapsed bg-white py-3" type="button" data-bs-toggle="collapse"
+                                                                                data-bs-target="#collapse${item.id}">
+                                                                                <div class="d-flex align-items-center w-100">
+                                                                                    <div class="col-fixed-check text-center fw-bold text-muted">${index + 1}</div>
+                                                                                    <div class="row flex-grow-1 m-0 align-items-center">
+                                                                                        <div class="col-3">
+                                                                                            <div class="fw-bold text-dark">${item.nomor_pembayaran}</div>
+                                                                                            <div class="small text-muted text-uppercase">${mitra.nama || '-'}</div>
+                                                                                        </div>
+                                                                                        <div class="col-2">
+                                                                                            <div class="badge bg-light text-dark border px-2 py-1">${item.metode_pembayaran}</div>
+                                                                                            <div class="small text-muted mt-1">${account.nama_akun || '-'}</div>
+                                                                                        </div>
+                                                                                        <div class="col-2">
+                                                                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">
+                                                                                                SETTLED
+                                                                                            </span>
+                                                                                        </div>
+                                                                                        <div class="col-2 small text-muted">
+                                                                                            <i class="fa fa-calendar-alt me-1"></i> ${item.tgl_pembayaran}
+                                                                                        </div>
+                                                                                        <div class="col-3 text-end pe-4">
+                                                                                            <div class="fw-bold text-dark" style="font-size: 1.1em;">${formatIDR(item.jumlah_bayar)}</div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="col-fixed-aksi text-center">
+                                                                                        <a href="{{ url('sales-receipt') }}/${item.id}" class="btn btn-sm btn-light border text-primary rounded-circle shadow-sm"
+                                                                                            title="Lihat Detail" target="_blank">
+                                                                                            <i class="fa fa-arrow-right"></i>
+                                                                                        </a>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </button>
+                                                                        </h2>
+                                                                        <div id="collapse${item.id}" class="accordion-collapse collapse" data-bs-parent="#receiptAccordion">
+                                                                            <div class="accordion-body bg-light border-top p-4">
+                                                                                <div class="row">
+                                                                                    <div class="col-md-6">
+                                                                                        <h6 class="fw-bold text-muted mb-3">Informasi Invoice</h6>
+                                                                                        <table class="table table-sm table-borderless mb-0">
+                                                                                            <tr>
+                                                                                                <td class="text-muted" width="120">No. Invoice</td>
+                                                                                                <td class="fw-bold">: ${invoice.nomor_invoice || '-'}</td>
+                                                                                            </tr>
+                                                                                            <tr>
+                                                                                                <td class="text-muted">Total Tagihan</td>
+                                                                                                <td class="fw-bold">: ${formatIDR(invoice.total_akhir)}</td>
+                                                                                            </tr>
+                                                                                            <tr>
+                                                                                                <td class="text-muted">Catatan</td>
+                                                                                                <td>: ${item.catatan || '-'}</td>
+                                                                                            </tr>
+                                                                                        </table>
+                                                                                    </div>
+                                                                                    <div class="col-md-6 text-end">
+                                                                                        <a href="javascript:void(0)" onclick="openPrintPreview(${item.id})"
+                                                                                           class="btn btn-outline-dark btn-sm fw-bold">
+                                                                                            <i class="fa fa-print me-1"></i> CETAK KUITANSI
+                                                                                        </a>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
                                                                         </div>
-                                                                        <div class="col-2">
-                                                                            <div class="badge bg-light text-dark border px-2 py-1">${item.metode_pembayaran}</div>
-                                                                            <div class="small text-muted mt-1">${account.nama_akun || '-'}</div>
-                                                                        </div>
-                                                                        <div class="col-2">
-                                                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">
-                                                                                SETTLED
-                                                                            </span>
-                                                                        </div>
-                                                                        <div class="col-2 small text-muted">
-                                                                            <i class="fa fa-calendar-alt me-1"></i> ${item.tgl_pembayaran}
-                                                                        </div>
-                                                                        <div class="col-3 text-end pe-4">
-                                                                            <div class="fw-bold text-dark" style="font-size: 1.1em;">${formatIDR(item.jumlah_bayar)}</div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="col-fixed-aksi text-center">
-                                                                        <a href="{{ url('sales-receipt') }}/${item.id}" class="btn btn-sm btn-light border text-primary rounded-circle shadow-sm"
-                                                                            title="Lihat Detail" target="_blank">
-                                                                            <i class="fa fa-arrow-right"></i>
-                                                                        </a>
-                                                                    </div>
-                                                                </div>
-                                                            </button>
-                                                        </h2>
-                                                        <div id="collapse${item.id}" class="accordion-collapse collapse" data-bs-parent="#receiptAccordion">
-                                                            <div class="accordion-body bg-light border-top p-4">
-                                                                <div class="row">
-                                                                    <div class="col-md-6">
-                                                                        <h6 class="fw-bold text-muted mb-3">Informasi Invoice</h6>
-                                                                        <table class="table table-sm table-borderless mb-0">
-                                                                            <tr>
-                                                                                <td class="text-muted" width="120">No. Invoice</td>
-                                                                                <td class="fw-bold">: ${invoice.nomor_invoice || '-'}</td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td class="text-muted">Total Tagihan</td>
-                                                                                <td class="fw-bold">: ${formatIDR(invoice.total_akhir)}</td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td class="text-muted">Catatan</td>
-                                                                                <td>: ${item.catatan || '-'}</td>
-                                                                            </tr>
-                                                                        </table>
-                                                                    </div>
-                                                                    <div class="col-md-6 text-end">
-                                                                        <a href="javascript:void(0)" onclick="openPrintPreview(${item.id})"
-                                                                           class="btn btn-outline-dark btn-sm fw-bold">
-                                                                            <i class="fa fa-print me-1"></i> CETAK KUITANSI
-                                                                        </a>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>`;
+                                                                    </div>`;
             });
             accordion.innerHTML = html;
         }
@@ -654,12 +667,12 @@
                 const activeClass = link.active ? 'active' : '';
                 const disabledClass = link.url ? '' : 'disabled';
                 html += `
-                                                        <li class="page-item ${activeClass} ${disabledClass}">
-                                                            <button class="page-link" onclick="loadReceiptData('${link.url}')" ${!link.url ? 'disabled' : ''}>
-                                                                ${link.label}
-                                                            </button>
-                                                        </li>
-                                                    `;
+                                                                        <li class="page-item ${activeClass} ${disabledClass}">
+                                                                            <button class="page-link" onclick="loadReceiptData('${link.url}')" ${!link.url ? 'disabled' : ''}>
+                                                                                ${link.label}
+                                                                            </button>
+                                                                        </li>
+                                                                    `;
             });
             container.innerHTML = html;
         }
@@ -732,22 +745,34 @@
                 const resMitra = await fetch(API_MITRA);
                 const jsonMitra = await resMitra.json();
 
-                const mitraSelect = document.getElementById('mitra_id');
-                mitraSelect.innerHTML = '<option value="">Pilih Pelanggan...</option>';
+                let mitraData = [];
                 if (jsonMitra.success) {
-                    jsonMitra.data.data.forEach(m => { // Assuming paginated, or adjust if array
-                        // NOTE: If API returns paginated 'data', use jsonMitra.data.data. If flat, jsonMitra.data
-                        // Checking standard API format in this project usually returns paginated.
-                        // But index methods might return pagination object.
-                        // Let's assume pagination based on other files.
-                        // Wait, for dropdowns we usually need all or search. 
-                        // Let's just try to map whatever array we find.
-                        mitraSelect.innerHTML += `<option value="${m.id}">${m.nama}</option>`;
-                    });
+                    if (Array.isArray(jsonMitra.data)) {
+                        mitraData = jsonMitra.data;
+                    } else if (jsonMitra.data && Array.isArray(jsonMitra.data.data)) {
+                        mitraData = jsonMitra.data.data;
+                    }
                 }
 
-                // Initialize TomSelect after options loaded
+                const mitraSelect = document.getElementById('mitra_id');
+                // Ensure clear before rebuild
+                if (tomMitra) {
+                    tomMitra.destroy();
+                    tomMitra = null;
+                }
+
+                mitraSelect.innerHTML = '<option value="">Pilih Pelanggan...</option>';
+                mitraData.forEach(m => {
+                    mitraSelect.innerHTML += `<option value="${m.id}">${m.nama}</option>`;
+                });
+
+                // Initialize TomSelect for Mitra
                 tomMitra = new TomSelect("#mitra_id", {
+                    create: false,
+                    sortField: {
+                        field: "text",
+                        direction: "asc"
+                    },
                     onChange: () => {
                         if (!tomMitra.skipClear) {
                             selectedInvoices = [];
@@ -760,16 +785,68 @@
                 const resFin = await fetch(API_FIN_ACC);
                 const jsonFin = await resFin.json();
 
-                const coaSelect = document.getElementById('akun_keuangan_id');
-                coaSelect.innerHTML = '<option value="">Pilih Akun...</option>';
+                let finData = [];
                 if (jsonFin.success) {
-                    jsonFin.data.forEach(acc => {
-                        coaSelect.innerHTML += `<option value="${acc.id}">${acc.name} (${acc.code})</option>`;
-                    });
+                    if (Array.isArray(jsonFin.data)) {
+                        finData = jsonFin.data;
+                    } else if (jsonFin.data && Array.isArray(jsonFin.data.data)) {
+                        finData = jsonFin.data.data;
+                    }
                 }
+
+                const coaSelect = document.getElementById('akun_keuangan_id');
+                // Destroy if already exists (check element property if needed, but for now just init)
+                if (coaSelect.tomselect) {
+                    coaSelect.tomselect.destroy();
+                }
+
+                coaSelect.innerHTML = '<option value="">Pilih Akun...</option>';
+                finData.forEach(acc => {
+                    coaSelect.innerHTML += `<option value="${acc.id}">${acc.name} (${acc.code})</option>`;
+                });
+
+                // Init TomSelect for Akun Keuangan
+                new TomSelect("#akun_keuangan_id", {
+                    create: false,
+                    sortField: {
+                        field: "text",
+                        direction: "asc"
+                    }
+                });
 
             } catch (e) {
                 console.error("Failed to load dropdowns", e);
+            }
+        }
+
+        // --- RUPIAH FORMATTER HELPER ---
+        function formatRupiahSimple(angka) {
+            if (!angka) return '';
+            let number_string = angka.toString().replace(/[^,\d]/g, '');
+            let split = number_string.split(',');
+            let sisa = split[0].length % 3;
+            let rupiah = split[0].substr(0, sisa);
+            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                let separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+
+            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+            return rupiah;
+        }
+
+        function formatRupiahInput(input) {
+            let val = input.value;
+            // Allow only digits
+            val = val.replace(/[^0-9]/g, '');
+            // Convert to integer to remove leading zeros if any, then format
+            if (val !== '') {
+                val = parseInt(val, 10);
+                input.value = formatRupiahSimple(val);
+            } else {
+                input.value = '';
             }
         }
 
