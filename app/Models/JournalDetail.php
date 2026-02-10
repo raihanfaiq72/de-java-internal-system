@@ -13,9 +13,15 @@ class JournalDetail extends Model
     protected $table = 'journal_details';
 
     protected $fillable = [
+        'nomor_journal',
         'journal_id',
         'akun_id',
         'debit',
         'kredit',
     ];
+
+    public function journal()
+    {
+        return $this->belongsTo(Journal::class, 'journal_id');
+    }
 }

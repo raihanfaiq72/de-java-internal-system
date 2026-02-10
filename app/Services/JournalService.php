@@ -20,6 +20,7 @@ class JournalService
     {
         // details = [['akun_id' => 1, 'debit' => 1000, 'kredit' => 0], ...]
         return DB::transaction(function () use ($officeId, $date, $refNo, $desc, $details) {
+
             $journal = Journal::create([
                 'office_id' => $officeId,
                 'tgl_jurnal' => $date,
@@ -28,7 +29,11 @@ class JournalService
             ]);
 
             foreach ($details as $det) {
+
+                $nomorJournal = $this->generateJournalNumber($det['akun_id'], $date);
+
                 JournalDetail::create([
+                    'nomor_journal' => $nomorJournal,
                     'journal_id' => $journal->id,
                     'akun_id' => $det['akun_id'],
                     'debit' => $det['debit'],
@@ -38,6 +43,112 @@ class JournalService
 
             return $journal;
         });
+    }
+
+    private function generateJournalNumber($accountId, $date)
+    {
+        $account = COA::find($accountId);
+        $code = $this->getAccountCode($account->nama_akun);
+        $year = \Carbon\Carbon::parse($date)->format('Y');
+
+        $lastNumber = JournalDetail::whereHas('journal', function ($q) use ($year) {
+            $q->whereYear('tgl_jurnal', $year);
+        })
+            ->where('akun_id', $accountId)
+            ->orderByDesc('id')
+            ->value('nomor_journal');
+
+        $lastSequence = 0;
+
+        if ($lastNumber) {
+            $parts = explode('/', $lastNumber);
+            $lastSequence = intval(end($parts));
+        }
+
+        $newSequence = str_pad($lastSequence + 1, 4, '0', STR_PAD_LEFT);
+
+        return "{$code}/{$year}/{$newSequence}";
+    }
+
+
+    private function getAccountCode($accountName)
+    {
+        $map = [
+            'Kas' => 'KAS',
+            'Bank' => 'BAN',
+            'Rekening Bersama Digital Payment Paper.id' => 'RDP',
+            'Piutang Usaha' => 'PIU',
+            'Persediaan' => 'PER',
+            'Persediaan dalam Perjalanan' => 'PDP',
+            'Persediaan Konsinyasi' => 'PKS',
+            'PPN Masukan' => 'PPN-M',
+            'PPH Pasal 23 Dibayar Dimuka' => 'PPH23-DM',
+            'Bangunan' => 'BGN',
+            'Peralatan' => 'ALT',
+            'Kendaraan' => 'KND',
+            'Akumulasi Penyusutan Bangunan' => 'AKM-BGN',
+            'Akumulasi Penyusutan Peralatan' => 'AKM-ALT',
+            'Akumulasi Penyusutan Kendaraan' => 'AKM-KND',
+            'Hutang Usaha' => 'HUT',
+            'Pendapatan Diterima Di Muka' => 'PDM',
+            'Penjualan dimuka in transit' => 'PJT',
+            'Hutang PPH Pasal 21' => 'PPH21',
+            'Hutang PPH Pasal 22' => 'PPH22',
+            'Hutang PPH Pasal 4(2)' => 'PPH42',
+            'Hutang PPH Pasal 25' => 'PPH25',
+            'PPN Keluaran' => 'PPN-K',
+            'Hutang PPN' => 'HUT-PPN',
+            'Hutang Bank' => 'HUT-BANK',
+            'Modal Disetor' => 'MOD',
+            'Dividen' => 'DIV',
+            'Saldo Ekuitas Awal' => 'SEA',
+            'Laba Ditahan' => 'LD',
+            'Laba Tahun Berjalan' => 'LTB',
+            'Penjualan Umum' => 'PJL-UM',
+            'Pendapatan Jasa' => 'PDJ',
+            'Penjualan Produk' => 'PJL-PROD',
+            'Pendapatan Pengiriman' => 'PDK',
+            'Diskon Penjualan' => 'DSK-PJL',
+            'Retur Penjualan' => 'RTR-PJL',
+            'Harga Pokok Penjualan' => 'HPP',
+            'Beban Pengiriman' => 'BBN-KRM',
+            'Beban Pembelian' => 'BBN-BELI',
+            'Diskon Pembelian' => 'DSK-BELI',
+            'Retur Pembelian' => 'RTR-BELI',
+            'Beban Gaji Operasional' => 'GAJI-OPS',
+            'Beban Gaji Administrasi' => 'GAJI-ADM',
+            'Biaya Pencairan Digital Payment' => 'BYR-DP',
+            'Biaya Pembayaran Keluar' => 'BYR-KLR',
+            'Beban Listrik dan Air' => 'LSTR-AIR',
+            'Beban Kendaraan dan Transportasi' => 'KND-TRP',
+            'Beban Komunikasi' => 'KMN',
+            'Beban Perlengkapan Kantor' => 'ATK',
+            'Beban Komisi Penjualan' => 'KMS-PJL',
+            'Beban Entertainment' => 'ENT',
+            'Beban Iklan dan Promosi' => 'IKL',
+            'Beban Perbaikan dan Pemeliharaan' => 'PRB',
+            'Beban Sewa' => 'SWA',
+            'Beban Asuransi' => 'ASR',
+            'Beban Penyesuaian Persediaan' => 'ADJ-PER',
+            'Beban Cacat Produksi' => 'CACAT',
+            'Beban Perijinan dan Lisensi' => 'LIS',
+            'Beban Piutang Tak Tertagih' => 'BAD-DEBT',
+            'Beban Penyusutan Bangunan' => 'DEP-BGN',
+            'Beban Penyusutan Peralatan' => 'DEP-ALT',
+            'Beban Penyusutan Kendaraan' => 'DEP-KND',
+            'Pendapatan Lain-lain' => 'PDL',
+            'Pendapatan Bunga' => 'PDB',
+            'Keuntungan dari Selisih Kurs' => 'GAIN-KURS',
+            'Keuntungan Dari Penjualan Aktiva Tetap' => 'GAIN-AT',
+            'Beban Lain-lain' => 'BBN-LAIN',
+            'Beban Bunga' => 'BBN-BNG',
+            'Beban Administrasi Bank' => 'ADM-BANK',
+            'Kerugian Selisih Kurs' => 'LOSS-KURS',
+            'Kerugian Dari Penjualan Aktiva Tetap' => 'LOSS-AT',
+            'Beban Pajak Penghasilan' => 'PPH-BBN',
+        ];
+
+        return $map[$accountName] ?? 'GEN';
     }
 
     /**
