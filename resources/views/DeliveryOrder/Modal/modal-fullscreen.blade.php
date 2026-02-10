@@ -32,7 +32,8 @@
                     <link rel="stylesheet"
                         href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
                     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-                    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+                    <script
+                        src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
                     <div class="row g-4">
                         <!-- Left: DO Info & Invoices -->
@@ -67,7 +68,8 @@
 
                                     <div class="mb-3">
                                         <label class="f-label">Catatan</label>
-                                        <textarea id="modal_notes" class="form-control f-input" rows="4" placeholder="Catatan tambahan..."></textarea>
+                                        <textarea id="modal_notes" class="form-control f-input" rows="4"
+                                            placeholder="Catatan tambahan..."></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -204,7 +206,7 @@
                     field: "text",
                     direction: "asc"
                 },
-                onChange: function(value) {
+                onChange: function (value) {
                     updateMapRoute(value);
                 }
             });
@@ -366,7 +368,7 @@
                 routeWhileDragging: false,
                 show: false, // Hide instruction list
                 addWaypoints: false
-            }).on('routesfound', function(e) {
+            }).on('routesfound', function (e) {
                 const routes = e.routes;
                 const summary = routes[0].summary;
                 // summary.totalDistance is in meters
@@ -574,9 +576,25 @@
 
             if (!jsonFleet.success) throw new Error("Gagal menyimpan data armada: " + jsonFleet.message);
 
-            // Success! Open Print
-            window.open(`{{ url('delivery-order/print') }}/${doId}`, '_blank');
-            location.reload(); // Refresh main page
+            // Success!
+            alert('Delivery Order berhasil disimpan.');
+
+            // Close Modal
+            const modalEl = document.getElementById('deliveryOrderModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+
+            // Refresh List
+            if (typeof loadInvoiceData === 'function') {
+                loadInvoiceData();
+            }
+
+            // Open Print Preview
+            if (typeof openPrintPreview === 'function') {
+                openPrintPreview(doId);
+            } else {
+                console.warn('openPrintPreview function not found');
+            }
 
         } catch (e) {
             alert("Terjadi kesalahan: " + e.message);
