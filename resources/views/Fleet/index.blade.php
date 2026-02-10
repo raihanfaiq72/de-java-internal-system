@@ -187,25 +187,25 @@
 
             data.forEach((item, index) => {
                 const tr = `
-                <tr class="clickable-row">
-                    <td class="text-center ps-4 text-muted small">${index + 1}</td>
-                    <td class="fw-bold text-dark">${item.fleet_name}</td>
-                    <td class="text-muted f-mono">${item.license_plate}</td>
-                    <td class="text-muted">${item.fuel_type}</td>
-                    <td class="text-center"><span class="f-badge f-active">${item.km_per_liter || '-'}</span></td>
-                    <td class="text-center text-muted small">${new Date(item.created_at).toLocaleDateString('id-ID')}</td>
-                    <td class="text-end pe-4">
-                        <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-primary me-1" onclick="openFleetModal(${item.id})"><i class="fa fa-pencil"></i></button>
-                        <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-danger" onclick="deleteFleet(${item.id})"><i class="fa fa-trash"></i></button>
-                    </td>
-                </tr>
-            `;
+                    <tr class="clickable-row">
+                        <td class="text-center ps-4 text-muted small">${index + 1}</td>
+                        <td class="fw-bold text-dark">${item.fleet_name}</td>
+                        <td class="text-muted f-mono">${item.license_plate}</td>
+                        <td class="text-muted">${item.fuel_type}</td>
+                        <td class="text-center"><span class="f-badge f-active">${item.km_per_liter || '-'}</span></td>
+                        <td class="text-center text-muted small">${new Date(item.created_at).toLocaleDateString('id-ID')}</td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-primary me-1" onclick="openFleetModal(${item.id})"><i class="fa fa-pencil"></i></button>
+                            <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-danger" onclick="deleteFleet(${item.id})"><i class="fa fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
                 tbody.insertAdjacentHTML('beforeend', tr);
             });
         }
 
         async function deleteFleet(id) {
-            if (!confirm('Hapus armada ini?')) return;
+            if (!await macConfirm('Hapus armada', 'Yakin ingin menghapus armada ini?')) return;
             try {
                 const res = await fetch(`${FLEET_URL}/${id}`, {
                     method: 'DELETE',
@@ -228,11 +228,11 @@
             const c = document.getElementById('pagination-container');
             c.innerHTML = '';
             if (!meta || !meta.links) return;
-            document.getElementById('pagination-info').innerText = `${meta.from||0}-${meta.to||0} dari ${meta.total} data`;
+            document.getElementById('pagination-info').innerText = `${meta.from || 0}-${meta.to || 0} dari ${meta.total} data`;
             meta.links.forEach(l => {
                 const cls = l.active ? 'bg-primary text-white' : 'bg-white text-dark';
                 c.insertAdjacentHTML('beforeend',
-                    `<li class="page-item ${!l.url?'disabled':''}"><a class="page-link border-0 mx-1 rounded shadow-sm fw-bold ${cls}" href="#" onclick="loadFleetsData('${l.url}')">${l.label}</a></li>`
+                    `<li class="page-item ${!l.url ? 'disabled' : ''}"><a class="page-link border-0 mx-1 rounded shadow-sm fw-bold ${cls}" href="#" onclick="loadFleetsData('${l.url}')">${l.label}</a></li>`
                 );
             });
         }

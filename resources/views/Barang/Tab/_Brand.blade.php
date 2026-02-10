@@ -194,7 +194,7 @@
         }
 
         async function deleteBrand(id) {
-            if (!confirm('Hapus brand ini?')) return;
+            if (!await macConfirm('Hapus brand', 'Yakin ingin menghapus brand ini?')) return;
 
             try {
                 const res = await fetch(`${BRAND_URL}/${id}`, {

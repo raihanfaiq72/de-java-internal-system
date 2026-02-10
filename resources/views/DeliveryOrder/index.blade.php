@@ -304,34 +304,34 @@
                 }
 
                 const tr = `
-                                        <tr class="clickable-row" onclick="openDetailDOModal(${item.id})">
-                                            <td class="text-start ps-3" onclick="event.stopPropagation()"><input type="checkbox" class="form-check-input"></td>
-                                            <td class="text-start text-muted small">${index + 1}</td>
-                                            <td>
-                                                <div class="fw-bold text-dark">${item.delivery_order_number}</div>
-                                                <div class="small text-muted"><i class="fa fa-calendar me-1"></i> ${new Date(item.delivery_date).toLocaleDateString('id-ID')}</div>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center mb-1">
-                                                    <div class="bg-light rounded px-2 py-1 border me-2">
-                                                        <i class="fa fa-truck text-secondary"></i>
-                                                    </div>
-                                                    <div class="fw-bold text-dark">${fleetName}</div>
-                                                </div>
-                                                <div class="small text-muted fst-italic text-truncate" style="max-width: 250px;">${item.notes || '-'}</div>
-                                            </td>
-                                            <td class="text-end pe-3" onclick="event.stopPropagation()">
-                                                <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-primary me-1" onclick="openDeliveryOrderModal(${item.id})"><i class="fa fa-pencil"></i></button>
-                                                <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-danger" onclick="deleteDO(${item.id})"><i class="fa fa-trash"></i></button>
-                                            </td>
-                                        </tr>
-                                    `;
+                                                        <tr class="clickable-row" onclick="openDetailDOModal(${item.id})">
+                                                            <td class="text-start ps-3" onclick="event.stopPropagation()"><input type="checkbox" class="form-check-input"></td>
+                                                            <td class="text-start text-muted small">${index + 1}</td>
+                                                            <td>
+                                                                <div class="fw-bold text-dark">${item.delivery_order_number}</div>
+                                                                <div class="small text-muted"><i class="fa fa-calendar me-1"></i> ${new Date(item.delivery_date).toLocaleDateString('id-ID')}</div>
+                                                            </td>
+                                                            <td>
+                                                                <div class="d-flex align-items-center mb-1">
+                                                                    <div class="bg-light rounded px-2 py-1 border me-2">
+                                                                        <i class="fa fa-truck text-secondary"></i>
+                                                                    </div>
+                                                                    <div class="fw-bold text-dark">${fleetName}</div>
+                                                                </div>
+                                                                <div class="small text-muted fst-italic text-truncate" style="max-width: 250px;">${item.notes || '-'}</div>
+                                                            </td>
+                                                            <td class="text-end pe-3" onclick="event.stopPropagation()">
+                                                                <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-primary me-1" onclick="openDeliveryOrderModal(${item.id})"><i class="fa fa-pencil"></i></button>
+                                                                <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-danger" onclick="deleteDO(${item.id})"><i class="fa fa-trash"></i></button>
+                                                            </td>
+                                                        </tr>
+                                                    `;
                 tbody.insertAdjacentHTML('beforeend', tr);
             });
         }
 
         async function deleteDO(id) {
-            if (!confirm('Hapus Delivery Order ini?')) return;
+            if (!await macConfirm('Hapus Delivery Order', 'Yakin ingin menghapus delivery order ini?')) return;
             try {
                 const res = await fetch(`${DO_API_URL}/${id}`, {
                     method: 'DELETE',
