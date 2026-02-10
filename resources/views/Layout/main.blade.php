@@ -428,7 +428,11 @@
                     <span class="logo-lg d-block">
                         <h4 class="mb-0 fw-bold text-white">Dejava</h4>
                         <small class="text-muted">
-                            Outlet {{ session('outlet_name', 'Pusat') }}
+                            @php
+                                $officeId = session('active_office_id');
+                                $office = App\Models\Office::find($officeId);
+                            @endphp
+                            {{ $office->name }}
                         </small>
                     </span>
 
@@ -450,7 +454,7 @@
 
     <!-- Force Sidebar Open Script -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             function enforceSidebar() {
                 if (window.innerWidth >= 992) {
                     if (document.body.getAttribute('data-sidebar-size') === 'collapsed') {
