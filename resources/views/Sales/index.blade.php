@@ -435,11 +435,14 @@
             }
         }
 
+        let paidInvoiceIds = [];
+
         async function loadInvoiceData(url = window.financeApp.API_URL) {
             const tbody = document.getElementById('invoiceTableBody');
             tbody.innerHTML =
                 '<tr><td colspan="10" class="text-center p-5"><div class="spinner-border spinner-border-sm text-primary"></div><p class="mt-2 text-muted small mb-0">Memuat data...</p></td></tr>';
             resetSelection();
+            paidInvoiceIds = []; // Reset
 
             try {
                 let finalUrl = (typeof url === 'string' && url.includes('/')) ? url : window.financeApp.API_URL;
@@ -454,8 +457,22 @@
                     tgl_jatuh_tempo: document.getElementById('filter-tgl-jatuh-tempo').value
                 });
 
-                const response = await fetch(`${finalUrl}${finalUrl.includes('?') ? '&' : '?'}${params.toString()}`);
-                const result = await response.json();
+                // Fetch invoices and payments in parallel
+                const [invoiceRes, paymentRes] = await Promise.all([
+                    fetch(`${finalUrl}${finalUrl.includes('?') ? '&' : '?'}${params.toString()}`),
+                    fetch(
+                        `/api/payment-api?tipe_receipt=Sales&limit=1000`) // Fetch enough payments to cover visible invoices
+                ]);
+
+                const result = await invoiceRes.json();
+                const paymentResult = await paymentRes.json();
+
+                if (paymentResult.success) {
+                    // Extract invoice_ids from payments
+                    // Note: API structure might be result.data.data or result.data depending on pagination
+                    const payments = paymentResult.data.data || paymentResult.data || [];
+                    paidInvoiceIds = payments.map(p => String(p.invoice_id)); // Store as strings
+                }
 
                 if (result.success) {
                     renderInvoiceList(result.data.data);
@@ -496,14 +513,14 @@
                 const tr = document.createElement('tr');
                 tr.classList.add('border-bottom', 'border-light');
                 tr.innerHTML = `
-                                                                            <td class="ps-3 py-3">
-                                                                                <div class="fw-bold text-dark">${it.nama_produk_manual || it.product?.nama_produk || '-'}</div>
-                                                                                <div class="small text-muted">${it.product?.kode_produk || '-'}</div>
-                                                                            </td>
-                                                                            <td class="text-center py-3">${parseFloat(it.qty)} ${it.product?.unit?.nama_unit || ''}</td>
-                                                                            <td class="text-end py-3">${window.financeApp.formatIDR(it.harga_satuan)}</td>
-                                                                            <td class="text-end pe-3 py-3">${window.financeApp.formatIDR(it.total_harga_item)}</td>
-                                                                        `;
+                        <td class="ps-3 py-3">
+                            <div class="fw-bold text-dark">${it.nama_produk_manual || it.product?.nama_produk || '-'}</div>
+                            <div class="small text-muted">${it.product?.kode_produk || '-'}</div>
+                        </td>
+                        <td class="text-center py-3">${parseFloat(it.qty)} ${it.product?.unit?.nama_unit || ''}</td>
+                        <td class="text-end py-3">${window.financeApp.formatIDR(it.harga_satuan)}</td>
+                        <td class="text-end pe-3 py-3">${window.financeApp.formatIDR(it.total_harga_item)}</td>
+                    `;
                 tbody.appendChild(tr);
             });
 
@@ -631,12 +648,16 @@
 
                 const btnReceipt = row.querySelector('.btn-create-receipt');
                 if (btnReceipt) {
-                    btnReceipt.onclick = (e) => {
-                        e.preventDefault();
-                        // Redirect to receipt page with params
-                        window.location.href =
-                            `{{ route('sales.receipt') }}?open_create=true&invoice_id=${item.id}&mitra_id=${item.mitra_id}`;
-                    };
+                    // Hide if payment exists for this invoice
+                    if (paidInvoiceIds.includes(String(item.id))) {
+                        btnReceipt.closest('li').remove();
+                    } else {
+                        btnReceipt.onclick = (e) => {
+                            e.preventDefault();
+                            window.location.href =
+                                `{{ route('sales.receipt') }}?open_create=true&invoice_id=${item.id}&mitra_id=${item.mitra_id}`;
+                        };
+                    }
                 }
 
                 row.querySelector('.btn-edit').onclick = () => openInvoiceModal(item.id, null, 'edit');
