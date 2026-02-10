@@ -3,14 +3,15 @@
         <div class="modal-content border-0 shadow-lg rounded-4" style="height: 90vh;">
             <div class="d-flex justify-content-between modal-header border-bottom py-3 px-4 bg-dark">
                 <div>
-                    <h5 class="modal-title fw-bold">Bulk Edit Invoice</h5>
-                    <p class="text-muted small mb-0">Edit multiple invoices simultaneously.</p>
+                    <h5 class="modal-title fw-bold text-white">Bulk Edit Invoice Pembelian</h5>
+                    <p class="text-white-50 small mb-0">Edit beberapa invoice pembelian sekaligus.</p>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
                         <span id="bulk-edit-count">0</span> Selected
                     </span>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
             </div>
             <div class="modal-body p-0">
@@ -18,7 +19,7 @@
                     <!-- Left: List -->
                     <div class="border-end bg-light d-flex flex-column" style="width: 320px; flex-shrink: 0;">
                         <div class="p-3 border-bottom bg-white sticky-top">
-                            <input type="text" class="form-control form-control-sm" placeholder="Filter list..."
+                            <input type="text" class="form-control form-control-sm" placeholder="Cari invoice..."
                                 id="bulk-list-filter">
                         </div>
                         <div class="list-group list-group-flush overflow-auto custom-scrollbar" id="bulk-invoice-list">
@@ -34,7 +35,7 @@
                             <div id="bulk-form-loading"
                                 class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
                                 <div class="spinner-border text-primary mb-3" role="status"></div>
-                                <div>Select an invoice to edit</div>
+                                <div>Pilih invoice untuk diedit</div>
                             </div>
 
                             <!-- Actual Form -->
@@ -54,9 +55,9 @@
                                                         id="bulk_nomor_invoice" readonly>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <label class="form-label small fw-bold text-muted">Pelanggan</label>
-                                                    <input type="text" class="form-control fw-bold bg-white"
-                                                        id="bulk_mitra_nama" readonly>
+                                                    <label class="form-label small fw-bold text-muted">Supplier</label>
+                                                    <select class="form-select" id="bulk_mitra_id"
+                                                        style="display:none"></select>
                                                 </div>
                                                 <div class="col-md-4">
                                                     <label class="form-label small fw-bold text-muted">Status
@@ -82,11 +83,11 @@
                                                         onchange="updateActiveBulkField('tgl_jatuh_tempo', this.value)">
                                                 </div>
                                                 <div class="col-md-3">
-                                                    <label
-                                                        class="form-label small fw-bold text-muted">Salesperson</label>
+                                                    <label class="form-label small fw-bold text-muted">Purchasing
+                                                        Staff</label>
                                                     <select class="form-select" id="bulk_sales_id"
                                                         onchange="updateActiveBulkField('sales_id', this.value)">
-                                                        <option value="">Pilih Sales...</option>
+                                                        <option value="">Pilih Staff...</option>
                                                         <!-- Populated by JS -->
                                                     </select>
                                                 </div>
@@ -125,7 +126,7 @@
                                                         <th class="ps-3 py-2" width="35%">Produk</th>
                                                         <th class="text-center py-2" width="10%">Qty</th>
                                                         <th class="text-center py-2" width="10%">Unit</th>
-                                                        <th class="text-end py-2" width="15%">Harga</th>
+                                                        <th class="text-end py-2" width="15%">Harga Beli</th>
                                                         <th class="text-end py-2" width="15%">Disc</th>
                                                         <th class="text-end py-2" width="15%">Total</th>
                                                         <th width="30"></th>
@@ -141,8 +142,8 @@
                                                         <td></td>
                                                     </tr>
                                                     <tr>
-                                                        <td colspan="5" class="text-end py-2 align-middle">Diskon
-                                                            Tambahan</td>
+                                                        <td colspan="5" class="text-end py-2 align-middle">Potongan
+                                                            Lumpsum</td>
                                                         <td class="text-end pe-3 py-2">
                                                             <input type="text"
                                                                 class="form-control form-control-sm text-end fw-bold"
@@ -152,7 +153,7 @@
                                                         <td></td>
                                                     </tr>
                                                     <tr>
-                                                        <td colspan="5" class="text-end py-2">Grand Total</td>
+                                                        <td colspan="5" class="text-end py-2">Total Tagihan</td>
                                                         <td class="text-end pe-3 py-2 text-primary"
                                                             id="bulk_grand_total">Rp 0</td>
                                                         <td></td>
@@ -228,6 +229,7 @@
         let bulkData = {};
         let activeBulkId = null;
         let bulkSalesPersons = [];
+        let tomSelectBulkMitra = null;
 
         async function initBulkEdit() {
             const selectedIds = window.financeApp.selectedIds;
@@ -243,11 +245,40 @@
             document.getElementById('bulk-form-content').classList.add('d-none');
             document.getElementById('bulk-list-filter').value = '';
 
-            // Load Salespersons if needed
+            // Load Salespersons/Staff
             if (bulkSalesPersons.length === 0) {
                 await fetchSalesPersons();
             }
             renderBulkSalesOptions();
+
+            // Init TomSelect for Mitra (Supplier)
+            if (!tomSelectBulkMitra) {
+                tomSelectBulkMitra = new TomSelect('#bulk_mitra_id', {
+                    valueField: 'id',
+                    labelField: 'nama',
+                    searchField: ['nama'],
+                    options: typeof masterMitra !== 'undefined' ? masterMitra : [],
+                    create: false,
+                    placeholder: 'Pilih Supplier...',
+                    dropdownParent: 'body',
+                    onChange: function (val) {
+                        if (activeBulkId && bulkData[activeBulkId]) {
+                            bulkData[activeBulkId].mitra_id = val;
+                            const m = this.options[val];
+                            if (m) {
+                                bulkData[activeBulkId].mitra = { nama: m.nama };
+                                renderBulkSidebar(document.getElementById('bulk-list-filter').value.toLowerCase());
+                            }
+                        }
+                    }
+                });
+            } else {
+                tomSelectBulkMitra.clear();
+                if (typeof masterMitra !== 'undefined') {
+                    tomSelectBulkMitra.clearOptions();
+                    tomSelectBulkMitra.addOptions(masterMitra);
+                }
+            }
 
             bulkData = {};
             activeBulkId = null;
@@ -263,14 +294,12 @@
                 results.forEach(res => {
                     if (res.success) {
                         bulkData[res.data.id] = JSON.parse(JSON.stringify(res.data)); // Deep copy
-                        // Ensure items array exists
                         if (!bulkData[res.data.id].items) bulkData[res.data.id].items = [];
                     }
                 });
 
                 renderBulkSidebar();
 
-                // Select first
                 const firstId = Object.keys(bulkData)[0];
                 if (firstId) {
                     setActiveBulkInvoice(firstId);
@@ -284,7 +313,7 @@
 
         async function fetchSalesPersons() {
             try {
-                const res = await fetch('/api/user-api'); // Assuming this lists users
+                const res = await fetch('/api/user-api');
                 const json = await res.json();
                 if (json.success) {
                     bulkSalesPersons = json.data.data || json.data;
@@ -294,13 +323,12 @@
 
         function renderBulkSalesOptions() {
             const sel = document.getElementById('bulk_sales_id');
-            sel.innerHTML = '<option value="">Pilih Sales...</option>';
+            sel.innerHTML = '<option value="">Pilih Staff...</option>';
             bulkSalesPersons.forEach(u => {
                 sel.insertAdjacentHTML('beforeend', `<option value="${u.id}">${u.name}</option>`);
             });
         }
 
-        // Filter List
         document.getElementById('bulk-list-filter').addEventListener('keyup', function () {
             renderBulkSidebar(this.value.toLowerCase());
         });
@@ -310,7 +338,6 @@
             container.innerHTML = '';
 
             Object.values(bulkData).forEach(inv => {
-                // Filter Check
                 if (filter) {
                     const matchObj = (inv.nomor_invoice || '').toLowerCase().includes(filter) ||
                         (inv.mitra ? inv.mitra.nama : '').toLowerCase().includes(filter);
@@ -324,21 +351,21 @@
                 if (isActive) el.style.borderLeftWidth = '4px !important';
 
                 el.onclick = () => {
-                    if (activeBulkId) saveCurrentBulkStateToMemory(); // Save current work before switching
+                    if (activeBulkId) saveCurrentBulkStateToMemory();
                     setActiveBulkInvoice(inv.id);
                 };
 
                 el.innerHTML = `
-                                                                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                                                                    <div class="fw-bold text-truncate ${isActive ? 'text-white' : 'text-dark'}" style="max-width: 140px;">${inv.nomor_invoice}</div>
-                                                                                    <span class="badge ${isActive ? 'bg-white text-primary' : 'bg-light text-secondary'} border">${inv.status_dok}</span>
-                                                                                </div>
-                                                                                <div class="small ${isActive ? 'text-white-50' : 'text-muted'} text-truncate">${inv.mitra ? inv.mitra.nama : 'Umum'}</div>
-                                                                                <div class="small ${isActive ? 'text-white-50' : 'text-muted'} d-flex justify-content-between mt-1">
-                                                                                    <span class="bulk-sidebar-total">${window.financeApp.formatIDR(inv.total_akhir)}</span>
-                                                                                    <span>${new Date(inv.tgl_invoice).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })}</span>
-                                                                                </div>
-                                                                            `;
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <div class="fw-bold text-truncate ${isActive ? 'text-white' : 'text-dark'}" style="max-width: 140px;">${inv.nomor_invoice}</div>
+                            <span class="badge ${isActive ? 'bg-white text-primary' : 'bg-light text-secondary'} border">${inv.status_dok}</span>
+                        </div>
+                        <div class="small ${isActive ? 'text-white-50' : 'text-muted'} text-truncate">${inv.mitra ? inv.mitra.nama : 'Umum'}</div>
+                        <div class="small ${isActive ? 'text-white-50' : 'text-muted'} d-flex justify-content-between mt-1">
+                            <span class="bulk-sidebar-total">${window.financeApp.formatIDR(inv.total_akhir)}</span>
+                            <span>${new Date(inv.tgl_invoice).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })}</span>
+                        </div>
+                    `;
                 container.appendChild(el);
             });
         }
@@ -346,7 +373,6 @@
         function saveCurrentBulkStateToMemory() {
             if (!activeBulkId || !bulkData[activeBulkId]) return;
 
-            // Save items from DOM to memory
             const currentItems = [];
             document.querySelectorAll('#bulk-items-body tr.bulk-product-row').forEach(row => {
                 const idInput = row.querySelector('.prod-id');
@@ -358,7 +384,6 @@
 
                 if (!idInput || !qtyInput) return;
 
-                // Recover product name
                 let prodName = '';
                 if (tsSelect && tsSelect.tomselect) {
                     const val = tsSelect.tomselect.getValue();
@@ -375,7 +400,8 @@
                 currentItems.push({
                     produk_id: idInput.value,
                     qty: qty,
-                    harga_satuan: price,
+                    harga_satuan: price, // Use generic field name, mapped from price
+                    harga_beli: price,   // Specific for purchase
                     diskon_nilai: disc,
                     deskripsi_produk: descInput.value,
                     total_harga_item: total,
@@ -386,7 +412,6 @@
             bulkData[activeBulkId].items = currentItems;
             bulkData[activeBulkId].diskon_tambahan_nilai = cleanNumber(document.getElementById('bulk_diskon_tambahan').value);
 
-            // Robust parsing for Grand Total (same as single edit modal)
             const rawTotal = document.getElementById('bulk_grand_total').innerText;
             bulkData[activeBulkId].total_akhir = parseFloat(rawTotal.replace(/[^0-9,-]+/g, '').replace(',', '.')) || 0;
         }
@@ -398,15 +423,19 @@
             const data = bulkData[id];
             if (!data) return;
 
-            // Show form
             document.getElementById('bulk-form-loading').classList.add('d-none');
             document.getElementById('bulk-form-content').classList.remove('d-none');
             document.getElementById('bulk_active_id').value = id;
             document.getElementById('bulk_mitra_id_hidden').value = data.mitra_id || '';
 
-            // Populate Fields
             document.getElementById('bulk_nomor_invoice').value = data.nomor_invoice;
-            document.getElementById('bulk_mitra_nama').value = data.mitra ? data.mitra.nama : 'Umum';
+
+            // Set Mitra in TomSelect
+            if (tomSelectBulkMitra) {
+                if (data.mitra_id) tomSelectBulkMitra.setValue(data.mitra_id, true);
+                else tomSelectBulkMitra.clear(true);
+            }
+
             document.getElementById('bulk_tgl_invoice').value = data.tgl_invoice;
             document.getElementById('bulk_tgl_jatuh_tempo').value = data.tgl_jatuh_tempo;
             document.getElementById('bulk_status_dok').value = data.status_dok;
@@ -415,7 +444,6 @@
             document.getElementById('bulk_sales_id').value = data.sales_id || '';
             document.getElementById('bulk_ref_no').value = data.ref_no || '';
 
-            // Format: Round to integer first to avoid ,00
             document.getElementById('bulk_diskon_tambahan').value = formatRupiah(Math.round(data.diskon_tambahan_nilai || 0));
 
             renderBulkItems(data);
@@ -429,8 +457,6 @@
                 data.items.forEach(item => {
                     bulkAddNewProductRow(item);
                 });
-            } else {
-                // Add empty row if no items? Or just leave empty
             }
             bulkCalculateTotal();
         }
@@ -449,14 +475,8 @@
             const unitLabel = tr.querySelector('.prod-unit-label');
             const descInput = tr.querySelector('.prod-desc');
 
-            // Initialize TomSelect (Reuse masterProduk from parent context if avail)
-            // We assume masterProduk is available globally from index.blade.php / modal-fullscreen.blade.php
-            // If empty, we might need to fetch it.
             if (typeof masterProduk === 'undefined' || masterProduk.length === 0) {
-                fetchMasterProduk().then(() => {
-                    // Re-init this specific row's TS after fetch?
-                    // Simplest is to ensure masterProduk is loaded in initBulkEdit
-                });
+                // Warning: might be empty if not loaded in parent
             }
 
             const ts = new TomSelect(selectEl, {
@@ -464,7 +484,7 @@
                     id: String(p.id),
                     nama: p.nama_produk,
                     sku: p.sku_kode,
-                    harga: parseFloat(p.harga_jual),
+                    harga: parseFloat(p.harga_beli || 0), // Purchase Price
                     unit: p.unit?.nama_unit || 'Pcs'
                 })),
                 valueField: 'id',
@@ -480,7 +500,6 @@
                     const selected = this.options[val];
                     if (selected) {
                         idInput.value = selected.id;
-                        // Round to integer
                         priceInput.value = formatRupiah(Math.round(selected.harga));
                         unitLabel.innerText = selected.unit;
                         bulkCalculateTotal();
@@ -491,13 +510,12 @@
 
             if (data) {
                 setTimeout(() => {
-                    let rawId = data.produk_id || data.product_id || data.id; // Handle various sources
+                    let rawId = data.produk_id || data.product_id || data.id;
                     const prodId = String(rawId);
 
                     if (ts.options[prodId]) {
                         ts.setValue(prodId, true);
                     } else {
-                        // Add option if missing (e.g. from historical data)
                         ts.addOption({
                             id: prodId,
                             nama: data.nama_produk_manual || data.nama_produk || 'Item',
@@ -509,13 +527,13 @@
                     idInput.value = prodId;
                     qtyInput.value = parseFloat(data.qty) || 1;
 
-                    // Round to integer before formatting to avoid ,00
-                    priceInput.value = formatRupiah(Math.round(data.harga_satuan ?? data.harga_jual ?? 0));
-                    discInput.value = formatRupiah(Math.round(data.diskon_nilai ?? data.diskon_item ?? 0));
+                    // Purchase uses harga_beli or generic harga_satuan
+                    const rawPrice = data.harga_beli ?? data.harga_satuan ?? 0;
+                    priceInput.value = formatRupiah(Math.round(rawPrice));
 
+                    discInput.value = formatRupiah(Math.round(data.diskon_nilai ?? data.diskon_item ?? 0));
                     descInput.value = data.deskripsi_produk || data.deskripsi_item || '';
 
-                    // Unit
                     let unitName = 'Pcs';
                     if (data.unit) {
                         unitName = (typeof data.unit === 'object') ? data.unit.nama_unit : data.unit;
@@ -531,7 +549,6 @@
 
         function bulkRemoveProductRow(btn) {
             const tr = btn.closest('tr');
-            // Destroy TS instance to prevent memory leaks?
             const sel = tr.querySelector('.prod-select-item');
             if (sel && sel.tomselect) sel.tomselect.destroy();
             tr.remove();
@@ -583,7 +600,7 @@
         }
 
         window.saveBulkEdit = async function () {
-            saveCurrentBulkStateToMemory(); // Ensure latest state is captured
+            saveCurrentBulkStateToMemory();
 
             const btn = document.querySelector('#modalBulkEdit .btn-primary');
             const originalHtml = btn.innerHTML;
@@ -600,14 +617,14 @@
                             tgl_invoice: inv.tgl_invoice,
                             tgl_jatuh_tempo: inv.tgl_jatuh_tempo,
                             status_dok: inv.status_dok,
-                            catatan: inv.catatan, // or keterangan
+                            catatan: inv.catatan,
                             keterangan: inv.catatan || inv.keterangan,
                             syarat_ketentuan: inv.syarat_ketentuan,
                             sales_id: inv.sales_id,
                             ref_no: inv.ref_no,
                             diskon_tambahan_nilai: inv.diskon_tambahan_nilai,
-                            total_akhir: inv.total_akhir
-                            // Ensure other required fields are present if validated strictly
+                            total_akhir: inv.total_akhir,
+                            mitra_id: inv.mitra_id, // include Mitra (Supplier)
                         },
                         items: inv.items
                     };

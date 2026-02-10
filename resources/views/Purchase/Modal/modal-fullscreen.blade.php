@@ -143,8 +143,7 @@
                                         <tbody id="itemBodyList" class="border-top-0"></tbody>
                                         <tfoot class="bg-light">
                                             <tr>
-                                                <td colspan="7"
-                                                    class="text-center py-2 text-muted small fst-italic">
+                                                <td colspan="7" class="text-center py-2 text-muted small fst-italic">
                                                     Klik tombol tambah untuk memasukkan item
                                                 </td>
                                             </tr>
@@ -159,12 +158,14 @@
                                     <div class="row g-4">
                                         <div class="col-md-6">
                                             <label class="f-label mb-2">Catatan Internal</label>
-                                            <textarea id="modal_keterangan" class="form-control f-text bg-light border-0" rows="3"
+                                            <textarea id="modal_keterangan"
+                                                class="form-control f-text bg-light border-0" rows="3"
                                                 placeholder="Catatan untuk tim internal..."></textarea>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="f-label mb-2">Syarat & Ketentuan</label>
-                                            <textarea id="modal_syarat" class="form-control f-text bg-light border-0" rows="3">1. Pastikan barang yang di-input sudah benar</textarea>
+                                            <textarea id="modal_syarat" class="form-control f-text bg-light border-0"
+                                                rows="3">1. Pastikan barang yang di-input sudah benar</textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -243,8 +244,8 @@
                     <table class="table table-hover align-middle mb-0" id="stockTable">
                         <thead class="bg-light sticky-top">
                             <tr>
-                                <th width="5%" class="text-center py-3"><input type="checkbox"
-                                        class="form-check-input" id="checkAllStock" onclick="toggleAllStock(this)">
+                                <th width="5%" class="text-center py-3"><input type="checkbox" class="form-check-input"
+                                        id="checkAllStock" onclick="toggleAllStock(this)">
                                 </th>
                                 <th class="py-3">Produk</th>
                                 <th class="py-3">Kategori</th>
@@ -283,8 +284,8 @@
                 placeholder="Deskripsi (Opsional)">
         </td>
         <td class="py-3">
-            <input type="number" class="form-control form-control-sm text-center prod-qty" value="1"
-                min="1" oninput="calculateInvoiceTotal()">
+            <input type="number" class="form-control form-control-sm text-center prod-qty" value="1" min="1"
+                oninput="calculateInvoiceTotal()">
         </td>
         <td class="py-3 text-center">
             <span class="badge bg-light text-secondary border prod-unit-label">-</span>
@@ -472,29 +473,29 @@
         sidebar.innerHTML = '<div class="fp-title">Tempo</div>';
 
         const options = [{
-                l: 'Hari Ini',
-                d: 0
-            },
-            {
-                l: '+7 Hari',
-                d: 7
-            },
-            {
-                l: '+14 Hari',
-                d: 14
-            },
-            {
-                l: '+30 Hari',
-                d: 30
-            },
-            {
-                l: '+45 Hari',
-                d: 45
-            },
-            {
-                l: '+60 Hari',
-                d: 60
-            }
+            l: 'Hari Ini',
+            d: 0
+        },
+        {
+            l: '+7 Hari',
+            d: 7
+        },
+        {
+            l: '+14 Hari',
+            d: 14
+        },
+        {
+            l: '+30 Hari',
+            d: 30
+        },
+        {
+            l: '+45 Hari',
+            d: 45
+        },
+        {
+            l: '+60 Hari',
+            d: 60
+        }
         ];
 
         options.forEach(opt => {
@@ -515,7 +516,7 @@
     }
 
     const originalOpenInvoiceModal = openInvoiceModal;
-    openInvoiceModal = async function(id = null, type = null, mode = 'create') {
+    openInvoiceModal = async function (id = null, type = null, mode = 'create') {
         await originalOpenInvoiceModal(id, type, mode);
         initInvoiceDatePickers();
     };
@@ -534,7 +535,7 @@
         if (tomSelectMitraModal) {
             try {
                 tomSelectMitraModal.destroy();
-            } catch (_) {}
+            } catch (_) { }
             tomSelectMitraModal = null;
         }
 
@@ -566,7 +567,7 @@
             `,
                 item: (data, escape) => `<div>${escape(data.nama || '')}</div>`
             },
-            onChange: function(val) {
+            onChange: function (val) {
                 renderMitraDetail();
             }
         });
@@ -580,7 +581,7 @@
         if (tomSelectMitraModal) {
             try {
                 tomSelectMitraModal.destroy();
-            } catch (_) {}
+            } catch (_) { }
             tomSelectMitraModal = null;
         }
     });
@@ -604,7 +605,7 @@
 
         // Event Listeners for Calculation
         [priceInput, discInput].forEach(el => {
-            el.addEventListener('keyup', function(e) {
+            el.addEventListener('keyup', function (e) {
                 this.value = formatRupiah(this.value);
                 calculateInvoiceTotal();
             });
@@ -629,7 +630,7 @@
                     `<div><div class="fw-bold">${esc(d.nama)}</div><small class="text-muted">${esc(d.sku)}</small></div>`,
                 item: (d, esc) => `<div>${esc(d.nama)}</div>`
             },
-            onChange: function(val) {
+            onChange: function (val) {
                 const selected = this.options[val];
                 if (selected) {
                     idInput.value = selected.id;
@@ -734,7 +735,7 @@
     }
 
     const _origOpenModal = openInvoiceModal;
-    openInvoiceModal = async function(id = null, type = null, mode = 'create') {
+    openInvoiceModal = async function (id = null, type = null, mode = 'create') {
         await _origOpenModal(id, type, mode);
         initInvoiceDatePickers();
     };
@@ -1128,7 +1129,7 @@
 
     // Filter Stock
     document.querySelectorAll('.col-filter').forEach(inp => {
-        inp.addEventListener('keyup', function() {
+        inp.addEventListener('keyup', function () {
             const val = this.value.toLowerCase();
             const col = this.dataset.col; // 1=code, 2=name, 3=cat
 
@@ -1145,28 +1146,80 @@
 
     function addSelectedStocks() {
         const checked = document.querySelectorAll('.stock-check:checked');
+        const target = window.activeStockTarget || 'main'; // 'main' or 'bulk'
 
-        const existingIds = Array.from(document.querySelectorAll('#itemBodyList .prod-id'))
-            .map(input => input.value);
+        let existingIds = [];
+        let tbodyId = '';
+
+        if (target === 'bulk') {
+            tbodyId = 'bulk-items-body';
+            existingIds = Array.from(document.querySelectorAll('#bulk-items-body .prod-id'))
+                .map(input => input.value);
+        } else {
+            tbodyId = 'itemBodyList';
+            existingIds = Array.from(document.querySelectorAll('#itemBodyList .prod-id'))
+                .map(input => input.value);
+        }
+
+        // Smart Placeholder Removal logic
+        const tbody = document.getElementById(tbodyId);
+        if (tbody) {
+            const rows = tbody.querySelectorAll('tr');
+            if (rows.length === 1) {
+                const idVal = rows[0].querySelector('.prod-id').value;
+                if (!idVal) {
+                    if (target === 'bulk') {
+                        if (typeof bulkRemoveProductRow === 'function') {
+                            const btn = rows[0].querySelector('.btn-remove-row');
+                            if (btn) bulkRemoveProductRow(btn);
+                            else rows[0].remove();
+                        }
+                    } else {
+                        const btn = rows[0].querySelector('.btn-remove-row');
+                        if (btn) {
+                            btn.click();
+                        } else {
+                            rows[0].remove();
+                        }
+                    }
+                    existingIds = [];
+                }
+            }
+        }
 
         checked.forEach(chk => {
             const data = JSON.parse(chk.dataset.raw);
             const productId = String(data.id);
 
             if (!existingIds.includes(productId)) {
-                addNewProductRow({
-                    product_id: data.id,
-                    id: data.id,
-                    nama_produk_manual: data.nama_produk,
-                    harga_jual: data.harga_jual,
-                    qty: 1,
-                    unit: data.unit?.nama_unit || 'Pcs',
-                    product: data
-                });
+                if (target === 'bulk') {
+                    if (typeof bulkAddNewProductRow === 'function') {
+                        bulkAddNewProductRow({
+                            id: data.id,
+                            nama_produk: data.nama_produk,
+                            harga_beli: data.harga_beli,
+                            qty: 1,
+                            unit: data.unit?.nama_unit || 'Pcs',
+                            product: data
+                        });
+                    }
+                } else {
+                    addNewProductRow({
+                        product_id: data.id,
+                        id: data.id,
+                        nama_produk_manual: data.nama_produk,
+                        harga_jual: data.harga_beli, // Use Purchase Price
+                        qty: 1,
+                        unit: data.unit?.nama_unit || 'Pcs',
+                        product: data
+                    });
+                }
             }
         });
 
-        bootstrap.Modal.getInstance(document.getElementById('stockModal')).hide();
+        const modalEl = document.getElementById('stockModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
     }
 
     function openMitraModal() {
@@ -1178,12 +1231,12 @@
             // Fallback if no global helper, try to find the modal directly
             const mitraModal = document.getElementById('mitraModal');
             if (mitraModal) {
-                 const modal = new bootstrap.Modal(mitraModal);
-                 // Reset form if check
-                 document.getElementById('mitraForm')?.reset();
-                 const typeInput = document.getElementById('mitra_tipe');
-                 if(typeInput) typeInput.value = 'Supplier';
-                 modal.show();
+                const modal = new bootstrap.Modal(mitraModal);
+                // Reset form if check
+                document.getElementById('mitraForm')?.reset();
+                const typeInput = document.getElementById('mitra_tipe');
+                if (typeInput) typeInput.value = 'Supplier';
+                modal.show();
             } else {
                 alert('Fitur Tambah Mitra belum terhubung. Pastikan Modal Mitra dimuat.');
             }
