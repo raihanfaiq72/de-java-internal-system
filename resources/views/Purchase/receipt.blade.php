@@ -546,6 +546,22 @@
                 return;
             }
 
+            // Get Mitra Name for Search
+            let mitraName = '';
+            if (tomMitra) {
+                const options = tomMitra.options;
+                if (options[mitraId]) {
+                    mitraName = options[mitraId].text;
+                } else {
+                    // Fallback if not found in options (rare if selected)
+                    const item = tomMitra.getItem(mitraId);
+                    if (item) mitraName = item.textContent;
+                }
+            }
+
+            // Clean up name if needed (remove extra info if any)
+            mitraName = mitraName.trim();
+
             const container = document.getElementById('selection-list-container');
             container.innerHTML = '<div class="text-center"><div class="spinner-border"></div></div>';
 
@@ -553,21 +569,20 @@
             modal.show();
 
             try {
-                // Fetch UNPAID invoices for this mitra
-                // Note: Using client-side filtering as per Sales receipt pattern for consistent behavior 
-                // until backend specific endpoint is confirmed.
-                const url = `${API_INVOICE}?search=${mitraId}&status_pembayaran=Unpaid&per_page=100`;
+                // Fetch UNPAID invoices Searching by Mitra Name
+                // Backend search handles 'mitra.nama' so this is better for user experience
+                const url = `${API_INVOICE}?search=${encodeURIComponent(mitraName)}&tipe_invoice=Purchase&status_pembayaran=Unpaid&per_page=100`;
 
                 const res = await fetch(url);
                 const result = await res.json();
 
                 if (result.success) {
                     let html = '<div class="list-group">';
-                    // Client side filter to be safe
+                    // Client side filter double check
                     const invoices = result.data.data.filter(inv =>
                         (inv.mitra_id == mitraId || inv.mitra?.id == mitraId) &&
                         inv.status_pembayaran !== 'Paid' &&
-                        inv.tipe_invoice === 'Purchase' // Ensure we only get Purchase invoices
+                        inv.tipe_invoice === 'Purchase'
                     );
 
                     if (invoices.length === 0) {
@@ -580,23 +595,23 @@
                         const sisa = inv.total_akhir - (inv.payment_sum_jumlah_bayar || 0);
 
                         html += `
-                                                                                <label class="list-group-item d-flex gap-3">
-                                                                                    <input class="form-check-input flex-shrink-0" type="checkbox" 
-                                                                                        value="${inv.id}" 
-                                                                                        data-json='${JSON.stringify(inv).replace(/'/g, "&apos;")}' 
-                                                                                        ${isSelected}>
-                                                                                    <span class="pt-1 form-checked-content w-100">
-                                                                                        <div class="d-flex justify-content-between w-100">
-                                                                                            <strong>${inv.nomor_invoice}</strong>
-                                                                                            <small class="text-muted">${inv.tgl_invoice}</small>
-                                                                                        </div>
-                                                                                        <div class="d-flex justify-content-between w-100 small">
-                                                                                            <span>Total: ${formatIDR(inv.total_akhir)}</span>
-                                                                                            <span class="text-danger fw-bold">Sisa: ${formatIDR(sisa)}</span>
-                                                                                        </div>
-                                                                                    </span>
-                                                                                </label>
-                                                                            `;
+                                <label class="list-group-item d-flex gap-3">
+                                    <input class="form-check-input flex-shrink-0" type="checkbox" 
+                                        value="${inv.id}" 
+                                        data-json='${JSON.stringify(inv).replace(/'/g, "&apos;")}' 
+                                        ${isSelected}>
+                                    <span class="pt-1 form-checked-content w-100">
+                                        <div class="d-flex justify-content-between w-100">
+                                            <strong>${inv.nomor_invoice}</strong>
+                                            <small class="text-muted">${inv.tgl_invoice}</small>
+                                        </div>
+                                        <div class="d-flex justify-content-between w-100 small">
+                                            <span>Total: ${formatIDR(inv.total_akhir)}</span>
+                                            <span class="text-danger fw-bold">Sisa: ${formatIDR(sisa)}</span>
+                                        </div>
+                                    </span>
+                                </label>
+                            `;
                     });
                     html += '</div>';
                     container.innerHTML = html;
@@ -752,12 +767,12 @@
                 if (label.includes('&raquo;')) label = '»';
 
                 html += `
-                                                                        <li class="page-item ${activeClass} ${disabledClass}">
-                                                                            <button class="page-link" onclick="loadReceiptData('${link.url}')" ${!link.url ? 'disabled' : ''}>
-                                                                                ${label}
-                                                                            </button>
-                                                                        </li>
-                                                                    `;
+                                                                                    <li class="page-item ${activeClass} ${disabledClass}">
+                                                                                        <button class="page-link" onclick="loadReceiptData('${link.url}')" ${!link.url ? 'disabled' : ''}>
+                                                                                            ${label}
+                                                                                        </button>
+                                                                                    </li>
+                                                                                `;
             });
             container.innerHTML = html;
         }
