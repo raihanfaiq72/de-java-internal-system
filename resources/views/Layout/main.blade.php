@@ -374,6 +374,26 @@
             font-size: 16px;
             box-shadow: 0 2px 5px rgba(0, 122, 255, 0.3);
         }
+
+        /* Mobile Overlay */
+        .startbar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            /* Below sidebar (1000) */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .startbar-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
     </style>
 
     @stack('css')
@@ -482,6 +502,25 @@
             observer.observe(document.body, {
                 attributes: true
             });
+
+            // Mobile Sidebar Toggle Logic
+            const toggleBtn = document.getElementById('togglemenu');
+            const startbar = document.querySelector('.startbar');
+            const overlay = document.querySelector('.startbar-overlay');
+
+            if (toggleBtn && startbar && overlay) {
+                toggleBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    startbar.classList.toggle('show');
+                    overlay.classList.toggle('show');
+                });
+
+                overlay.addEventListener('click', function () {
+                    startbar.classList.remove('show');
+                    overlay.classList.remove('show');
+                });
+            }
         });
     </script>
 </body>
