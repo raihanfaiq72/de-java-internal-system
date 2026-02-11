@@ -156,13 +156,8 @@ return [
         'id' => 'sidebarLaporan',
         'submenu' => [
             [
-                'title' => 'Laporan Invoice Penjualan',
+                'title' => 'Laporan Invoice',
                 'route' => 'report.invoice',
-                'icon' => 'iconoir-page-search',
-            ],
-            [
-                'title' => 'Laporan Penjualan',
-                'route' => 'report.sales',
                 'icon' => 'iconoir-graph-up',
             ],
             [
@@ -204,12 +199,6 @@ return [
                 'title' => 'Buku Besar',
                 'route' => 'report.general-ledger',
                 'icon' => 'iconoir-book',
-            ],
-            [
-
-                'title' => 'Simulasi Harga Average',
-                'route' => '#',
-                'icon' => 'iconoir-info-circle',
             ],
         ]
 
