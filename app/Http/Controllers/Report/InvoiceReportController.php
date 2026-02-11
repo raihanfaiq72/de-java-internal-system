@@ -158,15 +158,102 @@ class InvoiceReportController extends Controller
             
         $totalSoldQty = $soldProducts->sum('total_qty');
         
+        // --- Tab 4: Laporan Invoice Per Produk ---
+        $prodIdFilter = $request->product_id;
+        $invTypeFilter = $request->invoice_type;
+        $payStatusFilter = $request->payment_status;
+
+        $itemsQuery = DB::table('invoice_items')
+            ->join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
+            ->join('products', 'invoice_items.produk_id', '=', 'products.id')
+            ->join('mitras', 'invoices.mitra_id', '=', 'mitras.id')
+            ->where('invoices.office_id', $officeId)
+            ->whereNull('invoice_items.deleted_at')
+            ->whereNull('invoices.deleted_at')
+            ->select(
+                'invoices.status_pembayaran',
+                'invoices.tgl_invoice',
+                'products.nama_produk',
+                'mitras.nama as nama_mitra',
+                'invoices.nomor_invoice',
+                'invoice_items.qty',
+                'invoice_items.harga_satuan',
+                'invoice_items.diskon_nilai',
+                'invoice_items.total_harga_item',
+                'invoice_items.id as item_id',
+                'invoice_items.invoice_id'
+            );
+
+        if ($prodIdFilter) {
+            $itemsQuery->where('invoice_items.produk_id', $prodIdFilter);
+        }
+        if ($invTypeFilter) {
+            $itemsQuery->where('invoices.tipe_invoice', $invTypeFilter);
+        }
+        if ($payStatusFilter) {
+            $itemsQuery->where('invoices.status_pembayaran', $payStatusFilter);
+        }
+        if ($startDate && $endDate) {
+            $itemsQuery->whereBetween('invoices.tgl_invoice', [$startDate, $endDate]);
+        }
+        if ($search) {
+            $itemsQuery->where(function($q) use ($search) {
+                $q->where('invoices.nomor_invoice', 'like', "%$search%")
+                  ->orWhere('products.nama_produk', 'like', "%$search%")
+                  ->orWhere('mitras.nama', 'like', "%$search%");
+            });
+        }
+
+        $invoiceItems = $itemsQuery->orderBy('invoices.tgl_invoice', 'desc')->get();
+
+        // Calculate Taxes and Final Total per Item
+        $itemIds = $invoiceItems->pluck('item_id')->toArray();
+
+        $taxSums = [];
+        if (!empty($itemIds)) {
+            $taxSums = DB::table('invoice_item_taxes')
+                ->whereIn('invoice_item_id', $itemIds)
+                ->whereNull('deleted_at')
+                ->select('invoice_item_id', DB::raw('SUM(nilai_pajak_diterapkan) as total_tax'))
+                ->groupBy('invoice_item_id')
+                ->pluck('total_tax', 'invoice_item_id')
+                ->toArray();
+        }
+
+        $summaryTotalTransaction = 0;
+        $uniqueInvoiceIds = [];
+
+        foreach ($invoiceItems as $item) {
+            $tax = $taxSums[$item->item_id] ?? 0;
+            $item->total_pajak_item = $tax;
+            
+            // Calculate total discount
+            // total_harga_item = (qty * harga) - total_diskon
+            // total_diskon = (qty * harga) - total_harga_item
+            $gross = $item->qty * $item->harga_satuan;
+            $item->total_diskon = $gross - $item->total_harga_item;
+            
+            // Total Akhir Item = total_harga_item + tax
+            $item->total_akhir = $item->total_harga_item + $tax;
+            
+            $summaryTotalTransaction += $item->total_akhir;
+            $uniqueInvoiceIds[$item->nomor_invoice] = true;
+        }
+        
+        $summaryTotalInvoices = count($uniqueInvoiceIds);
+
         // Mitras for filter
         $mitras = Partner::where('office_id', $officeId)->get();
+        // Products for filter
+        $products = DB::table('products')->whereNull('deleted_at')->select('id', 'nama_produk')->orderBy('nama_produk')->get();
 
         return view('Report.Invoice.index', compact(
             'chartLabels', 'chartIncome', 'chartExpense',
             'pieSeries', 'pieLabels',
             'payments', 'totalPaymentAmount', 'totalUniqueInvoices',
             'soldProducts', 'totalSoldQty',
-            'mitras', 'startDate', 'endDate', 'year'
+            'mitras', 'startDate', 'endDate', 'year',
+            'invoiceItems', 'summaryTotalTransaction', 'summaryTotalInvoices', 'products'
         ));
     }
 }
