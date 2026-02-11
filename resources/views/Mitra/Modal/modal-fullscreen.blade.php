@@ -85,11 +85,24 @@
 
                                     <div class="mt-3">
                                         <label class="f-label">Alamat Lengkap</label>
-                                        <textarea id="modal_alamat" class="form-control f-input" rows="3" placeholder="Alamat kantor / gudang..."></textarea>
-                                        <div class="form-text text-muted small mt-1">
-                                            <i class="fa fa-info-circle me-1"></i>
-                                            Tips: Gunakan format <b>Nama Jalan, Kota, Provinsi</b> (contoh: <i>Jl. Jend. Sudirman No. 1, Jakarta Pusat, DKI Jakarta</i>) agar lokasi peta lebih akurat.
+                                        <div class="alert alert-soft-primary border-0 p-3 mb-2 rounded-3">
+                                            <div class="d-flex gap-2">
+                                                <i class="fa fa-info-circle mt-1 text-primary"></i>
+                                                <div>
+                                                    <h6 class="fw-bold small text-dark mb-1">Panduan Pengisian Alamat OpenStreetMap</h6>
+                                                    <p class="small text-muted mb-0" style="font-size: 11px; line-height: 1.4;">
+                                                        Agar lokasi peta akurat, ikuti panduan berikut:
+                                                    </p>
+                                                    <ul class="mb-0 ps-3 mt-1 small text-muted" style="font-size: 11px;">
+                                                        <li>Gunakan format lengkap: <b>Nama Jalan, Kecamatan, Kota, Provinsi</b>.</li>
+                                                        <li>Contoh: <i>Jl. Jend. Sudirman No. 1, Tanah Abang, Jakarta Pusat, DKI Jakarta</i>.</li>
+                                                        <li>Setelah mengetik alamat, klik tombol <b>"Cari dari Alamat"</b> untuk menitikkan lokasi otomatis.</li>
+                                                        <li>Jika titik kurang pas, Anda dapat menggeser peta atau mencari lokasi manual di peta.</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
                                         </div>
+                                        <textarea id="modal_alamat" class="form-control f-input" rows="3" placeholder="Masukkan alamat lengkap..."></textarea>
                                         
                                         <!-- Map Section -->
                                         <div class="mt-3">
