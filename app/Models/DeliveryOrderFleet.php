@@ -25,6 +25,11 @@ class DeliveryOrderFleet extends Model
         'estimated_distance_km',
         'estimated_fuel_cost',
         'additional_costs',
+        'start_latitude',
+        'start_longitude',
+        'last_latitude',
+        'last_longitude',
+        'status',
     ];
 
     protected $casts = [
@@ -38,6 +43,10 @@ class DeliveryOrderFleet extends Model
         'estimated_distance_km' => 'decimal:2',
         'estimated_fuel_cost'   => 'decimal:2',
         'additional_costs'      => 'array',
+        'start_latitude'        => 'decimal:8',
+        'start_longitude'       => 'decimal:8',
+        'last_latitude'         => 'decimal:8',
+        'last_longitude'        => 'decimal:8',
     ];
 
     public function deliveryOrder()

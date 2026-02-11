@@ -321,8 +321,9 @@
                                                                 <div class="small text-muted fst-italic text-truncate" style="max-width: 250px;">${item.notes || '-'}</div>
                                                             </td>
                                                             <td class="text-end pe-3" onclick="event.stopPropagation()">
-                                                                <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-primary me-1" onclick="openDeliveryOrderModal(${item.id})"><i class="fa fa-pencil"></i></button>
-                                                                <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-danger" onclick="deleteDO(${item.id})"><i class="fa fa-trash"></i></button>
+                                                                <a href="/delivery-order/track/${item.id}" class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-info me-1" title="Lacak"><i class="fa fa-map-marker"></i></a>
+                                                                <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-primary me-1" onclick="openDeliveryOrderModal(${item.id})" title="Edit"><i class="fa fa-pencil"></i></button>
+                                                                <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-danger" onclick="deleteDO(${item.id})" title="Hapus"><i class="fa fa-trash"></i></button>
                                                             </td>
                                                         </tr>
                                                     `;

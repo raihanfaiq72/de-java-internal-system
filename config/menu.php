@@ -146,6 +146,12 @@ return [
         'icon' => 'iconoir-delivery-truck',
     ],
     [
+        'type' => 'item',
+        'title' => 'Driver App',
+        'route' => 'driver.delivery.index',
+        'icon' => 'iconoir-steering-wheel',
+    ],
+    [
         'type' => 'label',
         'title' => 'Report',
     ],

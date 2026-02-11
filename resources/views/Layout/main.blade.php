@@ -18,6 +18,7 @@
     <link href="{{ url('') }}/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
     <link href="{{ url('') }}/assets/css/app.min.css" rel="stylesheet" type="text/css" />
     <link href="{{ url('') }}/assets/css/custom.css" rel="stylesheet" type="text/css" />
+    @yield('styles')
 
     <style>
         :root {
@@ -471,6 +472,8 @@
     @stack('js')
     <!-- App js -->
     <script src="{{ url('') }}/assets/js/app.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    @yield('scripts')
 
     <!-- Force Sidebar Open Script -->
     <script>

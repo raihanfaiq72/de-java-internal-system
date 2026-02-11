@@ -88,6 +88,16 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('delivery-order')->name('delivery-order.')->group(function () {
             Route::get('/', [DeliveryOrderController::class, 'index'])->name('index');
             Route::get('/print/{id}', [DeliveryOrderController::class, 'print'])->name('print');
+            Route::get('/track/{id}', [DeliveryOrderController::class, 'track'])->name('track');
+        });
+
+        Route::prefix('driver')->name('driver.')->group(function () {
+            Route::get('/delivery', [App\Http\Controllers\DriverDeliveryController::class, 'index'])->name('delivery.index');
+            Route::get('/delivery/{id}', [App\Http\Controllers\DriverDeliveryController::class, 'show'])->name('delivery.show');
+            Route::post('/delivery/{id}/start', [App\Http\Controllers\DriverDeliveryController::class, 'startTrip'])->name('delivery.start');
+            Route::post('/delivery/{id}/location', [App\Http\Controllers\DriverDeliveryController::class, 'updateLocation'])->name('delivery.location');
+            Route::post('/delivery/{id}/invoice/{invoiceId}/arrive', [App\Http\Controllers\DriverDeliveryController::class, 'arriveAtStop'])->name('delivery.arrive');
+            Route::post('/delivery/{id}/finish', [App\Http\Controllers\DriverDeliveryController::class, 'finishTrip'])->name('delivery.finish');
         });
 
         Route::prefix('admin')->group(function () {
