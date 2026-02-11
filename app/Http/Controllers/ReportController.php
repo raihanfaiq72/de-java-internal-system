@@ -681,37 +681,116 @@ class ReportController extends Controller
     }
 
 
-    public function profitAndLoss()
+    public function profitAndLoss(Request $request)
     {
-        $year = date('Y');
         $officeId = session('active_office_id');
-        
-        $revenue = DB::table('invoices')
-            ->where('tipe_invoice', 'Sales')
-            ->where('office_id', $officeId)
-            ->whereYear('tgl_invoice', $year)
-            ->whereNull('deleted_at')
-            ->sum('total_akhir');
+        $startDate = $request->start_date ?? date('Y-m-01');
+        $endDate = $request->end_date ?? date('Y-m-d');
 
-        $cogs = DB::table('invoices')
-            ->where('tipe_invoice', 'Purchase')
-            ->where('office_id', $officeId)
-            ->whereYear('tgl_invoice', $year)
-            ->whereNull('deleted_at')
-            ->sum('total_akhir');
+        // Target Groups
+        // 4000, 7001 -> Revenue (Credit - Debit)
+        // 5000, 6000, 6800, 8001, 9000 -> Expense (Debit - Credit)
+        $targetGroups = [4000, 5000, 6000, 6800, 7001, 8001, 9000];
 
-        $expenses = DB::table('expenses')
-            ->where('office_id', $officeId)
-            ->whereYear('tgl_biaya', $year)
-            ->whereNull('deleted_at')
-            ->select('nama_biaya', DB::raw('SUM(jumlah) as total'))
-            ->groupBy('nama_biaya')
+        // 1. Get Transaction Sums per Account for the period
+        $movements = DB::table('journal_details')
+            ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
+            ->where('journals.office_id', $officeId)
+            ->whereNull('journals.deleted_at')
+            ->whereNull('journal_details.deleted_at')
+            ->whereBetween('journals.tgl_jurnal', [$startDate, $endDate])
+            ->select(
+                'journal_details.akun_id',
+                DB::raw('SUM(journal_details.debit) as total_debit'),
+                DB::raw('SUM(journal_details.kredit) as total_credit')
+            )
+            ->groupBy('journal_details.akun_id')
+            ->get()
+            ->keyBy('akun_id');
+
+        // 2. Get COA Structure filtered by groups
+        $groups = DB::table('coa_group')
+            ->join('coa_type', 'coa_group.id', '=', 'coa_type.kelompok_id')
+            ->join('chart_of_accounts', 'coa_type.id', '=', 'chart_of_accounts.tipe_id')
+            ->where('coa_group.office_id', $officeId)
+            ->whereIn('coa_group.kode_kelompok', $targetGroups)
+            ->whereNull('coa_group.deleted_at')
+            ->whereNull('coa_type.deleted_at')
+            ->whereNull('chart_of_accounts.deleted_at')
+            ->select(
+                'coa_group.kode_kelompok',
+                'coa_group.nama_kelompok',
+                'chart_of_accounts.id as coa_id',
+                'chart_of_accounts.kode_akun',
+                'chart_of_accounts.nama_akun'
+            )
+            ->orderBy('coa_group.kode_kelompok')
+            ->orderBy('chart_of_accounts.kode_akun')
             ->get();
 
-        $totalExpenses = $expenses->sum('total');
-        $grossProfit = $revenue - $cogs;
-        $netIncome = $grossProfit - $totalExpenses;
+        // 3. Structure Data
+        $report = [];
+        $summary = [
+            'total_revenue' => 0,
+            'total_expense' => 0,
+            'net_profit' => 0
+        ];
 
-        return view($this->views . 'profit-loss', compact('revenue', 'cogs', 'expenses', 'totalExpenses', 'grossProfit', 'netIncome', 'year'));
+        foreach ($groups as $row) {
+            $groupId = $row->kode_kelompok;
+            
+            if (!isset($report[$groupId])) {
+                $report[$groupId] = [
+                    'code' => $row->kode_kelompok,
+                    'name' => $row->nama_kelompok,
+                    'accounts' => [],
+                    'total_balance' => 0
+                ];
+            }
+
+            // Calculate Balance
+            $debit = 0;
+            $credit = 0;
+            
+            if (isset($movements[$row->coa_id])) {
+                $debit = $movements[$row->coa_id]->total_debit;
+                $credit = $movements[$row->coa_id]->total_credit;
+            }
+
+            // Determine sign based on group
+            // Revenue (4000, 7001): Credit - Debit
+            // Expense (Others): Debit - Credit
+            if (in_array($groupId, [4000, 7001])) {
+                $balance = $credit - $debit;
+            } else {
+                $balance = $debit - $credit;
+            }
+
+            // Only add if non-zero? 
+            // User: "Saldo per akun dalam periode terpilih".
+            // If strictly 0, maybe hide?
+            // Let's show all for now, clearer.
+            
+            $report[$groupId]['accounts'][] = [
+                'kode_akun' => $row->kode_akun,
+                'nama_akun' => $row->nama_akun,
+                'balance' => $balance
+            ];
+
+            $report[$groupId]['total_balance'] += $balance;
+        }
+
+        // 4. Calculate Summary
+        foreach ($report as $groupId => $groupData) {
+            if (in_array($groupId, [4000, 7001])) {
+                $summary['total_revenue'] += $groupData['total_balance'];
+            } else {
+                $summary['total_expense'] += $groupData['total_balance'];
+            }
+        }
+
+        $summary['net_profit'] = $summary['total_revenue'] - $summary['total_expense'];
+
+        return view($this->views . 'profit-loss', compact('report', 'summary', 'startDate', 'endDate'));
     }
 }
