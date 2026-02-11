@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Models\Invoice;
 use App\Models\Partner;
+use App\Models\COA;
 
 class ReportController extends Controller
 {
@@ -78,9 +79,11 @@ class ReportController extends Controller
                 $paid = $inv->payment->sum('jumlah_bayar');
                 $remaining = $inv->total_akhir - $paid;
                 
-                if ($remaining <= 100) continue; // Ignore very small amounts (rounding errors)
+                // STRICTLY > 0 as per requirement "sisa_piutang > 0"
+                if ($remaining <= 0) continue;
                 
-                $dueDate = Carbon::parse($inv->tgl_jatuh_tempo);
+                // Use tgl_jatuh_tempo, fallback to tgl_invoice
+                $dueDate = $inv->tgl_jatuh_tempo ? Carbon::parse($inv->tgl_jatuh_tempo) : Carbon::parse($inv->tgl_invoice);
                 $daysOverdue = floor($dueDate->diffInDays(Carbon::now(), false));
 
                 if ($daysOverdue <= 0) {
@@ -131,6 +134,9 @@ class ReportController extends Controller
         if ($summary['total_customers'] > 0) {
             $summary['avg_days_past_due'] = $sumAvgDays / $summary['total_customers'];
         }
+
+        // Sort data by Total Piutang Descending
+        usort($agingData, fn($a, $b) => $b['total'] <=> $a['total']);
 
         return view($this->views . 'ar-aging', compact('agingData', 'summary', 'mitras'));
     }
@@ -369,9 +375,86 @@ class ReportController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    public function generalLedger()
+    public function generalLedger(Request $request)
     {
-        return view($this->views . 'general-ledger');
+        $officeId = session('active_office_id');
+        $startDate = $request->start_date ?? date('Y-m-01');
+        $endDate = $request->end_date ?? date('Y-m-d');
+        $coaId = $request->coa_id;
+        $status = $request->status;
+
+        $query = DB::table('journal_details')
+            ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
+            ->join('chart_of_accounts', 'journal_details.akun_id', '=', 'chart_of_accounts.id')
+            ->leftJoin('invoices', function($join) use ($officeId) {
+                $join->on('journals.nomor_referensi', '=', 'invoices.nomor_invoice')
+                     ->where('invoices.office_id', '=', $officeId)
+                     ->whereNull('invoices.deleted_at');
+            })
+            ->where('journals.office_id', $officeId)
+            ->whereNull('journals.deleted_at')
+            ->whereNull('journal_details.deleted_at')
+            ->whereBetween('journals.tgl_jurnal', [$startDate, $endDate])
+            ->select(
+                'journals.tgl_jurnal',
+                'journals.keterangan',
+                'journals.nomor_referensi',
+                'journal_details.nomor_journal',
+                'journal_details.debit',
+                'journal_details.kredit',
+                'chart_of_accounts.id as coa_id',
+                'chart_of_accounts.kode_akun',
+                'chart_of_accounts.nama_akun',
+                'invoices.status_dok'
+            );
+
+        if ($coaId) {
+            $query->where('journal_details.akun_id', $coaId);
+        }
+        
+        if ($status) {
+            $query->where('invoices.status_dok', $status);
+        }
+
+        $journalLines = $query->orderBy('journals.tgl_jurnal')->orderBy('journals.id')->get();
+
+        $groupedData = $journalLines->groupBy('coa_id');
+        
+        $reportData = [];
+        foreach ($groupedData as $id => $lines) {
+            $first = $lines->first();
+            $accountInfo = [
+                'kode_akun' => $first->kode_akun,
+                'nama_akun' => $first->nama_akun,
+            ];
+            
+            $totalDebit = 0;
+            $totalCredit = 0;
+            $balance = 0;
+            
+            $processedLines = $lines->map(function($line) use (&$totalDebit, &$totalCredit, &$balance) {
+                $lineBalance = $line->debit - $line->kredit;
+                $balance += $lineBalance;
+                $totalDebit += $line->debit;
+                $totalCredit += $line->kredit;
+                
+                $line->balance = $lineBalance; // Row balance
+                return $line;
+            });
+
+            $reportData[] = [
+                'account' => $accountInfo,
+                'lines' => $processedLines,
+                'total_debit' => $totalDebit,
+                'total_credit' => $totalCredit,
+                'total_saldo' => $balance
+            ];
+        }
+
+        // Get all COAs for filter
+        $coas = COA::where('office_id', $officeId)->orderBy('kode_akun')->get();
+
+        return view($this->views . 'general-ledger', compact('reportData', 'startDate', 'endDate', 'coas'));
     }
 
     private function getBalanceSheetData($date)
