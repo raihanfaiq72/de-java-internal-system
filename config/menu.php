@@ -164,7 +164,7 @@ return [
         'type' => 'item',
         'title' => 'Driver App',
         'route' => 'driver.delivery.index',
-        'icon' => 'iconoir-steering-wheel',
+        'icon' => 'iconoir-car',
     ],
     [
         'type' => 'label',

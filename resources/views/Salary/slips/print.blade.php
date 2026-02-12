@@ -1,26 +1,85 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Slip Gaji - {{ $salarySlip->employee->name }}</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .company-name { font-size: 24px; font-weight: bold; }
-        .slip-title { font-size: 18px; margin-top: 10px; text-transform: uppercase; }
-        .details-table { width: 100%; margin-bottom: 20px; }
-        .details-table td { padding: 5px; }
-        .salary-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .salary-table th, .salary-table td { border: 1px solid #ddd; padding: 8px; }
-        .salary-table th { background-color: #f2f2f2; text-align: left; }
-        .total-row { font-weight: bold; background-color: #eee; }
-        .footer { margin-top: 50px; text-align: center; display: flex; justify-content: space-between; }
-        .signature-box { width: 200px; text-align: center; }
-        .signature-line { border-bottom: 1px solid #000; margin-top: 60px; }
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .company-name {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .slip-title {
+            font-size: 18px;
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+
+        .details-table {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .details-table td {
+            padding: 5px;
+        }
+
+        .salary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .salary-table th,
+        .salary-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        .salary-table th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #eee;
+        }
+
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-box {
+            width: 200px;
+            text-align: center;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #000;
+            margin-top: 60px;
+        }
     </style>
 </head>
-<body onload="window.print()">
+
+<body>
 
     <div class="header">
         <div class="company-name">DE JAVA INTERNAL SYSTEM</div>
@@ -65,11 +124,13 @@
             </tr>
             <tr>
                 <td class="text-danger">Potongan Keterlambatan</td>
-                <td style="text-align: right; color: red;">- {{ number_format($salarySlip->late_deduction, 0, ',', '.') }}</td>
+                <td style="text-align: right; color: red;">-
+                    {{ number_format($salarySlip->late_deduction, 0, ',', '.') }}</td>
             </tr>
             <tr>
                 <td class="text-danger">Potongan Lainnya</td>
-                <td style="text-align: right; color: red;">- {{ number_format($salarySlip->other_deduction, 0, ',', '.') }}</td>
+                <td style="text-align: right; color: red;">-
+                    {{ number_format($salarySlip->other_deduction, 0, ',', '.') }}</td>
             </tr>
             <tr class="total-row">
                 <td>TOTAL DITERIMA</td>
@@ -92,4 +153,5 @@
     </div>
 
 </body>
+
 </html>

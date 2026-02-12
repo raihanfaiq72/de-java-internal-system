@@ -10,8 +10,9 @@
                         <p class="text-muted small mb-0">Kelola periode dan generate slip gaji karyawan.</p>
                     </div>
                     <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                        <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#createModal">
-                            <i class="mdi mdi-plus me-1"></i> Buat Periode Baru
+                        <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal"
+                            data-bs-target="#createModal">
+                            <i class="iconoir-plus me-1"></i> Buat Periode Baru
                         </button>
                     </div>
                 </div>
@@ -23,7 +24,8 @@
                     <div class="card-body p-4 bg-white">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
-                                <thead class="bg-light text-uppercase text-secondary fw-bold" style="font-size: 11px; letter-spacing: 0.5px;">
+                                <thead class="bg-light text-uppercase text-secondary fw-bold"
+                                    style="font-size: 11px; letter-spacing: 0.5px;">
                                     <tr>
                                         <th>Nama Periode</th>
                                         <th>Tanggal Mulai</th>
@@ -34,34 +36,40 @@
                                 </thead>
                                 <tbody class="border-top-0">
                                     @forelse($periods as $period)
-                                    <tr>
-                                        <td class="fw-bold text-dark">{{ $period->name }}</td>
-                                        <td>{{ $period->start_date->format('d M Y') }}</td>
-                                        <td>{{ $period->end_date->format('d M Y') }}</td>
-                                        <td>
-                                            <span class="badge bg-{{ $period->status == 'open' ? 'success' : 'secondary' }} rounded-pill px-3">
-                                                {{ ucfirst($period->status) }}
-                                            </span>
-                                        </td>
-                                        <td class="text-end pe-4">
-                                            <div class="btn-group">
-                                                <a href="{{ route('salary-periods.show', $period->id) }}" class="btn btn-sm btn-outline-primary fw-bold">
-                                                    Detail
-                                                </a>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="if(confirm('Yakin ingin menghapus?')) document.getElementById('delete-{{ $period->id }}').submit()">
-                                                    <i class="mdi mdi-trash-can"></i>
-                                                </button>
-                                            </div>
-                                            <form id="delete-{{ $period->id }}" action="{{ route('salary-periods.destroy', $period->id) }}" method="POST" class="d-none">
-                                                @csrf
-                                                @method('DELETE')
-                                            </form>
-                                        </td>
-                                    </tr>
+                                        <tr>
+                                            <td class="fw-bold text-dark">{{ $period->name }}</td>
+                                            <td>{{ $period->start_date->format('d M Y') }}</td>
+                                            <td>{{ $period->end_date->format('d M Y') }}</td>
+                                            <td>
+                                                <span
+                                                    class="badge bg-{{ $period->status == 'open' ? 'success' : 'secondary' }} rounded-pill px-3">
+                                                    {{ ucfirst($period->status) }}
+                                                </span>
+                                            </td>
+                                            <td class="text-end pe-4">
+                                                <div class="btn-group">
+                                                    <a href="{{ route('salary-periods.show', $period->id) }}"
+                                                        class="btn btn-sm btn-outline-primary fw-bold">
+                                                        Detail
+                                                    </a>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                                        onclick="deletePeriod('{{ $period->id }}', '{{ $period->name }}')">
+                                                        <i class="iconoir-trash"></i>
+                                                    </button>
+                                                </div>
+                                                <form id="delete-{{ $period->id }}"
+                                                    action="{{ route('salary-periods.destroy', $period->id) }}" method="POST"
+                                                    class="d-none">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                </form>
+                                            </td>
+                                        </tr>
                                     @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center py-5 text-muted">Belum ada periode penggajian.</td>
-                                    </tr>
+                                        <tr>
+                                            <td colspan="5" class="text-center py-5 text-muted">Belum ada periode penggajian.
+                                            </td>
+                                        </tr>
                                     @endforelse
                                 </tbody>
                             </table>
@@ -96,7 +104,8 @@
                             <input type="date" name="end_date" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-bold small text-uppercase text-muted">Nama Periode (Opsional)</label>
+                            <label class="form-label fw-bold small text-uppercase text-muted">Nama Periode
+                                (Opsional)</label>
                             <input type="text" name="name" class="form-control" placeholder="Contoh: Gaji Februari 2026">
                             <small class="text-muted">Jika kosong, akan otomatis dibuat berdasarkan tanggal.</small>
                         </div>
@@ -110,3 +119,18 @@
         </div>
     </div>
 @endsection
+
+@push('js')
+    <script>
+        async function deletePeriod(id, name) {
+            const confirmed = await macConfirm(
+                'Hapus Periode?',
+                `Apakah Anda yakin ingin menghapus periode "${name}"? Tindakan ini tidak dapat dibatalkan dan semua data terkait akan hilang.`
+            );
+
+            if (confirmed) {
+                document.getElementById(`delete-${id}`).submit();
+            }
+        }
+    </script>
+@endpush

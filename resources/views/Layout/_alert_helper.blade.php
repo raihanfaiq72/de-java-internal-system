@@ -19,7 +19,7 @@
         border-radius: 18px;
         padding: 16px;
         width: 340px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0,0,0,0.02);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.02);
         display: flex;
         align-items: flex-start;
         gap: 14px;
@@ -50,7 +50,7 @@
         justify-content: center;
         flex-shrink: 0;
     }
-    
+
     .mac-toast-icon svg {
         width: 18px;
         height: 18px;
@@ -77,10 +77,25 @@
     }
 
     /* Types */
-    .mac-toast-success .mac-toast-icon { background: #E4F9E9; color: #00C853; }
-    .mac-toast-error .mac-toast-icon { background: #FFEBEA; color: #FF3B30; }
-    .mac-toast-warning .mac-toast-icon { background: #FFF8E1; color: #FFCC00; }
-    .mac-toast-info .mac-toast-icon { background: #E3F2FD; color: #007AFF; }
+    .mac-toast-success .mac-toast-icon {
+        background: #E4F9E9;
+        color: #00C853;
+    }
+
+    .mac-toast-error .mac-toast-icon {
+        background: #FFEBEA;
+        color: #FF3B30;
+    }
+
+    .mac-toast-warning .mac-toast-icon {
+        background: #FFF8E1;
+        color: #FFCC00;
+    }
+
+    .mac-toast-info .mac-toast-icon {
+        background: #E3F2FD;
+        color: #007AFF;
+    }
 
     /* Mac Confirmation Modal */
     #mac-confirm-overlay {
@@ -181,14 +196,34 @@
         background: rgba(0, 0, 0, 0.1);
     }
 
-    .mac-btn-confirm {
+    .mac-btn-danger {
         background: #FF3B30;
         color: white;
         box-shadow: 0 2px 10px rgba(255, 59, 48, 0.3);
     }
 
-    .mac-btn-confirm:hover {
+    .mac-btn-danger:hover {
         background: #D70015;
+    }
+
+    .mac-btn-primary {
+        background: #007AFF;
+        color: white;
+        box-shadow: 0 2px 10px rgba(0, 122, 255, 0.3);
+    }
+
+    .mac-btn-primary:hover {
+        background: #0062cc;
+    }
+
+    .mac-btn-success {
+        background: #34C759;
+        color: white;
+        box-shadow: 0 2px 10px rgba(52, 199, 89, 0.3);
+    }
+
+    .mac-btn-success:hover {
+        background: #248a3d;
     }
 </style>
 
@@ -198,13 +233,15 @@
 <div id="mac-confirm-overlay">
     <div class="mac-confirm-box">
         <div class="mac-confirm-icon">
-            <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+            <svg viewBox="0 0 24 24">
+                <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+            </svg>
         </div>
         <div class="mac-confirm-title" id="mac-confirm-title">Konfirmasi</div>
         <div class="mac-confirm-message" id="mac-confirm-message">Apakah Anda yakin?</div>
         <div class="mac-confirm-actions">
             <button class="mac-btn mac-btn-cancel" id="mac-confirm-cancel">Batal</button>
-            <button class="mac-btn mac-btn-confirm" id="mac-confirm-ok">Hapus</button>
+            <button class="mac-btn mac-btn-danger" id="mac-confirm-ok">Hapus</button>
         </div>
     </div>
 </div>
@@ -216,8 +253,24 @@
      * @param {string} message
      * @returns {Promise<boolean>}
      */
-    function macConfirm(title, message) {
+    /**
+     * Show Apple-style Confirmation Modal
+     * @param {string} title
+     * @param {string} message
+     * @param {object} [options]
+     * @param {string} [options.confirmText='Hapus']
+     * @param {string} [options.confirmType='danger'] - 'danger', 'primary', 'success'
+     * @param {string} [options.cancelText='Batal']
+     * @returns {Promise<boolean>}
+     */
+    function macConfirm(title, message, options = {}) {
         return new Promise((resolve) => {
+            const {
+                confirmText = 'Hapus',
+                confirmType = 'danger',
+                cancelText = 'Batal'
+            } = options;
+
             const overlay = document.getElementById('mac-confirm-overlay');
             const titleEl = document.getElementById('mac-confirm-title');
             const msgEl = document.getElementById('mac-confirm-message');
@@ -226,6 +279,12 @@
 
             titleEl.textContent = title;
             msgEl.textContent = message;
+            btnOk.textContent = confirmText;
+            btnCancel.textContent = cancelText;
+
+            // Update button style
+            btnOk.className = 'mac-btn'; // Reset
+            btnOk.classList.add(`mac-btn-${confirmType}`);
 
             // Show modal
             overlay.classList.add('show');
@@ -252,7 +311,7 @@
      */
     function showNotification(type, message, title = null) {
         const container = document.getElementById('mac-toast-container');
-        
+
         // SVG Icons
         const icons = {
             success: `<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`,
@@ -303,13 +362,13 @@
 
     // Override default browser alert
     window.originalAlert = window.alert;
-    window.alert = function(message) {
+    window.alert = function (message) {
         if (!message) return;
-        
+
         let type = 'info';
         let title = 'Informasi';
         const msgLower = String(message).toLowerCase();
-        
+
         if (msgLower.includes('success') || msgLower.includes('berhasil') || msgLower.includes('sukses') || msgLower.includes('saved')) {
             type = 'success';
             title = 'Berhasil';
@@ -320,12 +379,12 @@
             type = 'warning';
             title = 'Perhatian';
         }
-        
+
         showNotification(type, message, title);
     };
 
     // Check for Session Flash Messages
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         @if(session('success'))
             showNotification('success', "{{ session('success') }}");
         @endif

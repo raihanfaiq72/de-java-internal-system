@@ -13,25 +13,29 @@
                             <div>
                                 <h4 class="fw-bold text-dark mb-1">Detail Periode Gaji</h4>
                                 <p class="text-muted small mb-0">
-                                    {{ $salaryPeriod->name }} 
-                                    <span class="mx-2">•</span> 
-                                    {{ $salaryPeriod->start_date->format('d M Y') }} - {{ $salaryPeriod->end_date->format('d M Y') }}
+                                    {{ $salaryPeriod->name }}
+                                    <span class="mx-2">•</span>
+                                    {{ $salaryPeriod->start_date->format('d M Y') }} -
+                                    {{ $salaryPeriod->end_date->format('d M Y') }}
                                 </p>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                         <span class="badge bg-{{ $salaryPeriod->status == 'open' ? 'success' : 'secondary' }} rounded-pill px-3 py-2 me-2">
+                        <span
+                            class="badge bg-{{ $salaryPeriod->status == 'open' ? 'success' : 'secondary' }} rounded-pill px-3 py-2 me-2">
                             {{ ucfirst($salaryPeriod->status) }}
                         </span>
-                        
-                        @if($salaryPeriod->status == 'open')
-                        <form action="{{ route('salary-periods.generate', $salaryPeriod->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Generate slip gaji untuk semua karyawan aktif?')">
-                            @csrf
-                            <button type="submit" class="btn btn-primary fw-bold px-4 shadow-sm">
-                                <i class="mdi mdi-calculator me-1"></i> Generate Slip Gaji
-                            </button>
-                        </form>
+
+                        @if ($salaryPeriod->status == 'open')
+                            <form action="{{ route('salary-periods.generate', $salaryPeriod->id) }}" method="POST"
+                                class="d-inline" id="generate-form">
+                                @csrf
+                                <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm"
+                                    onclick="generatePeriod({{ $salaryPeriod->id }}, '{{ $salaryPeriod->name }}')">
+                                    <i class="iconoir-calculator me-1"></i> Generate Slip Gaji
+                                </button>
+                            </form>
                         @endif
                     </div>
                 </div>
@@ -43,7 +47,8 @@
                     <div class="card-body p-4 bg-white">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
-                                <thead class="bg-light text-uppercase text-secondary fw-bold" style="font-size: 11px; letter-spacing: 0.5px;">
+                                <thead class="bg-light text-uppercase text-secondary fw-bold"
+                                    style="font-size: 11px; letter-spacing: 0.5px;">
                                     <tr>
                                         <th>Karyawan</th>
                                         <th>Jabatan</th>
@@ -55,37 +60,45 @@
                                 </thead>
                                 <tbody class="border-top-0">
                                     @forelse($salaryPeriod->salarySlips as $slip)
-                                    <tr>
-                                        <td>
-                                            <div class="fw-bold text-dark">{{ $slip->employee->name }}</div>
-                                            <small class="text-muted">{{ $slip->employee->nik }}</small>
-                                        </td>
-                                        <td>{{ $slip->employee->position }}</td>
-                                        <td>Rp {{ number_format($slip->basic_salary, 0, ',', '.') }}</td>
-                                        <td class="fw-bold text-success">Rp {{ number_format($slip->total_salary, 0, ',', '.') }}</td>
-                                        <td>
-                                            <span class="badge bg-{{ $slip->status == 'published' ? 'success' : ($slip->status == 'paid' ? 'primary' : 'warning') }} rounded-pill px-3">
-                                                {{ ucfirst($slip->status) }}
-                                            </span>
-                                        </td>
-                                        <td class="text-end pe-4">
-                                            <div class="btn-group">
-                                                <a href="{{ route('salary-slips.show', $slip->id) }}" class="btn btn-sm btn-outline-primary fw-bold">
-                                                    Detail
-                                                </a>
-                                                <a href="{{ route('salary-slips.print', $slip->id) }}" target="_blank" class="btn btn-sm btn-outline-secondary">
-                                                    <i class="mdi mdi-printer"></i>
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="fw-bold text-dark">{{ $slip->employee->name }}</div>
+                                                <small class="text-muted">{{ $slip->employee->nik }}</small>
+                                            </td>
+                                            <td>{{ $slip->employee->position }}</td>
+                                            <td>Rp {{ number_format($slip->basic_salary, 0, ',', '.') }}</td>
+                                            <td class="fw-bold text-success">Rp
+                                                {{ number_format($slip->total_salary, 0, ',', '.') }}
+                                            </td>
+                                            <td>
+                                                <span
+                                                    class="badge bg-{{ $slip->status == 'published' ? 'success' : ($slip->status == 'paid' ? 'primary' : 'warning') }} rounded-pill px-3">
+                                                    {{ ucfirst($slip->status) }}
+                                                </span>
+                                            </td>
+                                            <td class="text-end pe-4">
+                                                <div class="btn-group">
+                                                    <a href="{{ route('salary-slips.show', $slip->id) }}"
+                                                        class="btn btn-sm btn-outline-primary fw-bold">
+                                                        Detail
+                                                    </a>
+                                                    <button type="button" onclick="openPrintPreview({{ $slip->id }})"
+                                                        class="btn btn-sm btn-outline-secondary">
+                                                        <i class="iconoir-printing-page"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
                                     @empty
-                                    <tr>
-                                        <td colspan="6" class="text-center py-5 text-muted">
-                                            <div class="mb-2"><i class="mdi mdi-file-document-outline fs-1 text-secondary opacity-50"></i></div>
-                                            Belum ada slip gaji yang digenerate.<br>Silakan klik tombol Generate di atas.
-                                        </td>
-                                    </tr>
+                                        <tr>
+                                            <td colspan="6" class="text-center py-5 text-muted">
+                                                <div class="mb-2"><i
+                                                        class="mdi mdi-file-document-outline fs-1 text-secondary opacity-50"></i>
+                                                </div>
+                                                Belum ada slip gaji yang digenerate.<br>Silakan klik tombol Generate di
+                                                atas.
+                                            </td>
+                                        </tr>
                                     @endforelse
                                 </tbody>
                             </table>
@@ -95,4 +108,79 @@
             </div>
         </div>
     </div>
+
+    <!-- Print Preview Modal -->
+    <div class="modal fade" id="modalPrintPreview" tabindex="-1" aria-labelledby="modalPrintPreviewLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content shadow-lg border-9 rounded-4">
+                <div class="modal-header border-bottom-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold" id="modalPrintPreviewLabel">
+                        <i class="iconoir-printing-page text-primary me-2"></i> Preview Cetak Slip Gaji
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 ">
+                    <div class="ratio ratio-16x9 border rounded bg-light" style="min-height: 70vh;">
+                        <iframe id="print-iframe" src="" allowfullscreen></iframe>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light fw-bold px-4" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm" onclick="triggerPrint()">
+                        <i class="fa fa-print me-1"></i> Cetak Sekarang
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
+
+@push('js')
+    <script>
+        async function generatePeriod(id, name) {
+            const confirmed = await macConfirm(
+                'Generate Slip Gaji?',
+                `Apakah Anda yakin ingin generate slip gaji untuk periode "${name}"?`, {
+                    confirmText: 'Generate',
+                    confirmType: 'success'
+                }
+            );
+
+            if (confirmed) {
+                document.getElementById('generate-form').submit();
+            }
+        }
+
+        function openPrintPreview(id) {
+            const url = `{{ url('salary-slips/:id/print') }}/`.replace(':id', id);
+            const modalContainer = document.getElementById('modalPrintPreview');
+
+            if (!modalContainer) {
+                console.error('Modal container tidak ditemukan di halaman ini.');
+                return;
+            }
+
+            const iframe = modalContainer.querySelector('iframe');
+
+            if (!iframe) {
+                console.error('Elemen iframe tidak ditemukan di dalam modal.');
+                alert('Gagal memuat preview cetak.');
+                return;
+            }
+
+            iframe.src = url;
+
+            const bModal = bootstrap.Modal.getOrCreateInstance(modalContainer);
+            bModal.show();
+        }
+
+        function triggerPrint() {
+            const iframe = document.getElementById('print-iframe');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            }
+        }
+    </script>
+@endpush
