@@ -22,9 +22,24 @@ return [
         'id' => 'sidebarMaster',
         'submenu' => [
             [
-                'title' => 'User / Karyawan',
+                'title' => 'User System',
                 'route' => 'users.index',
                 'icon' => 'iconoir-user-circle',
+            ],
+            [
+                'title' => 'Data Karyawan',
+                'route' => 'employees.index',
+                'icon' => 'iconoir-group',
+            ],
+            [
+                'title' => 'Gaji Karyawan',
+                'route' => 'salary-periods.index',
+                'icon' => 'iconoir-wallet',
+            ],
+            [
+                'title' => 'Absensi',
+                'route' => 'attendances.index',
+                'icon' => 'iconoir-calendar',
             ],
             [
                 'title' => 'Mitra',

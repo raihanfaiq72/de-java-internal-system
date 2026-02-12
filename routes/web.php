@@ -21,6 +21,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FleetController;
 
 Route::get('/', [AuthController::class, 'login'])->name('login');
+
 Route::post('/login-proses', [AuthController::class, 'loginProses'])->name('login.proses');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -71,6 +72,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('finance/next-code', [App\Http\Controllers\FinanceController::class, 'getNextCode'])->name('finance.account.next-code');
 
         Route::get('users', fn() => view('Users.index'))->name('users.index');
+        Route::resource('employees', App\Http\Controllers\EmployeeController::class);
+        Route::resource('attendances', App\Http\Controllers\AttendanceController::class);
+
+        // Salary & Attendance
+        Route::resource('salary-periods', App\Http\Controllers\SalaryPeriodController::class);
+        Route::post('salary-periods/{salary_period}/generate', [App\Http\Controllers\SalaryPeriodController::class, 'generate'])->name('salary-periods.generate');
+        Route::resource('salary-slips', App\Http\Controllers\SalarySlipController::class)->only(['show', 'update']);
+        Route::get('salary-slips/{salary_slip}/print', [App\Http\Controllers\SalarySlipController::class, 'print'])->name('salary-slips.print');
+        Route::post('salary-slips/{salary_slip}/publish', [App\Http\Controllers\SalarySlipController::class, 'publish'])->name('salary-slips.publish');
 
         // Reports
         Route::get('report/invoice', [App\Http\Controllers\Report\InvoiceReportController::class, 'index'])->name('report.invoice');
