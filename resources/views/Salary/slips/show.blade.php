@@ -138,7 +138,7 @@
                                     <div class="d-flex justify-content-between align-items-center mt-5">
                                         @if($salarySlip->status == 'draft')
                                             <button type="button" class="btn btn-success fw-bold px-4 shadow-sm"
-                                                onclick="if(confirm('Publish slip gaji ini? Karyawan akan dapat melihatnya.')) document.getElementById('publish-form').submit()">
+                                                onclick="publishSlip()">
                                                 <i class="fa fa-check me-1"></i> Publish
                                             </button>
                                         @else
@@ -193,6 +193,12 @@
                 let hiddenInput = displayInput.parentElement.querySelector('.real-value');
                 if (hiddenInput) {
                     hiddenInput.value = cleanNumber(displayInput.value);
+                }
+            }
+
+            async function publishSlip() {
+                if (await macConfirm('Publish Slip Gaji', 'Publish slip gaji ini? Karyawan akan dapat melihatnya.', 'success')) {
+                    document.getElementById('publish-form').submit();
                 }
             }
         </script>

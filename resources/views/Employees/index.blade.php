@@ -84,11 +84,11 @@
                                             </td>
                                             <td class="text-end pe-4">
                                                 <div class="btn-group">
-                                                    <button class="btn btn-outline-info" data-bs-toggle="modal"
+                                                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal"
                                                         data-bs-target="#editModal{{ $employee->id }}">
                                                         <i class="fa fa-pencil"></i>
                                                     </button>
-                                                    <button type="button" class="btn btn-outline-danger"
+                                                    <button type="button" class="btn btn-sm btn-outline-danger"
                                                         onclick="deleteEmployee({{ $employee->id }}, '{{ $employee->name }}')">
                                                         <i class="fa fa-trash"></i>
                                                     </button>

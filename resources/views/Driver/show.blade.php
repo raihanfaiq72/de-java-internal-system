@@ -280,8 +280,12 @@
     }
 
     // Start Trip
-    $('#btn-start-trip').click(function() {
-        if (!confirm('Mulai perjalanan pengiriman sekarang?')) return;
+    $('#btn-start-trip').click(async function() {
+        if (!await macConfirm('Mulai Perjalanan', 'Mulai perjalanan pengiriman sekarang?', {
+            confirmText: 'Mulai',
+            confirmType: 'success',
+            cancelText: 'Batal'
+        })) return;
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(position => {
@@ -340,14 +344,18 @@
         
         // Get current location for validation
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(position => {
+            navigator.geolocation.getCurrentPosition(async position => {
                 const currentLat = position.coords.latitude;
                 const currentLng = position.coords.longitude;
 
                 // Validation: Distance Check (Warning if > 500m)
                 const dist = getDistanceFromLatLonInKm(currentLat, currentLng, lat, lng);
                 if (dist > 0.5) {
-                     if (!confirm(`Peringatan: Anda terdeteksi berada ${dist.toFixed(2)} km dari lokasi tujuan. Apakah Anda yakin sudah sampai?`)) {
+                     if (!await macConfirm('Peringatan Jarak', `Peringatan: Anda terdeteksi berada ${dist.toFixed(2)} km dari lokasi tujuan. Apakah Anda yakin sudah sampai?`, {
+                        confirmText: 'Ya, Saya Sudah Sampai',
+                        confirmType: 'success',
+                        cancelText: 'Batal'
+                     })) {
                         return;
                      }
                 }
@@ -417,8 +425,12 @@
     });
 
     // Finish Trip
-    $('#btn-finish-trip').click(function() {
-        if (!confirm('Apakah Anda sudah kembali ke kantor dan ingin menyelesaikan tugas ini?')) return;
+    $('#btn-finish-trip').click(async function() {
+        if (!await macConfirm('Selesaikan Tugas', 'Apakah Anda sudah kembali ke kantor dan ingin menyelesaikan tugas ini?', {
+            confirmText: 'Ya, Saya Sudah Kembali',
+            confirmType: 'success',
+            cancelText: 'Batal'
+        })) return;
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(position => {

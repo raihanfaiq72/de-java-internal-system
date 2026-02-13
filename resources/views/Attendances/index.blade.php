@@ -1,5 +1,42 @@
 @extends('Layout.main')
 
+
+@push('css')
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<style>
+    .ts-control {
+        border: none !important;
+        background: transparent !important;
+        padding-left: 10px !important;
+        box-shadow: none !important;
+        min-width: 200px;
+    }
+
+    .ts-dropdown {
+        z-index: 9999 !important;
+        border-radius: 8px !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+        border: 1px solid rgba(0,0,0,0.05) !important;
+    }
+
+    .ts-wrapper.form-select-sm .ts-control {
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+        min-height: auto !important;
+    }
+
+    .ts-wrapper.single .ts-control:after {
+        border-color: #64748b transparent transparent transparent !important;
+        border-width: 4px 4px 0 4px !important;
+    }
+
+    .ts-wrapper.dropdown-active {
+        z-index: 10000 !important;
+    }
+</style>
+@endpush
+
+
 @section('main')
     <div class="page-wrapper">
         <div class="page-content">
@@ -28,9 +65,9 @@
                                         <input type="date" name="date" class="form-control form-control-sm" value="{{ request('date', date('Y-m-d')) }}">
                                     </div>
                                     <div class="col-auto">
-                                        <select name="employee_id" class="form-select form-select-sm">
+                                        <select name="employee_id" id="filter-employee" class="form-select form-select-sm">
                                             <option value="">Semua Karyawan</option>
-                                            @foreach($employees as $emp)
+                                            @foreach($employees->sortBy('name') as $emp)
                                                 <option value="{{ $emp->id }}" {{ request('employee_id') == $emp->id ? 'selected' : '' }}>
                                                     {{ $emp->name }}
                                                 </option>
@@ -94,7 +131,7 @@
                                                 <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#editModal{{ $attendance->id }}">
                                                     <i class="fa fa-pencil"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="if(confirm('Yakin ingin menghapus?')) document.getElementById('delete-{{ $attendance->id }}').submit()">
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteAttendance({{ $attendance->id }})">
                                                     <i class="fa fa-trash"></i>
                                                 </button>
                                             </div>
@@ -112,15 +149,15 @@
                                                 <form action="{{ route('attendances.update', $attendance->id) }}" method="POST">
                                                     @csrf
                                                     @method('PUT')
-                                                    <div class="modal-header border-bottom-0 pb-0">
+                                                    <div class="modal-header border-bottom-0 py-3 bg-dark">
                                                         <h5 class="modal-title fw-bold">Edit Absensi</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                     </div>
                                                     <div class="modal-body p-4">
                                                         <div class="mb-3">
                                                             <label class="form-label fw-bold small text-uppercase text-muted">Karyawan</label>
-                                                            <select name="employee_id" class="form-select" required>
-                                                                @foreach($employees as $emp)
+                                                            <select name="employee_id" class="form-select tom-select-edit" required>
+                                                                @foreach($employees->sortBy('name') as $emp)
                                                                     <option value="{{ $emp->id }}" {{ $attendance->employee_id == $emp->id ? 'selected' : '' }}>
                                                                         {{ $emp->name }}
                                                                     </option>
@@ -191,16 +228,16 @@
             <div class="modal-content border-0 shadow-lg">
                 <form action="{{ route('attendances.store') }}" method="POST">
                     @csrf
-                    <div class="modal-header border-bottom-0 pb-0">
+                    <div class="modal-header border-bottom-0 py-3 bg-dark">
                         <h5 class="modal-title fw-bold">Tambah Absensi Baru</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body p-4">
                         <div class="mb-3">
                             <label class="form-label fw-bold small text-uppercase text-muted">Karyawan</label>
-                            <select name="employee_id" class="form-select" required>
+                            <select name="employee_id" id="create-employee" class="form-select" required>
                                 <option value="">Pilih Karyawan</option>
-                                @foreach($employees as $emp)
+                                @foreach($employees->sortBy('name') as $emp)
                                     <option value="{{ $emp->id }}">{{ $emp->name }}</option>
                                 @endforeach
                             </select>
@@ -243,3 +280,36 @@
         </div>
     </div>
 @endsection
+
+@push('js')
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        new TomSelect('#filter-employee', {
+            create: false,
+            placeholder: 'Semua Karyawan',
+            allowEmptyOption: true,
+        });
+
+        new TomSelect('#create-employee', {
+            create: false,
+            placeholder: 'Pilih Karyawan',
+            dropdownParent: 'body' 
+        });
+
+        document.querySelectorAll('.tom-select-edit').forEach((el) => {
+            new TomSelect(el, {
+                create: false,
+                placeholder: 'Pilih Karyawan',
+                dropdownParent: 'body' 
+            });
+        });
+    });
+
+    async function deleteAttendance(id) {
+        if (await macConfirm('Hapus Absensi', 'Apakah Anda yakin ingin menghapus data absensi ini?')) {
+            document.getElementById('delete-' + id).submit();
+        }
+    }
+</script>
+@endpush
