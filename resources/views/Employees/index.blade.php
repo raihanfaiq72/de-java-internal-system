@@ -12,7 +12,7 @@
                     <div class="col-md-5 text-md-end mt-3 mt-md-0">
                         <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal"
                             data-bs-target="#createModal">
-                            <i class="iconoir-plus me-1"></i> Tambah Karyawan
+                            <i class="fa fa-plus-circle me-1"></i> Tambah Karyawan
                         </button>
                     </div>
                 </div>
@@ -30,7 +30,7 @@
                                             class="form-control form-control-sm border-end-0"
                                             placeholder="Cari nama atau NIK..." value="{{ request('search') }}">
                                         <button class="btn btn-sm btn-secondary border-start-0 ps-3 pe-3" type="submit">
-                                            <i class="iconoir-search"></i>
+                                            <i class="fa fa-search"></i>
                                         </button>
                                     </div>
                                 </form>
@@ -86,11 +86,11 @@
                                                 <div class="btn-group">
                                                     <button class="btn btn-outline-info" data-bs-toggle="modal"
                                                         data-bs-target="#editModal{{ $employee->id }}">
-                                                        <i class="iconoir-edit-pencil"></i>
+                                                        <i class="fa fa-pencil"></i>
                                                     </button>
                                                     <button type="button" class="btn btn-outline-danger"
                                                         onclick="deleteEmployee({{ $employee->id }}, '{{ $employee->name }}')">
-                                                        <i class="iconoir-trash"></i>
+                                                        <i class="fa fa-trash"></i>
                                                     </button>
                                                 </div>
                                                 <form id="delete-{{ $employee->id }}"
@@ -219,7 +219,7 @@
                                         <tr>
                                             <td colspan="8" class="text-center py-5 text-muted">
                                                 <div class="mb-2"><i
-                                                        class="mdi mdi-account-off-outline fs-1 text-secondary opacity-50"></i>
+                                                        class="fa fa-user fs-1 text-secondary opacity-50"></i>
                                                 </div>
                                                 Belum ada data karyawan yang ditemukan.
                                             </td>

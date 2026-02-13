@@ -12,7 +12,7 @@
                     <div class="col-md-5 text-md-end mt-3 mt-md-0">
                         <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal"
                             data-bs-target="#createModal">
-                            <i class="iconoir-plus me-1"></i> Buat Periode Baru
+                            <i class="fa fa-plus-circle me-1"></i> Buat Periode Baru
                         </button>
                     </div>
                 </div>
@@ -54,7 +54,7 @@
                                                     </a>
                                                     <button type="button" class="btn btn-sm btn-outline-danger"
                                                         onclick="deletePeriod('{{ $period->id }}', '{{ $period->name }}')">
-                                                        <i class="iconoir-trash"></i>
+                                                        <i class="fa fa-trash"></i>
                                                     </button>
                                                 </div>
                                                 <form id="delete-{{ $period->id }}"

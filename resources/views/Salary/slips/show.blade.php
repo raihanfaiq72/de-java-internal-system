@@ -8,13 +8,15 @@
                     <div class="col-lg-8">
                         <div class="d-flex align-items-center mb-4">
                             <a href="{{ route('salary-periods.show', $salarySlip->salary_period_id) }}"
-                                class="btn btn-light shadow-sm me-3 rounded-circle">
-                                <i class="mdi mdi-arrow-left text-primary"></i>
+                                class="btn btn-light shadow-sm me-3 rounded-circle border"
+                                style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fa fa-arrow-left"></i>
                             </a>
                             <div>
                                 <h4 class="fw-bold text-dark mb-1">Edit Slip Gaji</h4>
                                 <p class="text-muted small mb-0">{{ $salarySlip->employee->name }} -
-                                    {{ $salarySlip->employee->nik }}</p>
+                                    {{ $salarySlip->employee->nik }}
+                                </p>
                             </div>
                         </div>
 
@@ -23,7 +25,7 @@
                                 <div class="alert alert-light border-start border-4 border-info shadow-sm">
                                     <div class="d-flex align-items-center">
                                         <div class="me-3">
-                                            <i class="mdi mdi-information-outline fs-4 text-info"></i>
+                                            <i class="fa fa-circle-info fs-4 text-info"></i>
                                         </div>
                                         <div>
                                             <h6 class="fw-bold mb-1">Info Kehadiran</h6>
@@ -126,7 +128,8 @@
                                                 <label class="d-block text-muted text-uppercase small fw-bold mb-2">Total
                                                     Gaji Diterima</label>
                                                 <h2 class="fw-bold text-primary mb-0">Rp
-                                                    {{ number_format($salarySlip->total_salary, 0, ',', '.') }}</h2>
+                                                    {{ number_format($salarySlip->total_salary, 0, ',', '.') }}
+                                                </h2>
                                                 <small class="text-muted">Akan dihitung ulang setelah disimpan</small>
                                             </div>
                                         </div>
@@ -136,14 +139,14 @@
                                         @if($salarySlip->status == 'draft')
                                             <button type="button" class="btn btn-success fw-bold px-4 shadow-sm"
                                                 onclick="if(confirm('Publish slip gaji ini? Karyawan akan dapat melihatnya.')) document.getElementById('publish-form').submit()">
-                                                <i class="mdi mdi-check-circle me-1"></i> Publish
+                                                <i class="fa fa-check me-1"></i> Publish
                                             </button>
                                         @else
                                             <div></div>
                                         @endif
 
                                         <button type="submit" class="btn btn-primary fw-bold px-5 shadow-sm">
-                                            <i class="mdi mdi-content-save me-1"></i> Simpan Perubahan
+                                            <i class="fa fa-save me-1"></i> Simpan Perubahan
                                         </button>
                                     </div>
                                 </form>

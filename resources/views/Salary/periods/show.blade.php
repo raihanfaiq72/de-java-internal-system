@@ -7,8 +7,10 @@
                 <div class="row align-items-center mb-4">
                     <div class="col-md-7">
                         <div class="d-flex align-items-center">
-                            <a href="{{ route('salary-periods.index') }}" class="btn btn-light shadow-sm me-3 rounded-circle">
-                                <i class="mdi mdi-arrow-left text-primary"></i>
+                            <a href="{{ route('salary-periods.index') }}"
+                                class="btn btn-light shadow-sm me-3 rounded-circle border"
+                                style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fa fa-arrow-left"></i>
                             </a>
                             <div>
                                 <h4 class="fw-bold text-dark mb-1">Detail Periode Gaji</h4>
@@ -33,7 +35,7 @@
                                 @csrf
                                 <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm"
                                     onclick="generatePeriod({{ $salaryPeriod->id }}, '{{ $salaryPeriod->name }}')">
-                                    <i class="iconoir-calculator me-1"></i> Generate Slip Gaji
+                                    <i class="fa fa-calculator me-1"></i> Generate Slip Gaji
                                 </button>
                             </form>
                         @endif
@@ -84,7 +86,7 @@
                                                     </a>
                                                     <button type="button" onclick="openPrintPreview({{ $slip->id }})"
                                                         class="btn btn-sm btn-outline-secondary">
-                                                        <i class="iconoir-printing-page"></i>
+                                                        <i class="fa fa-print"></i>
                                                     </button>
                                                 </div>
                                             </td>
@@ -93,7 +95,7 @@
                                         <tr>
                                             <td colspan="6" class="text-center py-5 text-muted">
                                                 <div class="mb-2"><i
-                                                        class="mdi mdi-file-document-outline fs-1 text-secondary opacity-50"></i>
+                                                        class="fa fa-file-lines fs-1 text-secondary opacity-50"></i>
                                                 </div>
                                                 Belum ada slip gaji yang digenerate.<br>Silakan klik tombol Generate di
                                                 atas.
@@ -142,9 +144,9 @@
             const confirmed = await macConfirm(
                 'Generate Slip Gaji?',
                 `Apakah Anda yakin ingin generate slip gaji untuk periode "${name}"?`, {
-                    confirmText: 'Generate',
-                    confirmType: 'success'
-                }
+                confirmText: 'Generate',
+                confirmType: 'success'
+            }
             );
 
             if (confirmed) {

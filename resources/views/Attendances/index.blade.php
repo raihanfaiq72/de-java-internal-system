@@ -11,7 +11,7 @@
                     </div>
                     <div class="col-md-5 text-md-end mt-3 mt-md-0">
                         <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#createModal">
-                            <i class="mdi mdi-plus me-1"></i> Tambah Absensi
+                            <i class="fa fa-plus-circle me-1"></i> Tambah Absensi
                         </button>
                     </div>
                 </div>
@@ -39,7 +39,7 @@
                                     </div>
                                     <div class="col-auto">
                                         <button class="btn btn-sm btn-light border fw-bold" type="submit">
-                                            <i class="mdi mdi-filter-variant"></i> Filter
+                                            <i class="fa fa-filter me-1"></i> Filter
                                         </button>
                                     </div>
                                 </form>
@@ -92,10 +92,10 @@
                                         <td class="text-end pe-4">
                                             <div class="btn-group">
                                                 <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#editModal{{ $attendance->id }}">
-                                                    <i class="mdi mdi-pencil"></i>
+                                                    <i class="fa fa-pencil"></i>
                                                 </button>
                                                 <button type="button" class="btn btn-sm btn-outline-danger" onclick="if(confirm('Yakin ingin menghapus?')) document.getElementById('delete-{{ $attendance->id }}').submit()">
-                                                    <i class="mdi mdi-trash-can"></i>
+                                                    <i class="fa fa-trash"></i>
                                                 </button>
                                             </div>
                                             <form id="delete-{{ $attendance->id }}" action="{{ route('attendances.destroy', $attendance->id) }}" method="POST" class="d-none">
@@ -129,7 +129,7 @@
                                                         </div>
                                                         <div class="mb-3">
                                                             <label class="form-label fw-bold small text-uppercase text-muted">Tanggal</label>
-                                                            <input type="date" name="date" class="form-control" value="{{ $attendance->date }}" required>
+                                                            <input type="date" name="date" class="form-control" value="{{ $attendance->date->format('Y-m-d') }}" required>
                                                         </div>
                                                         <div class="mb-3">
                                                             <label class="form-label fw-bold small text-uppercase text-muted">Status</label>
@@ -167,7 +167,7 @@
                                     @empty
                                     <tr>
                                         <td colspan="7" class="text-center py-5 text-muted">
-                                            <div class="mb-2"><i class="mdi mdi-calendar-blank-outline fs-1 text-secondary opacity-50"></i></div>
+                                            <div class="mb-2"><i class="fa fa-calendar fs-1 text-secondary opacity-50"></i></div>
                                             Belum ada data absensi untuk filter yang dipilih.
                                         </td>
                                     </tr>
