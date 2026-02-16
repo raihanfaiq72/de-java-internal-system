@@ -60,26 +60,36 @@
                                 <h6 class="mb-0 fw-bold text-dark">Riwayat Absensi</h6>
                             </div>
                             <div class="col-md-8">
-                                <form action="{{ route('attendances.index') }}" method="GET" class="row g-2 justify-content-md-end">
-                                    <div class="col-auto">
-                                        <input type="date" name="date" class="form-control form-control-sm" value="{{ request('date', date('Y-m-d')) }}">
-                                    </div>
-                                    <div class="col-auto">
-                                        <select name="employee_id" id="filter-employee" class="form-select form-select-sm">
-                                            <option value="">Semua Karyawan</option>
-                                            @foreach($employees->sortBy('name') as $emp)
-                                                <option value="{{ $emp->id }}" {{ request('employee_id') == $emp->id ? 'selected' : '' }}>
-                                                    {{ $emp->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-auto">
-                                        <button class="btn btn-sm btn-light border fw-bold" type="submit">
-                                            <i class="fa fa-filter me-1"></i> Filter
+                                <div class="d-flex flex-wrap justify-content-md-end gap-2">
+                                    <form action="{{ route('attendances.index') }}" method="GET" class="row g-2">
+                                        <div class="col-auto">
+                                            <input type="date" name="date" class="form-control form-control-sm" value="{{ request('date', date('Y-m-d')) }}">
+                                        </div>
+                                        <div class="col-auto">
+                                            <select name="employee_id" id="filter-employee" class="form-select form-select-sm">
+                                                <option value="">Semua Karyawan</option>
+                                                @foreach($employees->sortBy('name') as $emp)
+                                                    <option value="{{ $emp->id }}" {{ request('employee_id') == $emp->id ? 'selected' : '' }}>
+                                                        {{ $emp->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-auto">
+                                            <button class="btn btn-sm btn-light border fw-bold" type="submit">
+                                                <i class="fa fa-filter me-1"></i> Filter
+                                            </button>
+                                        </div>
+                                    </form>
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ route('attendances.template') }}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fa fa-file-excel-o me-1"></i> Download Template
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+                                            <i class="fa fa-upload me-1"></i> Import Dari Excel
                                         </button>
                                     </div>
-                                </form>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -274,6 +284,36 @@
                     <div class="modal-footer border-top-0 pt-0 pb-4 pe-4">
                         <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Batal</button>
                         <button type="submit" class="btn btn-primary fw-bold px-4">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <form action="{{ route('attendances.import') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-header border-bottom-0 py-3 bg-dark">
+                        <h5 class="modal-title fw-bold">Import Absensi dari Finger</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-uppercase text-muted">File Template</label>
+                            <input type="file" name="file" class="form-control" accept=".csv" required>
+                            <div class="form-text text-muted small">
+                                Gunakan format dari tombol Download Template. Kolom: employee_nik, date (YYYY-MM-DD), clock_in, clock_out, status, note.
+                            </div>
+                        </div>
+                        <div class="alert alert-light border-start border-4 border-info small mb-0">
+                            Contoh status: present, late, sick, permission, alpha.
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0 pb-4 pe-4">
+                        <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary fw-bold px-4">Import</button>
                     </div>
                 </form>
             </div>

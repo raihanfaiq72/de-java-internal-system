@@ -73,6 +73,8 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('users', fn() => view('Users.index'))->name('users.index');
         Route::resource('employees', App\Http\Controllers\EmployeeController::class);
+        Route::get('attendances/template', [App\Http\Controllers\AttendanceController::class, 'template'])->name('attendances.template');
+        Route::post('attendances/import', [App\Http\Controllers\AttendanceController::class, 'import'])->name('attendances.import');
         Route::resource('attendances', App\Http\Controllers\AttendanceController::class);
 
         // Salary & Attendance
