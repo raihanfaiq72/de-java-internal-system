@@ -269,7 +269,6 @@
             console.error(e);
         }
 
-        // Initialize Map
         setTimeout(() => initMap(), 500);
     }
 
@@ -293,13 +292,11 @@
     async function updateMapRoute(invoiceIds) {
         if (!map) return;
 
-        // Clear existing routing and markers (except office)
         if (routingControl) {
             map.removeControl(routingControl);
             routingControl = null;
         }
 
-        // Clear other markers
         mapMarkers.forEach(m => map.removeLayer(m));
         mapMarkers = [];
 
@@ -309,7 +306,6 @@
             return;
         }
 
-        // Fetch Invoice Details to get Addresses
         const waypoints = [L.latLng(OFFICE_LAT, OFFICE_LNG)];
 
         for (const id of invoiceIds) {
@@ -363,6 +359,7 @@
         }
 
         if (waypoints.length > 1) {
+            waypoints.push(L.latLng(OFFICE_LAT, OFFICE_LNG));
             routingControl = L.Routing.control({
                 waypoints: waypoints,
                 routeWhileDragging: false,
@@ -622,21 +619,19 @@
             document.getElementById('modalTitle').innerText = 'Edit Delivery Order';
 
             try {
-                // Fetch Fleet
-                const fleetRes = await fetch("{{ route('delivery-order-fleet-api.index', ':id') }}".replace(':id',
-                    id)).then(r => r.json());
+                const fleetRes = await fetch("{{ route('delivery-order-fleet-api.by-do', ':id') }}".replace(':id', id))
+                    .then(r => r.json());
                 if (fleetRes.success && fleetRes.data) {
                     const f = fleetRes.data;
                     document.getElementById('modal_fleet_id').value = f.fleet_id;
                     onFleetChange();
                     document.getElementById('modal_driver_id').value = f.driver_id;
-                    document.getElementById('modal_est_distance').value = f.estimated_distance_km;
-
-                    // Load Additional Costs
+                    document.getElementById('modal_est_distance').value = f.estimated_distance_km || 0;
+                    document.getElementById('modal_est_fuel_cost').value = f.estimated_fuel_cost || 0;
                     if (f.additional_costs && Array.isArray(f.additional_costs)) {
                         f.additional_costs.forEach(c => addCostRow(c.name, c.amount));
                     }
-                    calculateFuelCost(); // Update fuel cost based on distance
+                    calculateTotalCost();
                 }
 
                 // Fetch DO & Invoices
