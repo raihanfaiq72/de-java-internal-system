@@ -1,27 +1,17 @@
 @extends('Layout.main')
 
 @section('main')
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-
-<div class="page-wrapper" style="background-color: #f4f7fa; min-height: 100vh; font-family: 'Inter', sans-serif;">
-    <div class="page-content py-4">
+<div class="page-wrapper">
+    <div class="page-content">
         <div class="container-fluid">
-            <!-- Header & Filter -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h3 class="fw-bold text-dark mb-1">Neraca Keuangan</h3>
-                    <p class="text-muted mb-0">Laporan posisi keuangan per tanggal tertentu</p>
-                </div>
-                <div>
-                    <!-- Export Buttons -->
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fa fa-download me-1"></i> Unduh
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#" onclick="window.print()"><i class="fa fa-file-pdf me-2"></i>PDF / Cetak</a></li>
-                            <li><a class="dropdown-item" href="{{ route('report.balance-sheet.export.csv') }}?date={{ $date }}"><i class="fa fa-file-csv me-2"></i>CSV</a></li>
-                        </ul>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="page-title-box d-md-flex justify-content-between align-items-center">
+                        <h4 class="page-title">Neraca Keuangan</h4>
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Report: Balance Sheet</li>
+                        </ol>
                     </div>
                 </div>
             </div>
@@ -37,6 +27,17 @@
                             <button type="submit" class="btn btn-primary w-100">
                                 <i class="fa fa-filter me-1"></i> Tampilkan
                             </button>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa fa-download me-1"></i> Unduh
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="#" onclick="window.print()"><i class="fa fa-file-pdf me-2"></i>PDF / Cetak</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('report.balance-sheet.export.csv') }}?date={{ $date }}"><i class="fa fa-file-csv me-2"></i>CSV</a></li>
+                                </ul>
+                            </div>
                         </div>
                     </form>
                 </div>

@@ -24,18 +24,21 @@
 <div class="page-wrapper">
     <div class="page-content">
         <div class="container-fluid">
-            
-             <div class="row align-items-center mb-4">
-                <div class="col-md-7">
-                    <h4 class="fw-bold text-dark mb-1">Mapping Akses Rute</h4>
-                    <p class="text-muted small mb-0">Tentukan nama tampilan (alias) untuk setiap teknikal rute sistem.</p>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="page-title-box d-md-flex justify-content-between align-items-center">
+                        <h4 class="page-title">Admin: Permissions</h4>
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Permissions</li>
+                        </ol>
+                    </div>
                 </div>
-                <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                    <button onclick="location.reload()" class="btn btn-white border fw-bold px-3 shadow-sm text-dark">
-                        <i class="fa fa-sync me-1 text-primary"></i> Refresh Data
-                    </button>
-                    <!-- Expand All Button or other tools could go here -->
-                </div>
+            </div>
+            <div class="d-flex justify-content-end mb-3">
+                <button onclick="location.reload()" class="btn btn-white border fw-bold px-3 shadow-sm text-dark">
+                    <i class="fa fa-sync me-1 text-primary"></i> Refresh Data
+                </button>
             </div>
 
             <div class="row g-4">

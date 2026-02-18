@@ -1,24 +1,23 @@
 @extends('Layout.main')
 
 @section('main')
-    <div class="page-wrapper" style="background-color: #f8fafc; min-height: 100vh; font-family: 'Inter', sans-serif;">
+    <div class="page-wrapper">
         <div class="page-content">
             <div class="container-fluid">
 
-                <div class="row align-items-center mb-4">
-                    <div class="col-md-7">
-                        <h4 class="fw-bold text-dark mb-1">Biaya Operasional</h4>
-                        <p class="text-muted small mb-0">Kelola pengeluaran operasional dan kas kecil.</p>
-                    </div>
-                    <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                        <button class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal"
-                            data-bs-target="#modalExpense">
-                            <i class="fa fa-plus-circle me-1"></i> Tambah Biaya
-                        </button>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
+                            <h4 class="page-title">Biaya Operasional</h4>
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Expenses</li>
+                            </ol>
+                        </div>
                     </div>
                 </div>
 
-                <ul class="nav nav-tabs nav-tabs-custom mb-4" id="expenseTab" role="tablist">
+                <ul class="nav nav-tabs nav-tabs-custom mb-4 d-flex justify-content-between align-items-center" id="expenseTab" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active fw-bold" id="biaya-tab" data-bs-toggle="tab" data-bs-target="#biaya"
                             type="button" role="tab" aria-controls="biaya" aria-selected="true">Biaya</button>
@@ -26,6 +25,12 @@
                     <li class="nav-item" role="presentation">
                         <button class="nav-link fw-bold" id="analitik-tab" data-bs-toggle="tab" data-bs-target="#analitik"
                             type="button" role="tab" aria-controls="analitik" aria-selected="false">Analitik</button>
+                    </li>
+                    <li class="ms-auto">
+                        <button class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal"
+                            data-bs-target="#modalExpense">
+                            <i class="fa fa-plus-circle me-1"></i> Tambah Biaya
+                        </button>
                     </li>
                 </ul>
 

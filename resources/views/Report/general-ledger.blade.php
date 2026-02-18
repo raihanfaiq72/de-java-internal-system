@@ -1,27 +1,25 @@
 @extends('Layout.main')
 
 @section('main')
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-
-    <div class="page-wrapper" style="background-color: #f4f7fa; min-height: 100vh; font-family: 'Inter', sans-serif;">
-        <div class="page-content py-4">
+    <div class="page-wrapper">
+        <div class="page-content">
             <div class="container-fluid">
-                <!-- Header -->
-                <div class="row align-items-center mb-4">
-                    <div class="col-md-7">
-                        <h4 class="fw-bold text-dark mb-1">Buku Besar (General Ledger)</h4>
-                        <p class="text-muted small mb-0">Laporan detail transaksi per akun.</p>
-                    </div>
-                    <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                        <button class="btn btn-white border fw-bold px-3 shadow-sm text-dark me-2" onclick="window.print()">
-                            <i class="iconoir-printer me-1"></i> Print
-                        </button>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
+                            <h4 class="page-title">Buku Besar (General Ledger)</h4>
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Report: General Ledger</li>
+                            </ol>
+                        </div>
+                        <p class="text-muted small mb-3">Laporan detail transaksi per akun</p>
                     </div>
                 </div>
 
                 <!-- Filters -->
                 <div class="card border-0 shadow-sm rounded-3 mb-4">
-                    <div class="card-body p-4">
+                    <div class="card-body p-4 d-flex justify-content-between align-items-end">
                         <form action="{{ route('report.general-ledger') }}" method="GET" class="row g-3 align-items-end">
                             <div class="col-md-3">
                                 <label class="form-label fw-bold text-muted small text-uppercase">Akun (COA)</label>
@@ -56,6 +54,11 @@
                                 </button>
                             </div>
                         </form>
+                        <div class="text-end">
+                            <button class="btn btn-white border fw-bold px-3 shadow-sm text-dark" onclick="window.print()">
+                                <i class="iconoir-printer me-1"></i> Print
+                            </button>
+                        </div>
                     </div>
                 </div>
 

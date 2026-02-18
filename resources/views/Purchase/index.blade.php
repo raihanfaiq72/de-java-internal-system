@@ -138,28 +138,24 @@
 @endpush
 
 @section('main')
-    <div class="page-wrapper" style="background-color: #f8fafc; min-height: 100vh; font-family: 'Inter', sans-serif;">
+    <div class="page-wrapper">
         <div class="page-content">
             <div class="container-fluid">
 
-                <div class="row align-items-center mb-4">
-                    <div class="col-md-7">
-                        <h4 class="fw-bold text-dark mb-1">Manajemen Invoice Pembelian</h4>
-                        <p class="text-muted small mb-0">Kelola tagihan supplier dan pantau hutang usaha secara real-time.
-                        </p>
-                    </div>
-                    <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                        <button class="btn btn-white border fw-bold px-3 me-2 shadow-sm text-dark">
-                            <i class="fa fa-file-excel me-1 text-success"></i> Export .xls
-                        </button>
-                        <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openInvoiceModal()">
-                            <i class="fa fa-plus-circle me-1"></i> Buat Invoice Baru
-                        </button>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
+                            <h4 class="page-title">Manajemen Invoice Pembelian</h4>
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Purchase</li>
+                            </ol>
+                        </div>
                     </div>
                 </div>
 
                 <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
-                    <div class="card-header bg-white border-bottom py-0 px-4">
+                    <div class="card-header bg-white border-bottom py-0 px-4 d-flex align-items-center justify-content-between">
                         <ul class="nav nav-tabs nav-tabs-finance" role="tablist">
                             <li class="nav-item"><a class="nav-link active fw-bold py-3" data-bs-toggle="tab"
                                     href="#invoice-active">Invoice Aktif</a></li>
@@ -168,6 +164,14 @@
                             <li class="nav-item"><a class="nav-link fw-bold py-3" data-bs-toggle="tab"
                                     href="#invoice-in-trash">Invoice Terhapus</a></li>
                         </ul>
+                        <div class="text-end">
+                            <button class="btn btn-white border fw-bold px-3 me-2 shadow-sm text-dark">
+                                <i class="fa fa-file-excel me-1 text-success"></i> Export .xls
+                            </button>
+                            <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openInvoiceModal()">
+                                <i class="fa fa-plus-circle me-1"></i> Buat Invoice Baru
+                            </button>
+                        </div>
                     </div>
 
                     <div class="card-body p-4 bg-white">

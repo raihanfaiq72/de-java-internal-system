@@ -4,16 +4,15 @@
     <div class="page-wrapper">
         <div class="page-content">
             <div class="container-fluid">
-                <div class="row align-items-center mb-4">
-                    <div class="col-md-7">
-                        <h4 class="fw-bold text-dark mb-1">Data Karyawan</h4>
-                        <p class="text-muted small mb-0">Kelola data karyawan, gaji, dan akun user terkait.</p>
-                    </div>
-                    <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                        <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal"
-                            data-bs-target="#createModal">
-                            <i class="fa fa-plus-circle me-1"></i> Tambah Karyawan
-                        </button>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
+                            <h4 class="page-title">Manajemen Karyawan</h4>
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Employees</li>
+                            </ol>
+                        </div>
                     </div>
                 </div>
 
@@ -23,7 +22,11 @@
                             <div class="col-md-6">
                                 <h5 class="mb-0 fw-bold text-dark">Daftar Karyawan</h5>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-6 d-flex justify-content-end">
+                                <button type="button" class="btn btn-primary fw-bold me-3 shadow-sm" data-bs-toggle="modal"
+                                    data-bs-target="#createModal">
+                                    <i class="fa fa-plus-circle me-1"></i> Tambah Karyawan
+                                </button>
                                 <form action="{{ route('employees.index') }}" method="GET">
                                     <div class="input-group">
                                         <input type="text" name="search"

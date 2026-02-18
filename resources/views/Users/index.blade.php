@@ -2,29 +2,31 @@
 
 @section('main')
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
-        rel="stylesheet">
 
-    <div class="page-wrapper" style="background-color: #f8fafc; min-height: 100vh; font-family: 'Inter', sans-serif;">
+    <div class="page-wrapper">
         <div class="page-content">
             <div class="container-fluid">
 
-                <div class="row align-items-center mb-4">
-                    <div class="col-md-7">
-                        <h4 class="fw-bold text-dark mb-1">Manajemen Pengguna (User)</h4>
-                        <p class="text-muted small mb-0">Kelola akun dan akses login sistem.</p>
-                    </div>
-                    <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                        <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openUserModal()">
-                            <i class="fa fa-plus-circle me-1"></i> Tambah User Baru
-                        </button>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
+                            <h4 class="page-title">Manajemen Pengguna</h4>
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Users</li>
+                            </ol>
+                        </div>
                     </div>
                 </div>
 
                 <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
                     <div class="card-header bg-white border-bottom py-3 px-4">
                         <h6 class="mb-0 fw-bold text-dark">Daftar Pengguna</h6>
+                        <div class="ms-auto text-end">
+                            <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openUserModal()">
+                                <i class="fa fa-plus-circle me-1"></i> Tambah User Baru
+                            </button>
+                        </div>
                     </div>
 
                     <div class="card-body p-4 bg-white">

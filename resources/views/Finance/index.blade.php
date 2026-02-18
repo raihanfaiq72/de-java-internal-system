@@ -1,30 +1,24 @@
 @extends('Layout.main')
 
 @section('main')
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
-        rel="stylesheet">
-
-    <div class="page-wrapper" style="background-color: #f4f7fa; min-height: 100vh; font-family: 'Inter', sans-serif;">
-        <div class="page-content py-4">
+    <div class="page-wrapper">
+        <div class="page-content">
             <div class="container-fluid">
-                <!-- Header -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h3 class="fw-bold text-dark mb-1">Keuangan</h3>
-                        <p class="text-muted mb-0">Kelola akun kas, bank, dan transaksi keuangan</p>
-                    </div>
-                    <div>
-                        <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm"
-                            onclick="resetCreateModal()" data-bs-toggle="modal" data-bs-target="#modalCreateAccount">
-                            <i class="iconoir-plus-circle me-1"></i> Buat Akun Keuangan
-                        </button>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
+                            <h4 class="page-title">Keuangan</h4>
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Finance</li>
+                            </ol>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Tabs -->
                 <div class="card border-0 shadow-sm rounded-3 mb-4">
-                    <div class="card-body p-2">
+                    <div class="card-body p-2 d-flex justify-content-between align-items-center">
                         <ul class="nav nav-pills nav-fill" id="financeTab" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active rounded-3 fw-semibold py-2" id="dashboard-tab"
@@ -45,6 +39,12 @@
                                 </button>
                             </li>
                         </ul>
+                        <div>
+                            <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm"
+                                onclick="resetCreateModal()" data-bs-toggle="modal" data-bs-target="#modalCreateAccount">
+                                <i class="iconoir-plus-circle me-1"></i> Buat Akun Keuangan
+                            </button>
+                        </div>
                     </div>
                 </div>
 

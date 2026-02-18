@@ -4,22 +4,27 @@
     <div class="page-wrapper">
         <div class="page-content">
             <div class="container-fluid">
-                <div class="row align-items-center mb-4">
-                    <div class="col-md-7">
-                        <h4 class="fw-bold text-dark mb-1">Periode Penggajian</h4>
-                        <p class="text-muted small mb-0">Kelola periode dan generate slip gaji karyawan.</p>
-                    </div>
-                    <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                        <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal"
-                            data-bs-target="#createModal">
-                            <i class="fa fa-plus-circle me-1"></i> Buat Periode Baru
-                        </button>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
+                            <h4 class="page-title">Manajemen Periode Gaji</h4>
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Salary Periods</li>
+                            </ol>
+                        </div>
                     </div>
                 </div>
 
                 <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
                     <div class="card-header bg-white border-bottom py-3 px-4">
-                        <h6 class="mb-0 fw-bold text-dark">Daftar Periode</h6>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold text-dark">Daftar Periode</h6>
+                            <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal"
+                                data-bs-target="#createModal">
+                                <i class="fa fa-plus-circle me-1"></i> Buat Periode Baru
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body p-4 bg-white">
                         <div class="table-responsive">

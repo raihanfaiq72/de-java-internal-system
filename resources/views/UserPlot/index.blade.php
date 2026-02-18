@@ -70,21 +70,26 @@
         <div class="page-content">
             <div class="container-fluid">
 
-                <div class="row align-items-center mb-4">
-                    <div class="col-md-7">
-                        <h4 class="fw-bold text-dark mb-1">Plotting Otoritas User</h4>
-                        <p class="text-muted small mb-0">Petakan user ke kantor dan role spesifik.</p>
-                    </div>
-                    <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                        <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openPlotModal()">
-                            <i class="fa fa-link me-1"></i> Plotting Baru
-                        </button>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
+                            <h4 class="page-title">Admin: User Plots</h4>
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                <li class="breadcrumb-item active">User Plots</li>
+                            </ol>
+                        </div>
                     </div>
                 </div>
 
                 <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
                     <div class="card-header bg-white border-bottom py-3 px-4">
-                        <h6 class="mb-0 fw-bold text-dark">Daftar User Plot</h6>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold text-dark">Daftar User Plot</h6>
+                            <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openPlotModal()">
+                                <i class="fa fa-link me-1"></i> Plotting Baru
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">

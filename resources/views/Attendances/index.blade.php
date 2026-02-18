@@ -41,15 +41,15 @@
     <div class="page-wrapper">
         <div class="page-content">
             <div class="container-fluid">
-                <div class="row align-items-center mb-4">
-                    <div class="col-md-7">
-                        <h4 class="fw-bold text-dark mb-1">Data Absensi</h4>
-                        <p class="text-muted small mb-0">Kelola data kehadiran, sakit, izin, dan keterlambatan karyawan.</p>
-                    </div>
-                    <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                        <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#createModal">
-                            <i class="fa fa-plus-circle me-1"></i> Tambah Absensi
-                        </button>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
+                            <h4 class="page-title">Manajemen Absensi</h4>
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Attendances</li>
+                            </ol>
+                        </div>
                     </div>
                 </div>
 
@@ -61,6 +61,9 @@
                             </div>
                             <div class="col-md-8">
                                 <div class="d-flex flex-wrap justify-content-md-end gap-2">
+                                    <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm btn-sm" data-bs-toggle="modal" data-bs-target="#createModal">
+                                        <i class="fa fa-plus-circle me-1"></i> Tambah Absensi
+                                    </button>
                                     <form action="{{ route('attendances.index') }}" method="GET" class="row g-2">
                                         <div class="col-auto">
                                             <input type="date" name="date" class="form-control form-control-sm" value="{{ request('date', date('Y-m-d')) }}">

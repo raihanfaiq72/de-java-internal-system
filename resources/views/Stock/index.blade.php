@@ -4,30 +4,14 @@
     <div class="page-wrapper">
         <div class="page-content">
             <div class="container-fluid">
-                <!-- Header Section -->
-                <div class="row align-items-center mb-4">
-                    <div class="col-sm-12 col-md-8">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-primary-subtle text-primary p-3 rounded-circle me-3">
-                                <i class="iconoir-archive fs-3"></i>
-                            </div>
-                            <div>
-                                <h4 class="mb-0 fw-bold">Dashboard Stok</h4>
-                                <p class="text-muted mb-0 small text-wrap" style="max-width: 600px;">
-                                    Lihat persebaran stokmu disini. Kamu juga bisa lihat produk mana saja yang menguntungkan
-                                    dan kurang menguntungkan bisnis kamu.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-12 col-md-4 text-md-end mt-3 mt-md-0">
-                        <div class="form-check form-switch d-inline-block text-start">
-                            <label class="form-check-label small fw-bold text-muted d-block mb-1"
-                                for="auto-stock-toggle">Otomatis Kurangi/Tambahi Stok dari Invoice</label>
-                            <div class="d-flex align-items-center">
-                                <input class="form-check-input" type="checkbox" id="auto-stock-toggle" checked>
-                                <span class="ms-2 badge bg-success-subtle text-success">ON</span>
-                            </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
+                            <h4 class="page-title">Manajemen Stok</h4>
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Stok</li>
+                            </ol>
                         </div>
                     </div>
                 </div>
@@ -64,7 +48,7 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="card shadow-sm border-0">
-                            <div class="card-header bg-white border-bottom-0 pb-0">
+                            <div class="card-header bg-white border-bottom-0 pb-0 d-flex justify-content-between align-items-center">
                                 <ul class="nav nav-pills" role="tablist">
                                     <li class="nav-item">
                                         <a class="nav-link active fw-bold" data-bs-toggle="tab" href="#tab-dashboard"
@@ -88,6 +72,14 @@
                                         </a>
                                     </li>
                                 </ul>
+                                <div class="form-check form-switch d-inline-block text-start">
+                                    <label class="form-check-label small fw-bold text-muted d-block mb-1"
+                                        for="auto-stock-toggle">Otomatis Stok dari Invoice</label>
+                                    <div class="d-flex align-items-center">
+                                        <input class="form-check-input" type="checkbox" id="auto-stock-toggle" checked>
+                                        <span class="ms-2 badge bg-success-subtle text-success">ON</span>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="card-body pt-4">

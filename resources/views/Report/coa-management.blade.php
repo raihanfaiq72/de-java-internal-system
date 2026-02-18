@@ -1,26 +1,31 @@
 @extends('Layout.main')
 
 @section('main')
-    <div class="page-wrapper" style="font-family: 'Inter', sans-serif;">
+    <div class="page-wrapper">
         <div class="page-content">
             <div class="container-fluid">
-                <div class="row align-items-center mb-4">
-                    <div class="col-md-7">
-                        <h4 class="fw-bold text-dark mb-1">Manajemen Chart of Accounts</h4>
-                        <p class="text-muted small mb-0">Struktur akun per {{ date('d F Y', strtotime($date)) }}</p>
-                    </div>
-                    <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                        <a href="{{ route('report.balance-sheet') }}?date={{ $date }}"
-                            class="btn btn-outline-primary fw-bold px-3 shadow-sm rounded-3">
-                            <i class="fa fa-table me-1"></i> Lihat Neraca
-                        </a>
-                        <button class="btn btn-primary fw-bold px-3 shadow-sm ms-2 rounded-3" onclick="openAddModal()">
-                            <i class="fa fa-plus me-1"></i> Tambah COA
-                        </button>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
+                            <h4 class="page-title">Manajemen Chart of Accounts</h4>
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Report: COA Management</li>
+                            </ol>
+                        </div>
                     </div>
                 </div>
 
                 <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+                    <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-end">
+                        <a href="{{ route('report.balance-sheet') }}?date={{ $date }}"
+                            class="btn btn-outline-primary fw-bold px-3 shadow-sm rounded-3 me-2">
+                            <i class="fa fa-table me-1"></i> Lihat Neraca
+                        </a>
+                        <button class="btn btn-primary fw-bold px-3 shadow-sm rounded-3" onclick="openAddModal()">
+                            <i class="fa fa-plus me-1"></i> Tambah COA
+                        </button>
+                    </div>
                     <div class="card-body p-0">
                         <div class="accordion accordion-flush" id="accordionKelompok">
 

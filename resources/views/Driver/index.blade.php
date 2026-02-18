@@ -5,15 +5,16 @@
     <div class="page-content">
         <div class="container-fluid">
 
-            <!-- Page Title -->
             <div class="row">
                 <div class="col-sm-12">
-                    <div class="page-title-box d-md-flex justify-content-between align-items-center mb-3">
-                        <div>
-                            <h4 class="page-title fw-bold">Tugas Pengiriman Saya</h4>
-                            <p class="text-muted mb-0 small">Kelola pengiriman dan rute perjalanan Anda</p>
-                        </div>
+                    <div class="page-title-box d-md-flex justify-content-between align-items-center">
+                        <h4 class="page-title">Tugas Pengiriman Saya</h4>
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Driver App</li>
+                        </ol>
                     </div>
+                    <p class="text-muted mb-3 small">Kelola pengiriman dan rute perjalanan Anda</p>
                 </div>
             </div>
 

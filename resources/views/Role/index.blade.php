@@ -77,25 +77,32 @@
         <div class="page-content">
             <div class="container-fluid">
 
-                <div class="row align-items-center mb-4">
-                    <div class="col-md-7">
-                        <h4 class="fw-bold text-dark mb-1">Manajemen Role & Hak Akses</h4>
-                        <p class="text-muted small mb-0">Atur hierarki jabatan dan batasan akses modul sistem.</p>
-                    </div>
-                    <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                        <button onclick="location.reload()"
-                            class="btn btn-white border fw-bold px-3 shadow-sm text-dark me-2">
-                            <i class="fa fa-sync me-1 text-primary"></i> Refresh
-                        </button>
-                        <button onclick="openRoleModal()" class="btn btn-primary fw-bold px-4 shadow-sm">
-                            <i class="fa fa-plus-circle me-1"></i> Buat Role Baru
-                        </button>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
+                            <h4 class="page-title">Admin: Roles</h4>
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Roles</li>
+                            </ol>
+                        </div>
                     </div>
                 </div>
 
                 <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
                     <div class="card-header bg-white border-bottom py-3 px-4">
-                        <h6 class="mb-0 fw-bold text-dark">Daftar Role Tersedia</h6>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold text-dark">Daftar Role Tersedia</h6>
+                            <div class="text-end">
+                                <button onclick="location.reload()"
+                                    class="btn btn-white border fw-bold px-3 shadow-sm text-dark me-2">
+                                    <i class="fa fa-sync me-1 text-primary"></i> Refresh
+                                </button>
+                                <button onclick="openRoleModal()" class="btn btn-primary fw-bold px-4 shadow-sm">
+                                    <i class="fa fa-plus-circle me-1"></i> Buat Role Baru
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">

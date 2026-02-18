@@ -144,23 +144,28 @@
 @endpush
 
 @section('main')
-    <div class="page-wrapper" style="background-color: #f8fafc; min-height: 100vh; font-family: 'Inter', sans-serif;">
+    <div class="page-wrapper">
         <div class="page-content">
             <div class="container-fluid">
 
-                <div class="row align-items-center mb-4">
-                    <div class="col-md-7">
-                        <h4 class="fw-bold text-dark mb-1">Manajemen Delivery Order</h4>
-                        <p class="text-muted small mb-0">Pantau delivery order saat ini.</p>
-                    </div>
-                    <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                        <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openDeliveryOrderModal()">
-                            <i class="fa fa-plus-circle me-1"></i> TAMBAH DO
-                        </button>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
+                            <h4 class="page-title">Manajemen Delivery Order</h4>
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Delivery Order</li>
+                            </ol>
+                        </div>
                     </div>
                 </div>
 
                 <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+                    <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-end">
+                        <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openDeliveryOrderModal()">
+                            <i class="fa fa-plus-circle me-1"></i> TAMBAH DO
+                        </button>
+                    </div>
                     <div class="card-body p-4 bg-white">
                         <div class="mb-4 p-3 rounded-3 bg-light border shadow-sm">
                             <div class="row g-2 align-items-end">

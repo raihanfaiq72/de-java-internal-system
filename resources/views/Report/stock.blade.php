@@ -1,24 +1,18 @@
 @extends('Layout.main')
 
 @section('main')
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
-        rel="stylesheet">
-
-    <div class="page-wrapper" style="background-color: #f4f7fa; min-height: 100vh; font-family: 'Inter', sans-serif;">
-        <div class="page-content py-4">
+    <div class="page-wrapper">
+        <div class="page-content">
             <div class="container-fluid">
-                <!-- Header -->
-                <div class="row align-items-center mb-4">
-                    <div class="col-md-7">
-                        <h4 class="fw-bold text-dark mb-1">Laporan Stok</h4>
-                        <p class="text-muted small mb-0">Pergerakan stok dan inventori periode tertentu.</p>
-                    </div>
-                    <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                        <a href="{{ route('report.stock.export', request()->query()) }}"
-                            class="btn btn-white border fw-bold px-3 shadow-sm text-dark me-2">
-                            <i class="iconoir-download me-1"></i> Unduh
-                        </a>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
+                            <h4 class="page-title">Laporan Stok</h4>
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Report: Stock</li>
+                            </ol>
+                        </div>
                     </div>
                 </div>
 
