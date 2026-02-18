@@ -24,8 +24,8 @@ class FinancialAccountController extends Controller
     public function show($id)
     {
         $data = FinancialAccount::where('office_id', session('active_office_id'))->find($id);
-        
-        if (!$data) {
+
+        if (! $data) {
             return apiResponse(false, 'Data not found', null, null, 404);
         }
 

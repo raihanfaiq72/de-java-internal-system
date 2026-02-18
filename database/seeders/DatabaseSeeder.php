@@ -2,26 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Database\Seeders\ChartOfAccountSeeder;
-use Database\Seeders\PermissionSeeder;
-use Database\Seeders\SuperAdminSeeder;
-use Database\Seeders\AccountingLogSeeder;
-use Database\Seeders\MitraSeeder;
-use Database\Seeders\ProductSeeder;
-use Database\Seeders\TransactionSeeder;
-use Database\Seeders\PaymentSeeder;
-use Database\Seeders\InvoiceItemTaxSeeder;
-use Database\Seeders\UsersSeeder;
-use Database\Seeders\BrandSeeder;
-use Database\Seeders\ProductCategorySeeder;
-use Database\Seeders\TaxSeeder;
-use Database\Seeders\StockLocationSeeder;
-use Database\Seeders\ExpenseCategorySeeder;
-use Database\Seeders\FleetSeeder;
-use Database\Seeders\FinancialAccountSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -34,7 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         // 1. Auth & Base Structure
         $this->call(UsersSeeder::class); // Creates Users, Offices, Roles
-        
+
         // 2. Finance Master Data
         $this->call(ChartOfAccountSeeder::class);
         $this->call(TaxSeeder::class);
@@ -48,7 +30,7 @@ class DatabaseSeeder extends Seeder
         $this->call(StockLocationSeeder::class);
         $this->call(BrandSeeder::class);
         $this->call(ProductCategorySeeder::class);
-        
+
         // 5. Logistics
         $this->call(FleetSeeder::class);
 
@@ -59,7 +41,7 @@ class DatabaseSeeder extends Seeder
         // Uncomment if you want transaction data
         $this->call(TransactionSeeder::class);
         $this->call(PaymentSeeder::class);
-        
+
         // Others (Keep if valid)
         // $this->call(PermissionSeeder::class); // UsersSeeder handles permissions? Yes
         // $this->call(SuperAdminSeeder::class); // UsersSeeder handles admin? Yes

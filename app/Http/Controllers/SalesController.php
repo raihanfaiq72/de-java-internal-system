@@ -2,10 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Invoice;
-use App\Models\Payment;
-
 class SalesController extends Controller
 {
     private $views = 'Sales.';
@@ -17,7 +13,7 @@ class SalesController extends Controller
 
     public function show($id)
     {
-        return view($this->views . 'detail', compact('id'));
+        return view($this->views.'detail', compact('id'));
     }
 
     public function receipt()
@@ -27,11 +23,11 @@ class SalesController extends Controller
 
     public function printInvoice($id)
     {
-        return view($this->views . 'Nota.SalesNota', compact('id'));
+        return view($this->views.'Nota.SalesNota', compact('id'));
     }
 
     public function printReceipt($id)
     {
-        return view($this->views . 'Nota.ReceiptNota', compact('id'));
+        return view($this->views.'Nota.ReceiptNota', compact('id'));
     }
 }

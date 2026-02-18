@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class SuperAdminSeeder extends Seeder
 {
@@ -18,26 +18,26 @@ class SuperAdminSeeder extends Seeder
             [
                 'description' => 'Ini role Super Admin',
                 'created_at' => $now,
-                'updated_at' => $now
+                'updated_at' => $now,
             ]
         );
 
         $role = DB::table('roles')->where('name', 'superadmin')->first();
 
         $permissions = [
-            ['prefix_id'=>1,'action'=>'csrf-cookie','name'=>'sanctum.csrf-cookie'],
-            ['prefix_id'=>2,'action'=>'index','name'=>'roles.index'],
-            ['prefix_id'=>2,'action'=>'store','name'=>'roles.store'],
-            ['prefix_id'=>2,'action'=>'show','name'=>'roles.show'],
-            ['prefix_id'=>2,'action'=>'update','name'=>'roles.update'],
-            ['prefix_id'=>2,'action'=>'destroy','name'=>'roles.destroy'],
-            ['prefix_id'=>3,'action'=>'index','name'=>'permissions.index'],
-            ['prefix_id'=>3,'action'=>'store','name'=>'permissions.store'],
-            ['prefix_id'=>3,'action'=>'show','name'=>'permissions.show'],
-            ['prefix_id'=>3,'action'=>'update','name'=>'permissions.update'],
-            ['prefix_id'=>3,'action'=>'destroy','name'=>'permissions.destroy'],
-            ['prefix_id'=>4,'action'=>'index','name'=>'users.index'],
-            ['prefix_id'=>5,'action'=>'local','name'=>'storage.local'],
+            ['prefix_id' => 1, 'action' => 'csrf-cookie', 'name' => 'sanctum.csrf-cookie'],
+            ['prefix_id' => 2, 'action' => 'index', 'name' => 'roles.index'],
+            ['prefix_id' => 2, 'action' => 'store', 'name' => 'roles.store'],
+            ['prefix_id' => 2, 'action' => 'show', 'name' => 'roles.show'],
+            ['prefix_id' => 2, 'action' => 'update', 'name' => 'roles.update'],
+            ['prefix_id' => 2, 'action' => 'destroy', 'name' => 'roles.destroy'],
+            ['prefix_id' => 3, 'action' => 'index', 'name' => 'permissions.index'],
+            ['prefix_id' => 3, 'action' => 'store', 'name' => 'permissions.store'],
+            ['prefix_id' => 3, 'action' => 'show', 'name' => 'permissions.show'],
+            ['prefix_id' => 3, 'action' => 'update', 'name' => 'permissions.update'],
+            ['prefix_id' => 3, 'action' => 'destroy', 'name' => 'permissions.destroy'],
+            ['prefix_id' => 4, 'action' => 'index', 'name' => 'users.index'],
+            ['prefix_id' => 5, 'action' => 'local', 'name' => 'storage.local'],
         ];
 
         $permissionIds = [];
@@ -49,13 +49,13 @@ class SuperAdminSeeder extends Seeder
                     'prefix_id' => $perm['prefix_id'],
                     'action' => $perm['action'],
                     'created_at' => $now,
-                    'updated_at' => $now
+                    'updated_at' => $now,
                 ]
             );
 
             $permission = DB::table('permissions')
-                            ->where('name', $perm['name'])
-                            ->first();
+                ->where('name', $perm['name'])
+                ->first();
             $permissionIds[] = $permission->id;
         }
 
@@ -64,11 +64,11 @@ class SuperAdminSeeder extends Seeder
             DB::table('role_permissions')->updateOrInsert(
                 [
                     'role_id' => $role->id,
-                    'permission_id' => $pid
+                    'permission_id' => $pid,
                 ],
                 [
                     'created_at' => $now,
-                    'updated_at' => $now
+                    'updated_at' => $now,
                 ]
             );
         }

@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\DeliveryOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Models\DeliveryOrder;
 use Throwable;
 
 class DeliveryOrderController extends Controller
@@ -37,12 +37,13 @@ class DeliveryOrderController extends Controller
                 'delivery_date' => 'required|date',
             ]);
 
-            if ($validator->fails())
+            if ($validator->fails()) {
                 return apiResponse(false, 'Validation failed', null, $validator->errors(), 422);
+            }
 
             $doNumber = $request->delivery_order_number;
             if (empty($doNumber)) {
-                $doNumber = 'DO/' . date('Ymd') . '/' . strtoupper(uniqid());
+                $doNumber = 'DO/'.date('Ymd').'/'.strtoupper(uniqid());
             }
 
             $do = DeliveryOrder::create([
@@ -66,7 +67,9 @@ class DeliveryOrderController extends Controller
                 ->where('office_id', session('active_office_id'))
                 ->find($id);
 
-            if (!$do) return apiResponse(false, 'Not found', null, null, 404);
+            if (! $do) {
+                return apiResponse(false, 'Not found', null, null, 404);
+            }
 
             return apiResponse(true, 'Detail', $do);
         } catch (Throwable $e) {
@@ -78,7 +81,9 @@ class DeliveryOrderController extends Controller
     {
         try {
             $do = DeliveryOrder::where('office_id', session('active_office_id'))->find($id);
-            if (!$do) return apiResponse(false, 'Not found', null, null, 404);
+            if (! $do) {
+                return apiResponse(false, 'Not found', null, null, 404);
+            }
 
             $do->update($request->only([
                 'delivery_date',
@@ -86,7 +91,7 @@ class DeliveryOrderController extends Controller
                 'scheduled_at',
                 'departed_at',
                 'returned_at',
-                'notes'
+                'notes',
             ]));
 
             return apiResponse(true, 'Updated', $do);
@@ -99,9 +104,12 @@ class DeliveryOrderController extends Controller
     {
         try {
             $do = DeliveryOrder::where('office_id', session('active_office_id'))->find($id);
-            if (!$do) return apiResponse(false, 'Not found', null, null, 404);
+            if (! $do) {
+                return apiResponse(false, 'Not found', null, null, 404);
+            }
 
             $do->delete();
+
             return apiResponse(true, 'Deleted');
         } catch (Throwable $e) {
             return apiResponse(false, 'Failed to delete', null, $e->getMessage(), 500);

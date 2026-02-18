@@ -37,7 +37,7 @@ class InvoiceItemController extends Controller
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
-        if (!session()->has('active_office_id')) {
+        if (! session()->has('active_office_id')) {
             return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
         }
 
@@ -46,7 +46,7 @@ class InvoiceItemController extends Controller
             ->where('office_id', session('active_office_id'))
             ->first();
 
-        if (!$invoice) {
+        if (! $invoice) {
             return apiResponse(false, 'Invoice tidak valid untuk outlet ini', null, null, 422);
         }
 
@@ -63,7 +63,7 @@ class InvoiceItemController extends Controller
             })
             ->find($id);
 
-        if (!$item) {
+        if (! $item) {
             return apiResponse(false, 'Item invoice tidak ditemukan', null, null, 404);
         }
 
@@ -73,11 +73,11 @@ class InvoiceItemController extends Controller
     public function update(Request $request, $id)
     {
         $item = InvoiceItem::whereHas('invoice', function ($q) {
-                $q->where('office_id', session('active_office_id'));
-            })
+            $q->where('office_id', session('active_office_id'));
+        })
             ->find($id);
 
-        if (!$item) {
+        if (! $item) {
             return apiResponse(false, 'Item invoice tidak ditemukan', null, null, 404);
         }
 
@@ -90,11 +90,11 @@ class InvoiceItemController extends Controller
     public function destroy($id)
     {
         $item = InvoiceItem::whereHas('invoice', function ($q) {
-                $q->where('office_id', session('active_office_id'));
-            })
+            $q->where('office_id', session('active_office_id'));
+        })
             ->find($id);
 
-        if (!$item) {
+        if (! $item) {
             return apiResponse(false, 'Item invoice tidak ditemukan', null, null, 404);
         }
 
@@ -103,5 +103,4 @@ class InvoiceItemController extends Controller
 
         return apiResponse(true, 'Item invoice dihapus');
     }
-
 }

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Partner extends Model
 {
-    use SoftDeletes, ActivityLogs;
+    use ActivityLogs, SoftDeletes;
 
     protected $table = 'mitras';
 

@@ -34,7 +34,7 @@ return new class extends Migration
                 'bank_account_name',
                 'bank_branch',
                 'bank_city',
-                'currency'
+                'currency',
             ]);
         });
     }

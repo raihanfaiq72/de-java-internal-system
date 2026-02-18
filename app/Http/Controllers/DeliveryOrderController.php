@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 class DeliveryOrderController extends Controller
 {
     public function index()
@@ -14,15 +12,17 @@ class DeliveryOrderController extends Controller
     public function print($id)
     {
         $do = \App\Models\DeliveryOrder::with([
-            'invoices.invoice.mitra', 
-            'fleets.fleet', 
+            'invoices.invoice.mitra',
+            'fleets.fleet',
             'fleets.driver',
-            'office'
+            'office',
         ])
-        ->where('office_id', session('active_office_id'))
-        ->find($id);
+            ->where('office_id', session('active_office_id'))
+            ->find($id);
 
-        if (!$do) abort(404);
+        if (! $do) {
+            abort(404);
+        }
 
         return view('DeliveryOrder.print', compact('do'));
     }
@@ -30,15 +30,17 @@ class DeliveryOrderController extends Controller
     public function track($id)
     {
         $do = \App\Models\DeliveryOrder::with([
-            'invoices.invoice.mitra', 
-            'fleets.fleet', 
+            'invoices.invoice.mitra',
+            'fleets.fleet',
             'fleets.driver',
-            'office'
+            'office',
         ])
-        ->where('office_id', session('active_office_id'))
-        ->find($id);
+            ->where('office_id', session('active_office_id'))
+            ->find($id);
 
-        if (!$do) abort(404);
+        if (! $do) {
+            abort(404);
+        }
 
         return view('DeliveryOrder.track', compact('do'));
     }

@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Models\Office;
 use App\Models\Roles;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -42,16 +42,16 @@ class UserPlotController extends Controller
     {
         $plot = DB::table('user_office_roles')->where('id', $id)->first();
 
-        if (!$plot) {
+        if (! $plot) {
             return response()->json([
                 'success' => false,
-                'message' => 'Data tidak ditemukan'
+                'message' => 'Data tidak ditemukan',
             ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'data' => $plot
+            'data' => $plot,
         ]);
     }
 
@@ -72,6 +72,7 @@ class UserPlotController extends Controller
     public function destroy($id)
     {
         DB::table('user_office_roles')->where('id', $id)->delete();
+
         return back()->with('success', 'Plotting berhasil dihapus');
     }
 }

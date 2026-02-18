@@ -19,10 +19,10 @@ return new class extends Migration
 
             $table->foreignId('product_category_id')
                 ->constrained('product_categories');
-            
+
             $table->foreignId('supplier_id')
                 ->constrained('mitras');
-            
+
             $table->foreignId('brand_id')
                 ->constrained('brands');
 

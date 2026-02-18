@@ -7,11 +7,9 @@ use App\Models\Expense;
 use App\Models\FinancialAccount;
 use App\Models\FinancialTransaction;
 use App\Models\Payment;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use App\Traits\LogsActivity;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class FinanceController extends Controller
 {
@@ -20,10 +18,10 @@ class FinanceController extends Controller
     public function index()
     {
         $office_id = session('active_office_id');
-        
+
         // Fetch Financial Accounts from new table
         $accounts = FinancialAccount::where('office_id', $office_id)->get();
-            
+
         // Calculate Balances and Stats
         foreach ($accounts as $account) {
             $account->balance = $this->calculateBalance($account->id, $office_id);
@@ -33,7 +31,7 @@ class FinanceController extends Controller
 
         // For dropdowns in modals
         $all_accounts = FinancialAccount::where('office_id', $office_id)->get();
-        
+
         // For Parent Account selection (Keep COA for reference if needed, but not for creation)
         $parent_accounts = COA::where('office_id', $office_id)
             ->orderBy('kode_akun')
@@ -117,7 +115,7 @@ class FinanceController extends Controller
             ->where('status', 'posted')
             ->sum('amount');
 
-        return ($income + $transferIn + $otherIncome);
+        return $income + $transferIn + $otherIncome;
     }
 
     private function calculateExpenseLain($accountId, $officeId)
@@ -146,7 +144,7 @@ class FinanceController extends Controller
             ->where('chart_of_accounts_id', $accountId)
             ->sum('total_cost');
 
-        return ($expense + $transferOut + $otherExpense + $deliveryOrderAmount);
+        return $expense + $transferOut + $otherExpense + $deliveryOrderAmount;
     }
 
     public function storeTransaction(Request $request)
@@ -183,18 +181,19 @@ class FinanceController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Transaksi berhasil disimpan'
+                'message' => 'Transaksi berhasil disimpan',
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan: '.$e->getMessage(),
             ], 500);
         }
     }
-    
+
     // Store New Financial Account (Kas/Bank) - NOW USES FinancialAccount Table
     public function storeAccount(Request $request)
     {
@@ -203,7 +202,7 @@ class FinanceController extends Controller
             'tipe_akun' => 'required|string',
             'mode' => 'required|in:new,existing',
         ]);
-        
+
         try {
             DB::beginTransaction();
             $input = $request->all();
@@ -212,7 +211,7 @@ class FinanceController extends Controller
             $input['type'] = $request->tipe_akun;
             $input['name'] = $request->nama_akun;
             $input['code'] = $request->kode_akun;
-            
+
             $account = null;
 
             if ($request->mode == 'new') {
@@ -221,7 +220,7 @@ class FinanceController extends Controller
                     'kode_akun' => 'required|unique:financial_accounts,code',
                     'nama_akun' => 'required|string',
                 ]);
-                
+
                 // Create New Financial Account
                 $account = FinancialAccount::create($input);
 
@@ -230,7 +229,7 @@ class FinanceController extends Controller
                 $request->validate([
                     'existing_coa_id' => 'required|exists:financial_accounts,id',
                 ]);
-                
+
                 $account = FinancialAccount::find($request->existing_coa_id);
                 // Update fields
                 $account->type = $request->tipe_akun;
@@ -243,8 +242,8 @@ class FinanceController extends Controller
                 $account->currency = $request->currency ?? 'IDR';
                 $account->save();
             }
-            
-             // Log Activity
+
+            // Log Activity
             $this->logActivity(
                 $request->mode == 'new' ? 'create' : 'update',
                 'financial_accounts',
@@ -252,26 +251,28 @@ class FinanceController extends Controller
                 null,
                 $account->toArray()
             );
-            
+
             DB::commit();
-            
+
             return response()->json([
                 'success' => true,
-                'message' => 'Akun Keuangan berhasil disimpan'
+                'message' => 'Akun Keuangan berhasil disimpan',
             ]);
         } catch (\Exception $e) {
-             DB::rollBack();
-             return response()->json([
+            DB::rollBack();
+
+            return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan: '.$e->getMessage(),
             ], 500);
         }
     }
 
     // Helper to generate next code
-    public function getNextCode(Request $request) {
+    public function getNextCode(Request $request)
+    {
         $type = $request->type; // Cash, Bank, Corporate Card
-        
+
         // Define prefix logic based on type (User's implicit logic)
         // Cash -> 11xx
         // Bank -> 12xx
@@ -279,25 +280,32 @@ class FinanceController extends Controller
 
         // Simple logic: Find max code for that type or just increment from base.
         // Or simply find the last code in financial_accounts and increment.
-        
+
         // Let's look for existing accounts of same type to guess the pattern
         $lastAccount = FinancialAccount::where('type', $type)->orderBy('code', 'desc')->first();
-        
+
         if ($lastAccount && $lastAccount->code) {
-             // Increment
-             if (preg_match('/(\d+)$/', $lastAccount->code, $matches)) {
+            // Increment
+            if (preg_match('/(\d+)$/', $lastAccount->code, $matches)) {
                 $number = $matches[1];
                 $nextNumber = str_pad($number + 1, strlen($number), '0', STR_PAD_LEFT);
                 $nextCode = preg_replace('/(\d+)$/', $nextNumber, $lastAccount->code);
+
                 return response()->json(['code' => $nextCode]);
             }
         }
-        
+
         // Default if no previous account
-        if ($type == 'Cash') return response()->json(['code' => '1101']);
-        if ($type == 'Bank') return response()->json(['code' => '1201']);
-        if ($type == 'Corporate Card') return response()->json(['code' => '1251']);
-        
+        if ($type == 'Cash') {
+            return response()->json(['code' => '1101']);
+        }
+        if ($type == 'Bank') {
+            return response()->json(['code' => '1201']);
+        }
+        if ($type == 'Corporate Card') {
+            return response()->json(['code' => '1251']);
+        }
+
         return response()->json(['code' => '']);
     }
 
@@ -305,16 +313,16 @@ class FinanceController extends Controller
     {
         try {
             $account = FinancialAccount::findOrFail($id);
-            
+
             // Check if there are transactions
             $exists = FinancialTransaction::where('from_account_id', $id)
-                        ->orWhere('to_account_id', $id)
-                        ->exists();
-            
+                ->orWhere('to_account_id', $id)
+                ->exists();
+
             if ($exists) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Tidak dapat menghapus akun yang memiliki transaksi.'
+                    'message' => 'Tidak dapat menghapus akun yang memiliki transaksi.',
                 ], 400);
             }
 
@@ -325,13 +333,13 @@ class FinanceController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Akun berhasil dihapus'
+                'message' => 'Akun berhasil dihapus',
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan: '.$e->getMessage(),
             ], 500);
         }
     }

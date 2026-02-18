@@ -49,7 +49,7 @@ class PartnerController extends Controller
                 ->where('office_id', session('active_office_id'))
                 ->find($id);
 
-            if (!$partner) {
+            if (! $partner) {
                 return apiResponse(false, 'Mitra tidak ditemukan', null, null, 404);
             }
 
@@ -77,7 +77,7 @@ class PartnerController extends Controller
                 return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
             }
 
-            if (!session()->has('active_office_id')) {
+            if (! session()->has('active_office_id')) {
                 return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
             }
 
@@ -86,7 +86,7 @@ class PartnerController extends Controller
                 $data['nomor_mitra'] = $this->generateNomorMitra();
             }
             $data['office_id'] = session('active_office_id');
-            $data['akun_hutang_id']  = 18;
+            $data['akun_hutang_id'] = 18;
             $data['akun_piutang_id'] = 5;
 
             $partner = Partner::create($data);
@@ -102,7 +102,7 @@ class PartnerController extends Controller
         try {
             $partner = Partner::find($id);
 
-            if (!$partner) {
+            if (! $partner) {
                 return apiResponse(false, 'Mitra tidak ditemukan', null, null, 404);
             }
 
@@ -112,7 +112,7 @@ class PartnerController extends Controller
                 'nama' => 'sometimes|required|string|max:150',
                 'tipe_mitra' => 'sometimes|required|in:Supplier,Client,Both',
                 'email' => 'nullable|email',
-                'nomor_mitra' => 'nullable|unique:mitras,nomor_mitra,' . $id,
+                'nomor_mitra' => 'nullable|unique:mitras,nomor_mitra,'.$id,
                 'payment_terms' => 'nullable|string|max:50',
                 'identity_card' => 'nullable|string|max:50',
                 'latitude' => 'nullable|numeric|between:-90,90',
@@ -145,7 +145,7 @@ class PartnerController extends Controller
         try {
             $mitra = Partner::where('office_id', session('active_office_id'))->find($id);
 
-            if (!$mitra) {
+            if (! $mitra) {
                 return apiResponse(false, 'Mitra tidak ditemukan', null, null, 404);
             }
 
@@ -203,7 +203,7 @@ class PartnerController extends Controller
                 ->where('office_id', session('active_office_id'))
                 ->find($id);
 
-            if (!$mitra) {
+            if (! $mitra) {
                 return apiResponse(false, 'Mitra tidak ditemukan atau belum dihapus', null, null, 404);
             }
 
@@ -222,7 +222,7 @@ class PartnerController extends Controller
                 ->where('office_id', session('active_office_id'))
                 ->find($id);
 
-            if (!$mitra) {
+            if (! $mitra) {
                 return apiResponse(false, 'Mitra tidak ditemukan', null, null, 404);
             }
 
@@ -236,9 +236,9 @@ class PartnerController extends Controller
 
     private function generateNomorMitra()
     {
-        $prefix = 'M-' . date('ym') . '-';
+        $prefix = 'M-'.date('ym').'-';
 
-        $lastMitra = Partner::where('nomor_mitra', 'LIKE', $prefix . '%')
+        $lastMitra = Partner::where('nomor_mitra', 'LIKE', $prefix.'%')
             ->orderBy('id', 'desc')
             ->first();
 
@@ -250,7 +250,6 @@ class PartnerController extends Controller
             }
         }
 
-        return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        return $prefix.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
-
 }

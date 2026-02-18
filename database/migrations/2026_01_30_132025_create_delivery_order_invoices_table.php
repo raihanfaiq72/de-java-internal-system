@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('chart_of_accounts_id')
                 ->references('id')
                 ->on('financial_accounts')
-                ->onDelete('restrict');;
+                ->onDelete('restrict');
             $table->decimal('total_cost', 15, 2);
 
             $table->integer('delivery_queue')->default(1); // stop order
@@ -28,7 +28,7 @@ return new class extends Migration
                 'delivered',
                 'failed',
                 'rejected',
-                'returned'
+                'returned',
             ])->default('pending');
 
             $table->timestamp('arrived_at')->nullable();

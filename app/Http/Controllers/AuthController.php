@@ -9,13 +9,14 @@ use Illuminate\Support\Facades\DB;
 class AuthController extends Controller
 {
     /**
-     * setup login pertama kali 
+     * setup login pertama kali
      */
     public function login()
     {
         if (Auth::check()) {
             return redirect()->route('syo');
         }
+
         return view('Auth.login');
     }
 
@@ -23,7 +24,7 @@ class AuthController extends Controller
     {
         $credentials = $request->validate([
             'username' => 'required',
-            'password' => 'required'
+            'password' => 'required',
         ]);
 
         if (Auth::attempt($credentials)) {
@@ -49,7 +50,7 @@ class AuthController extends Controller
     public function syo()
     {
         $user = Auth::user();
-    
+
         $availableOffices = DB::table('user_office_roles')
             ->join('offices', 'user_office_roles.office_id', '=', 'offices.id')
             ->join('roles', 'user_office_roles.role_id', '=', 'roles.id')
@@ -72,26 +73,26 @@ class AuthController extends Controller
             ->whereIn('roles.name', ['Superadmin', 'Owner'])
             ->exists();
 
-        if (!$hasAccess) {
+        if (! $hasAccess) {
             return response()->json([
                 'success' => false,
-                'message' => 'Anda tidak memiliki akses untuk menghapus outlet ini.'
+                'message' => 'Anda tidak memiliki akses untuk menghapus outlet ini.',
             ], 403);
         }
 
         try {
-            // Karena cascading delete sudah diatur di migration, 
+            // Karena cascading delete sudah diatur di migration,
             // menghapus office akan menghapus data terkait.
             \App\Models\Office::findOrFail($id)->delete();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Outlet dan seluruh data terkait berhasil dihapus.'
+                'message' => 'Outlet dan seluruh data terkait berhasil dihapus.',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menghapus outlet: ' . $e->getMessage()
+                'message' => 'Gagal menghapus outlet: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -99,12 +100,12 @@ class AuthController extends Controller
     public function setOutlet(Request $request)
     {
         $request->validate(['office_id' => 'required']);
-        
+
         session(['active_office_id' => $request->office_id]);
-        
+
         return response()->json([
             'success' => true,
-            'redirect_url' => route('dashboard')
+            'redirect_url' => route('dashboard'),
         ]);
     }
 }

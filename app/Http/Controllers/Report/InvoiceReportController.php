@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Report;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\Partner;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class InvoiceReportController extends Controller
 {
@@ -18,12 +18,12 @@ class InvoiceReportController extends Controller
         $endDate = $request->end_date ?? date('Y-12-31');
         $mitraId = $request->mitra_id;
         $search = $request->search;
-        
+
         // --- Tab 1: Rekap Umum (Charts) ---
         // 1. Line Chart: Income vs Expenditure (Monthly for the selected year)
         // Uses the year from start_date
         $year = Carbon::parse($startDate)->year;
-        
+
         // Income (Sales Payments)
         $incomeData = DB::table('payments')
             ->join('invoices', 'payments.invoice_id', '=', 'invoices.id')
@@ -51,7 +51,7 @@ class InvoiceReportController extends Controller
         $chartLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
         $chartIncome = [];
         $chartExpense = [];
-        
+
         for ($m = 1; $m <= 12; $m++) {
             $chartIncome[] = $incomeData[$m] ?? 0;
             $chartExpense[] = $expenseData[$m] ?? 0;
@@ -61,13 +61,13 @@ class InvoiceReportController extends Controller
         // Outstanding = Total Sales - Total Received
         // Received = Total Received
         // Filter: Sales Invoices
-        
+
         $totalSales = DB::table('invoices')
             ->where('office_id', $officeId)
             ->where('tipe_invoice', 'Sales')
             ->whereNull('deleted_at')
             ->sum('total_akhir');
-            
+
         $totalReceived = DB::table('payments')
             ->join('invoices', 'payments.invoice_id', '=', 'invoices.id')
             ->where('invoices.office_id', $officeId)
@@ -75,11 +75,13 @@ class InvoiceReportController extends Controller
             ->whereNull('payments.deleted_at')
             ->whereNull('invoices.deleted_at')
             ->sum('payments.jumlah_bayar');
-            
+
         $outstanding = $totalSales - $totalReceived;
-        if ($outstanding < 0) $outstanding = 0;
-        
-        $pieSeries = [(float)$outstanding, (float)$totalReceived]; // [Outstanding, Received]
+        if ($outstanding < 0) {
+            $outstanding = 0;
+        }
+
+        $pieSeries = [(float) $outstanding, (float) $totalReceived]; // [Outstanding, Received]
         $pieLabels = ['Outstanding Amount', 'Amount Received'];
 
         // --- Tab 2: Rekap Pembayaran ---
@@ -103,11 +105,11 @@ class InvoiceReportController extends Controller
             $paymentsQuery->where('invoices.mitra_id', $mitraId);
         }
         if ($search) {
-            $paymentsQuery->where(function($q) use ($search) {
+            $paymentsQuery->where(function ($q) use ($search) {
                 $q->where('invoices.nomor_invoice', 'like', "%$search%")
-                  ->orWhere('mitras.nama', 'like', "%$search%")
-                  ->orWhere('mitras.nomor_mitra', 'like', "%$search%")
-                  ->orWhere('payments.nomor_pembayaran', 'like', "%$search%");
+                    ->orWhere('mitras.nama', 'like', "%$search%")
+                    ->orWhere('mitras.nomor_mitra', 'like', "%$search%")
+                    ->orWhere('payments.nomor_pembayaran', 'like', "%$search%");
             });
         }
 
@@ -131,11 +133,11 @@ class InvoiceReportController extends Controller
         }
         if ($search) {
             $invoiceIdsQuery->join('mitras', 'invoices.mitra_id', '=', 'mitras.id')
-                ->where(function($q) use ($search) {
+                ->where(function ($q) use ($search) {
                     $q->where('invoices.nomor_invoice', 'like', "%$search%")
-                      ->orWhere('mitras.nama', 'like', "%$search%")
-                      ->orWhere('mitras.nomor_mitra', 'like', "%$search%")
-                      ->orWhere('payments.nomor_pembayaran', 'like', "%$search%");
+                        ->orWhere('mitras.nama', 'like', "%$search%")
+                        ->orWhere('mitras.nomor_mitra', 'like', "%$search%")
+                        ->orWhere('payments.nomor_pembayaran', 'like', "%$search%");
                 });
         }
 
@@ -155,9 +157,9 @@ class InvoiceReportController extends Controller
             )
             ->groupBy('products.id', 'products.nama_produk', 'products.sku_kode', 'products.satuan', 'product_categories.nama_kategori')
             ->get();
-            
+
         $totalSoldQty = $soldProducts->sum('total_qty');
-        
+
         // --- Tab 4: Laporan Invoice Per Produk ---
         $prodIdFilter = $request->product_id;
         $invTypeFilter = $request->invoice_type;
@@ -197,10 +199,10 @@ class InvoiceReportController extends Controller
             $itemsQuery->whereBetween('invoices.tgl_invoice', [$startDate, $endDate]);
         }
         if ($search) {
-            $itemsQuery->where(function($q) use ($search) {
+            $itemsQuery->where(function ($q) use ($search) {
                 $q->where('invoices.nomor_invoice', 'like', "%$search%")
-                  ->orWhere('products.nama_produk', 'like', "%$search%")
-                  ->orWhere('mitras.nama', 'like', "%$search%");
+                    ->orWhere('products.nama_produk', 'like', "%$search%")
+                    ->orWhere('mitras.nama', 'like', "%$search%");
             });
         }
 
@@ -210,7 +212,7 @@ class InvoiceReportController extends Controller
         $itemIds = $invoiceItems->pluck('item_id')->toArray();
 
         $taxSums = [];
-        if (!empty($itemIds)) {
+        if (! empty($itemIds)) {
             $taxSums = DB::table('invoice_item_taxes')
                 ->whereIn('invoice_item_id', $itemIds)
                 ->whereNull('deleted_at')
@@ -226,20 +228,20 @@ class InvoiceReportController extends Controller
         foreach ($invoiceItems as $item) {
             $tax = $taxSums[$item->item_id] ?? 0;
             $item->total_pajak_item = $tax;
-            
+
             // Calculate total discount
             // total_harga_item = (qty * harga) - total_diskon
             // total_diskon = (qty * harga) - total_harga_item
             $gross = $item->qty * $item->harga_satuan;
             $item->total_diskon = $gross - $item->total_harga_item;
-            
+
             // Total Akhir Item = total_harga_item + tax
             $item->total_akhir = $item->total_harga_item + $tax;
-            
+
             $summaryTotalTransaction += $item->total_akhir;
             $uniqueInvoiceIds[$item->nomor_invoice] = true;
         }
-        
+
         $summaryTotalInvoices = count($uniqueInvoiceIds);
 
         // Mitras for filter

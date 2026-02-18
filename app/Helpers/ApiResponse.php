@@ -1,6 +1,6 @@
 <?php
 
-if (!function_exists('apiResponse')) {
+if (! function_exists('apiResponse')) {
     function apiResponse(
         bool $success,
         string $message = '',
@@ -12,7 +12,7 @@ if (!function_exists('apiResponse')) {
             'success' => $success,
             'message' => $message,
             'data' => $data,
-            'errors' => $errors
+            'errors' => $errors,
         ], $status);
     }
 }

@@ -4,14 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Office;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class OfficeController extends Controller
 {
     public function index()
     {
         $offices = Office::all();
+
         return view('Office.index', compact('offices'));
     }
 
@@ -19,13 +20,13 @@ class OfficeController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            'code' => 'required|unique:offices,code'
+            'code' => 'required|unique:offices,code',
         ]);
 
         $office = null;
-        DB::transaction(function() use ($request, &$office) {
+        DB::transaction(function () use ($request, &$office) {
             $office = Office::create($request->all());
-            
+
             // Assign creator as superadmin for this office
             $role = DB::table('roles')->where('name', 'superadmin')->first();
             if ($role) {
@@ -34,7 +35,7 @@ class OfficeController extends Controller
                     'office_id' => $office->id,
                     'role_id' => $role->id,
                     'created_at' => now(),
-                    'updated_at' => now()
+                    'updated_at' => now(),
                 ]);
             }
         });
@@ -43,7 +44,7 @@ class OfficeController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Kantor berhasil ditambahkan',
-                'data' => $office
+                'data' => $office,
             ]);
         }
 
@@ -56,6 +57,7 @@ class OfficeController extends Controller
         if (request()->ajax() || request()->wantsJson()) {
             return response()->json(['success' => true, 'data' => $office]);
         }
+
         return abort(404);
     }
 
@@ -63,16 +65,18 @@ class OfficeController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            'code' => 'required|unique:offices,code,' . $id
+            'code' => 'required|unique:offices,code,'.$id,
         ]);
 
         Office::findOrFail($id)->update($request->all());
+
         return back()->with('success', 'Kantor berhasil diperbarui');
     }
 
     public function destroy($id)
     {
         Office::findOrFail($id)->delete();
+
         return back()->with('success', 'Kantor berhasil dihapus');
     }
 }

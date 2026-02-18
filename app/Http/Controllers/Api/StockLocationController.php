@@ -14,6 +14,7 @@ class StockLocationController extends Controller
         $locations = StockLocation::where('office_id', session('active_office_id'))
             ->latest()
             ->get();
+
         return apiResponse(true, 'Data lokasi stok', $locations);
     }
 
@@ -28,7 +29,7 @@ class StockLocationController extends Controller
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
-        if (!session()->has('active_office_id')) {
+        if (! session()->has('active_office_id')) {
             return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
         }
 
@@ -36,22 +37,24 @@ class StockLocationController extends Controller
         $input['office_id'] = session('active_office_id');
 
         $location = StockLocation::create($input);
+
         return apiResponse(true, 'Lokasi stok berhasil dibuat', $location);
     }
 
     public function show($id)
     {
         $location = StockLocation::where('office_id', session('active_office_id'))->find($id);
-        if (!$location) {
+        if (! $location) {
             return apiResponse(false, 'Lokasi tidak ditemukan', null, null, 404);
         }
+
         return apiResponse(true, 'Detail lokasi stok', $location);
     }
 
     public function update(Request $request, $id)
     {
         $location = StockLocation::find($id);
-        if (!$location) {
+        if (! $location) {
             return apiResponse(false, 'Lokasi tidak ditemukan', null, null, 404);
         }
 
@@ -65,6 +68,7 @@ class StockLocationController extends Controller
         }
 
         $location->update($request->all());
+
         return apiResponse(true, 'Lokasi stok berhasil diperbarui', $location);
     }
 
@@ -74,11 +78,12 @@ class StockLocationController extends Controller
             ->where('office_id', session('active_office_id'))
             ->first();
 
-        if (!$location) {
+        if (! $location) {
             return apiResponse(false, 'Lokasi tidak ditemukan', null, null, 404);
         }
 
         $location->delete();
+
         return apiResponse(true, 'Lokasi stok berhasil dihapus');
     }
 }

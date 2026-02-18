@@ -4,17 +4,16 @@ namespace App\Http\Controllers\Report;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
-use App\Models\Partner;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class PurchaseReportController extends Controller
 {
     public function index(Request $request)
     {
         $officeId = session('active_office_id');
-        
+
         // Base Query for Stats & Charts (Purchase Invoices Only)
         $query = Invoice::query()
             ->where('tipe_invoice', 'Purchase')
@@ -28,16 +27,16 @@ class PurchaseReportController extends Controller
         // Apply Search Filter (Search by Supplier Name)
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('mitra', function($q) use ($search) {
+            $query->whereHas('mitra', function ($q) use ($search) {
                 $q->where('nama', 'like', "%$search%");
             });
         }
 
         // --- 1. Summary Cards ---
         // We clone the query to avoid modifying the base reference
-        
+
         // We need: Total Purchase, Total Paid (to calc AP), Overdue AP.
-        
+
         $statsQuery = clone $query;
         $stats = $statsQuery->selectRaw('
             SUM(total_akhir) as total_purchase,
@@ -51,7 +50,6 @@ class PurchaseReportController extends Controller
         $totalOverdue = $stats->total_overdue ?? 0;
         $paymentRatio = $totalPurchase > 0 ? ($totalPaid / $totalPurchase) * 100 : 0;
 
-
         // --- 2. Monthly Purchase Trend ---
         // Group by Month of tgl_invoice
         $trendQuery = clone $query;
@@ -59,10 +57,9 @@ class PurchaseReportController extends Controller
             ->groupBy('month')
             ->orderBy('month')
             ->get();
-        
-        $trendLabels = $trendData->pluck('month')->map(fn($m) => Carbon::createFromFormat('Y-m', $m)->translatedFormat('M Y'));
-        $trendSeries = $trendData->pluck('total');
 
+        $trendLabels = $trendData->pluck('month')->map(fn ($m) => Carbon::createFromFormat('Y-m', $m)->translatedFormat('M Y'));
+        $trendSeries = $trendData->pluck('total');
 
         // --- 3. Top 5 Suppliers ---
         // Group by Mitra (Supplier)
@@ -73,14 +70,13 @@ class PurchaseReportController extends Controller
             ->orderByDesc('total_purchase')
             ->limit(5)
             ->get();
-        
-        $topSupplierLabels = $topSuppliers->map(fn($item) => $item->mitra->nama ?? 'Unknown');
-        $topSupplierSeries = $topSuppliers->pluck('total_purchase');
 
+        $topSupplierLabels = $topSuppliers->map(fn ($item) => $item->mitra->nama ?? 'Unknown');
+        $topSupplierSeries = $topSuppliers->pluck('total_purchase');
 
         // --- 4. Payables List (Daftar Invoice Belum Lunas / Hutang) ---
         // Filter: Purchase Invoices with Balance > 0
-        
+
         $payablesQuery = Invoice::query()
             ->where('tipe_invoice', 'Purchase')
             ->where('office_id', $officeId)
@@ -90,10 +86,10 @@ class PurchaseReportController extends Controller
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $payablesQuery->whereBetween('tgl_invoice', [$request->start_date, $request->end_date]);
         }
-        
+
         if ($request->filled('search')) {
             $search = $request->search;
-            $payablesQuery->whereHas('mitra', function($q) use ($search) {
+            $payablesQuery->whereHas('mitra', function ($q) use ($search) {
                 $q->where('nama', 'like', "%$search%");
             });
         }
@@ -101,13 +97,14 @@ class PurchaseReportController extends Controller
         // Only unpaid/partial
         // We can check status_pembayaran != 'Paid'
         $payablesQuery->where('status_pembayaran', '!=', 'Paid');
-        
-        $payables = $payablesQuery->latest('tgl_invoice')->get()->map(function($invoice) {
-             $paid = $invoice->payment->sum('jumlah_bayar');
-             $balance = $invoice->total_akhir - $paid;
-             $invoice->sisa_tagihan = $balance;
-             return $invoice;
-        })->filter(function($invoice) {
+
+        $payables = $payablesQuery->latest('tgl_invoice')->get()->map(function ($invoice) {
+            $paid = $invoice->payment->sum('jumlah_bayar');
+            $balance = $invoice->total_akhir - $paid;
+            $invoice->sisa_tagihan = $balance;
+
+            return $invoice;
+        })->filter(function ($invoice) {
             return $invoice->sisa_tagihan > 0;
         });
 

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FinancialAccount extends Model
 {
-    use SoftDeletes, ActivityLogs;
+    use ActivityLogs, SoftDeletes;
 
     protected $guarded = ['id'];
 

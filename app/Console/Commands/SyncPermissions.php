@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Route;
 use App\Models\Permission;
 use App\Models\Prefix;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Route;
 
 class SyncPermissions extends Command
 {
@@ -15,6 +15,7 @@ class SyncPermissions extends Command
      * lakukan php artisan permission:sync
      */
     protected $signature = 'permissions:sync';
+
     protected $description = 'Sinkronisasi daftar route name ke tabel permissions';
 
     public function handle()
@@ -24,21 +25,21 @@ class SyncPermissions extends Command
 
         foreach ($routes as $route) {
             $name = $route->getName();
-            
-            if ($name && !str_starts_with($name, 'ignition') && !str_starts_with($name, 'sanctum') && !str_starts_with($name, 'generated::')) {
-                
+
+            if ($name && ! str_starts_with($name, 'ignition') && ! str_starts_with($name, 'sanctum') && ! str_starts_with($name, 'generated::')) {
+
                 $parts = explode('.', $name);
                 $prefixName = count($parts) > 1 ? $parts[0] : 'General';
 
                 $prefix = Prefix::firstOrCreate(['name' => ucfirst($prefixName)]);
 
                 $exists = Permission::where('name', $name)->exists();
-                if (!$exists) {
+                if (! $exists) {
                     Permission::create([
                         'prefix_id' => $prefix->id,
                         'name' => $name,
                         'action' => $parts[1] ?? 'index',
-                        'description' => null
+                        'description' => null,
                     ]);
                     $count++;
                 }

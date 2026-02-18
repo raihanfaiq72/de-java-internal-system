@@ -14,9 +14,11 @@ class UserController extends Controller
     {
         if ($request->has('all')) {
             $data = User::latest()->get();
+
             return apiResponse(true, 'Data all users', $data);
         }
         $data = User::latest()->paginate(10);
+
         return apiResponse(true, 'Data user', $data);
     }
 
@@ -24,7 +26,7 @@ class UserController extends Controller
     {
         $user = User::find($id);
 
-        if (!$user) {
+        if (! $user) {
             return apiResponse(false, 'User tidak ditemukan', null, null, 404);
         }
 
@@ -46,10 +48,10 @@ class UserController extends Controller
 
         try {
             $user = User::create([
-                'name'     => $request->name,
+                'name' => $request->name,
                 'username' => $request->username,
-                'email'    => $request->email,
-                'password' => $request->password, 
+                'email' => $request->email,
+                'password' => $request->password,
             ]);
 
             return apiResponse(true, 'User berhasil dibuat', $user, null, 201);
@@ -63,14 +65,14 @@ class UserController extends Controller
     {
         $user = User::find($id);
 
-        if (!$user) {
+        if (! $user) {
             return apiResponse(false, 'User tidak ditemukan', null, null, 404);
         }
 
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:150',
             'username' => 'sometimes|required|string|max:150',
-            'email' => 'sometimes|required|email|unique:users,email,' . $id,
+            'email' => 'sometimes|required|email|unique:users,email,'.$id,
             'password' => 'nullable|string|min:6',
         ]);
 
@@ -84,7 +86,7 @@ class UserController extends Controller
             $data = $request->only(['name', 'email', 'username']);
 
             if ($request->filled('password')) {
-                $data['password'] = $request->password; 
+                $data['password'] = $request->password;
             }
 
             $user->update($data);
@@ -100,7 +102,7 @@ class UserController extends Controller
     {
         $user = User::find($id);
 
-        if (!$user) {
+        if (! $user) {
             return apiResponse(false, 'User tidak ditemukan', null, null, 404);
         }
 
@@ -119,10 +121,10 @@ class UserController extends Controller
     {
         try {
             $data = User::where(function ($q) use ($value) {
-                    $q->where('name', 'LIKE', "%{$value}%")
+                $q->where('name', 'LIKE', "%{$value}%")
                     ->orWhere('username', 'LIKE', "%{$value}%")
                     ->orWhere('email', 'LIKE', "%{$value}%");
-                })
+            })
                 ->latest()
                 ->paginate(10);
 
@@ -142,5 +144,4 @@ class UserController extends Controller
             );
         }
     }
-
 }

@@ -19,7 +19,7 @@ class InvoiceItemTaxSeeder extends Seeder
                     'invoice_item_id' => $item->id,
                     'tax_id' => $tax->id,
                     'nilai_pajak_diterapkan' => ($item->total_harga_item * $tax->persentase) / 100,
-                    'created_at' => now()
+                    'created_at' => now(),
                 ];
             }
 

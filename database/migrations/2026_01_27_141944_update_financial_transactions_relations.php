@@ -16,7 +16,7 @@ return new class extends Migration
             // Note: The constraint name might vary, usually table_column_foreign
             $table->dropForeign(['from_account_id']);
             $table->dropForeign(['to_account_id']);
-            
+
             // We keep the columns, but now they can store FinancialAccount IDs OR COA IDs
             // Ideally we would rename them or add type columns, but for now just removing FK constraint allows flexibility
         });

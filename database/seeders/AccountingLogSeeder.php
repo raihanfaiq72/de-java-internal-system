@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use Faker\Factory as Faker;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Faker\Factory as Faker;
 
 class AccountingLogSeeder extends Seeder
 {
@@ -15,13 +15,13 @@ class AccountingLogSeeder extends Seeder
 
         $journals = [];
         $logs = [];
-        
+
         for ($i = 1; $i <= 3000; $i++) {
             $journals[] = [
                 'office_id' => 1,
                 'tgl_jurnal' => now(),
-                'keterangan' => 'Jurnal Otomatis Sistem ' . $i,
-                'created_at' => now()
+                'keterangan' => 'Jurnal Otomatis Sistem '.$i,
+                'created_at' => now(),
             ];
 
             $logs[] = [
@@ -31,11 +31,15 @@ class AccountingLogSeeder extends Seeder
                 'tabel_terkait' => 'invoices',
                 'data_id' => $i,
                 'ip_address' => $faker->ipv4,
-                'created_at' => now()
+                'created_at' => now(),
             ];
         }
 
-        foreach (array_chunk($journals, 500) as $chunk) DB::table('journals')->insert($chunk);
-        foreach (array_chunk($logs, 500) as $chunk) DB::table('activity_logs')->insert($chunk);
+        foreach (array_chunk($journals, 500) as $chunk) {
+            DB::table('journals')->insert($chunk);
+        }
+        foreach (array_chunk($logs, 500) as $chunk) {
+            DB::table('activity_logs')->insert($chunk);
+        }
     }
 }

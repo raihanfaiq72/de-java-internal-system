@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Services\JournalService;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use App\Traits\LogsActivity;
 
 class ExpenseController extends Controller
 {
@@ -31,6 +31,7 @@ class ExpenseController extends Controller
         }
 
         $data = $query->latest()->paginate(10);
+
         return apiResponse(true, 'Data biaya operasional', $data);
     }
 
@@ -40,9 +41,10 @@ class ExpenseController extends Controller
             ->where('office_id', session('active_office_id'))
             ->find($id);
 
-        if (!$data) {
+        if (! $data) {
             return apiResponse(false, 'Biaya tidak ditemukan', null, null, 404);
         }
+
         return apiResponse(true, 'Detail biaya', $data);
     }
 
@@ -61,7 +63,7 @@ class ExpenseController extends Controller
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
-        if (!session()->has('active_office_id')) {
+        if (! session()->has('active_office_id')) {
             return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
         }
 
@@ -73,12 +75,12 @@ class ExpenseController extends Controller
             $categoryName = $request->kategori_biaya;
             // Check if exists
             $exists = ExpenseCategory::where('office_id', session('active_office_id'))
-                        ->where('name', $categoryName)
-                        ->exists();
-            if (!$exists) {
+                ->where('name', $categoryName)
+                ->exists();
+            if (! $exists) {
                 ExpenseCategory::create([
                     'office_id' => session('active_office_id'),
-                    'name' => $categoryName
+                    'name' => $categoryName,
                 ]);
             }
         }
@@ -103,7 +105,7 @@ class ExpenseController extends Controller
     public function update(Request $request, $id)
     {
         $data = Expense::where('office_id', session('active_office_id'))->find($id);
-        if (!$data) {
+        if (! $data) {
             return apiResponse(false, 'Biaya tidak ditemukan', null, null, 404);
         }
 
@@ -125,12 +127,12 @@ class ExpenseController extends Controller
             $categoryName = $request->kategori_biaya;
             // Check if exists
             $exists = ExpenseCategory::where('office_id', session('active_office_id'))
-                        ->where('name', $categoryName)
-                        ->exists();
-            if (!$exists) {
+                ->where('name', $categoryName)
+                ->exists();
+            if (! $exists) {
                 ExpenseCategory::create([
                     'office_id' => session('active_office_id'),
-                    'name' => $categoryName
+                    'name' => $categoryName,
                 ]);
             }
         }
@@ -144,7 +146,7 @@ class ExpenseController extends Controller
             if ($data->lampiran && Storage::disk('public')->exists($data->lampiran)) {
                 Storage::disk('public')->delete($data->lampiran);
             }
-            
+
             $file = $request->file('lampiran');
             $path = $file->store('expenses', 'public');
             $input['lampiran'] = $path;
@@ -160,7 +162,7 @@ class ExpenseController extends Controller
     public function destroy($id)
     {
         $data = Expense::where('office_id', session('active_office_id'))->find($id);
-        if (!$data) {
+        if (! $data) {
             return apiResponse(false, 'Biaya tidak ditemukan', null, null, 404);
         }
 
@@ -199,16 +201,16 @@ class ExpenseController extends Controller
         });
 
         // Data for Bar Chart (Total Amount - if single category filtered, shows total, else shows comparison)
-        // Let's make Bar chart same as Pie chart data for now (comparison between categories), 
-        // or if specific requirement "Jumlah Biaya" means something else. 
+        // Let's make Bar chart same as Pie chart data for now (comparison between categories),
+        // or if specific requirement "Jumlah Biaya" means something else.
         // Based on image "Jumlah Biaya" looks like a single bar when filtered by "mimik".
         // If no filter, maybe top categories.
         // Let's stick to By Category for both, just different visualization.
-        
+
         return apiResponse(true, 'Data analitik summary', [
             'labels' => $byCategory->keys(),
             'series' => $byCategory->values(),
-            'total' => $expenses->sum('jumlah')
+            'total' => $expenses->sum('jumlah'),
         ]);
     }
 
@@ -230,9 +232,9 @@ class ExpenseController extends Controller
             'series' => [
                 [
                     'name' => 'Total Biaya',
-                    'data' => $monthlyData
-                ]
-            ]
+                    'data' => $monthlyData,
+                ],
+            ],
         ]);
     }
 }

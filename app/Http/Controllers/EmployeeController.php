@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class EmployeeController extends Controller
 {
@@ -46,7 +45,7 @@ class EmployeeController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'nik' => 'required|string|unique:employees,nik,' . $employee->id,
+            'nik' => 'required|string|unique:employees,nik,'.$employee->id,
             'position' => 'required|string',
             'daily_salary' => 'required|numeric|min:0',
             'premi' => 'nullable|numeric|min:0',
@@ -63,6 +62,7 @@ class EmployeeController extends Controller
     public function destroy(Employee $employee)
     {
         $employee->delete();
+
         return redirect()->back()->with('success', 'Karyawan berhasil dihapus');
     }
 }

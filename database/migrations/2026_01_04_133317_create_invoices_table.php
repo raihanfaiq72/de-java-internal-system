@@ -27,14 +27,14 @@ return new class extends Migration
             $table->bigInteger('kontak_person_id')->nullable();
             $table->bigInteger('sales_id')->nullable();
 
-            $table->enum('status_dok', ['Draft','Sent','Failed','Approved','Rejected'])->default('Draft');
-            $table->enum('status_pembayaran', ['Draft','Unpaid','Overdue','Paid','Partially Paid'])->default('Unpaid');
-            $table->enum('status_perjalanan', ['Cetak','Terkirim','Diterima'])->default('Cetak');
+            $table->enum('status_dok', ['Draft', 'Sent', 'Failed', 'Approved', 'Rejected'])->default('Draft');
+            $table->enum('status_pembayaran', ['Draft', 'Unpaid', 'Overdue', 'Paid', 'Partially Paid'])->default('Unpaid');
+            $table->enum('status_perjalanan', ['Cetak', 'Terkirim', 'Diterima'])->default('Cetak');
 
             $table->decimal('subtotal', 15, 2)->default(0);
             $table->decimal('total_diskon_item', 15, 2)->default(0);
             $table->decimal('diskon_tambahan_nilai', 15, 2)->default(0);
-            $table->enum('diskon_tambahan_tipe', ['Fixed','Percentage'])->default('Fixed');
+            $table->enum('diskon_tambahan_tipe', ['Fixed', 'Percentage'])->default('Fixed');
             $table->decimal('biaya_kirim', 15, 2)->default(0);
             $table->decimal('uang_muka', 15, 2)->default(0);
             $table->decimal('total_akhir', 15, 2)->default(0);

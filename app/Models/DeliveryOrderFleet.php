@@ -33,20 +33,20 @@ class DeliveryOrderFleet extends Model
     ];
 
     protected $casts = [
-        'fuel_start_liters'     => 'decimal:2',
-        'fuel_end_liters'       => 'decimal:2',
-        'distance_traveled_km'  => 'decimal:2',
-        'fuel_used_liters'      => 'decimal:2',
-        'toll_cost'             => 'decimal:2',
-        'parking_cost'          => 'decimal:2',
-        'other_cost'            => 'decimal:2',
+        'fuel_start_liters' => 'decimal:2',
+        'fuel_end_liters' => 'decimal:2',
+        'distance_traveled_km' => 'decimal:2',
+        'fuel_used_liters' => 'decimal:2',
+        'toll_cost' => 'decimal:2',
+        'parking_cost' => 'decimal:2',
+        'other_cost' => 'decimal:2',
         'estimated_distance_km' => 'decimal:2',
-        'estimated_fuel_cost'   => 'decimal:2',
-        'additional_costs'      => 'array',
-        'start_latitude'        => 'decimal:8',
-        'start_longitude'       => 'decimal:8',
-        'last_latitude'         => 'decimal:8',
-        'last_longitude'        => 'decimal:8',
+        'estimated_fuel_cost' => 'decimal:2',
+        'additional_costs' => 'array',
+        'start_latitude' => 'decimal:8',
+        'start_longitude' => 'decimal:8',
+        'last_latitude' => 'decimal:8',
+        'last_longitude' => 'decimal:8',
     ];
 
     public function deliveryOrder()

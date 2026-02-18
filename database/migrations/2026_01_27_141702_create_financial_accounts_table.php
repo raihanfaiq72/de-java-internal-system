@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('code')->nullable(); // User wants codes like 1101
             $table->string('type'); // Cash, Bank, Corporate Card
             $table->text('description')->nullable();
-            
+
             // Bank Details
             $table->string('bank_name')->nullable();
             $table->string('bank_account_number')->nullable();
@@ -26,7 +26,7 @@ return new class extends Migration
             $table->string('bank_branch')->nullable();
             $table->string('bank_city')->nullable();
             $table->string('currency')->default('IDR');
-            
+
             $table->timestamps();
             $table->softDeletes();
         });

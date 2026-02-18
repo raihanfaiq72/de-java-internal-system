@@ -19,15 +19,15 @@ class PaymentSeeder extends Seeder
         $updates = [];
 
         foreach ($invoices as $inv) {
-            $nomorPembayaran = 'PYM-' . rand(1000, 9999) . $inv->id;
-            
+            $nomorPembayaran = 'PYM-'.rand(1000, 9999).$inv->id;
+
             // Very unlikely to collide with rand, but good to check or just insert.
             // Since rand changes every run, we might add duplicate payments for same invoice if we run seeder multiple times?
             // Yes. Ideally we should check if invoice already has payment.
-            
+
             // Check if this invoice already has a payment linked (if relationship exists, but here we just check payments table)
             // But payments table usually has invoice_id.
-            
+
             $hasPayment = DB::table('payments')->where('invoice_id', $inv->id)->exists();
             if ($hasPayment) {
                 continue;
@@ -41,13 +41,13 @@ class PaymentSeeder extends Seeder
                 'metode_pembayaran' => 'Transfer',
                 'jumlah_bayar' => $inv->total_akhir,
                 'akun_keuangan_id' => $akunKas,
-                'created_at' => now()
+                'created_at' => now(),
             ];
 
             $updates[] = $inv->id;
         }
 
-        if (!empty($data)) {
+        if (! empty($data)) {
             DB::table('payments')->insert($data);
             DB::table('invoices')->whereIn('id', $updates)->update(['status_pembayaran' => 'Paid']);
         }

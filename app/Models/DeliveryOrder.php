@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DeliveryOrder extends Model
 {
-    use SoftDeletes, ActivityLogs;
+    use ActivityLogs, SoftDeletes;
 
     protected $table = 'delivery_orders';
 
@@ -25,9 +25,9 @@ class DeliveryOrder extends Model
 
     protected $casts = [
         'delivery_date' => 'date',
-        'scheduled_at'  => 'datetime',
-        'departed_at'   => 'datetime',
-        'returned_at'   => 'datetime',
+        'scheduled_at' => 'datetime',
+        'departed_at' => 'datetime',
+        'returned_at' => 'datetime',
     ];
 
     public function invoices()

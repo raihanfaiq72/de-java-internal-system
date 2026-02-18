@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\COA;
 use App\Models\ExpenseCategory;
+use Illuminate\Http\Request;
 
 class ExpenseController extends Controller
 {
     public function index()
     {
         $officeId = session('active_office_id');
-        
+
         // Akun Keuangan: Kas / Bank (Standalone FinancialAccount)
         $financialAccounts = \App\Models\FinancialAccount::where('office_id', $officeId)
             ->orderBy('code')

@@ -1,30 +1,28 @@
 <?php
 
-use App\Http\Controllers\Api\ExpenseController;
-use App\Http\Controllers\Api\InvoiceController;
-use App\Http\Controllers\Api\InvoiceItemController;
-use App\Http\Controllers\Api\InvoiceItemTaxController;
-use App\Http\Controllers\Api\PaymentController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\Api\ProductCategoryController;
-use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\SalesAttendanceController;
-use App\Http\Controllers\Api\TaxController;
-use App\Http\Controllers\Api\StockController;
-use App\Http\Controllers\Api\StockLocationController;
-use App\Http\Controllers\Api\OfficeController;
-use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\ChartOfAccountController;
-use App\Http\Controllers\Api\PartnerController;
 use App\Http\Controllers\Api\BrandController;
+use App\Http\Controllers\Api\ChartOfAccountController;
 use App\Http\Controllers\Api\DeliveryOrderController;
 use App\Http\Controllers\Api\DeliveryOrderFleetController;
 use App\Http\Controllers\Api\DeliveryOrderInvoiceController;
+use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\FinancialAccountController;
 use App\Http\Controllers\Api\FleetController;
+use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\InvoiceItemController;
+use App\Http\Controllers\Api\InvoiceItemTaxController;
+use App\Http\Controllers\Api\OfficeController;
+use App\Http\Controllers\Api\PartnerController;
+use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\ProductCategoryController;
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\StockController;
+use App\Http\Controllers\Api\StockLocationController;
 use App\Http\Controllers\Api\SupplierBrandController;
+use App\Http\Controllers\Api\TaxController;
+use App\Http\Controllers\Api\UserController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth'])->group(function () {
     Route::prefix('office-api')
@@ -183,15 +181,6 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::put('/{id}', [ExpenseController::class, 'update'])->name('update');
             Route::delete('/{id}', [ExpenseController::class, 'destroy'])->name('destroy');
             Route::get('/search/{value}', [ExpenseController::class, 'search'])->name('search');
-        });
-
-    Route::prefix('sales-attendance-api')
-        ->name('sales-attendance-api.')
-        ->group(function () {
-            Route::get('/', [SalesAttendanceController::class, 'index'])->name('index');
-            Route::post('/', [SalesAttendanceController::class, 'store'])->name('store');
-            Route::get('/{id}', [SalesAttendanceController::class, 'show'])->name('show');
-            Route::put('/{id}', [SalesAttendanceController::class, 'update'])->name('update');
         });
 
     Route::prefix('user-api')

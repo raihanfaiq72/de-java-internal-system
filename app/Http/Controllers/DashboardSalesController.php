@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class DashboardSalesController extends Controller
 {
@@ -15,7 +14,7 @@ class DashboardSalesController extends Controller
         // Gunakan hari ini secara dinamis
         $today = now()->format('Y-m-d');
         $officeId = session('active_office_id');
-        
+
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
         $mitraId = $request->input('mitra_id');
@@ -56,9 +55,9 @@ class DashboardSalesController extends Controller
             'mitras.nama as nama_pelanggan',
             DB::raw('DATEDIFF(NOW(), invoices.tgl_invoice) as umur_nota')
         )
-        ->orderBy('invoices.tgl_invoice', 'desc')
-        ->paginate(10)
-        ->withQueryString();
+            ->orderBy('invoices.tgl_invoice', 'desc')
+            ->paginate(10)
+            ->withQueryString();
 
         // Ambil SEMUA Mitra (Client & Both) agar PT Lazuardi muncul
         $listMitra = DB::table('mitras')
@@ -67,7 +66,7 @@ class DashboardSalesController extends Controller
             ->orderBy('nama', 'asc')
             ->get();
 
-        return view($this->views . 'index', compact('summary', 'invoices', 'listMitra', 'startDate', 'endDate'));
+        return view($this->views.'index', compact('summary', 'invoices', 'listMitra', 'startDate', 'endDate'));
     }
 
     public function detail($id)
@@ -78,7 +77,7 @@ class DashboardSalesController extends Controller
             ->where('office_id', session('active_office_id'))
             ->first();
 
-        if (!$invoice) {
+        if (! $invoice) {
             return response()->json(['error' => 'Invoice not found or access denied'], 404);
         }
 

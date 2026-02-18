@@ -12,9 +12,13 @@ class SystemNotification extends Notification implements ShouldQueue
     use Queueable;
 
     public $title;
+
     public $message;
+
     public $url;
+
     public $type;
+
     public $relatedData;
 
     /**

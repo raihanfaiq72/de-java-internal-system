@@ -26,7 +26,7 @@ class InvoiceItemTaxController extends Controller
 
     public function store(Request $request)
     {
-        if (!session()->has('active_office_id')) {
+        if (! session()->has('active_office_id')) {
             return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
         }
 
@@ -38,11 +38,11 @@ class InvoiceItemTaxController extends Controller
     public function destroy($id)
     {
         $data = InvoiceItemTax::whereHas('invoiceItem.invoice', function ($q) {
-                $q->where('office_id', session('active_office_id'));
-            })
+            $q->where('office_id', session('active_office_id'));
+        })
             ->find($id);
-            
-        if (!$data) {
+
+        if (! $data) {
             return apiResponse(false, 'Data tidak ditemukan', null, null, 404);
         }
 
@@ -51,5 +51,4 @@ class InvoiceItemTaxController extends Controller
 
         return apiResponse(true, 'Pajak item invoice dihapus');
     }
-
 }

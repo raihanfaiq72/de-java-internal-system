@@ -2,16 +2,16 @@
 
 namespace Database\Seeders;
 
+use Faker\Factory as Faker;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Faker\Factory as Faker;
 
 class ProductSeeder extends Seeder
 {
     public function run(): void
     {
         $faker = Faker::create('id_ID');
-        
+
         // Ensure dependencies exist
         $categoryId = DB::table('product_categories')->first()->id ?? 1;
         $brandId = DB::table('brands')->first()->id ?? 1;
@@ -24,11 +24,12 @@ class ProductSeeder extends Seeder
 
         if (empty($categories) || empty($brands) || empty($suppliers)) {
             $this->command->error('Categories, Brands, or Suppliers missing. Run their seeders first.');
+
             return;
         }
 
         $totalData = 100; // Reduced from 3000 for speed
-        
+
         // Get existing SKUs to avoid duplicates
         $existingSkus = DB::table('products')->pluck('sku_kode')->flip()->toArray();
 
@@ -36,16 +37,16 @@ class ProductSeeder extends Seeder
         $batchSize = 50;
 
         for ($i = 1; $i <= $totalData; $i++) {
-            $sku = 'PROD-' . str_pad($i, 5, '0', STR_PAD_LEFT);
-            
+            $sku = 'PROD-'.str_pad($i, 5, '0', STR_PAD_LEFT);
+
             if (isset($existingSkus[$sku])) {
                 continue;
             }
 
             $data[] = [
                 'office_id' => 1,
-                'sku_kode' => $sku, 
-                'nama_produk' => 'Produk Test ' . $i,
+                'sku_kode' => $sku,
+                'nama_produk' => 'Produk Test '.$i,
                 'product_category_id' => $faker->randomElement($categories),
                 'supplier_id' => $faker->randomElement($suppliers),
                 'brand_id' => $faker->randomElement($brands),
@@ -65,7 +66,7 @@ class ProductSeeder extends Seeder
             }
         }
 
-        if (!empty($data)) {
+        if (! empty($data)) {
             DB::table('products')->insert($data);
         }
     }

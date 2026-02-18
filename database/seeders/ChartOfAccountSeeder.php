@@ -118,7 +118,7 @@ class ChartOfAccountSeeder extends Seeder
                 [$kode, $nama, $kelompokNama, $tipeNama, $isKas] = $acc;
 
                 // ===== KELOMPOK =====
-                if (!isset($kelompokMap[$kelompokNama])) {
+                if (! isset($kelompokMap[$kelompokNama])) {
                     // Check if exists in DB
                     $existingGroup = DB::table('coa_group')
                         ->where('office_id', $officeId)
@@ -133,15 +133,15 @@ class ChartOfAccountSeeder extends Seeder
                             'kode_kelompok' => $kodeKelompokMap[$kelompokNama],
                             'nama_kelompok' => $kelompokNama,
                             'created_at' => now(),
-                            'updated_at' => now()
+                            'updated_at' => now(),
                         ]);
                         $kelompokMap[$kelompokNama] = $kelompokId;
                     }
                 }
 
                 // ===== TIPE =====
-                $tipeKey = $kelompokNama . '|' . $tipeNama;
-                if (!isset($tipeMap[$tipeKey])) {
+                $tipeKey = $kelompokNama.'|'.$tipeNama;
+                if (! isset($tipeMap[$tipeKey])) {
                     $existingType = DB::table('coa_type')
                         ->where('kelompok_id', $kelompokMap[$kelompokNama])
                         ->where('nama_tipe', $tipeNama)
@@ -154,7 +154,7 @@ class ChartOfAccountSeeder extends Seeder
                             'kelompok_id' => $kelompokMap[$kelompokNama],
                             'nama_tipe' => $tipeNama,
                             'created_at' => now(),
-                            'updated_at' => now()
+                            'updated_at' => now(),
                         ]);
                         $tipeMap[$tipeKey] = $tipeId;
                     }
@@ -168,7 +168,7 @@ class ChartOfAccountSeeder extends Seeder
                         'nama_akun' => $nama,
                         'is_kas_bank' => $isKas,
                         'created_at' => now(),
-                        'updated_at' => now()
+                        'updated_at' => now(),
                     ]
                 );
             }

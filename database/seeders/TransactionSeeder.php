@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use Faker\Factory as Faker;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Faker\Factory as Faker;
 
 class TransactionSeeder extends Seeder
 {
@@ -13,9 +13,10 @@ class TransactionSeeder extends Seeder
         $faker = Faker::create();
         $mitraIds = DB::table('mitras')->pluck('id')->toArray();
         $productIds = DB::table('products')->pluck('id')->toArray();
-        
+
         if (empty($mitraIds) || empty($productIds)) {
             $this->command->warn('Mitras or Products missing. Skipping transactions.');
+
             return;
         }
 
@@ -26,17 +27,17 @@ class TransactionSeeder extends Seeder
                 'persentase' => 11,
                 'tipe_pajak' => 'Exclusive',
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ]
         );
 
         $totalData = 100;
-        
+
         // Check existing invoices
         $existingInvoices = DB::table('invoices')->pluck('nomor_invoice')->flip()->toArray();
 
         for ($i = 1; $i <= $totalData; $i++) {
-            $nomorInvoice = 'INV/2026/' . str_pad($i, 5, '0', STR_PAD_LEFT);
+            $nomorInvoice = 'INV/2026/'.str_pad($i, 5, '0', STR_PAD_LEFT);
 
             if (isset($existingInvoices[$nomorInvoice])) {
                 continue;
@@ -53,7 +54,7 @@ class TransactionSeeder extends Seeder
                 'subtotal' => 100000,
                 'total_akhir' => 111000,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ]);
 
             DB::table('invoice_items')->insert([
@@ -63,12 +64,12 @@ class TransactionSeeder extends Seeder
                 'harga_satuan' => 20000,
                 'total_harga_item' => 100000,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ]);
 
             // Expenses (Demo data)
             $akunKas = DB::table('chart_of_accounts')->where('is_kas_bank', true)->value('id') ?? 1;
-            
+
             $akunBeban = DB::table('chart_of_accounts')
                 ->join('coa_type', 'chart_of_accounts.tipe_id', '=', 'coa_type.id')
                 ->join('coa_group', 'coa_type.kelompok_id', '=', 'coa_group.id')
@@ -80,18 +81,18 @@ class TransactionSeeder extends Seeder
                 // Check if expense exists (simple check by name/date/amount or just always add? expenses usually don't have unique code in seeder)
                 // We'll skip adding expenses if invoice existed, which we already do by 'continue'.
                 // If invoice didn't exist, we add expense.
-                
+
                 DB::table('expenses')->insert([
                     'office_id' => 1,
                     'akun_keuangan_id' => $akunKas,
-                    'nama_biaya' => 'Biaya Operasional ' . $i,
-                    'nama_vendor' => 'Vendor ' . $i,
+                    'nama_biaya' => 'Biaya Operasional '.$i,
+                    'nama_vendor' => 'Vendor '.$i,
                     'akun_beban_id' => $akunBeban,
                     'tgl_biaya' => now(),
                     'jumlah' => rand(10000, 50000),
                     'kategori_biaya' => 'Operasional Kantor',
                     'created_at' => now(),
-                    'updated_at' => now()
+                    'updated_at' => now(),
                 ]);
             }
         }

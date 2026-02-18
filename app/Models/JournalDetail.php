@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class JournalDetail extends Model
 {
-    use SoftDeletes, ActivityLogs;
-    
+    use ActivityLogs, SoftDeletes;
+
     protected $table = 'journal_details';
 
     protected $fillable = [

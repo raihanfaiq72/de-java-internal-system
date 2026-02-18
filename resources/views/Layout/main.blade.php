@@ -287,6 +287,40 @@
             }
         }
 
+        /* Extra Mobile Friendly tweaks */
+        @media (max-width: 575.98px) {
+            .page-title-box {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 8px;
+            }
+            .page-title-box .breadcrumb {
+                font-size: 12px;
+            }
+            .card-body {
+                padding: 12px !important;
+            }
+            .card-header {
+                padding: 12px !important;
+            }
+            .nav, .nav-tabs, .nav-pills {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .nav .nav-item {
+                white-space: nowrap;
+            }
+            .table {
+                font-size: 12px;
+            }
+            .input-group > .form-control,
+            .form-select,
+            .btn {
+                font-size: 0.9rem;
+            }
+        }
+
         /* Dropdown Optimization */
         .dropdown-menu {
             background: rgba(255, 255, 255, 0.95) !important;

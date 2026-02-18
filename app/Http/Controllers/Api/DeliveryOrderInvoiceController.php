@@ -18,8 +18,7 @@ class DeliveryOrderInvoiceController extends Controller
 
             $data = DeliveryOrderInvoice::with('invoice', 'deliveryOrder')
                 ->when($search, function ($q) use ($search) {
-                    $q->whereHas('invoice', fn($q2) =>
-                    $q2->where('nomor_invoice', 'like', "%{$search}%"));
+                    $q->whereHas('invoice', fn ($q2) => $q2->where('nomor_invoice', 'like', "%{$search}%"));
                 })
                 ->paginate(10);
 
@@ -37,7 +36,7 @@ class DeliveryOrderInvoiceController extends Controller
                 ->select('id')
                 ->first();
 
-            if (!$kas) {
+            if (! $kas) {
                 return apiResponse(false, 'Akun Kas (1101) tidak ditemukan', null, null, 422);
             }
 
@@ -48,8 +47,9 @@ class DeliveryOrderInvoiceController extends Controller
                 'total_cost' => 'nullable|numeric',
             ]);
 
-            if ($validator->fails())
+            if ($validator->fails()) {
                 return apiResponse(false, 'Validation failed', null, $validator->errors(), 422);
+            }
 
             $data = DeliveryOrderInvoice::create([
                 'delivery_order_id' => $request->delivery_order_id,
@@ -69,13 +69,15 @@ class DeliveryOrderInvoiceController extends Controller
     {
         try {
             $item = DeliveryOrderInvoice::find($id);
-            if (!$item) return apiResponse(false, 'Not found', null, null, 404);
+            if (! $item) {
+                return apiResponse(false, 'Not found', null, null, 404);
+            }
 
             $item->update($request->only([
                 'delivery_status',
                 'arrived_at',
                 'delivery_notes',
-                'proof_photo'
+                'proof_photo',
             ]));
 
             return apiResponse(true, 'Updated', $item);
@@ -88,9 +90,12 @@ class DeliveryOrderInvoiceController extends Controller
     {
         try {
             $item = DeliveryOrderInvoice::find($id);
-            if (!$item) return apiResponse(false, 'Not found', null, null, 404);
+            if (! $item) {
+                return apiResponse(false, 'Not found', null, null, 404);
+            }
 
             $item->delete();
+
             return apiResponse(true, 'Removed');
         } catch (Throwable $e) {
             return apiResponse(false, 'Failed to delete', null, $e->getMessage(), 500);

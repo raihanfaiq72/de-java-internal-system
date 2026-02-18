@@ -26,9 +26,10 @@ class ProductCategoryController extends Controller
     {
         $data = ProductCategory::where('office_id', session('active_office_id'))
             ->find($id);
-        if (!$data) {
+        if (! $data) {
             return apiResponse(false, 'Data tidak ditemukan', null, null, 404);
         }
+
         return apiResponse(true, 'Detail kategori produk', $data);
     }
 
@@ -36,14 +37,14 @@ class ProductCategoryController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'nama_kategori' => 'required|max:100',
-            'parent_id' => 'nullable|exists:product_categories,id'
+            'parent_id' => 'nullable|exists:product_categories,id',
         ]);
 
         if ($validator->fails()) {
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
-        if (!session()->has('active_office_id')) {
+        if (! session()->has('active_office_id')) {
             return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
         }
 
@@ -58,7 +59,7 @@ class ProductCategoryController extends Controller
     public function update(Request $request, $id)
     {
         $data = ProductCategory::where('office_id', session('active_office_id'))->find($id);
-        if (!$data) {
+        if (! $data) {
             return apiResponse(false, 'Data tidak ditemukan', null, null, 404);
         }
 
@@ -74,7 +75,7 @@ class ProductCategoryController extends Controller
             ->where('office_id', session('active_office_id'))
             ->first();
 
-        if (!$data) {
+        if (! $data) {
             return apiResponse(false, 'Data tidak ditemukan', null, null, 404);
         }
 
@@ -92,5 +93,4 @@ class ProductCategoryController extends Controller
 
         return apiResponse(true, 'Hasil pencarian kategori produk', $data);
     }
-
 }

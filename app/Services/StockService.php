@@ -15,8 +15,8 @@ class StockService
     {
         return DB::transaction(function () use ($productId, $qty, $costPrice, $stockLocationId, $referenceType, $referenceId, $notes) {
             $product = Product::find($productId);
-            if (!$product) {
-                throw new \Exception("Product not found");
+            if (! $product) {
+                throw new \Exception('Product not found');
             }
 
             $mutation = StockMutation::create([
@@ -45,8 +45,8 @@ class StockService
     {
         return DB::transaction(function () use ($productId, $qty, $stockLocationId, $referenceType, $referenceId, $notes) {
             $product = Product::find($productId);
-            if (!$product) {
-                throw new \Exception("Product not found");
+            if (! $product) {
+                throw new \Exception('Product not found');
             }
 
             $remainingToDeduct = $qty;
@@ -55,7 +55,7 @@ class StockService
             $query = StockMutation::where('product_id', $productId)
                 ->where('type', 'IN')
                 ->where('remaining_qty', '>', 0);
-            
+
             if ($stockLocationId) {
                 $query->where('stock_location_id', $stockLocationId);
             }
@@ -66,11 +66,13 @@ class StockService
 
             $totalCost = 0;
             foreach ($batches as $batch) {
-                if ($remainingToDeduct <= 0) break;
+                if ($remainingToDeduct <= 0) {
+                    break;
+                }
 
                 $deduct = min($batch->remaining_qty, $remainingToDeduct);
                 $totalCost += ($deduct * $batch->cost_price);
-                
+
                 $batch->decrement('remaining_qty', $deduct);
                 $remainingToDeduct -= $deduct;
             }
@@ -83,7 +85,7 @@ class StockService
                 'type' => 'OUT',
                 'qty' => $qty,
                 'remaining_qty' => 0,
-                'cost_price' => ($qty > 0) ? ($totalCost / $qty) : 0, 
+                'cost_price' => ($qty > 0) ? ($totalCost / $qty) : 0,
                 'reference_type' => $referenceType,
                 'reference_id' => $referenceId,
                 'notes' => $notes,
@@ -110,6 +112,7 @@ class StockService
 
         if ($diff > 0) {
             $product = Product::find($productId);
+
             return $this->recordIn($productId, $diff, $product->harga_beli, $stockLocationId, 'Adjustment', null, $notes);
         } elseif ($diff < 0) {
             return $this->recordOut($productId, abs($diff), $stockLocationId, 'Adjustment', null, $notes);
@@ -124,7 +127,7 @@ class StockService
     public function recalculateProductStock($productId)
     {
         $this->updateProductTotalQty($productId);
-        
+
         return Product::find($productId)->qty;
     }
 
@@ -139,7 +142,7 @@ class StockService
 
         // Note: For simplicity, I'll count IN as positive and OUT as negative.
         // If ADJUSTMENT is added later as a separate type, we handle it too.
-        
+
         $total = $in - $out;
 
         Product::where('id', $productId)->update(['qty' => $total]);

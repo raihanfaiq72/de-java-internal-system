@@ -13,11 +13,11 @@ class NotificationService
     /**
      * Send notification to users who have access to a specific permission/module.
      *
-     * @param string $permissionName The name of the permission (e.g., 'sales.index')
-     * @param string $title Notification title
-     * @param string $message Notification message
-     * @param string $url Target URL
-     * @param string $type Notification type (info, success, warning, error)
+     * @param  string  $permissionName  The name of the permission (e.g., 'sales.index')
+     * @param  string  $title  Notification title
+     * @param  string  $message  Notification message
+     * @param  string  $url  Target URL
+     * @param  string  $type  Notification type (info, success, warning, error)
      * @return void
      */
     public static function notifyByPermission($permissionName, $title, $message, $url = '#', $type = 'info', $data = [])
@@ -25,7 +25,7 @@ class NotificationService
         // 1. Find the permission ID
         $permission = Permission::where('name', $permissionName)->first();
 
-        if (!$permission) {
+        if (! $permission) {
             return;
         }
 

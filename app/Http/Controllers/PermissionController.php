@@ -13,6 +13,7 @@ class PermissionController extends Controller
     {
         $this->syncPermissionsFromRoutes();
         $prefixes = Prefix::with('permissions')->orderBy('name', 'asc')->get();
+
         return view('Permission.index', compact('prefixes'));
     }
 
@@ -24,12 +25,12 @@ class PermissionController extends Controller
 
         $permission = Permission::findOrFail($id);
         $permission->update([
-            'description' => $request->description
+            'description' => $request->description,
         ]);
 
         return response()->json([
-            'success' => true, 
-            'message' => 'Label rute berhasil diperbarui'
+            'success' => true,
+            'message' => 'Label rute berhasil diperbarui',
         ]);
     }
 
@@ -37,7 +38,7 @@ class PermissionController extends Controller
     {
         foreach (Route::getRoutes() as $route) {
             $name = $route->getName();
-            if (!$name) {
+            if (! $name) {
                 continue;
             }
             if (str_starts_with($name, 'ignition') || str_starts_with($name, 'sanctum') || str_starts_with($name, 'generated::')) {
@@ -46,12 +47,12 @@ class PermissionController extends Controller
             $parts = explode('.', $name);
             $prefixName = count($parts) > 1 ? $parts[0] : 'General';
             $prefix = Prefix::firstOrCreate(['name' => ucfirst($prefixName)]);
-            if (!Permission::where('name', $name)->exists()) {
+            if (! Permission::where('name', $name)->exists()) {
                 Permission::create([
                     'prefix_id' => $prefix->id,
                     'name' => $name,
                     'action' => $parts[1] ?? 'index',
-                    'description' => null
+                    'description' => null,
                 ]);
             }
         }

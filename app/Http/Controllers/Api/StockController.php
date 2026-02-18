@@ -26,7 +26,7 @@ class StockController extends Controller
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('nama_produk', 'LIKE', "%{$request->search}%")
-                ->orWhere('sku_kode', 'LIKE', "%{$request->search}%");
+                    ->orWhere('sku_kode', 'LIKE', "%{$request->search}%");
             });
         }
 
@@ -37,17 +37,17 @@ class StockController extends Controller
         $query->where('track_stock', true);
 
         if ($request->location_id) {
-            $query->withSum(['stock_mutations as location_qty' => function($q) use ($request) {
+            $query->withSum(['stock_mutations as location_qty' => function ($q) use ($request) {
                 $q->where('stock_location_id', $request->location_id);
             }], 'qty'); // Note: This sums ALL qty. For FIFO, we need IN - OUT.
-            
+
             // Actually, we need to sum IN as positive and OUT as negative.
             // Eloquent withSum doesn't easily support CASE WHEN. I'll use a raw subquery.
-            
+
             $query->select('*')->addSelect([
                 'location_qty' => StockMutation::selectRaw('SUM(CASE WHEN type = "IN" THEN qty ELSE -qty END)')
                     ->whereColumn('product_id', 'products.id')
-                    ->where('stock_location_id', $request->location_id)
+                    ->where('stock_location_id', $request->location_id),
             ]);
         }
 
@@ -66,21 +66,21 @@ class StockController extends Controller
         // Base product query
         $productQuery = Product::where('track_stock', true)
             ->where('office_id', $officeId);
-        
+
         // Base Invoice query for pending orders (These might be office-based, not location-based)
         $pendingReceiveQuery = \App\Models\Invoice::where('tipe_invoice', 'Purchase')
             ->where('office_id', $officeId)
             ->where('status_perjalanan', '!=', 'Diterima');
-            
+
         $pendingShipQuery = \App\Models\Invoice::where('tipe_invoice', 'Sales')
             ->where('office_id', $officeId)
             ->where('status_perjalanan', '!=', 'Terkirim')
             ->where('status_perjalanan', '!=', 'Diterima');
 
         if ($locationId) {
-             // If location specific logic is needed, add here. 
-             // But invoices are usually office-level until allocated? 
-             // Assuming locationId is within the office.
+            // If location specific logic is needed, add here.
+            // But invoices are usually office-level until allocated?
+            // Assuming locationId is within the office.
         }
 
         if ($dateFrom) {
@@ -95,13 +95,13 @@ class StockController extends Controller
         // Stats
         $pendingReceive = $pendingReceiveQuery->sum('total_akhir');
         $pendingShip = $pendingShipQuery->sum('total_akhir');
-        
+
         if ($locationId) {
             $totalQty = StockMutation::where('stock_location_id', $locationId)
                 ->where('office_id', $officeId)
                 ->selectRaw('SUM(CASE WHEN type = "IN" THEN qty ELSE -qty END) as total')
                 ->first()->total ?? 0;
-            
+
             // Valuation is harder per location if not tracking remaining cost per location batch
             // For now, use global product cost
             $inventoryValue = Product::where('track_stock', true)
@@ -142,19 +142,21 @@ class StockController extends Controller
 
             $incoming = $incomingQuery->selectRaw('SUM(qty) as q, SUM(qty * cost_price) as v')->first();
             $outgoing = $outgoingQuery->selectRaw('SUM(qty) as q, SUM(qty * cost_price) as v')->first();
-            
-            $qtyIncoming[] = (float)($incoming->q ?? 0);
-            $qtyOutgoing[] = (float)($outgoing->q ?? 0);
-            $valIncoming[] = (float)($incoming->v ?? 0);
-            $valOutgoing[] = (float)($outgoing->v ?? 0);
+
+            $qtyIncoming[] = (float) ($incoming->q ?? 0);
+            $qtyOutgoing[] = (float) ($outgoing->q ?? 0);
+            $valIncoming[] = (float) ($incoming->v ?? 0);
+            $valOutgoing[] = (float) ($outgoing->v ?? 0);
         }
 
         // Top & Bottom Products (based on OUT mutations)
         $topProducts = Product::where('track_stock', true)
             ->where('office_id', $officeId)
-            ->withSum(['stock_mutations as sent_qty' => function($q) use ($locationId, $officeId) {
+            ->withSum(['stock_mutations as sent_qty' => function ($q) use ($locationId, $officeId) {
                 $q->where('type', 'OUT')->where('office_id', $officeId);
-                if ($locationId) $q->where('stock_location_id', $locationId);
+                if ($locationId) {
+                    $q->where('stock_location_id', $locationId);
+                }
             }], 'qty')
             ->orderByDesc('sent_qty')
             ->limit(5)
@@ -162,9 +164,11 @@ class StockController extends Controller
 
         $bottomProducts = Product::where('track_stock', true)
             ->where('office_id', $officeId)
-            ->withSum(['stock_mutations as sent_qty' => function($q) use ($locationId, $officeId) {
+            ->withSum(['stock_mutations as sent_qty' => function ($q) use ($locationId, $officeId) {
                 $q->where('type', 'OUT')->where('office_id', $officeId);
-                if ($locationId) $q->where('stock_location_id', $locationId);
+                if ($locationId) {
+                    $q->where('stock_location_id', $locationId);
+                }
             }], 'qty')
             ->orderBy('sent_qty', 'asc')
             ->limit(5)
@@ -172,24 +176,24 @@ class StockController extends Controller
 
         return apiResponse(true, 'Statistik stok detail', [
             'overview' => [
-                'pending_receive' => (float)$pendingReceive,
-                'pending_ship' => (float)$pendingShip,
-                'total_qty' => (float)$totalQty,
-                'inventory_value' => (float)$inventoryValue,
+                'pending_receive' => (float) $pendingReceive,
+                'pending_ship' => (float) $pendingShip,
+                'total_qty' => (float) $totalQty,
+                'inventory_value' => (float) $inventoryValue,
             ],
             'charts' => [
                 'labels' => $months,
                 'qty' => [
                     'incoming' => $qtyIncoming,
-                    'outgoing' => $qtyOutgoing
+                    'outgoing' => $qtyOutgoing,
                 ],
                 'value' => [
                     'incoming' => $valIncoming,
-                    'outgoing' => $valOutgoing
-                ]
+                    'outgoing' => $valOutgoing,
+                ],
             ],
             'top_products' => $topProducts,
-            'bottom_products' => $bottomProducts
+            'bottom_products' => $bottomProducts,
         ]);
     }
 
@@ -201,7 +205,7 @@ class StockController extends Controller
         if ($request->product_id) {
             $query->where('product_id', $request->product_id);
         }
-        
+
         if ($request->location_id) {
             $query->where('stock_location_id', $request->location_id);
         }
@@ -216,7 +220,7 @@ class StockController extends Controller
         $validator = Validator::make($request->all(), [
             'qty' => 'required|numeric|min:0',
             'stock_location_id' => 'nullable|exists:stock_locations,id',
-            'notes' => 'nullable|string'
+            'notes' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -225,7 +229,7 @@ class StockController extends Controller
 
         // Validate Product ownership
         $product = Product::where('id', $id)->where('office_id', session('active_office_id'))->first();
-        if (!$product) {
+        if (! $product) {
             return apiResponse(false, 'Produk tidak ditemukan', null, null, 404);
         }
 
@@ -234,16 +238,17 @@ class StockController extends Controller
             $location = \App\Models\StockLocation::where('id', $request->stock_location_id)
                 ->where('office_id', session('active_office_id'))
                 ->first();
-            if (!$location) {
+            if (! $location) {
                 return apiResponse(false, 'Lokasi stok tidak valid', null, null, 422);
             }
         }
 
         try {
             $this->stockService->adjustStock($id, $request->qty, $request->stock_location_id, $request->notes);
+
             return apiResponse(true, 'Stok berhasil diperbarui');
         } catch (\Exception $e) {
-            return apiResponse(false, 'Gagal memperbarui stok: ' . $e->getMessage(), null, null, 500);
+            return apiResponse(false, 'Gagal memperbarui stok: '.$e->getMessage(), null, null, 500);
         }
     }
 
@@ -262,7 +267,7 @@ class StockController extends Controller
 
         // Validate Product ownership
         $product = Product::where('id', $request->product_id)->where('office_id', session('active_office_id'))->first();
-        if (!$product) {
+        if (! $product) {
             return apiResponse(false, 'Produk tidak ditemukan', null, null, 404);
         }
 
@@ -270,7 +275,7 @@ class StockController extends Controller
         $location = \App\Models\StockLocation::where('id', $request->stock_location_id)
             ->where('office_id', session('active_office_id'))
             ->first();
-        if (!$location) {
+        if (! $location) {
             return apiResponse(false, 'Lokasi stok tidak valid', null, null, 422);
         }
 
@@ -284,9 +289,10 @@ class StockController extends Controller
                 null,
                 'Initial stock entry'
             );
+
             return apiResponse(true, 'Persediaan awal berhasil dicatat');
         } catch (\Exception $e) {
-            return apiResponse(false, 'Gagal mencatat persediaan awal: ' . $e->getMessage(), null, null, 500);
+            return apiResponse(false, 'Gagal mencatat persediaan awal: '.$e->getMessage(), null, null, 500);
         }
     }
 
@@ -305,7 +311,7 @@ class StockController extends Controller
 
         // Validate Product ownership
         $product = Product::where('id', $request->product_id)->where('office_id', session('active_office_id'))->first();
-        if (!$product) {
+        if (! $product) {
             return apiResponse(false, 'Produk tidak ditemukan', null, null, 404);
         }
 
@@ -313,7 +319,7 @@ class StockController extends Controller
         $location = \App\Models\StockLocation::where('id', $request->stock_location_id)
             ->where('office_id', session('active_office_id'))
             ->first();
-        if (!$location) {
+        if (! $location) {
             return apiResponse(false, 'Lokasi stok tidak valid', null, null, 422);
         }
 
@@ -324,16 +330,17 @@ class StockController extends Controller
                 $request->stock_location_id,
                 $request->notes ?: 'Stock Opname'
             );
+
             return apiResponse(true, 'Stok opname berhasil dicatat');
         } catch (\Exception $e) {
-            return apiResponse(false, 'Gagal mencatat stok opname: ' . $e->getMessage(), null, null, 500);
+            return apiResponse(false, 'Gagal mencatat stok opname: '.$e->getMessage(), null, null, 500);
         }
     }
 
     public function fifo($id)
     {
         $product = Product::where('id', $id)->where('office_id', session('active_office_id'))->first();
-        if (!$product) {
+        if (! $product) {
             return apiResponse(false, 'Produk tidak ditemukan', null, null, 404);
         }
 
@@ -341,7 +348,7 @@ class StockController extends Controller
         // We might want to filter by location if the user is currently filtering by location
         // But FIFO is generally global or per-location depending on strategy.
         // Assuming global FIFO for now or we can accept a location_id param.
-        
+
         $locationId = request('location_id');
 
         $query = StockMutation::where('product_id', $id)
@@ -357,5 +364,4 @@ class StockController extends Controller
 
         return apiResponse(true, 'Data FIFO', $batches);
     }
-
 }

@@ -17,8 +17,7 @@ class DeliveryOrderFleetController extends Controller
 
             $data = DeliveryOrderFleet::with('fleet', 'deliveryOrder')
                 ->when($search, function ($q) use ($search) {
-                    $q->whereHas('fleet', fn($q2) =>
-                    $q2->where('plate_number', 'like', "%{$search}%"));
+                    $q->whereHas('fleet', fn ($q2) => $q2->where('plate_number', 'like', "%{$search}%"));
                 })
                 ->paginate(10);
 
@@ -36,13 +35,15 @@ class DeliveryOrderFleetController extends Controller
                 'fleet_id' => 'required|exists:fleets,id',
             ]);
 
-            if ($validator->fails())
+            if ($validator->fails()) {
                 return apiResponse(false, 'Validation failed', null, $validator->errors(), 422);
+            }
 
             $data = DeliveryOrderFleet::updateOrCreate(
                 ['delivery_order_id' => $request->delivery_order_id],
                 $request->all()
             );
+
             return apiResponse(true, 'Fleet assigned', $data);
         } catch (Throwable $e) {
             return apiResponse(false, 'Failed to assign fleet', null, $e->getMessage(), 500);
@@ -56,7 +57,9 @@ class DeliveryOrderFleetController extends Controller
                 ->where('delivery_order_id', $doId)
                 ->first(); // Assuming one active fleet per DO for now, or returns the first one
 
-            if(!$data) return apiResponse(false, 'Data not found', null, null, 404);
+            if (! $data) {
+                return apiResponse(false, 'Data not found', null, null, 404);
+            }
 
             return apiResponse(true, 'DO Fleet Data', $data);
         } catch (Throwable $e) {
@@ -68,9 +71,12 @@ class DeliveryOrderFleetController extends Controller
     {
         try {
             $fleet = DeliveryOrderFleet::find($id);
-            if (!$fleet) return apiResponse(false, 'Not found', null, null, 404);
+            if (! $fleet) {
+                return apiResponse(false, 'Not found', null, null, 404);
+            }
 
             $fleet->update($request->all());
+
             return apiResponse(true, 'Updated', $fleet);
         } catch (Throwable $e) {
             return apiResponse(false, 'Failed to update', null, $e->getMessage(), 500);
@@ -81,9 +87,12 @@ class DeliveryOrderFleetController extends Controller
     {
         try {
             $fleet = DeliveryOrderFleet::find($id);
-            if (!$fleet) return apiResponse(false, 'Not found', null, null, 404);
+            if (! $fleet) {
+                return apiResponse(false, 'Not found', null, null, 404);
+            }
 
             $fleet->delete();
+
             return apiResponse(true, 'Removed');
         } catch (Throwable $e) {
             return apiResponse(false, 'Failed to delete', null, $e->getMessage(), 500);

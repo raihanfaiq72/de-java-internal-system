@@ -25,7 +25,7 @@ class ProductController extends Controller
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('nama_produk', 'LIKE', "%{$request->search}%")
-                ->orWhere('sku_kode', 'LIKE', "%{$request->search}%");
+                    ->orWhere('sku_kode', 'LIKE', "%{$request->search}%");
             });
         }
 
@@ -43,9 +43,10 @@ class ProductController extends Controller
         $data = Product::with(['category', 'supplier', 'brand'])
             ->where('office_id', session('active_office_id'))
             ->find($id);
-        if (!$data) {
+        if (! $data) {
             return apiResponse(false, 'Produk tidak ditemukan', null, null, 404);
         }
+
         return apiResponse(true, 'Detail produk', $data);
     }
 
@@ -64,7 +65,7 @@ class ProductController extends Controller
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
-        if (!session()->has('active_office_id')) {
+        if (! session()->has('active_office_id')) {
             return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
         }
 
@@ -79,7 +80,7 @@ class ProductController extends Controller
     public function update(Request $request, $id)
     {
         $data = Product::where('office_id', session('active_office_id'))->find($id);
-        if (!$data) {
+        if (! $data) {
             return apiResponse(false, 'Produk tidak ditemukan', null, null, 404);
         }
 
@@ -106,7 +107,7 @@ class ProductController extends Controller
     public function destroy($id)
     {
         $data = Product::where('office_id', session('active_office_id'))->find($id);
-        if (!$data) {
+        if (! $data) {
             return apiResponse(false, 'Produk tidak ditemukan', null, null, 404);
         }
 
@@ -119,9 +120,9 @@ class ProductController extends Controller
     public function search($value)
     {
         $data = Product::where('office_id', session('active_office_id'))
-            ->where(function($q) use ($value) {
+            ->where(function ($q) use ($value) {
                 $q->where('nama_produk', 'LIKE', "%$value%")
-                  ->orWhere('sku_kode', 'LIKE', "%$value%");
+                    ->orWhere('sku_kode', 'LIKE', "%$value%");
             })
             ->paginate(10);
 
@@ -133,14 +134,14 @@ class ProductController extends Controller
         $last = Product::where('office_id', session('active_office_id'))
             ->orderBy('id', 'desc')->first();
 
-        if (!$last || !$last->sku_kode) {
+        if (! $last || ! $last->sku_kode) {
             return apiResponse(true, 'Next SKU', 'PROD-00001');
         }
 
         preg_match('/(\d+)$/', $last->sku_kode, $matches);
-        $number = isset($matches[1]) ? (int)$matches[1] + 1 : 1;
+        $number = isset($matches[1]) ? (int) $matches[1] + 1 : 1;
 
-        $sku = 'PROD-' . str_pad($number, 5, '0', STR_PAD_LEFT);
+        $sku = 'PROD-'.str_pad($number, 5, '0', STR_PAD_LEFT);
 
         return apiResponse(true, 'Next SKU', $sku);
     }
@@ -148,7 +149,7 @@ class ProductController extends Controller
     public function recalculateStock($id)
     {
         $product = Product::where('office_id', session('active_office_id'))->find($id);
-        if (!$product) {
+        if (! $product) {
             return apiResponse(false, 'Produk tidak ditemukan', null, null, 404);
         }
 
@@ -156,5 +157,4 @@ class ProductController extends Controller
 
         return apiResponse(true, 'Stok berhasil direkalkulasi', ['qty' => $newQty]);
     }
-
 }

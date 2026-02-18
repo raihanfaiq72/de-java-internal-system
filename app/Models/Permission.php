@@ -7,20 +7,23 @@ use Illuminate\Database\Eloquent\Model;
 class Permission extends Model
 {
     protected $table = 'permissions';
+
     protected $guarded = ['id'];
-    protected $fillable = ['prefix_id','action','name','description'];
+
+    protected $fillable = ['prefix_id', 'action', 'name', 'description'];
 
     public function roles()
     {
         return $this->belongsToMany(
             Role::class,
-            'role_permissions',  
-            'permission_id',     
-            'role_id'            
+            'role_permissions',
+            'permission_id',
+            'role_id'
         );
     }
 
-    public function prefix() {
+    public function prefix()
+    {
         return $this->belongsTo(Prefix::class);
     }
 }

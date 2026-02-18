@@ -26,7 +26,7 @@ return new class extends Migration
                 'partially_delivered',
                 'completed',
                 'returned',
-                'cancelled'
+                'cancelled',
             ])->default('draft');
 
             $table->timestamp('scheduled_at')->nullable();

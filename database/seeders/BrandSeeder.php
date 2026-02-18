@@ -39,7 +39,7 @@ class BrandSeeder extends Seeder
             DB::table('brands')->updateOrInsert(
                 [
                     'nama_brand' => $brand,
-                    'office_id'  => $officeId
+                    'office_id' => $officeId,
                 ],
                 [
                     'updated_at' => now(),
@@ -67,9 +67,9 @@ class BrandSeeder extends Seeder
             foreach ($randomBrands as $brandId) {
                 DB::table('supplier_brands')->updateOrInsert(
                     [
-                        'office_id'   => $officeId,
+                        'office_id' => $officeId,
                         'supplier_id' => $supplierId,
-                        'brand_id'    => $brandId,
+                        'brand_id' => $brandId,
                     ],
                     [
                         'updated_at' => now(),

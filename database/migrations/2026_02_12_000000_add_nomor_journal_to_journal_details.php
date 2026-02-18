@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('journal_details', 'nomor_journal')) {
+        if (! Schema::hasColumn('journal_details', 'nomor_journal')) {
             Schema::table('journal_details', function (Blueprint $table) {
                 $table->string('nomor_journal')->after('id')->nullable();
             });

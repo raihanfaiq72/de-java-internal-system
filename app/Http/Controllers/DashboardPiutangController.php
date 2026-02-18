@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class DashboardPiutangController extends Controller
 {
@@ -64,14 +62,14 @@ class DashboardPiutangController extends Controller
                 ->whereYear('tgl_invoice', $year)
                 ->whereMonth('tgl_invoice', $m)
                 ->sum('total_akhir');
-            
+
             // Pengeluaran dari Expense + Purchase Invoice
             $expenseTable = DB::table('expenses')
                 ->where('office_id', $officeId)
                 ->whereYear('tgl_biaya', $year)
                 ->whereMonth('tgl_biaya', $m)
                 ->sum('jumlah');
-                
+
             $purchaseInvoice = DB::table('invoices')
                 ->where('tipe_invoice', 'Purchase')
                 ->where('office_id', $officeId)
@@ -86,10 +84,10 @@ class DashboardPiutangController extends Controller
         $totalLabaRugi = array_sum($monthlyIncome) - array_sum($monthlyExpense);
 
         return view($this->views.'index', compact(
-            'totalSaldo', 
-            'piutangData', 
-            'utangData', 
-            'monthlyIncome', 
+            'totalSaldo',
+            'piutangData',
+            'utangData',
+            'monthlyIncome',
             'monthlyExpense',
             'totalLabaRugi'
         ));

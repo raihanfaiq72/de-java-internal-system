@@ -8,8 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Fleet extends Model
 {
-
-    use SoftDeletes, ActivityLogs;
+    use ActivityLogs, SoftDeletes;
 
     protected $fillable = [
         'office_id',
@@ -35,7 +34,7 @@ class Fleet extends Model
                 'total_distance_km',
                 'fuel_used_liter',
                 'extra_cost',
-                'notes'
+                'notes',
             ])
             ->withTimestamps();
     }

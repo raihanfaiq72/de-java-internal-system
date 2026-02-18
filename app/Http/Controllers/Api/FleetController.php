@@ -34,7 +34,9 @@ class FleetController extends Controller
     {
         try {
             $fleet = Fleet::find($id);
-            if (!$fleet) return apiResponse(false, 'Not found', null, null, 404);
+            if (! $fleet) {
+                return apiResponse(false, 'Not found', null, null, 404);
+            }
 
             return apiResponse(true, 'Fleet detail', $fleet);
         } catch (Throwable $e) {
@@ -50,8 +52,9 @@ class FleetController extends Controller
                 'license_plate' => 'required|unique:fleets',
             ]);
 
-            if ($validator->fails())
+            if ($validator->fails()) {
                 return apiResponse(false, 'Validation failed', null, $validator->errors(), 422);
+            }
 
             $fleet = Fleet::create([
                 'office_id' => session('active_office_id'),
@@ -72,9 +75,12 @@ class FleetController extends Controller
     {
         try {
             $fleet = Fleet::find($id);
-            if (!$fleet) return apiResponse(false, 'Not found', null, null, 404);
+            if (! $fleet) {
+                return apiResponse(false, 'Not found', null, null, 404);
+            }
 
             $fleet->update($request->all());
+
             return apiResponse(true, 'Updated', $fleet);
         } catch (Throwable $e) {
             return apiResponse(false, 'Failed to update', null, $e->getMessage(), 500);
@@ -85,9 +91,12 @@ class FleetController extends Controller
     {
         try {
             $fleet = Fleet::find($id);
-            if (!$fleet) return apiResponse(false, 'Not found', null, null, 404);
+            if (! $fleet) {
+                return apiResponse(false, 'Not found', null, null, 404);
+            }
 
             $fleet->delete();
+
             return apiResponse(true, 'Deleted');
         } catch (Throwable $e) {
             return apiResponse(false, 'Failed to delete', null, $e->getMessage(), 500);

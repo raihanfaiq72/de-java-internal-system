@@ -14,15 +14,17 @@ class TaxController extends Controller
         $data = Tax::where('office_id', session('active_office_id'))
             ->latest()
             ->paginate(10);
+
         return apiResponse(true, 'Data pajak', $data);
     }
 
     public function show($id)
     {
         $data = Tax::where('office_id', session('active_office_id'))->find($id);
-        if (!$data) {
+        if (! $data) {
             return apiResponse(false, 'Pajak tidak ditemukan', null, null, 404);
         }
+
         return apiResponse(true, 'Detail pajak', $data);
     }
 
@@ -31,14 +33,14 @@ class TaxController extends Controller
         $validator = Validator::make($request->all(), [
             'nama_pajak' => 'required|max:100',
             'persentase' => 'required|numeric',
-            'tipe_pajak' => 'required|in:Exclusive,Inclusive,Gross Up'
+            'tipe_pajak' => 'required|in:Exclusive,Inclusive,Gross Up',
         ]);
 
         if ($validator->fails()) {
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
-        if (!session()->has('active_office_id')) {
+        if (! session()->has('active_office_id')) {
             return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
         }
 
@@ -53,7 +55,7 @@ class TaxController extends Controller
     public function update(Request $request, $id)
     {
         $data = Tax::where('office_id', session('active_office_id'))->find($id);
-        if (!$data) {
+        if (! $data) {
             return apiResponse(false, 'Pajak tidak ditemukan', null, null, 404);
         }
 
@@ -66,7 +68,7 @@ class TaxController extends Controller
     public function destroy($id)
     {
         $data = Tax::where('office_id', session('active_office_id'))->find($id);
-        if (!$data) {
+        if (! $data) {
             return apiResponse(false, 'Pajak tidak ditemukan', null, null, 404);
         }
 
@@ -84,5 +86,4 @@ class TaxController extends Controller
 
         return apiResponse(true, 'Hasil pencarian pajak', $data);
     }
-
 }

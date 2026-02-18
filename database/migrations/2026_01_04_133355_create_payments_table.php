@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('nomor_pembayaran', 100)->unique();
             $table->string('ref_no', 100)->nullable();
             $table->date('tgl_pembayaran');
-            $table->enum('metode_pembayaran', ['Cash','Transfer','Lainnya']);
+            $table->enum('metode_pembayaran', ['Cash', 'Transfer', 'Lainnya']);
             $table->decimal('jumlah_bayar', 15, 2);
 
             $table->foreignId('akun_keuangan_id')

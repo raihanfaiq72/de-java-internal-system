@@ -16,18 +16,18 @@ return new class extends Migration
             $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
             $table->date('transaction_date');
             $table->enum('type', ['transfer', 'income', 'expense']);
-            
+
             // For transfer: from = source, to = destination
             // For income: to = destination account (source might be null or specific COA)
             // For expense: from = source account (destination might be null or specific COA)
             $table->foreignId('from_account_id')->nullable()->constrained('chart_of_accounts');
             $table->foreignId('to_account_id')->nullable()->constrained('chart_of_accounts');
-            
+
             $table->decimal('amount', 15, 2);
             $table->text('description')->nullable();
             $table->string('reference_number')->nullable();
             $table->string('lampiran')->nullable();
-            
+
             $table->timestamps();
             $table->softDeletes();
         });

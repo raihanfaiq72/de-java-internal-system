@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use App\Models\Partner;
 use App\Models\SupplierBrand;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Throwable;
 
 class BrandController extends Controller
@@ -41,7 +41,7 @@ class BrandController extends Controller
                 ->where('tipe_mitra', 'supplier')
                 ->find($supplier_id);
 
-            if (!$supplier) {
+            if (! $supplier) {
                 return apiResponse(false, 'Supplier tidak ditemukan', null, null, 404);
             }
 
@@ -55,10 +55,10 @@ class BrandController extends Controller
 
             return apiResponse(true, 'Daftar brand milik supplier', [
                 'supplier' => [
-                    'id'   => $supplier->id,
+                    'id' => $supplier->id,
                     'nama' => $supplier->nama,
                 ],
-                'brands' => $brands
+                'brands' => $brands,
             ]);
         } catch (Throwable $e) {
             return apiResponse(false, 'Gagal mengambil data brand supplier', null, $e->getMessage(), 500);
@@ -72,7 +72,7 @@ class BrandController extends Controller
                 ->where('office_id', session('active_office_id'))
                 ->find($id);
 
-            if (!$brand) {
+            if (! $brand) {
                 return apiResponse(false, 'Brand tidak ditemukan', null, null, 404);
             }
 
@@ -85,14 +85,14 @@ class BrandController extends Controller
     public function store(Request $request)
     {
         try {
-            if (!session()->has('active_office_id')) {
+            if (! session()->has('active_office_id')) {
                 return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
             }
 
             $validator = Validator::make($request->all(), [
-                'nama_brand' => 'required|string|max:100|unique:brands,nama_brand,NULL,id,office_id,' . session('active_office_id'),
+                'nama_brand' => 'required|string|max:100|unique:brands,nama_brand,NULL,id,office_id,'.session('active_office_id'),
                 'supplier_ids' => 'nullable|array',
-                'supplier_ids.*' => 'exists:mitras,id'
+                'supplier_ids.*' => 'exists:mitras,id',
             ]);
 
             if ($validator->fails()) {
@@ -102,7 +102,7 @@ class BrandController extends Controller
             $brand = DB::transaction(function () use ($request) {
 
                 $brand = Brand::create([
-                    'office_id'  => session('active_office_id'),
+                    'office_id' => session('active_office_id'),
                     'nama_brand' => $request->nama_brand,
                 ]);
 
@@ -128,14 +128,14 @@ class BrandController extends Controller
         try {
             $brand = Brand::where('office_id', session('active_office_id'))->find($id);
 
-            if (!$brand) {
+            if (! $brand) {
                 return apiResponse(false, 'Brand tidak ditemukan', null, null, 404);
             }
 
             $validator = Validator::make($request->all(), [
-                'nama_brand' => 'required|string|max:100|unique:brands,nama_brand,' . $id . ',id,office_id,' . session('active_office_id'),
+                'nama_brand' => 'required|string|max:100|unique:brands,nama_brand,'.$id.',id,office_id,'.session('active_office_id'),
                 'supplier_ids' => 'nullable|array',
-                'supplier_ids.*' => 'exists:mitras,id'
+                'supplier_ids.*' => 'exists:mitras,id',
             ]);
 
             if ($validator->fails()) {
@@ -167,12 +167,12 @@ class BrandController extends Controller
                     foreach ($toAdd as $supplierId) {
                         SupplierBrand::updateOrCreate(
                             [
-                                'brand_id'    => $brand->id,
+                                'brand_id' => $brand->id,
                                 'supplier_id' => $supplierId,
                             ],
                             [
-                                'office_id'  => session('active_office_id'),
-                                'deleted_at' => null
+                                'office_id' => session('active_office_id'),
+                                'deleted_at' => null,
                             ]
                         );
                     }
@@ -192,7 +192,7 @@ class BrandController extends Controller
         try {
             $brand = Brand::where('office_id', session('active_office_id'))->find($id);
 
-            if (!$brand) {
+            if (! $brand) {
                 return apiResponse(false, 'Brand tidak ditemukan', null, null, 404);
             }
 
@@ -208,5 +208,4 @@ class BrandController extends Controller
             return apiResponse(false, 'Gagal menghapus brand', null, $e->getMessage(), 500);
         }
     }
-
 }

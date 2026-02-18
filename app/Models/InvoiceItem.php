@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class InvoiceItem extends Model
 {
-    use SoftDeletes, ActivityLogs;
-    
+    use ActivityLogs, SoftDeletes;
+
     protected $table = 'invoice_items';
 
     protected $fillable = [

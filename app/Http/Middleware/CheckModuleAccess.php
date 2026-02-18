@@ -11,7 +11,7 @@ class CheckModuleAccess
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login');
         }
 
@@ -25,7 +25,7 @@ class CheckModuleAccess
             return $next($request);
         }
 
-        if (!$officeId) {
+        if (! $officeId) {
             return redirect()->route('syo')->with('error', 'Silahkan pilih kantor terlebih dahulu.');
         }
 

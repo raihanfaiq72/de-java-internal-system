@@ -12,7 +12,7 @@ return [
         'icon' => 'iconoir-dashboard',
         'badge' => [
             'text' => 'New',
-            'class' => 'text-bg-info ms-auto'
+            'class' => 'text-bg-info ms-auto',
         ],
     ],
     [
@@ -35,11 +35,6 @@ return [
                 'title' => 'Gaji Karyawan',
                 'route' => 'salary-periods.index',
                 'icon' => 'iconoir-wallet',
-            ],
-            [
-                'title' => 'Absensi',
-                'route' => 'attendances.index',
-                'icon' => 'iconoir-calendar',
             ],
             [
                 'title' => 'Mitra',
@@ -82,7 +77,7 @@ return [
                 'icon' => 'iconoir-code-brackets',
                 'badge' => [
                     'text' => 'Dev',
-                    'class' => 'badge-outline-danger ms-auto font-10'
+                    'class' => 'badge-outline-danger ms-auto font-10',
                 ],
             ],
             [
@@ -122,7 +117,7 @@ return [
                 'route' => 'sales.receipt',
                 'icon' => 'iconoir-hand-contactless',
             ],
-        ]
+        ],
     ],
     [
         'type' => 'item',
@@ -140,7 +135,7 @@ return [
                 'route' => 'purchase.receipt',
                 'icon' => 'iconoir-delivery-truck',
             ],
-        ]
+        ],
     ],
     [
         'type' => 'item',
@@ -152,7 +147,7 @@ return [
         'type' => 'item',
         'title' => 'Keuangan',
         'icon' => 'iconoir-coins',
-        'route' => 'finance.index'
+        'route' => 'finance.index',
     ],
     [
         'type' => 'item',
@@ -221,7 +216,7 @@ return [
                 'route' => 'report.general-ledger',
                 'icon' => 'iconoir-book',
             ],
-        ]
+        ],
 
     ],
 

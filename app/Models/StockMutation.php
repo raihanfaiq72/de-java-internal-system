@@ -4,12 +4,11 @@ namespace App\Models;
 
 use App\Traits\ActivityLogs;
 use Illuminate\Database\Eloquent\Model;
-
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StockMutation extends Model
 {
-    use SoftDeletes, ActivityLogs;
+    use ActivityLogs, SoftDeletes;
 
     protected $table = 'stock_mutations';
 

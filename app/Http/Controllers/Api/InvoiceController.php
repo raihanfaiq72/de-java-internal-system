@@ -7,8 +7,8 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\InvoiceItemTax;
 use App\Models\Partner;
-use App\Services\StockService;
 use App\Services\JournalService;
+use App\Services\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Validator;
 class InvoiceController extends Controller
 {
     protected $stockService;
+
     protected $journalService;
 
     public function __construct(StockService $stockService, JournalService $journalService)
@@ -23,6 +24,7 @@ class InvoiceController extends Controller
         $this->stockService = $stockService;
         $this->journalService = $journalService;
     }
+
     public function index(Request $request)
     {
         $query = Invoice::with(['mitra', 'items.taxes', 'payment', 'items.product'])
@@ -46,15 +48,15 @@ class InvoiceController extends Controller
         if ($request->status_pembayaran) {
             $query->where('status_pembayaran', $request->status_pembayaran);
         }
-        
+
         if ($request->search) {
-             $query->where(function($q) use ($request) {
+            $query->where(function ($q) use ($request) {
                 $q->where('nomor_invoice', 'LIKE', "%{$request->search}%")
-                  ->orWhere('ref_no', 'LIKE', "%{$request->search}%")
-                  ->orWhereHas('mitra', function($qMitra) use ($request) {
-                      $qMitra->where('nama', 'LIKE', "%{$request->search}%");
-                  });
-             });
+                    ->orWhere('ref_no', 'LIKE', "%{$request->search}%")
+                    ->orWhereHas('mitra', function ($qMitra) use ($request) {
+                        $qMitra->where('nama', 'LIKE', "%{$request->search}%");
+                    });
+            });
         }
 
         $perPage = $request->get('per_page', 10);
@@ -69,7 +71,7 @@ class InvoiceController extends Controller
             ->where('office_id', session('active_office_id'))
             ->find($id);
 
-        if (!$data) {
+        if (! $data) {
             return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
         }
 
@@ -82,14 +84,14 @@ class InvoiceController extends Controller
             'tipe_invoice' => 'required|in:Sales,Purchase',
             'nomor_invoice' => 'required|unique:invoices,nomor_invoice',
             'tgl_invoice' => 'required|date',
-            'mitra_id' => 'required|exists:mitras,id'
+            'mitra_id' => 'required|exists:mitras,id',
         ]);
 
         if ($validator->fails()) {
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
-        if (!session()->has('active_office_id')) {
+        if (! session()->has('active_office_id')) {
             return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
         }
 
@@ -97,7 +99,7 @@ class InvoiceController extends Controller
         $partner = Partner::where('id', $request->mitra_id)
             ->where('office_id', session('active_office_id'))
             ->first();
-        if (!$partner) {
+        if (! $partner) {
             return apiResponse(false, 'Mitra tidak valid untuk outlet ini', null, null, 422);
         }
 
@@ -113,7 +115,7 @@ class InvoiceController extends Controller
     {
         return DB::transaction(function () use ($request, $id) {
             $invoice = Invoice::where('office_id', session('active_office_id'))->find($id);
-            if (!$invoice) {
+            if (! $invoice) {
                 return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
             }
 
@@ -122,9 +124,9 @@ class InvoiceController extends Controller
             // Handle Logo Upload
             if ($request->hasFile('logo_img')) {
                 $file = $request->file('logo_img');
-                $filename = 'kop_' . time() . '_' . $file->getClientOriginalName();
+                $filename = 'kop_'.time().'_'.$file->getClientOriginalName();
                 $path = $file->move(public_path('invoices/kop'), $filename);
-                $dataToUpdate['logo_img'] = 'invoices/kop/' . $filename;
+                $dataToUpdate['logo_img'] = 'invoices/kop/'.$filename;
             }
 
             // Update Invoice Details
@@ -132,9 +134,9 @@ class InvoiceController extends Controller
 
             // If items are provided, replace them (Full Sync)
             if ($request->has('items') && is_array($request->items)) {
-                
+
                 // Get old items IDs for logging/cleanup if needed, then delete
-                $invoice->items()->each(function($item) {
+                $invoice->items()->each(function ($item) {
                     $item->taxes()->delete();
                     $item->delete();
                 });
@@ -143,12 +145,12 @@ class InvoiceController extends Controller
                     $itemData['invoice_id'] = $invoice->id;
                     $item = InvoiceItem::create($itemData);
 
-                    if (!empty($itemData['taxes'])) {
+                    if (! empty($itemData['taxes'])) {
                         foreach ($itemData['taxes'] as $taxData) {
                             InvoiceItemTax::create([
-                                'invoice_item_id'       => $item->id,
-                                'tax_id'                => $taxData['tax_id'],
-                                'nilai_pajak_diterapkan'=> $taxData['nilai_pajak_diterapkan'] ?? 0
+                                'invoice_item_id' => $item->id,
+                                'tax_id' => $taxData['tax_id'],
+                                'nilai_pajak_diterapkan' => $taxData['nilai_pajak_diterapkan'] ?? 0,
                             ]);
                         }
                     }
@@ -162,7 +164,7 @@ class InvoiceController extends Controller
     public function destroy($id)
     {
         $invoice = Invoice::where('office_id', session('active_office_id'))->find($id);
-        if (!$invoice) {
+        if (! $invoice) {
             return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
         }
 
@@ -177,12 +179,12 @@ class InvoiceController extends Controller
         $query = Invoice::with(['mitra', 'items.product', 'items.taxes', 'payment'])
             ->withSum('payment', 'jumlah_bayar')
             ->where('office_id', session('active_office_id'))
-            ->where(function($q) use ($value) {
+            ->where(function ($q) use ($value) {
                 $q->where('nomor_invoice', 'LIKE', "%$value%")
-                  ->orWhere('ref_no', 'LIKE', "%$value%")
-                  ->orWhereHas('mitra', function($qMitra) use ($value) {
-                      $qMitra->where('nama', 'LIKE', "%{$value}%");
-                  });
+                    ->orWhere('ref_no', 'LIKE', "%$value%")
+                    ->orWhereHas('mitra', function ($qMitra) use ($value) {
+                        $qMitra->where('nama', 'LIKE', "%{$value}%");
+                    });
             });
 
         if ($request->tipe_invoice) {
@@ -197,22 +199,22 @@ class InvoiceController extends Controller
     public function createFullInvoice(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'invoice.tipe_invoice'   => 'required|in:Sales,Purchase',
-            'invoice.nomor_invoice'  => 'required|unique:invoices,nomor_invoice',
-            'invoice.tgl_invoice'    => 'required|date',
-            'invoice.mitra_id'       => 'required|exists:mitras,id',
+            'invoice.tipe_invoice' => 'required|in:Sales,Purchase',
+            'invoice.nomor_invoice' => 'required|unique:invoices,nomor_invoice',
+            'invoice.tgl_invoice' => 'required|date',
+            'invoice.mitra_id' => 'required|exists:mitras,id',
 
-            'items'                  => 'required|array|min:1',
-            'items.*.qty'            => 'required|numeric|min:0.01',
-            'items.*.harga_satuan'   => 'required|numeric|min:0',
-            'items.*.taxes'          => 'nullable|array',
+            'items' => 'required|array|min:1',
+            'items.*.qty' => 'required|numeric|min:0.01',
+            'items.*.harga_satuan' => 'required|numeric|min:0',
+            'items.*.taxes' => 'nullable|array',
         ]);
 
         if ($validator->fails()) {
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
-        if (!session()->has('active_office_id')) {
+        if (! session()->has('active_office_id')) {
             return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
         }
 
@@ -221,17 +223,17 @@ class InvoiceController extends Controller
         $mitra = Partner::where('id', $mitraId)
             ->where('office_id', session('active_office_id'))
             ->first();
-        if (!$mitra) {
+        if (! $mitra) {
             return apiResponse(false, 'Mitra tidak valid untuk outlet ini', null, null, 422);
         }
 
         // Validate Stock Location if provided
-        if (!empty($request->invoice['stock_location_id'])) {
+        if (! empty($request->invoice['stock_location_id'])) {
             $location = \App\Models\StockLocation::where('id', $request->invoice['stock_location_id'])
                 ->where('office_id', session('active_office_id'))
                 ->first();
-            
-            if (!$location) {
+
+            if (! $location) {
                 return apiResponse(false, 'Lokasi stok tidak valid untuk outlet ini', null, null, 422);
             }
         }
@@ -272,13 +274,13 @@ class InvoiceController extends Controller
                     }
                 }
 
-                if (!empty($itemData['taxes'])) {
+                if (! empty($itemData['taxes'])) {
                     foreach ($itemData['taxes'] as $taxData) {
-                        if (!empty($taxData['tax_id'])) {
+                        if (! empty($taxData['tax_id'])) {
                             $tax = InvoiceItemTax::create([
-                                'invoice_item_id'       => $item->id,
-                                'tax_id'                => $taxData['tax_id'],
-                                'nilai_pajak_diterapkan'=> $taxData['nilai_pajak_diterapkan'] ?? 0
+                                'invoice_item_id' => $item->id,
+                                'tax_id' => $taxData['tax_id'],
+                                'nilai_pajak_diterapkan' => $taxData['nilai_pajak_diterapkan'] ?? 0,
                             ]);
                         }
                     }
@@ -293,7 +295,7 @@ class InvoiceController extends Controller
             }
 
             return apiResponse(true, 'Invoice berhasil dibuat lengkap', [
-                'invoice' => $invoice->load('items.taxes.tax')
+                'invoice' => $invoice->load('items.taxes.tax'),
             ], null, 201);
         });
     }

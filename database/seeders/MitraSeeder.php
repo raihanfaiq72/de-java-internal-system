@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use Faker\Factory as Faker;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Faker\Factory as Faker;
 
 class MitraSeeder extends Seeder
 {
@@ -20,7 +20,7 @@ class MitraSeeder extends Seeder
                 'lat_min' => -6.30,
                 'lat_max' => -6.20,
                 'lng_min' => 106.75,
-                'lng_max' => 106.85
+                'lng_max' => 106.85,
             ],
             [
                 'city' => 'Bandung',
@@ -28,7 +28,7 @@ class MitraSeeder extends Seeder
                 'lat_min' => -6.95,
                 'lat_max' => -6.85,
                 'lng_min' => 107.55,
-                'lng_max' => 107.70
+                'lng_max' => 107.70,
             ],
             [
                 'city' => 'Surabaya',
@@ -36,7 +36,7 @@ class MitraSeeder extends Seeder
                 'lat_min' => -7.35,
                 'lat_max' => -7.20,
                 'lng_min' => 112.65,
-                'lng_max' => 112.80
+                'lng_max' => 112.80,
             ],
             [
                 'city' => 'Semarang',
@@ -44,7 +44,7 @@ class MitraSeeder extends Seeder
                 'lat_min' => -7.05,
                 'lat_max' => -6.95,
                 'lng_min' => 110.35,
-                'lng_max' => 110.50
+                'lng_max' => 110.50,
             ],
             [
                 'city' => 'Yogyakarta',
@@ -52,7 +52,7 @@ class MitraSeeder extends Seeder
                 'lat_min' => -7.85,
                 'lat_max' => -7.75,
                 'lng_min' => 110.35,
-                'lng_max' => 110.45
+                'lng_max' => 110.45,
             ],
             [
                 'city' => 'Medan',
@@ -60,7 +60,7 @@ class MitraSeeder extends Seeder
                 'lat_min' => 3.55,
                 'lat_max' => 3.65,
                 'lng_min' => 98.60,
-                'lng_max' => 98.70
+                'lng_max' => 98.70,
             ],
             [
                 'city' => 'Denpasar',
@@ -68,16 +68,16 @@ class MitraSeeder extends Seeder
                 'lat_min' => -8.70,
                 'lat_max' => -8.60,
                 'lng_min' => 115.15,
-                'lng_max' => 115.25
+                'lng_max' => 115.25,
             ],
         ];
 
         $cityData = $faker->randomElement($cities);
 
         $address = "Jl. {$faker->randomElement($streets)} No. {$faker->buildingNumber}, "
-            . "Kel. {$faker->citySuffix}, "
-            . "Kec. {$faker->lastName}, "
-            . "{$cityData['city']}, {$cityData['province']}, Indonesia";
+            ."Kel. {$faker->citySuffix}, "
+            ."Kec. {$faker->lastName}, "
+            ."{$cityData['city']}, {$cityData['province']}, Indonesia";
 
         return $address;
     }
@@ -95,7 +95,7 @@ class MitraSeeder extends Seeder
         $totalData = 100;
 
         for ($i = 1; $i <= $totalData; $i++) {
-            $nomorMitra = 'MTR-' . str_pad($i, 5, '0', STR_PAD_LEFT);
+            $nomorMitra = 'MTR-'.str_pad($i, 5, '0', STR_PAD_LEFT);
 
             if (isset($existingMitras[$nomorMitra])) {
                 continue;
@@ -130,7 +130,7 @@ class MitraSeeder extends Seeder
             }
         }
 
-        if (!empty($data)) {
+        if (! empty($data)) {
             DB::table('mitras')->insert($data);
         }
     }

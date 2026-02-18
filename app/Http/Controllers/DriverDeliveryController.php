@@ -8,8 +8,6 @@ use App\Models\DeliveryOrderFleet;
 use App\Models\DeliveryOrderInvoice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class DriverDeliveryController extends Controller
 {
@@ -25,7 +23,7 @@ class DriverDeliveryController extends Controller
             ->whereIn('status', ['assigned', 'in_transit'])
             ->latest()
             ->get();
-            
+
         $completed = DeliveryOrderFleet::with(['deliveryOrder', 'fleet'])
             ->where('driver_id', $driverId)
             ->where('status', 'completed')
@@ -40,18 +38,18 @@ class DriverDeliveryController extends Controller
     {
         // $id is delivery_order_id or delivery_order_fleet_id?
         // Let's assume delivery_order_id for URL cleanliness, but we need to ensure the driver is assigned.
-        
+
         $driverId = Auth::id();
-        
+
         $fleet = DeliveryOrderFleet::where('delivery_order_id', $id)
             ->where('driver_id', $driverId)
             ->firstOrFail();
-            
-        $do = DeliveryOrder::with(['invoices' => function($q) {
-                $q->orderBy('delivery_sequence', 'asc');
-            }, 'invoices.invoice.mitra'])
+
+        $do = DeliveryOrder::with(['invoices' => function ($q) {
+            $q->orderBy('delivery_sequence', 'asc');
+        }, 'invoices.invoice.mitra'])
             ->findOrFail($id);
-            
+
         return view('Driver.show', compact('do', 'fleet'));
     }
 
@@ -78,7 +76,7 @@ class DriverDeliveryController extends Controller
             'last_latitude' => $request->latitude,
             'last_longitude' => $request->longitude,
         ]);
-        
+
         // Also update DO status if it's the first fleet moving?
         // Or just keep DO status as 'in_transit'
         $do = DeliveryOrder::find($id);
@@ -125,7 +123,7 @@ class DriverDeliveryController extends Controller
         ]);
 
         $driverId = Auth::id();
-        
+
         // Verify Fleet
         $fleet = DeliveryOrderFleet::where('delivery_order_id', $id)
             ->where('driver_id', $driverId)
@@ -138,12 +136,12 @@ class DriverDeliveryController extends Controller
 
         // Validate Location (Optional: Distance Check)
         // For now, we trust the driver but could log the distance deviation.
-        
+
         // Upload Photo
         $path = null;
         if ($request->hasFile('photo')) {
             $file = $request->file('photo');
-            $filename = 'proof_' . $id . '_' . $invoiceId . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $filename = 'proof_'.$id.'_'.$invoiceId.'_'.time().'.'.$file->getClientOriginalExtension();
             $path = $file->storeAs('proofs', $filename, 'public');
         }
 

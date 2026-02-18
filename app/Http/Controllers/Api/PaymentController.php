@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Payment;
 use App\Models\Invoice;
+use App\Models\Payment;
 use App\Services\JournalService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -30,6 +30,7 @@ class PaymentController extends Controller
         }
 
         $data = $query->latest()->paginate(10);
+
         return apiResponse(true, 'Data pembayaran', $data);
     }
 
@@ -38,9 +39,10 @@ class PaymentController extends Controller
         $data = Payment::with(['invoice.mitra', 'akun_keuangan'])
             ->where('office_id', session('active_office_id'))
             ->find($id);
-        if (!$data) {
+        if (! $data) {
             return apiResponse(false, 'Pembayaran tidak ditemukan', null, null, 404);
         }
+
         return apiResponse(true, 'Detail pembayaran', $data);
     }
 
@@ -52,7 +54,7 @@ class PaymentController extends Controller
             'tgl_pembayaran' => 'required|date',
             'metode_pembayaran' => 'required|in:Cash,Transfer,Lainnya,Cek/Giro',
             'jumlah_bayar' => 'required|numeric|min:0.01',
-            'akun_keuangan_id' => 'required|exists:financial_accounts,id'
+            'akun_keuangan_id' => 'required|exists:financial_accounts,id',
         ]);
 
         if ($validator->fails()) {
@@ -61,7 +63,7 @@ class PaymentController extends Controller
 
         return DB::transaction(function () use ($request) {
 
-            if (!session()->has('active_office_id')) {
+            if (! session()->has('active_office_id')) {
                 return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
             }
 
@@ -69,7 +71,7 @@ class PaymentController extends Controller
                 ->lockForUpdate()
                 ->find($request->invoice_id);
 
-            if (!$invoice) {
+            if (! $invoice) {
                 return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
             }
 
@@ -82,14 +84,14 @@ class PaymentController extends Controller
                     false,
                     'Jumlah bayar melebihi sisa tagihan',
                     [
-                        'sisa_tagihan' => $sisaTagihan
+                        'sisa_tagihan' => $sisaTagihan,
                     ],
                     null,
                     422
                 );
             }
 
-            if (!session()->has('active_office_id')) {
+            if (! session()->has('active_office_id')) {
                 return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
             }
 
@@ -99,7 +101,7 @@ class PaymentController extends Controller
             $payment = Payment::create($paymentData);
 
             $totalSetelahBayar = round($totalSudahDibayar + $request->jumlah_bayar, 2);
-            $totalInvoice      = round($invoice->total_akhir, 2);
+            $totalInvoice = round($invoice->total_akhir, 2);
 
             if ($totalSetelahBayar <= 0) {
                 $statusPembayaran = 'Unpaid';
@@ -117,7 +119,7 @@ class PaymentController extends Controller
             }
 
             $invoice->update([
-                'status_pembayaran' => $statusPembayaran
+                'status_pembayaran' => $statusPembayaran,
             ]);
 
             // Automatic Journal Entry
@@ -130,8 +132,8 @@ class PaymentController extends Controller
                     'total_akhir' => $invoice->total_akhir,
                     'total_dibayar' => $totalSetelahBayar,
                     'sisa_tagihan' => $invoice->total_akhir - $totalSetelahBayar,
-                    'status_pembayaran' => $statusPembayaran
-                ]
+                    'status_pembayaran' => $statusPembayaran,
+                ],
             ], null, 201);
         });
     }
@@ -144,13 +146,13 @@ class PaymentController extends Controller
                 ->lockForUpdate()
                 ->find($id);
 
-            if (!$payment) {
+            if (! $payment) {
                 return apiResponse(false, 'Pembayaran tidak ditemukan', null, null, 404);
             }
 
             $invoice = Invoice::lockForUpdate()->find($payment->invoice_id);
 
-            if (!$invoice) {
+            if (! $invoice) {
                 return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
             }
 
@@ -164,7 +166,7 @@ class PaymentController extends Controller
             );
 
             $totalInvoice = round($invoice->total_akhir, 2);
-            $hariIni      = Carbon::today();
+            $hariIni = Carbon::today();
 
             if ($totalBayar <= 0) {
 
@@ -187,16 +189,15 @@ class PaymentController extends Controller
             }
 
             $invoice->update([
-                'status_pembayaran' => $statusPembayaran
+                'status_pembayaran' => $statusPembayaran,
             ]);
 
             return apiResponse(true, 'Pembayaran berhasil dihapus dan status invoice diperbarui', [
                 'invoice_id' => $invoice->id,
                 'total_invoice' => $totalInvoice,
                 'total_dibayar' => $totalBayar,
-                'status_pembayaran' => $statusPembayaran
+                'status_pembayaran' => $statusPembayaran,
             ]);
         });
     }
-
 }

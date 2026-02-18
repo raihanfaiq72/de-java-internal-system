@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Invoice;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use App\Models\Office;
-use App\Models\UserOfficeRole;
 use App\Models\DeliveryOrderFleet;
+use App\Models\Invoice;
+use App\Models\Office;
 use App\Models\Product;
+use App\Models\UserOfficeRole;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
@@ -41,7 +39,7 @@ class DashboardController extends Controller
         // Check if Driver
         if (stripos($roleName, 'Driver') !== false || stripos($roleName, 'Kurir') !== false) {
             $data['isDriver'] = true;
-            
+
             // Driver Stats
             $data['driverJobs'] = DeliveryOrderFleet::with(['deliveryOrder'])
                 ->where('driver_id', $user->id)
@@ -58,7 +56,7 @@ class DashboardController extends Controller
 
         } else {
             // Admin / Staff Logic
-            
+
             // 1. Sales Stats
             $data['stats']['revenue'] = Invoice::where('office_id', $officeId)
                 ->where('tipe_invoice', 'Sales')

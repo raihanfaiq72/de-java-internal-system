@@ -42,7 +42,7 @@ class SupplierBrandController extends Controller
                 ->where('office_id', session('active_office_id'))
                 ->find($id);
 
-            if (!$data) {
+            if (! $data) {
                 return apiResponse(false, 'Data relasi tidak ditemukan', null, null, 404);
             }
 
@@ -55,13 +55,13 @@ class SupplierBrandController extends Controller
     public function store(Request $request)
     {
         try {
-            if (!session()->has('active_office_id')) {
+            if (! session()->has('active_office_id')) {
                 return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
             }
 
             $validator = Validator::make($request->all(), [
                 'supplier_id' => 'required|exists:mitras,id',
-                'brand_id'    => 'required|exists:brands,id',
+                'brand_id' => 'required|exists:brands,id',
             ]);
 
             if ($validator->fails()) {
@@ -80,9 +80,9 @@ class SupplierBrandController extends Controller
             }
 
             $data = SupplierBrand::create([
-                'office_id'   => $officeId,
+                'office_id' => $officeId,
                 'supplier_id' => $request->supplier_id,
-                'brand_id'    => $request->brand_id,
+                'brand_id' => $request->brand_id,
             ]);
 
             return apiResponse(true, 'Supplier berhasil dikaitkan dengan brand', $data, null, 201);
@@ -96,7 +96,7 @@ class SupplierBrandController extends Controller
         try {
             $data = SupplierBrand::where('office_id', session('active_office_id'))->find($id);
 
-            if (!$data) {
+            if (! $data) {
                 return apiResponse(false, 'Data relasi tidak ditemukan', null, null, 404);
             }
 
@@ -104,7 +104,7 @@ class SupplierBrandController extends Controller
 
             $validator = Validator::make($request->all(), [
                 'supplier_id' => 'required|exists:mitras,id',
-                'brand_id'    => 'required|exists:brands,id',
+                'brand_id' => 'required|exists:brands,id',
             ]);
 
             if ($validator->fails()) {
@@ -125,7 +125,7 @@ class SupplierBrandController extends Controller
 
             $data->update([
                 'supplier_id' => $request->supplier_id,
-                'brand_id'    => $request->brand_id,
+                'brand_id' => $request->brand_id,
             ]);
 
             return apiResponse(true, 'Relasi supplier-brand berhasil diperbarui', $data);
@@ -139,7 +139,7 @@ class SupplierBrandController extends Controller
         try {
             $data = SupplierBrand::where('office_id', session('active_office_id'))->find($id);
 
-            if (!$data) {
+            if (! $data) {
                 return apiResponse(false, 'Data relasi tidak ditemukan', null, null, 404);
             }
 
@@ -152,5 +152,4 @@ class SupplierBrandController extends Controller
             return apiResponse(false, 'Gagal menghapus relasi', null, $e->getMessage(), 500);
         }
     }
-
 }

@@ -2,12 +2,12 @@
 
 namespace App\Services;
 
+use App\Models\COA;
+use App\Models\Expense;
+use App\Models\Invoice;
 use App\Models\Journal;
 use App\Models\JournalDetail;
-use App\Models\COA;
-use App\Models\Invoice;
 use App\Models\Payment;
-use App\Models\Expense;
 use App\Models\StockMutation;
 use Illuminate\Support\Facades\DB;
 
@@ -25,7 +25,7 @@ class JournalService
                 'office_id' => $officeId,
                 'tgl_jurnal' => $date,
                 'nomor_referensi' => $refNo,
-                'keterangan' => $desc
+                'keterangan' => $desc,
             ]);
 
             foreach ($details as $det) {
@@ -37,7 +37,7 @@ class JournalService
                     'journal_id' => $journal->id,
                     'akun_id' => $det['akun_id'],
                     'debit' => $det['debit'],
-                    'kredit' => $det['kredit']
+                    'kredit' => $det['kredit'],
                 ]);
             }
 
@@ -69,7 +69,6 @@ class JournalService
 
         return "{$code}/{$year}/{$newSequence}";
     }
-
 
     private function getAccountCode($accountName)
     {
@@ -157,14 +156,14 @@ class JournalService
     public function recordExpense(Expense $expense)
     {
         $officeId = $expense->office_id;
-        
+
         $details = [];
 
         // Debit Expense Account
         $details[] = [
             'akun_id' => $expense->akun_beban_id,
             'debit' => $expense->jumlah ?: 0,
-            'kredit' => 0
+            'kredit' => 0,
         ];
 
         // Credit Payment Account (Cash/Bank)
@@ -173,17 +172,21 @@ class JournalService
         $creditCoaId = null;
         if ($finAccount) {
             $code = ($finAccount->type == 'Cash') ? '1101' : '1201'; // Default Cash or Bank
-            if ($finAccount->type == 'Corporate Card') $code = '1251';
-            
+            if ($finAccount->type == 'Corporate Card') {
+                $code = '1251';
+            }
+
             $coa = $this->findAccount($officeId, $code);
-            if ($coa) $creditCoaId = $coa->id;
+            if ($coa) {
+                $creditCoaId = $coa->id;
+            }
         }
 
         if ($creditCoaId) {
             $details[] = [
                 'akun_id' => $creditCoaId,
                 'debit' => 0,
-                'kredit' => $expense->jumlah ?: 0
+                'kredit' => $expense->jumlah ?: 0,
             ];
 
             $this->createJournal(
@@ -204,13 +207,15 @@ class JournalService
     public function recordPurchaseInvoice(Invoice $invoice)
     {
         $officeId = $invoice->office_id;
-        
+
         // Find Accounts
         $accAP = $this->findAccount($officeId, '2101'); // Hutang Usaha
         $accInventory = $this->findAccount($officeId, '1401') ?? $this->findAccount($officeId, '5101'); // Fallback to HPP if no Inventory
         $accExpense = $this->findAccount($officeId, '5101'); // HPP / Pembelian
 
-        if (!$accAP) return; // Cannot proceed without AP account
+        if (! $accAP) {
+            return;
+        } // Cannot proceed without AP account
 
         $details = [];
         $totalPayable = $invoice->total_akhir;
@@ -219,7 +224,7 @@ class JournalService
         $details[] = [
             'akun_id' => $accAP->id,
             'debit' => 0,
-            'kredit' => $totalPayable
+            'kredit' => $totalPayable,
         ];
 
         // Debit: Split based on items
@@ -227,13 +232,13 @@ class JournalService
             $amount = $item->total ?: 0; // qty * price - discount + tax (assuming total is net)
             // Wait, InvoiceItem model usually has 'total'. Let's check calculation.
             // Assuming item->total is correct.
-            
+
             $product = $item->product;
             $isTrackStock = $product ? $product->track_stock : false;
 
             $debitAccId = $isTrackStock ? ($accInventory->id ?? $accExpense->id) : $accExpense->id;
 
-            // Aggregate debits to avoid too many lines? Or keep detail? 
+            // Aggregate debits to avoid too many lines? Or keep detail?
             // For simplicity, let's aggregate by account in a real app, but here push individually is fine or aggregate.
             // Let's aggregate.
             $found = false;
@@ -248,13 +253,13 @@ class JournalService
                 $details[] = [
                     'akun_id' => $debitAccId,
                     'debit' => $amount,
-                    'kredit' => 0
+                    'kredit' => 0,
                 ];
             }
         }
 
-        // Handle Taxes/Fees if separate? 
-        // For now assume item->total sums up to invoice->total_akhir. 
+        // Handle Taxes/Fees if separate?
+        // For now assume item->total sums up to invoice->total_akhir.
         // If there are global taxes not in items, we need to handle that.
         // Usually Invoice total_akhir includes global tax.
         // Let's assume strict item-based for now.
@@ -282,7 +287,9 @@ class JournalService
         $accHPP = $this->findAccount($officeId, '5101'); // HPP
         $accInventory = $this->findAccount($officeId, '1401'); // Persediaan
 
-        if (!$accAR || !$accRevenue) return;
+        if (! $accAR || ! $accRevenue) {
+            return;
+        }
 
         $details = [];
 
@@ -291,13 +298,13 @@ class JournalService
         $details[] = [
             'akun_id' => $accAR->id,
             'debit' => $invoice->total_akhir ?: 0,
-            'kredit' => 0
+            'kredit' => 0,
         ];
         // Credit Revenue
         $details[] = [
             'akun_id' => $accRevenue->id,
             'debit' => 0,
-            'kredit' => $invoice->total_akhir ?: 0
+            'kredit' => $invoice->total_akhir ?: 0,
         ];
 
         // 2. COGS Entry (Perpetual)
@@ -316,13 +323,13 @@ class JournalService
             $details[] = [
                 'akun_id' => $accHPP->id,
                 'debit' => $totalCOGS,
-                'kredit' => 0
+                'kredit' => 0,
             ];
             // Credit Inventory
             $details[] = [
                 'akun_id' => $accInventory->id,
                 'debit' => 0,
-                'kredit' => $totalCOGS
+                'kredit' => $totalCOGS,
             ];
         }
 
@@ -348,11 +355,15 @@ class JournalService
         $accCashBank = null;
         if ($finAccount) {
             $code = ($finAccount->type == 'Cash') ? '1101' : '1201';
-            if ($finAccount->type == 'Corporate Card') $code = '1251';
+            if ($finAccount->type == 'Corporate Card') {
+                $code = '1251';
+            }
             $accCashBank = $this->findAccount($officeId, $code);
         }
 
-        if (!$accCashBank) return;
+        if (! $accCashBank) {
+            return;
+        }
 
         $details = [];
 
@@ -362,16 +373,16 @@ class JournalService
             $details[] = [
                 'akun_id' => $accCashBank->id,
                 'debit' => $payment->jumlah_bayar ?: 0,
-                'kredit' => 0
+                'kredit' => 0,
             ];
-            
+
             // Credit AR
             $accAR = $this->findAccount($officeId, '1301');
             if ($accAR) {
                 $details[] = [
                     'akun_id' => $accAR->id,
                     'debit' => 0,
-                    'kredit' => $payment->jumlah_bayar ?: 0
+                    'kredit' => $payment->jumlah_bayar ?: 0,
                 ];
             }
         } else {
@@ -380,7 +391,7 @@ class JournalService
             $details[] = [
                 'akun_id' => $accCashBank->id,
                 'debit' => 0,
-                'kredit' => $payment->jumlah_bayar ?: 0
+                'kredit' => $payment->jumlah_bayar ?: 0,
             ];
 
             // Debit AP
@@ -389,7 +400,7 @@ class JournalService
                 $details[] = [
                     'akun_id' => $accAP->id,
                     'debit' => $payment->jumlah_bayar ?: 0,
-                    'kredit' => 0
+                    'kredit' => 0,
                 ];
             }
         }

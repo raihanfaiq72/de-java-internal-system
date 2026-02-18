@@ -64,14 +64,14 @@ class PaperIdSeeder extends Seeder
             DB::table('chart_of_accounts')->updateOrInsert(
                 [
                     'office_id' => $officeId,
-                    'kode_akun' => $acc[0]
+                    'kode_akun' => $acc[0],
                 ],
                 [
                     'nama_akun' => $acc[1],
                     'kelompok_akun' => $acc[2],
                     'is_kas_bank' => $acc[3],
                     'created_at' => now(),
-                    'updated_at' => now()
+                    'updated_at' => now(),
                 ]
             );
         }

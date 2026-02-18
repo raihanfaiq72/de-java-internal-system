@@ -1,24 +1,23 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BarangController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardPiutangController;
 use App\Http\Controllers\DashboardSalesController;
-use App\Http\Controllers\SalesController;
-use App\Http\Controllers\PurchaseController;
-use App\Http\Controllers\BarangController;
 use App\Http\Controllers\DeliveryOrderController;
-use App\Http\Controllers\StockController;
-use App\Http\Controllers\MitraController;
-use App\Http\Controllers\OfficeController;
-use App\Http\Controllers\UserPlotController;
-use App\Http\Controllers\PermissionController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FleetController;
+use App\Http\Controllers\MitraController;
+use App\Http\Controllers\OfficeController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SalesController;
+use App\Http\Controllers\StockController;
+use App\Http\Controllers\UserPlotController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', [AuthController::class, 'login'])->name('login');
 
@@ -71,16 +70,14 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('finance/account/{id}', [App\Http\Controllers\FinanceController::class, 'destroyAccount'])->name('finance.account.destroy');
         Route::get('finance/next-code', [App\Http\Controllers\FinanceController::class, 'getNextCode'])->name('finance.account.next-code');
 
-        Route::get('users', fn() => view('Users.index'))->name('users.index');
+        Route::get('users', fn () => view('Users.index'))->name('users.index');
         Route::resource('employees', App\Http\Controllers\EmployeeController::class);
-        Route::get('attendances/template', [App\Http\Controllers\AttendanceController::class, 'template'])->name('attendances.template');
-        Route::post('attendances/import', [App\Http\Controllers\AttendanceController::class, 'import'])->name('attendances.import');
-        Route::resource('attendances', App\Http\Controllers\AttendanceController::class);
+        // Absensi dihapus dari sistem
 
         // Salary & Attendance
         Route::resource('salary-periods', App\Http\Controllers\SalaryPeriodController::class);
-        Route::post('salary-periods/{salary_period}/generate', [App\Http\Controllers\SalaryPeriodController::class, 'generate'])->name('salary-periods.generate');
-        Route::resource('salary-slips', App\Http\Controllers\SalarySlipController::class)->only(['show', 'update']);
+        Route::post('salary-periods/{salary_period}/slips/store-one', [App\Http\Controllers\SalaryPeriodController::class, 'storeOne'])->name('salary-periods.slips.store-one');
+        Route::resource('salary-slips', App\Http\Controllers\SalarySlipController::class)->only(['update']);
         Route::get('salary-slips/{salary_slip}/print', [App\Http\Controllers\SalarySlipController::class, 'print'])->name('salary-slips.print');
         Route::post('salary-slips/{salary_slip}/publish', [App\Http\Controllers\SalarySlipController::class, 'publish'])->name('salary-slips.publish');
 
@@ -130,7 +127,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/user-plots/{id}', [UserPlotController::class, 'show'])->name('user_plots.show');
             Route::put('/user-plots/{id}', [UserPlotController::class, 'update'])->name('user_plots.update');
             Route::delete('/user-plots/{id}', [UserPlotController::class, 'destroy'])->name('user_plots.destroy');
-            
+
             // Test Notification Route
             Route::get('/test-notification', function () {
                 App\Services\NotificationService::notifyByPermission(
@@ -140,6 +137,7 @@ Route::middleware(['auth'])->group(function () {
                     url('/dashboard'),
                     'success'
                 );
+
                 return 'Notification sent!';
             });
         });

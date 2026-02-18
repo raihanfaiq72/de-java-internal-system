@@ -12,6 +12,7 @@ class ProfileController extends Controller
     public function edit()
     {
         $user = Auth::user();
+
         return view('profile.edit', compact('user'));
     }
 
@@ -21,7 +22,7 @@ class ProfileController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|email|max:255|unique:users,email,'.$user->id,
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'password' => 'nullable|min:6|confirmed',
         ]);
@@ -35,8 +36,8 @@ class ProfileController extends Controller
 
         if ($request->hasFile('avatar')) {
             // Delete old avatar if exists
-            if ($user->avatar && Storage::exists('public/' . $user->avatar)) {
-                Storage::delete('public/' . $user->avatar);
+            if ($user->avatar && Storage::exists('public/'.$user->avatar)) {
+                Storage::delete('public/'.$user->avatar);
             }
 
             $path = $request->file('avatar')->store('avatars', 'public');
