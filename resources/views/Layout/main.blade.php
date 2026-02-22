@@ -180,6 +180,26 @@
             }
         }
 
+        /* Mobile Hamburger - Better touch target */
+        .mobile-menu-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: #1d1d1f;
+            cursor: pointer;
+            padding: 0;
+        }
+        .mobile-menu-btn:active,
+        .mobile-menu-btn:focus {
+            outline: none;
+            background: rgba(0, 0, 0, 0.06);
+        }
+
         /* Card Restyling */
         .card {
             background: #fff;
@@ -369,6 +389,53 @@
             color: #FF3B30 !important;
         }
 
+        .page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #ffffff;
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .page-loader.active {
+            display: flex;
+        }
+        .loader-container {
+            width: 90%;
+            max-width: 720px;
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #f0f2f5 25%, #e6e9ef 37%, #f0f2f5 63%);
+            background-size: 400% 100%;
+            animation: shimmer 1.2s ease-in-out infinite;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        .skeleton.header {
+            height: 24px;
+            width: 40%;
+        }
+        .skeleton.line {
+            height: 14px;
+            width: 100%;
+        }
+        .skeleton.line.short {
+            width: 60%;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .page-content {
+            transition: opacity 0.18s ease;
+        }
+        body.page-transition-start .page-content {
+            opacity: 0.6;
+        }
         /* Header Profile adjustments */
         .dropdown-menu .bg-secondary-subtle {
             background: transparent !important;
@@ -429,6 +496,11 @@
             opacity: 1;
             visibility: visible;
         }
+        /* Prevent background scroll when sidebar open */
+        body.sidebar-open {
+            overflow: hidden;
+            touch-action: none;
+        }
     </style>
 
     @stack('css')
@@ -471,6 +543,17 @@
             </div>
         </div>
     @endunless
+    <div class="page-loader d-print-none" id="pageLoader">
+        <div class="loader-container">
+            <div class="skeleton header"></div>
+            <div class="skeleton line"></div>
+            <div class="skeleton line"></div>
+            <div class="skeleton line short"></div>
+            <div class="skeleton line"></div>
+            <div class="skeleton line"></div>
+            <div class="skeleton line short"></div>
+        </div>
+    </div>
     @unless (Request::is('select-your-outlet'))
         <div class="startbar d-print-none">
             <div class="brand text-center py-3">
@@ -512,12 +595,16 @@
     <!-- Force Sidebar Open Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const BODY = document.body;
             function enforceSidebar() {
                 if (window.innerWidth >= 992) {
                     if (document.body.getAttribute('data-sidebar-size') === 'collapsed') {
                         document.body.setAttribute('data-sidebar-size', 'default');
                     }
                     document.body.classList.remove('vertical-collapsed');
+                    document.querySelector('.startbar')?.classList.remove('show');
+                    document.querySelector('.startbar-overlay')?.classList.remove('show');
+                    BODY.classList.remove('sidebar-open');
                 }
             }
 
@@ -544,6 +631,7 @@
             const toggleBtn = document.getElementById('togglemenu');
             const startbar = document.querySelector('.startbar');
             const overlay = document.querySelector('.startbar-overlay');
+            const pageLoader = document.getElementById('pageLoader');
 
             if (toggleBtn && startbar && overlay) {
                 toggleBtn.addEventListener('click', function (e) {
@@ -551,13 +639,62 @@
                     e.stopPropagation();
                     startbar.classList.toggle('show');
                     overlay.classList.toggle('show');
+                    const isOpen = startbar.classList.contains('show');
+                    BODY.classList.toggle('sidebar-open', isOpen);
+                    startbar.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+                    toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
                 });
 
                 overlay.addEventListener('click', function () {
                     startbar.classList.remove('show');
                     overlay.classList.remove('show');
+                    BODY.classList.remove('sidebar-open');
+                    startbar.setAttribute('aria-hidden', 'true');
+                    toggleBtn.setAttribute('aria-expanded', 'false');
+                });
+
+                startbar.addEventListener('click', function (ev) {
+                    const link = ev.target.closest('.nav-link');
+                    if (!link) return;
+                    const isCollapseToggle = link.getAttribute('data-bs-toggle') === 'collapse';
+                    const href = link.getAttribute('href') || '';
+                    const isHash = href.startsWith('#');
+                    if (window.innerWidth < 992) {
+                        if (isCollapseToggle || isHash) {
+                            ev.stopPropagation();
+                            return;
+                        }
+                        if (pageLoader) {
+                            pageLoader.classList.add('active');
+                        }
+                        BODY.classList.add('page-transition-start');
+                        startbar.classList.remove('show');
+                        overlay.classList.remove('show');
+                        BODY.classList.remove('sidebar-open');
+                        startbar.setAttribute('aria-hidden', 'true');
+                        toggleBtn.setAttribute('aria-expanded', 'false');
+                    }
+                });
+
+                // ESC to close
+                document.addEventListener('keydown', function (ev) {
+                    if (ev.key === 'Escape' && startbar.classList.contains('show')) {
+                        startbar.classList.remove('show');
+                        overlay.classList.remove('show');
+                        BODY.classList.remove('sidebar-open');
+                        startbar.setAttribute('aria-hidden', 'true');
+                        toggleBtn.setAttribute('aria-expanded', 'false');
+                    }
                 });
             }
+            window.addEventListener('beforeunload', function () {
+                BODY.classList.add('page-transition-start');
+                pageLoader?.classList.add('active');
+            });
+            window.addEventListener('load', function () {
+                BODY.classList.remove('page-transition-start');
+                pageLoader?.classList.remove('active');
+            });
         });
     </script>
 </body>
