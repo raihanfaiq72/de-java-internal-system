@@ -57,105 +57,95 @@
                 </div>
 
 
-                <!-- Summary Section -->
-                <div class="card border-0 shadow-sm rounded-3 mb-4">
-                    <div class="card-header bg-white border-bottom p-4">
-                        <h6 class="fw-bold mb-0 text-uppercase text-muted" style="letter-spacing: 0.5px;">Ringkasan</h6>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-borderless mb-0 align-middle">
-                                <thead class="bg-light text-muted small text-uppercase">
-                                    <tr>
-                                        <th class="px-4 py-3">Total Customers</th>
-                                        <th class="py-3">Avg. Day Past Due</th>
-                                        <th class="py-3">Total Invoices</th>
-                                        <th class="py-3 text-end">Total Amount</th>
-                                        <th class="py-3 text-end">
-                                            <= 0 Hari</th>
-                                        <th class="py-3 text-end">1-15 Hari</th>
-                                        <th class="py-3 text-end">16-30 Hari</th>
-                                        <th class="py-3 text-end">31-45 Hari</th>
-                                        <th class="py-3 text-end">46-60 Hari</th>
-                                        <th class="py-3 text-end px-4">61+ Hari</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr class="fw-bold fs-5">
-                                        <td class="px-4 py-3">{{ $summary['total_customers'] }}</td>
-                                        <td class="py-3">{{ number_format($summary['avg_days_past_due'], 2) }}</td>
-                                        <td class="py-3">{{ $summary['total_invoices'] }}</td>
-                                        <td class="py-3 text-end text-primary">{{ number_format($summary['total_amount']) }}
-                                        </td>
-                                        <td class="py-3 text-end text-success">
-                                            {{ number_format($summary['buckets']['current']) }}</td>
-                                        <td class="py-3 text-end">{{ number_format($summary['buckets']['1-15']) }}</td>
-                                        <td class="py-3 text-end">{{ number_format($summary['buckets']['16-30']) }}</td>
-                                        <td class="py-3 text-end">{{ number_format($summary['buckets']['31-45']) }}</td>
-                                        <td class="py-3 text-end">{{ number_format($summary['buckets']['46-60']) }}</td>
-                                        <td class="py-3 text-end px-4 text-danger">
-                                            {{ number_format($summary['buckets']['61+']) }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Detailed Table -->
                 <div class="card border-0 shadow-sm rounded-3">
-                    <div class="card-header bg-white border-bottom p-4">
-                        <h6 class="fw-bold mb-0 text-uppercase text-muted" style="letter-spacing: 0.5px;">Rincian Per
-                            Pelanggan</h6>
+                    <div class="card-header bg-white border-bottom p-0">
+                        <ul class="nav nav-tabs px-4 pt-3" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link active" data-bs-toggle="tab" href="#tab-ringkasan" role="tab">Ringkasan Umur Piutang</a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link" data-bs-toggle="tab" href="#tab-detail" role="tab">Detail Pelanggan</a>
+                            </li>
+                        </ul>
                     </div>
                     <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0 align-middle">
-                                <thead class="bg-light text-muted small text-uppercase">
-                                    <tr>
-                                        <th class="px-4 py-3">Pelanggan</th>
-                                        <th class="py-3">Avg. Day Past Due</th>
-                                        <th class="py-3">Total Invoices</th>
-                                        <th class="py-3 text-end">Total</th>
-                                        <th class="py-3 text-end">
-                                            <= 0 Hari</th>
-                                        <th class="py-3 text-end">1-15 Hari</th>
-                                        <th class="py-3 text-end">16-30 Hari</th>
-                                        <th class="py-3 text-end">31-45 Hari</th>
-                                        <th class="py-3 text-end">46-60 Hari</th>
-                                        <th class="py-3 text-end px-4">61+ Hari</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($agingData as $data)
-                                        <tr>
-                                            <td class="px-4 py-3 fw-bold text-dark">{{ $data['mitra_name'] }}</td>
-                                            <td class="py-3">{{ number_format($data['avg_days'], 2) }}</td>
-                                            <td class="py-3">{{ $data['count'] }}</td>
-                                            <td class="py-3 text-end fw-bold">{{ number_format($data['total']) }}</td>
-                                            <td class="py-3 text-end text-muted">
-                                                {{ number_format($data['buckets']['current']) }}</td>
-                                            <td class="py-3 text-end text-muted">
-                                                {{ number_format($data['buckets']['1-15']) }}</td>
-                                            <td class="py-3 text-end text-muted">
-                                                {{ number_format($data['buckets']['16-30']) }}</td>
-                                            <td class="py-3 text-end text-muted">
-                                                {{ number_format($data['buckets']['31-45']) }}</td>
-                                            <td class="py-3 text-end text-muted">
-                                                {{ number_format($data['buckets']['46-60']) }}</td>
-                                            <td class="py-3 text-end px-4 text-danger">
-                                                {{ number_format($data['buckets']['61+']) }}</td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="10" class="text-center py-5 text-muted">
-                                                <i class="iconoir-file-not-found fs-1 d-inline-block mb-2"></i>
-                                                <p class="mb-0">Tidak ada data piutang untuk periode ini.</p>
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="tab-ringkasan" role="tabpanel">
+                                <div class="table-responsive">
+                                    <table class="table table-borderless mb-0 align-middle">
+                                        <thead class="bg-light text-muted small text-uppercase">
+                                            <tr>
+                                                <th class="px-4 py-3">Total Customers</th>
+                                                <th class="py-3">Avg. Day Past Due</th>
+                                                <th class="py-3">Total Invoices</th>
+                                                <th class="py-3 text-end">Total Amount</th>
+                                                <th class="py-3 text-end">
+                                                    <= 0 Hari</th>
+                                                <th class="py-3 text-end">1-15 Hari</th>
+                                                <th class="py-3 text-end">16-30 Hari</th>
+                                                <th class="py-3 text-end">31-45 Hari</th>
+                                                <th class="py-3 text-end">46-60 Hari</th>
+                                                <th class="py-3 text-end px-4">61+ Hari</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="fw-bold fs-5">
+                                                <td class="px-4 py-3">{{ $summary['total_customers'] }}</td>
+                                                <td class="py-3">{{ number_format($summary['avg_days_past_due'], 2) }}</td>
+                                                <td class="py-3">{{ $summary['total_invoices'] }}</td>
+                                                <td class="py-3 text-end text-primary">{{ number_format($summary['total_amount']) }}</td>
+                                                <td class="py-3 text-end text-success">{{ number_format($summary['buckets']['current']) }}</td>
+                                                <td class="py-3 text-end">{{ number_format($summary['buckets']['1-15']) }}</td>
+                                                <td class="py-3 text-end">{{ number_format($summary['buckets']['16-30']) }}</td>
+                                                <td class="py-3 text-end">{{ number_format($summary['buckets']['31-45']) }}</td>
+                                                <td class="py-3 text-end">{{ number_format($summary['buckets']['46-60']) }}</td>
+                                                <td class="py-3 text-end px-4 text-danger">{{ number_format($summary['buckets']['61+']) }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="tab-detail" role="tabpanel">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0 align-middle">
+                                        <thead class="bg-light text-muted small text-uppercase">
+                                            <tr>
+                                                <th class="px-4 py-3">No</th>
+                                                <th class="py-3">Kode Pelanggan</th>
+                                                <th class="py-3">Nama Pelanggan</th>
+                                                <th class="py-3 text-end">Tagihan Invoice</th>
+                                                <th class="py-3 text-end">Sudah Bayar</th>
+                                                <th class="py-3 text-end">Outstanding</th>
+                                                <th class="py-3">Sales Code</th>
+                                                <th class="py-3">Sales Name</th>
+                                                <th class="py-3 text-end">Umur Nota</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($customerDetails as $i => $row)
+                                                <tr>
+                                                    <td class="px-4 py-3">{{ $i + 1 }}</td>
+                                                    <td class="py-3">{{ $row['kode'] }}</td>
+                                                    <td class="py-3 fw-bold text-dark">{{ $row['nama'] }}</td>
+                                                    <td class="py-3 text-end fw-bold">{{ number_format($row['tagihan']) }}</td>
+                                                    <td class="py-3 text-end">{{ number_format($row['dibayar']) }}</td>
+                                                    <td class="py-3 text-end text-primary">{{ number_format($row['outstanding']) }}</td>
+                                                    <td class="py-3">{{ $row['sales_code'] }}</td>
+                                                    <td class="py-3">{{ $row['sales_name'] }}</td>
+                                                    <td class="py-3 text-end {{ $row['umur_nota'] > 60 ? 'text-danger' : '' }}">{{ $row['umur_nota'] }}</td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="9" class="text-center py-5 text-muted">
+                                                        <i class="iconoir-file-not-found fs-1 d-inline-block mb-2"></i>
+                                                        <p class="mb-0">Tidak ada data piutang untuk periode ini.</p>
+                                                    </td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

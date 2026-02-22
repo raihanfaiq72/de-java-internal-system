@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\COA;
 use App\Models\Invoice;
 use App\Models\Partner;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -41,6 +42,7 @@ class ReportController extends Controller
         $invoices = $query->get();
 
         $agingData = [];
+        $customerDetails = [];
         $summary = [
             'total_customers' => 0,
             'avg_days_past_due' => 0,
@@ -61,6 +63,7 @@ class ReportController extends Controller
 
         foreach ($grouped as $mid => $invs) {
             $mitraName = $invs->first()->mitra->nama ?? 'Unknown';
+            $mitraCode = $invs->first()->mitra->nomor_mitra ?? '-';
             $mitraTotal = 0;
             $mitraInvoicesCount = 0;
             $mitraTotalDaysOverdue = 0;
@@ -122,6 +125,37 @@ class ReportController extends Controller
                     'buckets' => $buckets,
                 ];
 
+                $totalTagihan = $invs->sum('total_akhir');
+                $totalPaid = $invs->sum(function ($inv) {
+                    return $inv->payment->sum('jumlah_bayar');
+                });
+                $outstanding = $totalTagihan - $totalPaid;
+
+                $ages = [];
+                foreach ($invs as $inv) {
+                    $paid = $inv->payment->sum('jumlah_bayar');
+                    $remaining = $inv->total_akhir - $paid;
+                    if ($remaining <= 0) {
+                        continue;
+                    }
+                    $ages[] = Carbon::parse($inv->tgl_invoice)->diffInDays(Carbon::now());
+                }
+                $avgAge = count($ages) > 0 ? floor(array_sum($ages) / count($ages)) : 0;
+
+                $latestInv = $invs->sortByDesc('tgl_invoice')->first();
+                $salesUser = $latestInv && $latestInv->sales_id ? User::find($latestInv->sales_id) : null;
+
+                $customerDetails[] = [
+                    'kode' => $mitraCode,
+                    'nama' => $mitraName,
+                    'tagihan' => $totalTagihan,
+                    'dibayar' => $totalPaid,
+                    'outstanding' => $outstanding,
+                    'sales_code' => $salesUser?->username ?? '-',
+                    'sales_name' => $salesUser?->name ?? '-',
+                    'umur_nota' => $avgAge,
+                ];
+
                 $summary['total_customers']++;
                 $summary['total_invoices'] += $mitraInvoicesCount;
                 $summary['total_amount'] += $mitraTotal;
@@ -140,7 +174,7 @@ class ReportController extends Controller
         // Sort data by Total Piutang Descending
         usort($agingData, fn ($a, $b) => $b['total'] <=> $a['total']);
 
-        return view($this->views.'ar-aging', compact('agingData', 'summary', 'mitras'));
+        return view($this->views.'ar-aging', compact('agingData', 'summary', 'mitras', 'customerDetails'));
     }
 
     public function salesReport()
