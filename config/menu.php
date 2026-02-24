@@ -17,7 +17,7 @@ return [
     ],
     [
         'type' => 'item',
-        'title' => 'Master Data',
+        'title' => 'Master & Akses',
         'icon' => 'iconoir-database',
         'id' => 'sidebarMaster',
         'submenu' => [
@@ -25,6 +25,21 @@ return [
                 'title' => 'User System',
                 'route' => 'users.index',
                 'icon' => 'iconoir-user-circle',
+            ],
+            [
+                'title' => 'Plotting User',
+                'route' => 'user_plots.index',
+                'icon' => 'iconoir-group',
+            ],
+            [
+                'title' => 'Role & Permission',
+                'route' => 'roles.index',
+                'icon' => 'iconoir-shield-check',
+            ],
+            [
+                'title' => 'Daftar Kantor (Outlet)',
+                'route' => 'offices.index',
+                'icon' => 'iconoir-city',
             ],
             [
                 'title' => 'Data Karyawan',
@@ -56,21 +71,6 @@ return [
                 'route' => 'fleets.index',
                 'icon' => 'iconoir-truck',
             ],
-        ],
-    ],
-    [
-        'type' => 'label',
-        'title' => 'Administrator <small class="fw-bold">(Dev Only)</small>',
-        'class' => 'text-danger',
-        'is_html' => true,
-    ],
-    [
-        'type' => 'item',
-        'title' => 'Akses & Kantor',
-        'icon' => 'iconoir-lock',
-        'id' => 'sidebarAuth',
-        'class' => 'text-danger',
-        'submenu' => [
             [
                 'title' => 'Mapping Route',
                 'route' => 'permissions.index',
@@ -79,21 +79,6 @@ return [
                     'text' => 'Dev',
                     'class' => 'badge-outline-danger ms-auto font-10',
                 ],
-            ],
-            [
-                'title' => 'Role & Permission',
-                'route' => 'roles.index',
-                'icon' => 'iconoir-shield-check',
-            ],
-            [
-                'title' => 'Daftar Kantor (Outlet)',
-                'route' => 'offices.index',
-                'icon' => 'iconoir-city',
-            ],
-            [
-                'title' => 'Plotting User',
-                'route' => 'user_plots.index',
-                'icon' => 'iconoir-group',
             ],
         ],
     ],
