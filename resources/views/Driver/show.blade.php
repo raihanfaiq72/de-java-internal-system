@@ -1,13 +1,13 @@
 @extends('Layout.main')
 
 @section('styles')
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="/assets/libs/leaflet/leaflet.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
 <style>
     #map { height: 400px; width: 100%; border-radius: 8px; }
     .stop-card { border-left: 4px solid #dee2e6; transition: all 0.2s; }
     .stop-card.active { border-left-color: #0d6efd; background-color: #f8f9fa; }
-    .stop-card.completed { border-left-color: #198754; opacity: 0.8; }
+    .stop-card.completed { border-left-color: #198754; opacity: 0.9; cursor: pointer; }
 </style>
 @endsection
 
@@ -15,8 +15,6 @@
 <div class="page-wrapper">
     <div class="page-content">
         <div class="container-fluid">
-
-            <!-- Page Title -->
             <div class="row">
                 <div class="col-sm-12">
                     <div class="page-title-box d-md-flex justify-content-between align-items-center mb-3">
@@ -44,7 +42,6 @@
                         </div>
                     </div>
 
-                    <!-- Actions -->
                     <div class="card shadow-sm border-0">
                         <div class="card-body">
                             @if($fleet->status == 'assigned')
@@ -71,65 +68,113 @@
                 <div class="col-lg-4">
                     <h5 class="mb-3">Daftar Tujuan</h5>
                     <div class="list-group">
-                @foreach($do->invoices as $index => $item)
-                    @php
-                        $isNext = false;
-                        if ($fleet->status == 'in_transit' && $item->delivery_status == 'pending') {
-                            // Check if previous ones are done
-                            $prevDone = true;
-                            foreach($do->invoices as $prevItem) {
-                                if ($prevItem->delivery_sequence < $item->delivery_sequence && $prevItem->delivery_status == 'pending') {
-                                    $prevDone = false;
-                                    break;
+                        @foreach($do->invoices as $index => $item)
+                            @php
+                                $isNext = false;
+                                if ($fleet->status == 'in_transit' && $item->delivery_status == 'pending') {
+                                    $prevDone = true;
+                                    foreach($do->invoices as $prevItem) {
+                                        if ($prevItem->delivery_sequence < $item->delivery_sequence && $prevItem->delivery_status == 'pending') {
+                                            $prevDone = false;
+                                            break;
+                                        }
+                                    }
+                                    $isNext = $prevDone;
                                 }
-                            }
-                            $isNext = $prevDone;
-                        }
-                    @endphp
-
-                    <div class="list-group-item stop-card p-3 mb-2 shadow-sm border-0 {{ $item->delivery_status == 'delivered' ? 'completed' : ($isNext ? 'active' : '') }}">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h6 class="mb-1">{{ $index + 1 }}. {{ $item->invoice->mitra->nama }}</h6>
-                                <p class="mb-1 small text-muted">{{ $item->invoice->mitra->alamat }}</p>
-                                <span class="badge bg-{{ $item->delivery_status == 'delivered' ? 'success' : 'secondary' }}">
-                                    {{ ucfirst($item->delivery_status) }}
-                                </span>
+                            @endphp
+                            <div class="list-group-item stop-card p-3 mb-2 shadow-sm border-0 {{ $item->delivery_status == 'delivered' ? 'completed' : ($isNext ? 'active' : '') }}"
+                                 @if($item->delivery_status == 'delivered')
+                                 data-invoice-id="{{ $item->invoice_id }}"
+                                 data-name="{{ $item->invoice->mitra->nama }}"
+                                 data-address="{{ $item->invoice->mitra->alamat }}"
+                                 data-lat="{{ $item->invoice->mitra->latitude }}"
+                                 data-lng="{{ $item->invoice->mitra->longitude }}"
+                                 data-arrived-at="{{ $item->arrived_at ? \Carbon\Carbon::parse($item->arrived_at)->format('Y-m-d H:i') : '' }}"
+                                 @endif
+                            >
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">{{ $index + 1 }}. {{ $item->invoice->mitra->nama }}</h6>
+                                        <p class="mb-1 small text-muted">{{ $item->invoice->mitra->alamat }}</p>
+                                        <span class="badge bg-{{ $item->delivery_status == 'delivered' ? 'success' : 'secondary' }}">
+                                            {{ ucfirst($item->delivery_status) }}
+                                        </span>
+                                    </div>
+                                    <div class="text-end">
+                                    @if($isNext)
+                                        <button class="btn btn-sm btn-success btn-arrive"
+                                            data-id="{{ $item->invoice_id }}"
+                                            data-lat="{{ $item->invoice->mitra->latitude }}"
+                                            data-lng="{{ $item->invoice->mitra->longitude }}"
+                                            data-name="{{ $item->invoice->mitra->nama }}">
+                                            Sampai
+                                        </button>
+                                    @endif
+                                    @if($item->delivery_status == 'delivered')
+                                        <button class="btn btn-sm btn-outline-primary btn-detail-proof">Detail</button>
+                                    @endif
+                                    </div>
+                                </div>
+                                @if($item->delivery_status == 'delivered')
+                                    <div class="mt-2 small text-success">
+                                        <i class="iconoir-check"></i> Diterima: {{ $item->arrived_at ? \Carbon\Carbon::parse($item->arrived_at)->format('H:i') : '-' }}
+                                    </div>
+                                @endif
                             </div>
-                            @if($isNext)
-                                <button class="btn btn-sm btn-success btn-arrive" 
-                                    data-id="{{ $item->invoice_id }}" 
-                                    data-lat="{{ $item->invoice->mitra->latitude }}" 
-                                    data-lng="{{ $item->invoice->mitra->longitude }}"
-                                    data-name="{{ $item->invoice->mitra->nama }}">
-                                    Sampai
-                                </button>
-                            @endif
-                        </div>
-                        @if($item->delivery_status == 'delivered')
-                            <div class="mt-2 small text-success">
-                                <i class="iconoir-check"></i> Diterima: {{ $item->arrived_at ? \Carbon\Carbon::parse($item->arrived_at)->format('H:i') : '-' }}
-                            </div>
-                        @endif
+                        @endforeach
                     </div>
-                @endforeach
-            </div>
 
-            @if($fleet->status == 'in_transit')
-                @php
-                    $allDelivered = $do->invoices->every(fn($i) => $i->delivery_status == 'delivered');
-                @endphp
-                @if($allDelivered)
-                    <button id="btn-finish-trip" class="btn btn-success w-100 btn-lg mt-3">
-                        <i class="iconoir-home me-2"></i> Kembali ke Kantor & Selesai
-                    </button>
-                @endif
-            @endif
+                    @if($fleet->status == 'in_transit')
+                        @php
+                            $allDelivered = $do->invoices->every(fn($i) => $i->delivery_status == 'delivered');
+                        @endphp
+                        @if($allDelivered)
+                            <button id="btn-finish-trip" class="btn btn-success w-100 btn-lg mt-3">
+                                <i class="iconoir-home me-2"></i> Kembali ke Kantor & Selesai
+                            </button>
+                        @endif
+                    @endif
+                </div>
+            </div>
+            <div class="mt-4">
+                <span class="badge bg-light text-dark"><i class="iconoir-time"></i> Riwayat Selesai (10 Terakhir)</span>
+                <div class="list-group mt-3">
+                    @php
+                        $history = $do->invoices->where('delivery_status','delivered')->sortByDesc('arrived_at')->take(10);
+                    @endphp
+                    @if($history->count())
+                        @foreach($history as $h)
+                            <div class="list-group-item stop-card completed p-3 mb-2 shadow-sm border-0"
+                                 data-invoice-id="{{ $h->invoice_id }}"
+                                 data-name="{{ $h->invoice->mitra->nama }}"
+                                 data-address="{{ $h->invoice->mitra->alamat }}"
+                                 data-lat="{{ $h->invoice->mitra->latitude }}"
+                                 data-lng="{{ $h->invoice->mitra->longitude }}"
+                                 data-arrived-at="{{ $h->arrived_at ? \Carbon\Carbon::parse($h->arrived_at)->format('Y-m-d H:i') : '' }}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">{{ $h->invoice->mitra->nama }}</h6>
+                                        <p class="mb-1 small text-muted">{{ $h->invoice->mitra->alamat }}</p>
+                                        <span class="badge bg-success">Delivered</span>
+                                        <div class="mt-1 small text-success">
+                                            <i class="iconoir-check"></i> Diterima: {{ $h->arrived_at ? \Carbon\Carbon::parse($h->arrived_at)->format('H:i') : '-' }}
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <button class="btn btn-sm btn-outline-primary btn-detail-proof">Detail</button>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="text-muted small">Belum ada riwayat selesai.</div>
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Bukti Pengiriman -->
 <div class="modal fade" id="proofModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -142,17 +187,16 @@
                     <input type="hidden" id="proofInvoiceId">
                     <input type="hidden" id="proofLat">
                     <input type="hidden" id="proofLng">
-                    
                     <div class="mb-3">
                         <label class="form-label">Lokasi Tujuan</label>
                         <input type="text" class="form-control" id="proofMitraName" readonly>
                     </div>
-
                     <div class="mb-3">
                         <label class="form-label">Jepret Foto Bukti <span class="text-danger">*</span></label>
-                        <div class="border rounded p-2">
+                        <div class="border rounded p-2 position-relative">
                             <video id="cameraStream" autoplay playsinline style="width:100%; max-height:240px; background:#000;"></video>
                             <canvas id="captureCanvas" class="d-none"></canvas>
+                            <div id="shutterFlash" class="d-none" style="position:absolute; inset:0; background:#fff; opacity:0.7;"></div>
                             <div class="d-flex gap-2 mt-2">
                                 <button type="button" class="btn btn-primary btn-sm" id="btn-capture" disabled>
                                     <i class="iconoir-camera me-1"></i> Jepret
@@ -166,7 +210,6 @@
                         <input type="file" class="form-control d-none" id="proofPhoto" accept="image/*">
                         <div class="form-text">Ambil foto penerima atau lokasi pengiriman.</div>
                     </div>
-
                     <div class="mb-3">
                         <label class="form-label">Catatan (Opsional)</label>
                         <textarea class="form-control" id="proofNotes" rows="2"></textarea>
@@ -179,8 +222,8 @@
             </div>
         </div>
     </div>
+</div>
 
-<!-- Modal Preview Foto -->
 <div class="modal fade" id="previewModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -193,386 +236,427 @@
             </div>
         </div>
     </div>
-    </div>
 </div>
+
+<!-- Modal Detail Bukti -->
+<div class="modal fade" id="proofDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detail Bukti Kedatangan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <img id="proofDetailImage" src="" alt="Bukti" style="max-width:100%; border-radius:8px;">
+                        <div id="proofDetailImageEmpty" class="text-muted small mt-2 d-none">Foto bukti tidak tersedia.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-2"><strong>Tujuan:</strong> <span id="proofDetailName">-</span></div>
+                        <div class="mb-2"><strong>Alamat:</strong> <span id="proofDetailAddress">-</span></div>
+                        <div class="mb-2"><strong>Koordinat:</strong> <span id="proofDetailCoord">-</span></div>
+                        <div class="mb-2"><strong>Diterima:</strong> <span id="proofDetailArrivedAt">-</span></div>
+                        <div class="mb-2"><strong>Catatan:</strong> <span id="proofDetailNotes">-</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
 @section('scripts')
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 <script>
-    const deliveryId = {{ $do->id }};
-    const fleetStatus = '{{ $fleet->status }}';
-    @php
-        $stopsData = $do->invoices->map(fn($i) => [
-            'name' => $i->invoice->mitra->nama,
-            'lat' => $i->invoice->mitra->latitude,
-            'lng' => $i->invoice->mitra->longitude,
-            'status' => $i->delivery_status
-        ]);
-    @endphp
-    const stops = @json($stopsData);
-    
-    let map, userMarker;
-    let watchId;
-
-    function initMap() {
-        // Default center (Indonesia) or first stop
-        const center = stops.length > 0 && stops[0].lat ? [stops[0].lat, stops[0].lng] : [-6.200000, 106.816666];
-        map = L.map('map').setView(center, 13);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        // Add markers for stops
-        stops.forEach((stop, index) => {
-            if (stop.lat && stop.lng) {
-                const color = stop.status === 'delivered' ? 'green' : 'red';
-                const marker = L.circleMarker([stop.lat, stop.lng], {
-                    color: color,
-                    fillColor: color,
-                    fillOpacity: 0.5,
-                    radius: 8
-                }).addTo(map);
-                marker.bindPopup(`<b>${index + 1}. ${stop.name}</b><br>${stop.status}`);
-            }
-        });
-
-        // Try to get user location immediately
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(pos => {
-                const { latitude, longitude } = pos.coords;
-                updateUserMarker(latitude, longitude);
-                map.setView([latitude, longitude], 13);
-            });
-        }
+const deliveryId = {{ $do->id }};
+const fleetStatus = '{{ $fleet->status }}';
+@php
+    $stopsData = $do->invoices->map(fn($i) => [
+        'name' => $i->invoice->mitra->nama,
+        'lat' => $i->invoice->mitra->latitude,
+        'lng' => $i->invoice->mitra->longitude,
+        'status' => $i->delivery_status
+    ]);
+@endphp
+const stops = @json($stopsData);
+let map, userMarker, watchId, routingControl, routeCalculated = false, routingLibLoaded = false;
+function fitStopsBounds() {
+    const pts = stops.filter(s => s.lat && s.lng).map(s => [parseFloat(s.lat), parseFloat(s.lng)]);
+    if (pts.length > 0) {
+        const b = L.latLngBounds(pts);
+        map.fitBounds(b, { padding: [40, 40] });
     }
-
-    let routingControl;
-    let routeCalculated = false;
-
-    function updateUserMarker(lat, lng) {
-        if (!userMarker) {
-            userMarker = L.marker([lat, lng], {
-                icon: L.divIcon({
-                    className: 'user-marker',
-                    html: '<div style="background-color: blue; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>',
-                    iconSize: [16, 16]
-                })
-            }).addTo(map);
-        } else {
-            userMarker.setLatLng([lat, lng]);
-        }
-
-        // Calculate route if not already done and we have valid location
-        if (!routeCalculated && fleetStatus === 'in_transit') {
-            calculateRoute(lat, lng);
-            routeCalculated = true;
-        }
-    }
-
-    function calculateRoute(startLat, startLng) {
-        if (routingControl) {
-            map.removeControl(routingControl);
-        }
-
-        const waypoints = [
-            L.latLng(startLat, startLng)
-        ];
-
-        // Add all pending stops to waypoints
-        stops.forEach(stop => {
-            if (stop.lat && stop.lng && stop.status === 'pending') {
-                waypoints.push(L.latLng(stop.lat, stop.lng));
-            }
-        });
-
-        if (waypoints.length > 1) {
-            routingControl = L.Routing.control({
-                waypoints: waypoints,
-                routeWhileDragging: false,
-                addWaypoints: false,
-                draggableWaypoints: false,
-                fitSelectedRoutes: true,
-                showAlternatives: false,
-                lineOptions: {
-                    styles: [{color: 'blue', opacity: 0.6, weight: 4}]
-                },
-                createMarker: function() { return null; }, // Disable default markers
-                show: false // Hide turn-by-turn instructions
-            }).addTo(map);
-        }
-    }
-
-    // Start Trip
-    $('#btn-start-trip').click(async function() {
-        if (!await macConfirm('Mulai Perjalanan', 'Mulai perjalanan pengiriman sekarang?', {
-            confirmText: 'Mulai',
-            confirmType: 'success',
-            cancelText: 'Batal'
-        })) return;
-
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(position => {
-                const { latitude, longitude } = position.coords;
-                
-                $.post("{{ route('driver.delivery.start', $do->id) }}", {
-                    _token: "{{ csrf_token() }}",
-                    latitude: latitude,
-                    longitude: longitude
-                })
-                .done(function() {
-                    location.reload();
-                })
-                .fail(function(err) {
-                    alert('Gagal memulai perjalanan: ' + (err.responseJSON?.message || 'Error'));
-                });
-            }, err => alert('Gagal mendapatkan lokasi. Pastikan GPS aktif.'));
-        } else {
-            alert('Browser tidak mendukung Geolocation.');
+}
+async function initMap() {
+    await ensureLeafletReady();
+    setDefaultMarkerAssets();
+    const el = document.getElementById('map');
+    if (!el) return;
+    const firstStop = stops.find(s => s.lat && s.lng);
+    const center = firstStop ? [parseFloat(firstStop.lat), parseFloat(firstStop.lng)] : [-6.2, 106.816666];
+    map = L.map(el).setView(center, 13);
+    addBestTileLayer(map);
+    stops.forEach((s, i) => {
+        if (s.lat && s.lng) {
+            const col = s.status === 'delivered' ? 'green' : 'red';
+            L.circleMarker([parseFloat(s.lat), parseFloat(s.lng)], { color: col, fillColor: col, fillOpacity: 0.5, radius: 8 })
+                .addTo(map)
+                .bindPopup(`${i + 1}. ${s.name} (${s.status})`);
         }
     });
-
-    // Tracking Logic
-    if (fleetStatus === 'in_transit') {
-        if (navigator.geolocation) {
-            watchId = navigator.geolocation.watchPosition(position => {
-                const { latitude, longitude } = position.coords;
-                updateUserMarker(latitude, longitude);
-
-                // Send update to server (throttle this in production, e.g., every 30s)
-                // For demo, we do it here but maybe debounced
-                sendLocationUpdate(latitude, longitude);
-            }, null, { enableHighAccuracy: true });
-        }
+    fitStopsBounds();
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(p => {
+            const { latitude, longitude } = p.coords;
+            updateUserMarker(latitude, longitude);
+        }, () => {
+            calculateRoute(center[0], center[1]);
+        });
+    } else {
+        calculateRoute(center[0], center[1]);
     }
-
-    let lastUpdate = 0;
-    function sendLocationUpdate(lat, lng) {
-        const now = Date.now();
-        if (now - lastUpdate < 10000) return; // Limit to every 10s
-        lastUpdate = now;
-
-        $.post("{{ route('driver.delivery.location', $do->id) }}", {
-            _token: "{{ csrf_token() }}",
-            latitude: lat,
-            longitude: lng
-        }); // Fire and forget
+}
+function updateUserMarker(lat, lng) {
+    if (!userMarker) {
+        userMarker = L.marker([lat, lng], {
+            icon: L.divIcon({ className: 'user-marker', html: '<div style="background-color: blue; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>', iconSize: [16, 16] })
+        }).addTo(map);
+    } else {
+        userMarker.setLatLng([lat, lng]);
     }
-
-    // Arrive Button
-    $('.btn-arrive').click(function() {
-        const id = $(this).data('id');
-        const name = $(this).data('name');
-        const lat = $(this).data('lat');
-        const lng = $(this).data('lng');
-        
-        // Get current location for validation
+    const hasPending = stops.some(s => s.status === 'pending' && s.lat && s.lng);
+    if (!routeCalculated && hasPending) {
+        calculateRoute(lat, lng);
+        routeCalculated = true;
+    }
+}
+async function calculateRoute(slat, slng) {
+    const pending = stops.filter(s => s.status === 'pending' && s.lat && s.lng);
+    if (pending.length === 0) return;
+    await ensureRoutingReady();
+    if (routingControl) map.removeControl(routingControl);
+    const w = [L.latLng(slat, slng), ...pending.map(s => L.latLng(parseFloat(s.lat), parseFloat(s.lng)))];
+    if (typeof L.Routing !== 'undefined') {
+        routingControl = L.Routing.control({
+            waypoints: w,
+            routeWhileDragging: false,
+            addWaypoints: false,
+            draggableWaypoints: false,
+            fitSelectedRoutes: true,
+            showAlternatives: false,
+            lineOptions: { styles: [{ color: 'blue', opacity: 0.6, weight: 4 }] },
+            createMarker: function() { return null; },
+            show: false
+        }).addTo(map);
+    }
+}
+let lastUpdate = 0;
+function sendLocationUpdate(lat, lng) {
+    const now = Date.now();
+    if (now - lastUpdate < 10000) return;
+    lastUpdate = now;
+    fetch("{{ route('driver.delivery.location', $do->id) }}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+        body: new URLSearchParams({ latitude: lat, longitude: lng }).toString()
+    }).catch(() => {});
+}
+document.getElementById('btn-start-trip')?.addEventListener('click', async function() {
+    if (!await macConfirm('Mulai Perjalanan', 'Mulai perjalanan pengiriman sekarang?', { confirmText: 'Mulai', confirmType: 'success', cancelText: 'Batal' })) return;
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async pos => {
+            const { latitude, longitude } = pos.coords;
+            try {
+                const res = await fetch("{{ route('driver.delivery.start', $do->id) }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+                    body: new URLSearchParams({ latitude, longitude }).toString()
+                });
+                if (res.ok) location.reload(); else { const d = await res.json().catch(() => ({})); alert('Gagal memulai perjalanan: ' + (d.message || res.statusText)); }
+            } catch (e) { alert('Gagal memulai perjalanan: ' + (e.message || 'Error')); }
+        }, () => alert('Gagal mendapatkan lokasi. Pastikan GPS aktif.'));
+    } else { alert('Browser tidak mendukung Geolocation.'); }
+});
+if (fleetStatus === 'in_transit' && navigator.geolocation) {
+    watchId = navigator.geolocation.watchPosition(p => {
+        const { latitude, longitude } = p.coords;
+        updateUserMarker(latitude, longitude);
+        sendLocationUpdate(latitude, longitude);
+    }, null, { enableHighAccuracy: true });
+}
+document.querySelectorAll('.btn-arrive').forEach(el => {
+    el.addEventListener('click', function() {
+        const id = this.dataset.id;
+        const name = this.dataset.name;
+        const lat = parseFloat(this.dataset.lat);
+        const lng = parseFloat(this.dataset.lng);
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(async position => {
-                const currentLat = position.coords.latitude;
-                const currentLng = position.coords.longitude;
-
-                // Validation: Distance Check (Warning if > 500m)
-                const dist = getDistanceFromLatLonInKm(currentLat, currentLng, lat, lng);
+            navigator.geolocation.getCurrentPosition(async p => {
+                const clat = p.coords.latitude;
+                const clng = p.coords.longitude;
+                const dist = getDistanceFromLatLonInKm(clat, clng, lat, lng);
                 if (dist > 0.5) {
-                     if (!await macConfirm('Peringatan Jarak', `Peringatan: Anda terdeteksi berada ${dist.toFixed(2)} km dari lokasi tujuan. Apakah Anda yakin sudah sampai?`, {
-                        confirmText: 'Ya, Saya Sudah Sampai',
-                        confirmType: 'success',
-                        cancelText: 'Batal'
-                     })) {
-                        return;
-                     }
+                    const ok = await macConfirm('Peringatan Jarak', `Peringatan: Anda terdeteksi berada ${dist.toFixed(2)} km dari lokasi tujuan. Apakah Anda yakin sudah sampai?`, { confirmText: 'Ya, Saya Sudah Sampai', confirmType: 'success', cancelText: 'Batal' });
+                    if (!ok) return;
                 }
-
-                $('#proofInvoiceId').val(id);
-                $('#proofMitraName').val(name);
-                $('#proofLat').val(currentLat);
-                $('#proofLng').val(currentLng);
-                
-                // Show Modal
-                new bootstrap.Modal(document.getElementById('proofModal')).show();
+                document.getElementById('proofInvoiceId').value = id;
+                document.getElementById('proofMitraName').value = name;
+                document.getElementById('proofLat').value = clat;
+                document.getElementById('proofLng').value = clng;
+                const Modal = window.bootstrap?.Modal;
+                if (Modal) new Modal(document.getElementById('proofModal')).show(); else document.getElementById('proofModal').classList.add('show');
                 startCamera();
             });
         }
     });
-
-    function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-        var R = 6371; // Radius of the earth in km
-        var dLat = deg2rad(lat2-lat1); 
-        var dLon = deg2rad(lon2-lon1); 
-        var a = 
-            Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
-            Math.sin(dLon/2) * Math.sin(dLon/2)
-            ; 
-        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-        var d = R * c; // Distance in km
-        return d;
+});
+function getDistanceFromLatLonInKm(a1, o1, a2, o2) {
+    const R = 6371, dA = (a2 - a1) * Math.PI / 180, dO = (o2 - o1) * Math.PI / 180;
+    const A1 = a1 * Math.PI / 180, A2 = a2 * Math.PI / 180;
+    const a = Math.sin(dA/2)**2 + Math.cos(A1) * Math.cos(A2) * Math.sin(dO/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+let streamRef = null, capturedBlob = null;
+async function startCamera() {
+    try {
+        if (streamRef) return;
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        streamRef = stream;
+        const v = document.getElementById('cameraStream');
+        v.srcObject = stream;
+        v.onloadedmetadata = () => { document.getElementById('btn-capture').disabled = false; };
+    } catch {
+        document.getElementById('proofPhoto').classList.remove('d-none');
+        document.getElementById('btn-capture').disabled = true;
+        document.getElementById('btn-preview').disabled = true;
     }
-
-    function deg2rad(deg) {
-        return deg * (Math.PI/180)
-    }
-
-    let streamRef = null;
-    let capturedBlob = null;
-
-    async function startCamera() {
-        try {
-            if (streamRef) return;
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            streamRef = stream;
-            const video = document.getElementById('cameraStream');
-            video.srcObject = stream;
-            video.onloadedmetadata = () => {
-                document.getElementById('btn-capture').disabled = false;
-            };
-        } catch (e) {
-            console.warn('Camera unavailable, fallback to file input');
-            document.getElementById('proofPhoto').classList.remove('d-none');
-            document.getElementById('btn-capture').disabled = true;
-            document.getElementById('btn-preview').disabled = true;
-        }
-    }
-
-    document.getElementById('btn-capture').addEventListener('click', function() {
-        const video = document.getElementById('cameraStream');
-        const canvas = document.getElementById('captureCanvas');
-        if (!video.videoWidth || !video.videoHeight) {
-            alert('Kamera belum siap. Tunggu sebentar lalu coba lagi.');
-            return;
-        }
-        const w = video.videoWidth;
-        const h = video.videoHeight;
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, w, h);
+}
+document.getElementById('btn-capture').addEventListener('click', function() {
+    const v = document.getElementById('cameraStream');
+    const c = document.getElementById('captureCanvas');
+    if (!v.videoWidth || !v.videoHeight) { alert('Kamera belum siap.'); return; }
+    const w = v.videoWidth, h = v.videoHeight;
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d');
+    const f = document.getElementById('shutterFlash'); f.classList.remove('d-none'); setTimeout(() => f.classList.add('d-none'), 120);
+    setTimeout(() => {
+        ctx.drawImage(v, 0, 0, w, h);
         applyWatermark(ctx, w, h);
-        getCanvasBlob(canvas, function(blob) {
+        getCanvasBlob(c, function(blob) {
             capturedBlob = blob;
             const url = URL.createObjectURL(blob);
-            const img = document.getElementById('previewImage');
-            img.src = url;
+            document.getElementById('previewImage').src = url;
             document.getElementById('btn-preview').disabled = false;
         });
+    }, 50);
+});
+document.getElementById('btn-preview').addEventListener('click', function() {
+    const Modal = window.bootstrap?.Modal;
+    if (Modal) {
+        new Modal(document.getElementById('previewModal')).show();
+    } else {
+        document.getElementById('previewModal').classList.add('show');
+    }
+});
+document.querySelectorAll('.stop-card.completed').forEach(el => {
+    el.addEventListener('click', function() {
+        const d = {
+            invoiceId: this.dataset.invoiceId,
+            name: this.dataset.name,
+            address: this.dataset.address,
+            lat: this.dataset.lat,
+            lng: this.dataset.lng,
+            arrivedAt: this.dataset.arrivedAt
+        };
+        openProofDetailModal(d);
     });
-
-    function applyWatermark(ctx, w, h) {
-        const name = document.getElementById('proofMitraName').value || 'Lokasi';
-        const lat = document.getElementById('proofLat').value || '-';
-        const lng = document.getElementById('proofLng').value || '-';
-        const time = new Date().toLocaleString('id-ID');
-        const lines = [
-            `Lokasi: ${name}`,
-            `Koordinat: ${lat}, ${lng}`,
-            `Waktu: ${time}`
+});
+document.querySelectorAll('.btn-detail-proof').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const card = this.closest('.stop-card');
+        if (!card) return;
+        const d = {
+            invoiceId: card.dataset.invoiceId,
+            name: card.dataset.name,
+            address: card.dataset.address,
+            lat: card.dataset.lat,
+            lng: card.dataset.lng,
+            arrivedAt: card.dataset.arrivedAt
+        };
+        openProofDetailModal(d);
+    });
+});
+async function openProofDetailModal(d) {
+    document.getElementById('proofDetailName').textContent = d.name || '-';
+    document.getElementById('proofDetailAddress').textContent = d.address || '-';
+    document.getElementById('proofDetailCoord').textContent = (d.lat && d.lng) ? `${d.lat}, ${d.lng}` : '-';
+    document.getElementById('proofDetailArrivedAt').textContent = d.arrivedAt || '-';
+    document.getElementById('proofDetailNotes').textContent = '-';
+    const img = document.getElementById('proofDetailImage');
+    const imgEmpty = document.getElementById('proofDetailImageEmpty');
+    img.src = ''; img.classList.remove('d-none'); imgEmpty.classList.add('d-none');
+    let photoUrl = null;
+    try {
+        const res = await fetch("{{ url('driver/delivery') }}/" + deliveryId + "/invoice/" + d.invoiceId + "/proof");
+        if (res.ok) {
+            const data = await res.json();
+            if (data?.photo_url) photoUrl = data.photo_url;
+            if (data?.notes) document.getElementById('proofDetailNotes').textContent = data.notes;
+        }
+    } catch {}
+    if (!photoUrl) {
+        const guesses = [
+            "/storage/proofs/" + d.invoiceId + ".jpg",
+            "/uploads/proofs/" + d.invoiceId + ".jpg",
+            "/assets/proofs/" + d.invoiceId + ".jpg"
         ];
-        ctx.fillStyle = 'rgba(0,0,0,0.45)';
-        const rectH = 70;
-        ctx.fillRect(0, h - rectH - 10, w, rectH + 10);
-        ctx.fillStyle = '#fff';
-        ctx.font = '16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
-        let y = h - rectH;
-        lines.forEach((line, idx) => {
-            ctx.fillText(line, 12, y + (idx * 22));
-        });
+        photoUrl = await findExistingImage(guesses);
     }
-
-    function getCanvasBlob(canvas, cb) {
-        if (canvas.toBlob) {
-            canvas.toBlob(function (blob) { cb(blob); }, 'image/jpeg', 0.9);
-        } else {
-            const dataURL = canvas.toDataURL('image/jpeg', 0.9);
-            const byteString = atob(dataURL.split(',')[1]);
-            const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
-            const ab = new ArrayBuffer(byteString.length);
-            const ia = new Uint8Array(ab);
-            for (let i = 0; i < byteString.length; i++) {
-                ia[i] = byteString.charCodeAt(i);
-            }
-            cb(new Blob([ab], { type: mimeString }));
-        }
+    if (photoUrl) {
+        img.src = photoUrl;
+    } else {
+        img.classList.add('d-none');
+        imgEmpty.classList.remove('d-none');
     }
-
-    // Stop camera when modal closes
-    document.getElementById('proofModal').addEventListener('hidden.bs.modal', function () {
-        if (streamRef) {
-            streamRef.getTracks().forEach(t => t.stop());
-            streamRef = null;
-            capturedBlob = null;
-            document.getElementById('btn-preview').disabled = true;
+    const Modal = window.bootstrap?.Modal;
+    if (Modal) {
+        new Modal(document.getElementById('proofDetailModal')).show();
+    } else {
+        document.getElementById('proofDetailModal').classList.add('show');
+    }
+}
+function findExistingImage(urls) {
+    return new Promise(resolve => {
+        let i = 0;
+        function tryNext() {
+            if (i >= urls.length) return resolve(null);
+            const u = urls[i++];
+            const im = new Image();
+            im.onload = () => resolve(u);
+            im.onerror = tryNext;
+            im.src = u + '?v=' + Date.now();
         }
+        tryNext();
     });
-
-    // Submit Proof
-    $('#btn-submit-proof').click(function() {
-        const formData = new FormData();
-        formData.append('_token', "{{ csrf_token() }}");
-        formData.append('latitude', $('#proofLat').val());
-        formData.append('longitude', $('#proofLng').val());
-        formData.append('notes', $('#proofNotes').val());
-        
-        if (capturedBlob) {
-            formData.append('photo', capturedBlob, 'capture.jpg');
-        } else {
-            const fileInput = document.getElementById('proofPhoto');
-            if (fileInput.files.length === 0) {
-                alert('Harap jepret foto bukti!');
-                return;
-            }
-            formData.append('photo', fileInput.files[0]);
-        }
-
-        const invoiceId = $('#proofInvoiceId').val();
-        const btn = $(this);
-        btn.prop('disabled', true).text('Mengirim...');
-
-        $.ajax({
-            url: "{{ url('driver/delivery') }}/" + deliveryId + "/invoice/" + invoiceId + "/arrive",
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function() {
-                location.reload();
-            },
-            error: function(err) {
-                alert('Gagal mengirim bukti: ' + (err.responseJSON?.message || 'Error'));
-                btn.prop('disabled', false).text('Kirim Bukti');
-            }
-        });
+}
+function applyWatermark(ctx, w, h) {
+    const name = document.getElementById('proofMitraName').value || 'Lokasi';
+    const lat = document.getElementById('proofLat').value || '-';
+    const lng = document.getElementById('proofLng').value || '-';
+    const time = new Date().toLocaleString('id-ID');
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    const rectH = 70;
+    ctx.fillRect(0, h - rectH - 10, w, rectH + 10);
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+    let y = h - rectH;
+    ctx.fillText(`Lokasi: ${name}`, 12, y + 0);
+    ctx.fillText(`Koordinat: ${lat}, ${lng}`, 12, y + 22);
+    ctx.fillText(`Waktu: ${time}`, 12, y + 44);
+}
+function getCanvasBlob(canvas, cb) {
+    if (canvas.toBlob) { canvas.toBlob(blob => cb(blob), 'image/jpeg', 0.9); return; }
+    const dataURL = canvas.toDataURL('image/jpeg', 0.9), byteString = atob(dataURL.split(',')[1]), mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+    const ab = new ArrayBuffer(byteString.length), ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+    cb(new Blob([ab], { type: mimeString }));
+}
+function addBestTileLayer(m) {
+    const remoteUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    const localUrl = '/assets/tiles/{z}/{x}/{y}.png';
+    const remoteLayer = L.tileLayer(remoteUrl, { attribution: '© OpenStreetMap contributors', minZoom: 5, maxZoom: 18 }).addTo(m);
+    setTimeout(() => m.invalidateSize(), 100);
+    const z = m.getZoom ? m.getZoom() : 13;
+    const c = m.getCenter ? m.getCenter() : L.latLng(-6.2, 106.816666);
+    const t = latLngToTile(c.lat, c.lng, z);
+    const img = new Image();
+    img.onload = function() {
+        m.removeLayer(remoteLayer);
+        L.tileLayer(localUrl, { attribution: '© OpenStreetMap contributors', minZoom: 5, maxZoom: 18 }).addTo(m);
+        setTimeout(() => m.invalidateSize(), 100);
+    };
+    img.onerror = function() {};
+    img.src = `/assets/tiles/${z}/${t.x}/${t.y}.png?v=1`;
+}
+function latLngToTile(lat, lon, zoom) {
+    const lr = lat * Math.PI / 180, n = Math.pow(2, zoom);
+    const x = Math.floor((lon + 180) / 360 * n);
+    const y = Math.floor((1 - Math.log(Math.tan(lr) + 1 / Math.cos(lr)) / Math.PI) / 2 * n);
+    return { x, y };
+}
+function ensureRoutingReady() {
+    if (typeof L !== 'undefined' && typeof L.Routing !== 'undefined') return Promise.resolve(true);
+    if (routingLibLoaded) return new Promise(r => r(true));
+    routingLibLoaded = true;
+    return new Promise((resolve) => {
+        const s = document.createElement('script');
+        s.src = '/assets/vendor/leaflet-routing/leaflet-routing-machine.js';
+        s.onload = () => resolve(true);
+        s.onerror = () => { routingLibLoaded = false; const cdn = document.createElement('script'); cdn.src = 'https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js'; cdn.onload = () => resolve(true); cdn.onerror = () => resolve(false); document.body.appendChild(cdn); };
+        document.body.appendChild(s);
     });
-
-    // Finish Trip
-    $('#btn-finish-trip').click(async function() {
-        if (!await macConfirm('Selesaikan Tugas', 'Apakah Anda sudah kembali ke kantor dan ingin menyelesaikan tugas ini?', {
-            confirmText: 'Ya, Saya Sudah Kembali',
-            confirmType: 'success',
-            cancelText: 'Batal'
-        })) return;
-
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(position => {
-                $.post("{{ route('driver.delivery.finish', $do->id) }}", {
-                    _token: "{{ csrf_token() }}",
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude
-                })
-                .done(function() {
-                    location.reload();
-                })
-                .fail(function(err) {
-                    alert('Gagal menyelesaikan tugas: ' + (err.responseJSON?.message || 'Error'));
+}
+function ensureLeafletReady() {
+    if (typeof L !== 'undefined') return Promise.resolve(true);
+    return new Promise((resolve) => {
+        let done = false;
+        function ok(){ if (!done && typeof L !== 'undefined') { done = true; resolve(true); } }
+        const local = document.createElement('script'); local.src = '/assets/libs/leaflet/leaflet.js'; local.onload = ok; local.onerror = () => { const cdn = document.createElement('script'); cdn.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'; cdn.onload = ok; cdn.onerror = ok; document.head.appendChild(cdn); }; document.head.appendChild(local);
+        const iv = setInterval(() => { if (typeof L !== 'undefined') { clearInterval(iv); ok(); } }, 50);
+        setTimeout(() => { clearInterval(iv); ok(); }, 2000);
+    });
+}
+function setDefaultMarkerAssets() {
+    if (L && L.Icon && L.Icon.Default) {
+        L.Icon.Default.mergeOptions({ iconRetinaUrl: '/assets/libs/leaflet/images/marker-icon.png', iconUrl: '/assets/libs/leaflet/images/marker-icon.png', shadowUrl: null });
+    }
+}
+document.getElementById('proofModal').addEventListener('hidden.bs.modal', function () {
+    if (streamRef) { streamRef.getTracks().forEach(t => t.stop()); streamRef = null; capturedBlob = null; document.getElementById('btn-preview').disabled = true; }
+});
+document.getElementById('btn-submit-proof')?.addEventListener('click', async function() {
+    const fd = new FormData();
+    fd.append('_token', "{{ csrf_token() }}");
+    fd.append('latitude', document.getElementById('proofLat').value);
+    fd.append('longitude', document.getElementById('proofLng').value);
+    fd.append('notes', document.getElementById('proofNotes').value);
+    if (capturedBlob) fd.append('photo', capturedBlob, 'capture.jpg'); else {
+        const fi = document.getElementById('proofPhoto');
+        if (fi.files.length === 0) { alert('Harap jepret foto bukti!'); return; }
+        fd.append('photo', fi.files[0]);
+    }
+    const invoiceId = document.getElementById('proofInvoiceId').value;
+    const btn = this; btn.disabled = true; btn.textContent = 'Mengirim...';
+    try {
+        const res = await fetch("{{ url('driver/delivery') }}/" + deliveryId + "/invoice/" + invoiceId + "/arrive", { method: 'POST', body: fd });
+        if (res.ok) location.reload(); else { const d = await res.json().catch(() => ({})); alert('Gagal mengirim bukti: ' + (d.message || res.statusText)); btn.disabled = false; btn.textContent = 'Kirim Bukti'; }
+    } catch (e) { alert('Gagal mengirim bukti: ' + (e.message || 'Error')); btn.disabled = false; btn.textContent = 'Kirim Bukti'; }
+});
+document.getElementById('btn-finish-trip')?.addEventListener('click', async function() {
+    if (!await macConfirm('Selesaikan Tugas', 'Apakah Anda sudah kembali ke kantor dan ingin menyelesaikan tugas ini?', { confirmText: 'Ya, Saya Sudah Kembali', confirmType: 'success', cancelText: 'Batal' })) return;
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async p => {
+            try {
+                const res = await fetch("{{ route('driver.delivery.finish', $do->id) }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+                    body: new URLSearchParams({ latitude: p.coords.latitude, longitude: p.coords.longitude }).toString()
                 });
-            });
-        }
-    });
-
-    $(document).ready(function() {
-        initMap();
-    });
+                if (res.ok) location.reload(); else { const d = await res.json().catch(() => ({})); alert('Gagal menyelesaikan tugas: ' + (d.message || res.statusText)); }
+            } catch (e) { alert('Gagal menyelesaikan tugas: ' + (e.message || 'Error')); }
+        });
+    }
+});
+document.addEventListener('DOMContentLoaded', function() {
+    initMap();
+    const el = document.getElementById('map');
+    if (el) {
+        const obs = new IntersectionObserver(es => { es.forEach(x => { if (x.isIntersecting && map) map.invalidateSize(); }); }, { threshold: 0.2 });
+        obs.observe(el);
+    }
+    setTimeout(function(){ if (map) { map.invalidateSize(); map.setView(map.getCenter(), map.getZoom()); } }, 600);
+});
 </script>
 @endsection

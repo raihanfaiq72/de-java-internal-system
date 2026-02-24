@@ -1,8 +1,8 @@
 @extends('Layout.main')
 
 @section('styles')
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+<link rel="stylesheet" href="/assets/libs/leaflet/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
 <style>
     #map {
         height: 520px;
@@ -132,8 +132,8 @@
         ];
     });
 @endphp
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+<script src="/assets/libs/leaflet/leaflet.js" onerror="(function(){var s=document.createElement('script');s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';document.head.appendChild(s)})()"></script>
+<script src="/assets/vendor/leaflet-routing/leaflet-routing-machine.js" onerror="(function(){var s=document.createElement('script');s.src='https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js';document.head.appendChild(s)})()"></script>
 <script>
     const deliveryId = {{ $do->id }};
     const fleet = @json($do->fleets->first());
@@ -144,7 +144,10 @@
 
     let map, driverMarker, routingControl;
 
-    function initMap() {
+    async function initMap() {
+        if (typeof L === 'undefined') {
+            await new Promise(r => setTimeout(r, 100));
+        }
         let center = [-6.200000, 106.816666];
         if (fleet && fleet.last_latitude && fleet.last_longitude) {
             center = [fleet.last_latitude, fleet.last_longitude];
@@ -154,9 +157,8 @@
 
         map = L.map('map').setView(center, 13);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+        addBestTileLayer(map);
+        setDefaultMarkerAssets();
 
         const routePoints = [];
         routePoints.push(L.latLng(OFFICE_LAT, OFFICE_LNG));
@@ -168,11 +170,13 @@
         routePoints.push(L.latLng(OFFICE_LAT, OFFICE_LNG));
 
         if (routePoints.length > 1) {
+            await ensureRoutingReady();
             routingControl = L.Routing.control({
                 waypoints: routePoints,
                 routeWhileDragging: false,
                 addWaypoints: false,
-                show: false
+                show: false,
+                createMarker: function() { return null; }
             }).addTo(map);
         }
 
@@ -218,8 +222,71 @@
         map.panTo([lat, lng]);
     }
 
+    function addBestTileLayer(mapInstance) {
+        const remoteUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        const localUrl = '/assets/tiles/{z}/{x}/{y}.png';
+        const remoteLayer = L.tileLayer(remoteUrl, {
+            attribution: '© OpenStreetMap contributors',
+            minZoom: 5,
+            maxZoom: 18
+        }).addTo(mapInstance);
+        setTimeout(() => mapInstance.invalidateSize(), 100);
+        const z = mapInstance.getZoom ? mapInstance.getZoom() : 13;
+        const c = mapInstance.getCenter ? mapInstance.getCenter() : L.latLng(-6.200000, 106.816666);
+        const t = latLngToTile(c.lat, c.lng, z);
+        const testImg = new Image();
+        testImg.onload = function() {
+            mapInstance.removeLayer(remoteLayer);
+            L.tileLayer(localUrl, {
+                attribution: '© OpenStreetMap contributors',
+                minZoom: 5,
+                maxZoom: 18
+            }).addTo(mapInstance);
+            setTimeout(() => mapInstance.invalidateSize(), 100);
+        };
+        testImg.onerror = function() { /* keep remote */ };
+        testImg.src = `/assets/tiles/${z}/${t.x}/${t.y}.png?v=1`;
+    }
+    function latLngToTile(lat, lon, zoom) {
+        const latRad = lat * Math.PI / 180;
+        const n = Math.pow(2, zoom);
+        const x = Math.floor((lon + 180) / 360 * n);
+        const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n);
+        return { x, y };
+    }
+
+    function ensureRoutingReady() {
+        if (typeof L !== 'undefined' && typeof L.Routing !== 'undefined') {
+            return Promise.resolve(true);
+        }
+        return new Promise((resolve) => {
+            const local = document.createElement('script');
+            local.src = '/assets/vendor/leaflet-routing/leaflet-routing-machine.js';
+            local.onload = () => resolve(true);
+            local.onerror = () => {
+                const cdn = document.createElement('script');
+                cdn.src = 'https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js';
+                cdn.onload = () => resolve(true);
+                cdn.onerror = () => resolve(false);
+                document.head.appendChild(cdn);
+            };
+            document.head.appendChild(local);
+        });
+    }
+
+    function setDefaultMarkerAssets() {
+        if (L && L.Icon && L.Icon.Default) {
+            L.Icon.Default.mergeOptions({
+                iconRetinaUrl: '/assets/libs/leaflet/images/marker-icon.png',
+                iconUrl: '/assets/libs/leaflet/images/marker-icon.png',
+                shadowUrl: null
+            });
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         initMap();
+        setTimeout(function(){ if (map) map.invalidateSize(); }, 300);
 
         // Listen to Reverb Channel
         if (window.Echo) {

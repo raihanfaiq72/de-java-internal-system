@@ -207,9 +207,7 @@
 
         if (!mitraMap) {
             mitraMap = L.map('mitraMap').setView([lat, lng], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(mitraMap);
+            addBestTileLayer(mitraMap);
             
             mitraMap.on('click', function(e) {
                 updateMarker(e.latlng.lat, e.latlng.lng);
@@ -272,6 +270,21 @@
             btn.innerHTML = originalContent;
             btn.disabled = false;
         }
+    }
+
+    function addBestTileLayer(mapInstance) {
+        const localUrl = '/assets/tiles/{z}/{x}/{y}.png';
+        const remoteUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        let layer = L.tileLayer(localUrl, { attribution: '© OpenStreetMap contributors' });
+        let switched = false;
+        layer.on('tileerror', function() {
+            if (switched) return;
+            switched = true;
+            mapInstance.removeLayer(layer);
+            layer = L.tileLayer(remoteUrl, { attribution: '© OpenStreetMap contributors' });
+            layer.addTo(mapInstance);
+        });
+        layer.addTo(mapInstance);
     }
 
     async function openMitraModal(id = null) {

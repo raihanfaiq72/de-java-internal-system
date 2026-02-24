@@ -27,13 +27,11 @@
                     <input type="hidden" id="form_mode" value="create">
                     <input type="hidden" id="edit_do_id" value="">
 
-                    <!-- Leaflet Assets -->
-                    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-                    <link rel="stylesheet"
-                        href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-                    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-                    <script
-                        src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+                    <!-- Leaflet Assets (Local) -->
+                    <link rel="stylesheet" href="/assets/libs/leaflet/leaflet.css" />
+                    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+                    <script src="/assets/libs/leaflet/leaflet.js" onerror="(function(){var s=document.createElement('script');s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';document.head.appendChild(s)})()"></script>
+                    <script src="/assets/vendor/leaflet-routing/leaflet-routing-machine.js"></script>
 
                     <div class="row g-4">
                         <!-- Left: DO Info & Invoices -->
@@ -272,18 +270,21 @@
         setTimeout(() => initMap(), 500);
     }
 
-    function initMap() {
+    async function initMap() {
         if (map) {
             map.invalidateSize();
             return;
         }
 
+        if (typeof L === 'undefined') {
+            await new Promise(r => setTimeout(r, 100));
+        }
+
         map = L.map('map').setView([OFFICE_LAT, OFFICE_LNG], 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+        addBestTileLayer(map);
 
         // Add Office Marker
+        setDefaultMarkerAssets();
         L.marker([OFFICE_LAT, OFFICE_LNG]).addTo(map)
             .bindPopup("Lokasi Kantor (Start)")
             .openPopup();
@@ -291,6 +292,7 @@
 
     async function updateMapRoute(invoiceIds) {
         if (!map) return;
+        await ensureRoutingReady();
 
         if (routingControl) {
             map.removeControl(routingControl);
@@ -359,12 +361,12 @@
         }
 
         if (waypoints.length > 1) {
-            waypoints.push(L.latLng(OFFICE_LAT, OFFICE_LNG));
             routingControl = L.Routing.control({
                 waypoints: waypoints,
                 routeWhileDragging: false,
                 show: false, // Hide instruction list
-                addWaypoints: false
+                addWaypoints: false,
+                createMarker: function() { return null; }
             }).on('routesfound', function (e) {
                 const routes = e.routes;
                 const summary = routes[0].summary;
@@ -374,6 +376,38 @@
                 calculateFuelCost();
             }).addTo(map);
         }
+    }
+    function addBestTileLayer(mapInstance) {
+        const remoteUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        const localUrl = '/assets/tiles/{z}/{x}/{y}.png';
+        const remoteLayer = L.tileLayer(remoteUrl, {
+            attribution: '© OpenStreetMap contributors',
+            minZoom: 5,
+            maxZoom: 18
+        }).addTo(mapInstance);
+        setTimeout(() => mapInstance.invalidateSize(), 100);
+        const z = mapInstance.getZoom ? mapInstance.getZoom() : 12;
+        const c = mapInstance.getCenter ? mapInstance.getCenter() : L.latLng(-6.966667, 110.416664);
+        const t = latLngToTile(c.lat, c.lng, z);
+        const testImg = new Image();
+        testImg.onload = function() {
+            mapInstance.removeLayer(remoteLayer);
+            L.tileLayer(localUrl, {
+                attribution: '© OpenStreetMap contributors',
+                minZoom: 5,
+                maxZoom: 18
+            }).addTo(mapInstance);
+            setTimeout(() => mapInstance.invalidateSize(), 100);
+        };
+        testImg.onerror = function() { /* keep remote */ };
+        testImg.src = `/assets/tiles/${z}/${t.x}/${t.y}.png?v=1`;
+    }
+    function latLngToTile(lat, lon, zoom) {
+        const latRad = lat * Math.PI / 180;
+        const n = Math.pow(2, zoom);
+        const x = Math.floor((lon + 180) / 360 * n);
+        const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n);
+        return { x, y };
     }
 
     // Simple Nominatim Geocoding (Rate Limited!)
@@ -600,6 +634,7 @@
     }
 
     async function openDeliveryOrderModal(id = null) {
+        await ensureBootstrapReady();
         const modal = new bootstrap.Modal(document.getElementById('deliveryOrderModal'));
         document.getElementById('deliveryOrderForm').reset();
         document.getElementById('disp_total_cost').innerText = 'Rp 0';
@@ -670,5 +705,51 @@
         setTimeout(() => {
             if (map) map.invalidateSize();
         }, 500);
+    }
+
+    function ensureBootstrapReady() {
+        if (typeof bootstrap !== 'undefined') return Promise.resolve(true);
+        return new Promise((resolve) => {
+            const local = document.createElement('script');
+            local.src = '/assets/libs/bootstrap/js/bootstrap.bundle.min.js';
+            local.onload = () => resolve(true);
+            local.onerror = () => {
+                const cdn = document.createElement('script');
+                cdn.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js';
+                cdn.onload = () => resolve(true);
+                cdn.onerror = () => resolve(false);
+                document.head.appendChild(cdn);
+            };
+            document.head.appendChild(local);
+        });
+    }
+
+    function ensureRoutingReady() {
+        if (typeof L !== 'undefined' && typeof L.Routing !== 'undefined') {
+            return Promise.resolve(true);
+        }
+        return new Promise((resolve) => {
+            const local = document.createElement('script');
+            local.src = '/assets/vendor/leaflet-routing/leaflet-routing-machine.js';
+            local.onload = () => resolve(true);
+            local.onerror = () => {
+                const cdn = document.createElement('script');
+                cdn.src = 'https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js';
+                cdn.onload = () => resolve(true);
+                cdn.onerror = () => resolve(false);
+                document.head.appendChild(cdn);
+            };
+            document.head.appendChild(local);
+        });
+    }
+
+    function setDefaultMarkerAssets() {
+        if (L && L.Icon && L.Icon.Default) {
+            L.Icon.Default.mergeOptions({
+                iconRetinaUrl: '/assets/libs/leaflet/images/marker-icon.png',
+                iconUrl: '/assets/libs/leaflet/images/marker-icon.png',
+                shadowUrl: null
+            });
+        }
     }
 </script>

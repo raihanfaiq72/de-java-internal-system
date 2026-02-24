@@ -584,12 +584,20 @@
 
     @include('Layout._alert_helper')
 
+    <script>window.__jq_loaded = !!window.jQuery;</script>
+    <script src="/assets/vendor/jquery/jquery-3.7.1.min.js" onerror="window.__jq_loaded=false"></script>
+    <script>
+        if (!window.__jq_loaded) {
+            var s = document.createElement('script');
+            s.src = 'https://code.jquery.com/jquery-3.7.1.min.js';
+            document.head.appendChild(s);
+        }
+    </script>
     <script src="{{ url('') }}/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url('') }}/assets/libs/simplebar/simplebar.min.js"></script>
     @stack('js')
     <!-- App js -->
     <script src="{{ url('') }}/assets/js/app.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     @yield('scripts')
 
     <!-- Force Sidebar Open Script -->

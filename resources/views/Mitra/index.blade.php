@@ -2,7 +2,7 @@
 
 @section('main')
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/assets/libs/leaflet/leaflet.css" />
 
     <div class="page-wrapper">
         <div class="page-content">
@@ -162,6 +162,7 @@
     </div>
 
     @include('Mitra.Modal.modal-fullscreen')
+    <script src="/assets/libs/leaflet/leaflet.js" onerror="(function(){var s=document.createElement('script');s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';document.head.appendChild(s)})()"></script>
 @endsection
 
 @push('css')
