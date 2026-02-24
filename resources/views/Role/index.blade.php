@@ -311,6 +311,9 @@
                             const chk = document.getElementById(`perm-${pId}`);
                             if (chk) chk.checked = true;
                         });
+
+                        // Auto toggle group switches when all in group are checked
+                        updateAllGroupToggles();
                     }
                 } catch (e) {
                     console.error(e);
@@ -342,6 +345,36 @@
         function toggleGroup(prefixId, toggle) {
             const checkboxes = document.querySelectorAll(`.group-${prefixId}`);
             checkboxes.forEach(c => c.checked = toggle.checked);
+
+            // Reflect state immediately
+            document.getElementById(`check-all-${prefixId}`).checked = toggle.checked;
         }
+
+        // Update a single group's toggle based on its child checkboxes
+        function updateGroupToggle(prefixId) {
+            const checkboxes = document.querySelectorAll(`.group-${prefixId}`);
+            const allChecked = Array.from(checkboxes).length > 0 && Array.from(checkboxes).every(c => c.checked);
+            const toggle = document.getElementById(`check-all-${prefixId}`);
+            if (toggle) toggle.checked = allChecked;
+        }
+
+        // Update all group toggles
+        function updateAllGroupToggles() {
+            document.querySelectorAll('input[id^="check-all-"]').forEach(t => {
+                const pid = t.id.replace('check-all-', '');
+                updateGroupToggle(pid);
+            });
+        }
+
+        // Listen to child checkbox changes to auto-update group toggles
+        document.addEventListener('change', function(e) {
+            if (e.target.classList && e.target.classList.contains('permission-checkbox')) {
+                const cls = Array.from(e.target.classList).find(c => c.startsWith('group-'));
+                if (cls) {
+                    const pid = cls.replace('group-', '');
+                    updateGroupToggle(pid);
+                }
+            }
+        });
     </script>
 @endpush

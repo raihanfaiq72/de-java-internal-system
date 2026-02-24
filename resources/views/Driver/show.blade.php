@@ -149,8 +149,21 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Upload Foto Bukti <span class="text-danger">*</span></label>
-                        <input type="file" class="form-control" id="proofPhoto" accept="image/*" capture="environment" required>
+                        <label class="form-label">Jepret Foto Bukti <span class="text-danger">*</span></label>
+                        <div class="border rounded p-2">
+                            <video id="cameraStream" autoplay playsinline style="width:100%; max-height:240px; background:#000;"></video>
+                            <canvas id="captureCanvas" class="d-none"></canvas>
+                            <div class="d-flex gap-2 mt-2">
+                                <button type="button" class="btn btn-primary btn-sm" id="btn-capture" disabled>
+                                    <i class="iconoir-camera me-1"></i> Jepret
+                                </button>
+                                <button type="button" class="btn btn-light border btn-sm" id="btn-preview" disabled data-bs-toggle="modal" data-bs-target="#previewModal">
+                                    <i class="iconoir-image me-1"></i> Lihat Foto
+                                </button>
+                            </div>
+                            <small class="text-muted d-block mt-2">Gunakan kamera belakang jika tersedia.</small>
+                        </div>
+                        <input type="file" class="form-control d-none" id="proofPhoto" accept="image/*">
                         <div class="form-text">Ambil foto penerima atau lokasi pengiriman.</div>
                     </div>
 
@@ -166,7 +179,21 @@
             </div>
         </div>
     </div>
-</div>
+
+<!-- Modal Preview Foto -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Preview Foto Bukti</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="previewImage" src="" alt="Preview" style="max-width:100%; border-radius:8px;">
+            </div>
+        </div>
+    </div>
+    </div>
 </div>
 </div>
 @endsection
@@ -367,6 +394,7 @@
                 
                 // Show Modal
                 new bootstrap.Modal(document.getElementById('proofModal')).show();
+                startCamera();
             });
         }
     });
@@ -389,6 +417,96 @@
         return deg * (Math.PI/180)
     }
 
+    let streamRef = null;
+    let capturedBlob = null;
+
+    async function startCamera() {
+        try {
+            if (streamRef) return;
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            streamRef = stream;
+            const video = document.getElementById('cameraStream');
+            video.srcObject = stream;
+            video.onloadedmetadata = () => {
+                document.getElementById('btn-capture').disabled = false;
+            };
+        } catch (e) {
+            console.warn('Camera unavailable, fallback to file input');
+            document.getElementById('proofPhoto').classList.remove('d-none');
+            document.getElementById('btn-capture').disabled = true;
+            document.getElementById('btn-preview').disabled = true;
+        }
+    }
+
+    document.getElementById('btn-capture').addEventListener('click', function() {
+        const video = document.getElementById('cameraStream');
+        const canvas = document.getElementById('captureCanvas');
+        if (!video.videoWidth || !video.videoHeight) {
+            alert('Kamera belum siap. Tunggu sebentar lalu coba lagi.');
+            return;
+        }
+        const w = video.videoWidth;
+        const h = video.videoHeight;
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, w, h);
+        applyWatermark(ctx, w, h);
+        getCanvasBlob(canvas, function(blob) {
+            capturedBlob = blob;
+            const url = URL.createObjectURL(blob);
+            const img = document.getElementById('previewImage');
+            img.src = url;
+            document.getElementById('btn-preview').disabled = false;
+        });
+    });
+
+    function applyWatermark(ctx, w, h) {
+        const name = document.getElementById('proofMitraName').value || 'Lokasi';
+        const lat = document.getElementById('proofLat').value || '-';
+        const lng = document.getElementById('proofLng').value || '-';
+        const time = new Date().toLocaleString('id-ID');
+        const lines = [
+            `Lokasi: ${name}`,
+            `Koordinat: ${lat}, ${lng}`,
+            `Waktu: ${time}`
+        ];
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        const rectH = 70;
+        ctx.fillRect(0, h - rectH - 10, w, rectH + 10);
+        ctx.fillStyle = '#fff';
+        ctx.font = '16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+        let y = h - rectH;
+        lines.forEach((line, idx) => {
+            ctx.fillText(line, 12, y + (idx * 22));
+        });
+    }
+
+    function getCanvasBlob(canvas, cb) {
+        if (canvas.toBlob) {
+            canvas.toBlob(function (blob) { cb(blob); }, 'image/jpeg', 0.9);
+        } else {
+            const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+            const byteString = atob(dataURL.split(',')[1]);
+            const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            cb(new Blob([ab], { type: mimeString }));
+        }
+    }
+
+    // Stop camera when modal closes
+    document.getElementById('proofModal').addEventListener('hidden.bs.modal', function () {
+        if (streamRef) {
+            streamRef.getTracks().forEach(t => t.stop());
+            streamRef = null;
+            capturedBlob = null;
+            document.getElementById('btn-preview').disabled = true;
+        }
+    });
+
     // Submit Proof
     $('#btn-submit-proof').click(function() {
         const formData = new FormData();
@@ -397,12 +515,16 @@
         formData.append('longitude', $('#proofLng').val());
         formData.append('notes', $('#proofNotes').val());
         
-        const fileInput = document.getElementById('proofPhoto');
-        if (fileInput.files.length === 0) {
-            alert('Harap upload foto bukti!');
-            return;
+        if (capturedBlob) {
+            formData.append('photo', capturedBlob, 'capture.jpg');
+        } else {
+            const fileInput = document.getElementById('proofPhoto');
+            if (fileInput.files.length === 0) {
+                alert('Harap jepret foto bukti!');
+                return;
+            }
+            formData.append('photo', fileInput.files[0]);
         }
-        formData.append('photo', fileInput.files[0]);
 
         const invoiceId = $('#proofInvoiceId').val();
         const btn = $(this);

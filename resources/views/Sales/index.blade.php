@@ -141,6 +141,22 @@
             z-index: 2001 !important;
         }
     </style>
+    <style>
+        @media (max-width: 576px) {
+            .page-title-box .breadcrumb { display: none; }
+            .card .card-body { padding: 1rem !important; }
+            .nav-tabs-finance .nav-link { font-size: 12px; padding: 8px 10px; }
+            #invoiceTable { display: block; width: 100%; overflow-x: auto; }
+            .detail-wrapper { padding: 8px; }
+
+            /* Header: make tabs and actions stack */
+            .card-header.d-flex { flex-wrap: wrap; gap: .5rem; }
+            .card-header .nav-tabs-finance { width: 100%; margin-top: .5rem; }
+            .card-header .text-end { width: 100%; text-align: left !important; }
+            .card-header .text-end .btn { width: 100%; }
+            .card-header .text-end .btn + .btn { margin-top: .5rem; }
+        }
+    </style>
 @endpush
 
 @section('main')
@@ -183,24 +199,16 @@
 
                     <div class="card-body p-4 bg-white">
                         <div class="mb-4 p-3 rounded-3 bg-light border shadow-sm">
-                            <div class="d-flex flex-nowrap align-items-end gap-2 overflow-auto pb-1"
-                                style="scrollbar-width: thin;">
-
-                                <div style="min-width: 0; flex: 1.2;">
-                                    <label class="f-label mb-1 fw-bold text-muted"
-                                        style="font-size: 11px;">Pencarian</label>
+                            <div class="row g-2 align-items-end">
+                                <div class="col-12 col-md-4">
+                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Pencarian</label>
                                     <div class="input-group input-group-sm">
-                                        <span class="input-group-text bg-white border-end-0"><i
-                                                class="fa fa-search text-muted"></i></span>
-                                        <input type="text" id="filter-search"
-                                            class="form-control border-start-0 ps-0 shadow-none"
-                                            placeholder="No. Invoice / Mitra...">
+                                        <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"></i></span>
+                                        <input type="text" id="filter-search" class="form-control border-start-0 ps-0 shadow-none" placeholder="No. Invoice / Mitra...">
                                     </div>
                                 </div>
-
-                                <div style="min-width: 0; flex: 1;">
-                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Status
-                                        Dok</label>
+                                <div class="col-12 col-sm-6 col-md-2">
+                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Status Dok</label>
                                     <select id="filter-status-dok" class="tom-select-init">
                                         @php $documentStatus = ['Draft', 'Sent', 'Failed', 'Approved', 'Rejected']; @endphp
                                         <option value="">Semua</option>
@@ -209,10 +217,8 @@
                                         @endforeach
                                     </select>
                                 </div>
-
-                                <div style="min-width: 0; flex: 1;">
-                                    <label class="f-label mb-1 fw-bold text-muted"
-                                        style="font-size: 11px;">Pembayaran</label>
+                                <div class="col-12 col-sm-6 col-md-2">
+                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Pembayaran</label>
                                     <select id="filter-status-bayar" class="tom-select-init">
                                         @php
                                             $paymentStatus = [
@@ -229,49 +235,36 @@
                                         @endforeach
                                     </select>
                                 </div>
-
-                                <div style="min-width: 0; flex: 1;">
+                                <div class="col-12 col-sm-6 col-md-2">
                                     <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Mitra</label>
                                     <select id="filter-mitra-id" class="tom-select-init">
                                         <option value="">Semua Pemasok...</option>
                                     </select>
                                 </div>
-
-                                <div style="min-width: 0; flex: 1;">
-                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Tgl.
-                                        Invoice</label>
-                                    <input type="date" id="filter-tgl-invoice"
-                                        class="form-control form-control-sm shadow-none">
+                                <div class="col-6 col-md-2">
+                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Tgl. Invoice</label>
+                                    <input type="date" id="filter-tgl-invoice" class="form-control form-control-sm shadow-none">
                                 </div>
-
-                                <div style="min-width: 0; flex: 1;">
-                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Jatuh
-                                        Tempo</label>
-                                    <input type="date" id="filter-tgl-jatuh-tempo"
-                                        class="form-control form-control-sm shadow-none">
+                                <div class="col-6 col-md-2">
+                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Jatuh Tempo</label>
+                                    <input type="date" id="filter-tgl-jatuh-tempo" class="form-control form-control-sm shadow-none">
                                 </div>
-
-                                <div class="d-flex gap-1" style="flex: 1; min-width: 0;">
-                                    <button onclick="loadInvoiceData()"
-                                        class="btn btn-dark fw-bold btn-sm flex-fill shadow-sm" title="Filter">
+                                <div class="col-12 col-sm-6 col-md-2 d-flex gap-2">
+                                    <button onclick="loadInvoiceData()" class="btn btn-dark fw-bold btn-sm flex-fill shadow-sm" title="Filter">
                                         <i class="fa fa-filter"></i>
                                     </button>
-                                    <button onclick="resetFilter()"
-                                        class="btn btn-light border border-danger fw-bold text-danger btn-sm flex-fill"
-                                        title="Reset">
+                                    <button onclick="resetFilter()" class="btn btn-light border border-danger fw-bold text-danger btn-sm flex-fill" title="Reset">
                                         <i class="fa fa-sync"></i>
                                     </button>
                                 </div>
-
-                                <div id="bulk-action-area" class="d-none flex-shrink-0 ms-2 border-start ps-2">
-                                    <button class="btn btn-outline-primary fw-bold btn-sm px-3 me-1"
-                                        onclick="initBulkEdit()">
-                                        <i class="fa fa-pencil"></i>
-                                    </button>
-                                    <button class="btn btn-outline-danger fw-bold btn-sm px-3" onclick="bulkDelete()">
-                                        <i class="fa fa-trash-can"></i>
-                                    </button>
-                                </div>
+                            </div>
+                            <div id="bulk-action-area" class="d-none border-top pt-2 mt-2">
+                                <button class="btn btn-outline-primary fw-bold btn-sm px-3 me-1" onclick="initBulkEdit()">
+                                    <i class="fa fa-pencil"></i>
+                                </button>
+                                <button class="btn btn-outline-danger fw-bold btn-sm px-3" onclick="bulkDelete()">
+                                    <i class="fa fa-trash-can"></i>
+                                </button>
                             </div>
                         </div>
 

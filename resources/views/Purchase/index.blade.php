@@ -135,6 +135,15 @@
             z-index: 2001 !important;
         }
     </style>
+    <style>
+        @media (max-width: 576px) {
+            .page-title-box .breadcrumb { display: none; }
+            .card .card-body { padding: 1rem !important; }
+            .nav-tabs-finance .nav-link { font-size: 12px; padding: 8px 10px; }
+            #invoiceTable { display: block; width: 100%; overflow-x: auto; }
+            .detail-wrapper { padding: 8px; }
+        }
+    </style>
 @endpush
 
 @section('main')

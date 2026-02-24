@@ -296,6 +296,16 @@
             color: inherit;
         }
     </style>
+    <style>
+        @media (max-width: 576px) {
+            .page-title-box .breadcrumb { display: none; }
+            .card .card-body { padding: 1rem !important; }
+            .row.g-2 .col-md-4, .row.g-2 .col-md-3, .row.g-2 .col-md-2 { flex: 0 0 100%; max-width: 100%; }
+            .header-grid, .header-table-custom { display: none; }
+            .accordion-button .row > [class^="col-"] { flex: 0 0 100%; max-width: 100%; margin-bottom: 6px; }
+            .col-fixed-check, .col-fixed-aksi { text-align: left !important; width: auto; }
+        }
+    </style>
 @endpush
 
 @push('js')

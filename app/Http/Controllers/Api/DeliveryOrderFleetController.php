@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\DeliveryOrderFleet;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Throwable;
 
@@ -14,12 +15,22 @@ class DeliveryOrderFleetController extends Controller
     {
         try {
             $search = $request->search;
+            $status = $request->status;
+            $mine = filter_var($request->mine, FILTER_VALIDATE_BOOL);
+            $perPage = (int) ($request->per_page ?? 10);
 
             $data = DeliveryOrderFleet::with('fleet', 'deliveryOrder')
                 ->when($search, function ($q) use ($search) {
                     $q->whereHas('fleet', fn ($q2) => $q2->where('plate_number', 'like', "%{$search}%"));
                 })
-                ->paginate(10);
+                ->when($status, function ($q) use ($status) {
+                    $q->where('status', $status);
+                })
+                ->when($mine, function ($q) {
+                    $q->where('driver_id', Auth::id());
+                })
+                ->latest()
+                ->paginate($perPage);
 
             return response()->json(['success' => true, 'data' => $data]);
         } catch (\Throwable $e) {
