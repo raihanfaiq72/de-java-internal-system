@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\COA;
 use App\Models\Invoice;
 use App\Models\Partner;
+use App\Models\Expense;
+use App\Models\Payment;
+use App\Models\FinancialAccount;
+use App\Models\Office;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -177,6 +181,157 @@ class ReportController extends Controller
         return view($this->views.'ar-aging', compact('agingData', 'summary', 'mitras', 'customerDetails'));
     }
 
+    public function cashBook(Request $request)
+    {
+        $officeId = session('active_office_id');
+        $accounts = FinancialAccount::where('office_id', $officeId)->orderBy('code')->get();
+        $accountId = $request->account_id ?: ($accounts->first()->id ?? null);
+
+        $start = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfMonth();
+        $end = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
+
+        $openingIncome = Payment::where('office_id', $officeId)
+            ->where('akun_keuangan_id', $accountId)
+            ->whereDate('tgl_pembayaran', '<', $start->toDateString())
+            ->sum('jumlah_bayar');
+
+        $openingExpense = Expense::where('office_id', $officeId)
+            ->where('akun_keuangan_id', $accountId)
+            ->whereDate('tgl_biaya', '<', $start->toDateString())
+            ->sum('jumlah');
+
+        $openingTransferIn = \App\Models\FinancialTransaction::where('office_id', $officeId)
+            ->where('to_account_id', $accountId)
+            ->where('status', 'posted')
+            ->whereIn('type', ['transfer', 'income'])
+            ->whereDate('transaction_date', '<', $start->toDateString())
+            ->sum('amount');
+
+        $openingTransferOut = \App\Models\FinancialTransaction::where('office_id', $officeId)
+            ->where('from_account_id', $accountId)
+            ->where('status', 'posted')
+            ->whereIn('type', ['transfer', 'expense'])
+            ->whereDate('transaction_date', '<', $start->toDateString())
+            ->sum('amount');
+
+        $openingBalance = $openingIncome + $openingTransferIn - ($openingExpense + $openingTransferOut);
+
+        $rows = [];
+
+        $rows[] = [
+            'date' => $start->toDateString(),
+            'type' => 'DEPOSIT',
+            'description' => 'SALDO AWAL',
+            'debit' => $openingBalance > 0 ? $openingBalance : 0,
+            'credit' => $openingBalance < 0 ? abs($openingBalance) : 0,
+        ];
+
+        $payments = Payment::with(['invoice.mitra'])
+            ->where('office_id', $officeId)
+            ->where('akun_keuangan_id', $accountId)
+            ->whereBetween('tgl_pembayaran', [$start->toDateString(), $end->toDateString()])
+            ->get();
+
+        foreach ($payments as $p) {
+            $mitra = $p->invoice?->mitra?->nama;
+            $invNo = $p->invoice?->nomor_invoice;
+            $desc = ($mitra ?: 'Pembayaran').' - Pembayaran Nota '.($invNo ?: $p->nomor_pembayaran);
+            $rows[] = [
+                'date' => Carbon::parse($p->tgl_pembayaran)->toDateString(),
+                'type' => 'DEPOSIT',
+                'description' => $desc,
+                'debit' => $p->jumlah_bayar,
+                'credit' => 0,
+            ];
+        }
+
+        $expenses = Expense::where('office_id', $officeId)
+            ->where('akun_keuangan_id', $accountId)
+            ->whereBetween('tgl_biaya', [$start->toDateString(), $end->toDateString()])
+            ->get();
+
+        foreach ($expenses as $e) {
+            $rows[] = [
+                'date' => Carbon::parse($e->tgl_biaya)->toDateString(),
+                'type' => 'BEBAN',
+                'description' => $e->nama_biaya,
+                'debit' => 0,
+                'credit' => $e->jumlah,
+            ];
+        }
+
+        $finTrxIn = \App\Models\FinancialTransaction::where('office_id', $officeId)
+            ->where('to_account_id', $accountId)
+            ->where('status', 'posted')
+            ->whereBetween('transaction_date', [$start->toDateString(), $end->toDateString()])
+            ->get();
+
+        foreach ($finTrxIn as $t) {
+            $rows[] = [
+                'date' => Carbon::parse($t->transaction_date)->toDateString(),
+                'type' => 'DEPOSIT',
+                'description' => $t->description ?? 'Penerimaan',
+                'debit' => $t->amount,
+                'credit' => 0,
+            ];
+        }
+
+        $finTrxOut = \App\Models\FinancialTransaction::where('office_id', $officeId)
+            ->where('from_account_id', $accountId)
+            ->where('status', 'posted')
+            ->whereBetween('transaction_date', [$start->toDateString(), $end->toDateString()])
+            ->get();
+
+        foreach ($finTrxOut as $t) {
+            $rows[] = [
+                'date' => Carbon::parse($t->transaction_date)->toDateString(),
+                'type' => 'BEBAN',
+                'description' => $t->description ?? 'Pengeluaran',
+                'debit' => 0,
+                'credit' => $t->amount,
+            ];
+        }
+
+        usort($rows, function ($a, $b) {
+            if ($a['description'] === 'SALDO AWAL') {
+                return -1;
+            }
+            if ($b['description'] === 'SALDO AWAL') {
+                return 1;
+            }
+            return strcmp($a['date'], $b['date']);
+        });
+
+        $running = 0;
+        $totalDebit = 0;
+        $totalCredit = 0;
+        foreach ($rows as &$r) {
+            $totalDebit += $r['debit'];
+            $totalCredit += $r['credit'];
+            if ($r['description'] === 'SALDO AWAL') {
+                $running = $openingBalance;
+            } else {
+                $running += $r['debit'];
+                $running -= $r['credit'];
+            }
+            $r['balance'] = $running;
+        }
+        unset($r);
+
+        $office = Office::find($officeId);
+
+        return view($this->views.'cash-book', [
+            'accounts' => $accounts,
+            'accountId' => $accountId,
+            'rows' => $rows,
+            'totalDebit' => $totalDebit,
+            'totalCredit' => $totalCredit,
+            'finalBalance' => $running,
+            'start' => $start,
+            'end' => $end,
+            'officeName' => $office?->name,
+        ]);
+    }
     public function salesReport()
     {
         $year = date('Y');

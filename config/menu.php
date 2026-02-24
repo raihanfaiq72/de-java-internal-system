@@ -216,6 +216,11 @@ return [
                 'route' => 'report.general-ledger',
                 'icon' => 'iconoir-book',
             ],
+            [
+                'title' => 'Kas Besar',
+                'route' => 'report.cash-book',
+                'icon' => 'iconoir-wallet',
+            ],
         ],
 
     ],
