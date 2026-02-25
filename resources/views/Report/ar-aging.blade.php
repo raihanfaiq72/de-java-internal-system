@@ -49,8 +49,8 @@
                             </div>
                         </form>
                         <div class="text-end">
-                            <button class="btn btn-white border fw-bold px-3 shadow-sm text-dark">
-                                <i class="iconoir-download me-1"></i> Unduh
+                            <button type="button" class="btn btn-white border fw-bold px-3 shadow-sm text-dark" data-bs-toggle="modal" data-bs-target="#printPreviewModal">
+                                <i class="fa fa-print me-1"></i> Cetak
                             </button>
                         </div>
                     </div>
@@ -150,6 +150,107 @@
                     </div>
                 </div>
 
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Preview Modal -->
+    <div class="modal fade" id="printPreviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">
+                        <i class="fa fa-print me-2"></i> Preview Cetak Laporan
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body bg-light p-4">
+                    <div class="card border shadow-sm mx-auto" style="max-width: 210mm; min-height: 297mm;">
+                        <div class="card-body p-5 bg-white">
+                            <!-- Report Header -->
+                            <div class="text-center mb-4">
+                                <h4 class="fw-bold text-uppercase mb-1">LAPORAN UMUR PIUTANG</h4>
+                                <p class="text-muted mb-0">
+                                    Periode: {{ request('start_date') ? \Carbon\Carbon::parse(request('start_date'))->translatedFormat('d F Y') : 'Awal' }} 
+                                    s/d 
+                                    {{ request('end_date') ? \Carbon\Carbon::parse(request('end_date'))->translatedFormat('d F Y') : 'Akhir' }}
+                                </p>
+                            </div>
+
+                            <!-- Ringkasan Section -->
+                            <h6 class="fw-bold border-bottom pb-2 mb-3">RINGKASAN UMUR PIUTANG</h6>
+                            <table class="table table-bordered table-sm mb-5" style="border-color: #000;">
+                                <thead class="bg-light text-center">
+                                    <tr>
+                                        <th>Total Customers</th>
+                                        <th>Avg. Day Past Due</th>
+                                        <th>Total Invoices</th>
+                                        <th>Total Amount</th>
+                                        <th><= 0 Hari</th>
+                                        <th>1-15 Hari</th>
+                                        <th>16-30 Hari</th>
+                                        <th>31-45 Hari</th>
+                                        <th>46-60 Hari</th>
+                                        <th>61+ Hari</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-center">
+                                    <tr>
+                                        <td>{{ $summary['total_customers'] }}</td>
+                                        <td>{{ number_format($summary['avg_days_past_due'], 2) }}</td>
+                                        <td>{{ $summary['total_invoices'] }}</td>
+                                        <td class="text-end">{{ number_format($summary['total_amount']) }}</td>
+                                        <td class="text-end">{{ number_format($summary['buckets']['current']) }}</td>
+                                        <td class="text-end">{{ number_format($summary['buckets']['1-15']) }}</td>
+                                        <td class="text-end">{{ number_format($summary['buckets']['16-30']) }}</td>
+                                        <td class="text-end">{{ number_format($summary['buckets']['31-45']) }}</td>
+                                        <td class="text-end">{{ number_format($summary['buckets']['46-60']) }}</td>
+                                        <td class="text-end">{{ number_format($summary['buckets']['61+']) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <!-- Detail Section -->
+                            <h6 class="fw-bold border-bottom pb-2 mb-3">DETAIL PELANGGAN</h6>
+                            <table class="table table-bordered table-sm" style="border-color: #000; font-size: 12px;">
+                                <thead class="bg-light text-center">
+                                    <tr>
+                                        <th style="width: 5%;">No</th>
+                                        <th>Kode</th>
+                                        <th>Nama Pelanggan</th>
+                                        <th>Tagihan</th>
+                                        <th>Bayar</th>
+                                        <th>Outstanding</th>
+                                        <th>Sales Code</th>
+                                        <th>Sales Name</th>
+                                        <th>Umur</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($customerDetails as $i => $row)
+                                        <tr>
+                                            <td class="text-center">{{ $i + 1 }}</td>
+                                            <td>{{ $row['kode'] }}</td>
+                                            <td>{{ $row['nama'] }}</td>
+                                            <td class="text-end">{{ number_format($row['tagihan']) }}</td>
+                                            <td class="text-end">{{ number_format($row['dibayar']) }}</td>
+                                            <td class="text-end fw-bold">{{ number_format($row['outstanding']) }}</td>
+                                            <td>{{ $row['sales_code'] }}</td>
+                                            <td>{{ $row['sales_name'] }}</td>
+                                            <td class="text-center">{{ $row['umur_nota'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-light fw-bold border" data-bs-dismiss="modal">Tutup</button>
+                    <a href="{{ request()->fullUrlWithQuery(['export' => 'excel']) }}" class="btn btn-primary fw-bold">
+                        <i class="fa fa-print me-2"></i> Cetak Sekarang
+                    </a>
+                </div>
             </div>
         </div>
     </div>

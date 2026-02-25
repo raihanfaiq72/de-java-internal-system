@@ -178,6 +178,18 @@ class ReportController extends Controller
         // Sort data by Total Piutang Descending
         usort($agingData, fn ($a, $b) => $b['total'] <=> $a['total']);
 
+        // Handle Export Request
+        if ($request->has('export') && $request->export == 'excel') {
+            $filename = 'Laporan_Umur_Piutang_' . date('YmdHis') . '.xls';
+            
+            return response()->streamDownload(function () use ($summary, $customerDetails) {
+                echo view('Report.ar-aging-excel', compact('summary', 'customerDetails'));
+            }, $filename, [
+                'Content-Type' => 'application/vnd.ms-excel',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+        }
+
         return view($this->views.'ar-aging', compact('agingData', 'summary', 'mitras', 'customerDetails'));
     }
 
