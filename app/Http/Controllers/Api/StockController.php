@@ -108,9 +108,23 @@ class StockController extends Controller
                 ->where('office_id', $officeId)
                 ->selectRaw('SUM((SELECT SUM(CASE WHEN type = "IN" THEN qty ELSE -qty END) FROM stock_mutations WHERE product_id = products.id AND stock_location_id = ?) * harga_beli) as total_value', [$locationId])
                 ->first()->total_value ?? 0;
+            
+            // Location-specific counts are expensive without materialized views or better schema
+            // We'll skip low/out stock counts for location-specific view for now or estimate
+            $lowStockCount = 0; 
+            $outOfStockCount = 0;
+            $totalItems = Product::where('track_stock', true)->where('office_id', $officeId)
+                ->whereHas('stock_mutations', function($q) use ($locationId) {
+                    $q->where('stock_location_id', $locationId);
+                })->count();
+
         } else {
             $totalQty = $productQuery->sum('qty');
             $inventoryValue = $productQuery->selectRaw('SUM(qty * harga_beli) as total_value')->first()->total_value ?? 0;
+            
+            $totalItems = $productQuery->count();
+            $lowStockCount = (clone $productQuery)->where('qty', '>', 0)->where('qty', '<', 5)->count();
+            $outOfStockCount = (clone $productQuery)->where('qty', '<=', 0)->count();
         }
 
         // Chart Data (Last 6 Months)
@@ -180,6 +194,9 @@ class StockController extends Controller
                 'pending_ship' => (float) $pendingShip,
                 'total_qty' => (float) $totalQty,
                 'inventory_value' => (float) $inventoryValue,
+                'total_items' => (int) $totalItems,
+                'low_stock_count' => (int) $lowStockCount,
+                'out_of_stock_count' => (int) $outOfStockCount,
             ],
             'charts' => [
                 'labels' => $months,
@@ -208,6 +225,18 @@ class StockController extends Controller
 
         if ($request->location_id) {
             $query->where('stock_location_id', $request->location_id);
+        }
+
+        if ($request->type) {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
         }
 
         $data = $query->latest()->paginate(10);
@@ -344,11 +373,6 @@ class StockController extends Controller
             return apiResponse(false, 'Produk tidak ditemukan', null, null, 404);
         }
 
-        // Fetch active IN mutations (remaining_qty > 0)
-        // We might want to filter by location if the user is currently filtering by location
-        // But FIFO is generally global or per-location depending on strategy.
-        // Assuming global FIFO for now or we can accept a location_id param.
-
         $locationId = request('location_id');
 
         $query = StockMutation::where('product_id', $id)
@@ -361,7 +385,12 @@ class StockController extends Controller
         }
 
         $batches = $query->orderBy('created_at', 'asc')->get();
+        $totalStock = $batches->sum('remaining_qty');
 
-        return apiResponse(true, 'Data FIFO', $batches);
+        return apiResponse(true, 'Data FIFO', [
+            'product' => $product,
+            'batches' => $batches,
+            'total_stock' => $totalStock
+        ]);
     }
 }

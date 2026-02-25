@@ -60,6 +60,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('mitra', [MitraController::class, 'index'])->name('mitra');
         Route::get('barang', [BarangController::class, 'index'])->name('barang');
         Route::get('stok', [StockController::class, 'index'])->name('stok');
+        Route::get('stok/export', [StockController::class, 'export'])->name('stok.export');
+        Route::get('stok/print', [StockController::class, 'print'])->name('stok.print');
         Route::get('expenses', [ExpenseController::class, 'index'])->name('expenses.index');
         Route::get('fleets', [FleetController::class, 'index'])->name('fleets.index');
 

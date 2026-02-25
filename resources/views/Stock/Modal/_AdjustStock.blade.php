@@ -16,6 +16,14 @@
                     </div>
                 </div>
 
+                <div class="mb-3">
+                    <label class="small fw-bold">Lokasi Stok</label>
+                    <select id="adjust-stock-location" class="form-select form-select-sm">
+                        <option value="">-- Pilih Lokasi (Opsional) --</option>
+                    </select>
+                    <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">Jika kosong, akan menyesuaikan stok global/tak teralokasi.</small>
+                </div>
+
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="small fw-bold">Stok Saat Ini</label>
