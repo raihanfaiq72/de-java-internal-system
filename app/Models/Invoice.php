@@ -54,8 +54,8 @@ class Invoice extends Model
         return $this->hasMany(Payment::class);
     }
 
-    public function deliveryOrderInvoice()
+    public function deliveryOrderInvoices()
     {
-        return $this->hasOne(DeliveryOrderInvoice::class);
+        return $this->hasMany(DeliveryOrderInvoice::class);
     }
 }
