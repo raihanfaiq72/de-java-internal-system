@@ -309,7 +309,8 @@
             if (invoiceSelect) {
                 invoiceSelect.clearOptions();
                 // Fetch more invoices to ensure better coverage
-                const resInv = await fetch("{{ route('invoice-api.index') }}?status=Unpaid&per_page=100");
+                // exclude_delivered=1 to hide invoices already in active DOs
+                const resInv = await fetch("{{ route('invoice-api.index') }}?status=Unpaid&per_page=100&exclude_delivered=1");
                 const jsonInv = await resInv.json();
 
                 if (jsonInv.success) {

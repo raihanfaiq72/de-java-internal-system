@@ -190,6 +190,13 @@ class InvoiceController extends Controller
         if ($request->tipe_invoice) {
             $query->where('tipe_invoice', $request->tipe_invoice);
         }
+        
+        // Filter: Exclude invoices already in delivery orders (unless status is failed/rejected)
+        if ($request->exclude_delivered) {
+            $query->whereDoesntHave('deliveryOrderInvoice', function ($q) {
+                $q->whereNotIn('delivery_status', ['failed', 'rejected', 'returned']);
+            });
+        }
 
         $data = $query->latest()->paginate(10);
 
