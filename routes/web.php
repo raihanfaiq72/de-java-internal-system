@@ -107,6 +107,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/delivery/{id}/start', [App\Http\Controllers\DriverDeliveryController::class, 'startTrip'])->name('delivery.start');
             Route::post('/delivery/{id}/location', [App\Http\Controllers\DriverDeliveryController::class, 'updateLocation'])->name('delivery.location');
             Route::post('/delivery/{id}/invoice/{invoiceId}/arrive', [App\Http\Controllers\DriverDeliveryController::class, 'arriveAtStop'])->name('delivery.arrive');
+            Route::get('/delivery/{id}/invoice/{invoiceId}/proof', [App\Http\Controllers\DriverDeliveryController::class, 'getProof'])->name('delivery.proof');
             Route::post('/delivery/{id}/finish', [App\Http\Controllers\DriverDeliveryController::class, 'finishTrip'])->name('delivery.finish');
         });
 

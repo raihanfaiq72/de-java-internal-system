@@ -41,7 +41,8 @@ class DriverDeliveryController extends Controller
 
         $driverId = Auth::id();
 
-        $fleet = DeliveryOrderFleet::where('delivery_order_id', $id)
+        $fleet = DeliveryOrderFleet::with('fleet')
+            ->where('delivery_order_id', $id)
             ->where('driver_id', $driverId)
             ->firstOrFail();
 
@@ -155,11 +156,25 @@ class DriverDeliveryController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function getProof($id, $invoiceId)
+    {
+        $doInvoice = DeliveryOrderInvoice::where('delivery_order_id', $id)
+            ->where('invoice_id', $invoiceId)
+            ->firstOrFail();
+
+        return response()->json([
+            'photo_url' => $doInvoice->proof_photo ? asset('storage/' . $doInvoice->proof_photo) : null,
+            'notes' => $doInvoice->delivery_notes
+        ]);
+    }
+
     public function finishTrip(Request $request, $id)
     {
         $request->validate([
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
+            'odo_end' => 'required|numeric|min:0',
+            'gas_leftover' => 'required|numeric|min:0',
         ]);
 
         $driverId = Auth::id();
@@ -175,7 +190,17 @@ class DriverDeliveryController extends Controller
             'status' => 'completed',
             'last_latitude' => $request->latitude,
             'last_longitude' => $request->longitude,
+            'odo_end' => $request->odo_end,
+            'gas_leftover' => $request->gas_leftover,
         ]);
+
+        // Update Fleet Master Data for next trip
+        if ($fleet->fleet) {
+            $fleet->fleet->update([
+                'last_odometer' => $request->odo_end,
+                'last_fuel_leftover' => $request->gas_leftover,
+            ]);
+        }
 
         // Check if all invoices delivered?
         // Update DO status

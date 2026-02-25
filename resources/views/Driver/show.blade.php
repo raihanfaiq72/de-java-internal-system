@@ -37,6 +37,27 @@
             <div class="row">
                 <div class="col-lg-8 mb-4">
                     <div class="card shadow-sm border-0 mb-3">
+                        <div class="card-body py-2">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Armada</small>
+                                    <div class="fw-bold text-truncate">{{ $fleet->fleet->fleet_name ?? '-' }}</div>
+                                    <small class="text-secondary">{{ $fleet->fleet->license_plate ?? '-' }}</small>
+                                </div>
+                                <div class="col-3 text-center border-start">
+                                    <small class="text-muted d-block">Odo Awal</small>
+                                    <div class="fw-bold">{{ number_format($fleet->odo_start ?? 0, 0, ',', '.') }}</div>
+                                    <small class="text-secondary">KM</small>
+                                </div>
+                                <div class="col-3 text-center border-start">
+                                    <small class="text-muted d-block">Uang Jalan</small>
+                                    <div class="fw-bold text-success">{{ number_format($fleet->cash_amount ?? 0, 0, ',', '.') }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm border-0 mb-3">
                         <div class="card-body p-2">
                             <div id="map"></div>
                         </div>
@@ -193,19 +214,23 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Jepret Foto Bukti <span class="text-danger">*</span></label>
-                        <div class="border rounded p-2 position-relative">
-                            <video id="cameraStream" autoplay playsinline style="width:100%; max-height:240px; background:#000;"></video>
-                            <canvas id="captureCanvas" class="d-none"></canvas>
-                            <div id="shutterFlash" class="d-none" style="position:absolute; inset:0; background:#fff; opacity:0.7;"></div>
-                            <div class="d-flex gap-2 mt-2">
-                                <button type="button" class="btn btn-primary btn-sm" id="btn-capture" disabled>
-                                    <i class="iconoir-camera me-1"></i> Jepret
+                        <div class="border rounded p-2 position-relative text-center">
+                            <div class="position-relative">
+                                <video id="cameraStream" autoplay playsinline style="width:100%; max-height:240px; background:#000; border-radius: 4px;"></video>
+                                <img id="capturedResult" class="d-none" style="width:100%; max-height:240px; object-fit:contain; border-radius: 4px;">
+                                <canvas id="captureCanvas" class="d-none"></canvas>
+                                <div id="shutterFlash" class="d-none" style="position:absolute; inset:0; background:#fff; opacity:0.7;"></div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-center gap-2 mt-2">
+                                <button type="button" class="btn btn-primary" id="btn-capture" disabled>
+                                    <i class="iconoir-camera me-1"></i> Jepret Foto
                                 </button>
-                                <button type="button" class="btn btn-light border btn-sm" id="btn-preview" disabled data-bs-toggle="modal" data-bs-target="#previewModal">
-                                    <i class="iconoir-image me-1"></i> Lihat Foto
+                                <button type="button" class="btn btn-warning d-none" id="btn-retake">
+                                    <i class="iconoir-refresh-double me-1"></i> Foto Ulang
                                 </button>
                             </div>
-                            <small class="text-muted d-block mt-2">Gunakan kamera belakang jika tersedia.</small>
+                            <small class="text-muted d-block mt-2" id="cam-hint">Gunakan kamera belakang jika tersedia.</small>
                         </div>
                         <input type="file" class="form-control d-none" id="proofPhoto" accept="image/*">
                         <div class="form-text">Ambil foto penerima atau lokasi pengiriman.</div>
@@ -237,6 +262,7 @@
         </div>
     </div>
 </div>
+<!-- End Preview Modal (Removed) -->
 
 <!-- Modal Detail Bukti -->
 <div class="modal fade" id="proofDetailModal" tabindex="-1">
@@ -260,6 +286,42 @@
                         <div class="mb-2"><strong>Catatan:</strong> <span id="proofDetailNotes">-</span></div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Selesaikan Trip -->
+<div class="modal fade" id="finishTripModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Selesaikan Perjalanan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="finishTripForm">
+                    <input type="hidden" id="finishLat">
+                    <input type="hidden" id="finishLng">
+                    <div class="mb-3">
+                        <label class="form-label">Odometer Awal</label>
+                        <input type="text" class="form-control" value="{{ $fleet->odo_start }}" readonly disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Odometer Akhir (KM) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.1" class="form-control" id="finishOdoEnd" required placeholder="Contoh: 12500.5">
+                        <div class="form-text">Masukkan angka odometer saat tiba di kantor.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sisa Bensin (Liter) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.1" class="form-control" id="finishGasLeftover" required placeholder="Contoh: 5.5">
+                        <div class="form-text">Perkiraan sisa bensin di tangki untuk trip berikutnya.</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-success" id="btn-submit-finish">Selesaikan & Simpan</button>
             </div>
         </div>
     </div>
@@ -424,40 +486,64 @@ async function startCamera() {
         streamRef = stream;
         const v = document.getElementById('cameraStream');
         v.srcObject = stream;
-        v.onloadedmetadata = () => { document.getElementById('btn-capture').disabled = false; };
+        v.onloadedmetadata = () => { 
+            document.getElementById('btn-capture').disabled = false;
+            v.play(); // ensure play
+        };
     } catch {
         document.getElementById('proofPhoto').classList.remove('d-none');
-        document.getElementById('btn-capture').disabled = true;
-        document.getElementById('btn-preview').disabled = true;
+        document.getElementById('btn-capture').classList.add('d-none');
+        document.getElementById('cam-hint').innerText = 'Kamera tidak tersedia. Silakan upload foto manual.';
     }
 }
 document.getElementById('btn-capture').addEventListener('click', function() {
     const v = document.getElementById('cameraStream');
     const c = document.getElementById('captureCanvas');
+    const img = document.getElementById('capturedResult');
+    
     if (!v.videoWidth || !v.videoHeight) { alert('Kamera belum siap.'); return; }
+    
     const w = v.videoWidth, h = v.videoHeight;
     c.width = w; c.height = h;
     const ctx = c.getContext('2d');
-    const f = document.getElementById('shutterFlash'); f.classList.remove('d-none'); setTimeout(() => f.classList.add('d-none'), 120);
+    
+    // Flash effect
+    const f = document.getElementById('shutterFlash'); 
+    f.classList.remove('d-none'); 
+    setTimeout(() => f.classList.add('d-none'), 120);
+    
     setTimeout(() => {
+        // Draw video to canvas
         ctx.drawImage(v, 0, 0, w, h);
         applyWatermark(ctx, w, h);
+        
         getCanvasBlob(c, function(blob) {
             capturedBlob = blob;
             const url = URL.createObjectURL(blob);
-            document.getElementById('previewImage').src = url;
-            document.getElementById('btn-preview').disabled = false;
+            
+            // Show result
+            const img = document.getElementById('capturedResult');
+            img.src = url;
+            img.classList.remove('d-none');
+            v.classList.add('d-none');
+            
+            // Toggle buttons
+            document.getElementById('btn-capture').classList.add('d-none');
+            document.getElementById('btn-retake').classList.remove('d-none');
         });
     }, 50);
 });
-document.getElementById('btn-preview').addEventListener('click', function() {
-    const Modal = window.bootstrap?.Modal;
-    if (Modal) {
-        new Modal(document.getElementById('previewModal')).show();
-    } else {
-        document.getElementById('previewModal').classList.add('show');
-    }
+
+document.getElementById('btn-retake').addEventListener('click', function() {
+    // Reset state
+    capturedBlob = null;
+    document.getElementById('capturedResult').classList.add('d-none');
+    document.getElementById('cameraStream').classList.remove('d-none');
+    
+    document.getElementById('btn-retake').classList.add('d-none');
+    document.getElementById('btn-capture').classList.remove('d-none');
 });
+
 document.querySelectorAll('.stop-card.completed').forEach(el => {
     el.addEventListener('click', function() {
         const d = {
@@ -636,17 +722,85 @@ document.getElementById('btn-submit-proof')?.addEventListener('click', async fun
 });
 document.getElementById('btn-finish-trip')?.addEventListener('click', async function() {
     if (!await macConfirm('Selesaikan Tugas', 'Apakah Anda sudah kembali ke kantor dan ingin menyelesaikan tugas ini?', { confirmText: 'Ya, Saya Sudah Kembali', confirmType: 'success', cancelText: 'Batal' })) return;
+    
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Lokasi...';
+
     if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(async p => {
-            try {
-                const res = await fetch("{{ route('driver.delivery.finish', $do->id) }}", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
-                    body: new URLSearchParams({ latitude: p.coords.latitude, longitude: p.coords.longitude }).toString()
-                });
-                if (res.ok) location.reload(); else { const d = await res.json().catch(() => ({})); alert('Gagal menyelesaikan tugas: ' + (d.message || res.statusText)); }
-            } catch (e) { alert('Gagal menyelesaikan tugas: ' + (e.message || 'Error')); }
+        navigator.geolocation.getCurrentPosition(p => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="iconoir-home me-2"></i> Kembali ke Kantor & Selesai';
+            
+            document.getElementById('finishLat').value = p.coords.latitude;
+            document.getElementById('finishLng').value = p.coords.longitude;
+            
+            const Modal = window.bootstrap?.Modal;
+            if (Modal) {
+                new Modal(document.getElementById('finishTripModal')).show();
+            } else {
+                document.getElementById('finishTripModal').classList.add('show');
+            }
+        }, () => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="iconoir-home me-2"></i> Kembali ke Kantor & Selesai';
+            alert('Gagal mendapatkan lokasi. Pastikan GPS aktif.');
         });
+    } else {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="iconoir-home me-2"></i> Kembali ke Kantor & Selesai';
+        alert('Browser tidak mendukung Geolocation.');
+    }
+});
+
+document.getElementById('btn-submit-finish')?.addEventListener('click', async function() {
+    const odoEnd = document.getElementById('finishOdoEnd').value;
+    const gasLeftover = document.getElementById('finishGasLeftover').value;
+    const lat = document.getElementById('finishLat').value;
+    const lng = document.getElementById('finishLng').value;
+
+    if (!odoEnd || !gasLeftover) {
+        alert('Mohon lengkapi data Odometer Akhir dan Sisa Bensin.');
+        return;
+    }
+    
+    // Simple client-side validation
+    const odoStart = {{ $fleet->odo_start ?? 0 }};
+    if (parseFloat(odoEnd) < parseFloat(odoStart)) {
+        if (!confirm('Odometer Akhir (' + odoEnd + ') lebih kecil dari Odometer Awal (' + odoStart + '). Yakin ingin melanjutkan?')) return;
+    }
+
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Menyimpan...';
+
+    try {
+        const res = await fetch("{{ route('driver.delivery.finish', $do->id) }}", {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': "{{ csrf_token() }}" 
+            },
+            body: JSON.stringify({
+                latitude: lat,
+                longitude: lng,
+                odo_end: odoEnd,
+                gas_leftover: gasLeftover
+            })
+        });
+
+        if (res.ok) {
+            location.reload();
+        } else {
+            const d = await res.json().catch(() => ({}));
+            alert('Gagal menyelesaikan tugas: ' + (d.message || res.statusText));
+            btn.disabled = false;
+            btn.textContent = 'Selesaikan & Simpan';
+        }
+    } catch (e) {
+        alert('Gagal menyelesaikan tugas: ' + (e.message || 'Error'));
+        btn.disabled = false;
+        btn.textContent = 'Selesaikan & Simpan';
     }
 });
 document.addEventListener('DOMContentLoaded', function() {

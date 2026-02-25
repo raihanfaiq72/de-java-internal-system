@@ -17,11 +17,15 @@ class Fleet extends Model
         'license_plate',
         'km_per_liter',
         'liter_price',
+        'last_odometer',
+        'last_fuel_leftover',
     ];
 
     protected $casts = [
         'km_per_liter' => 'decimal:2',
         'liter_price' => 'decimal:2',
+        'last_odometer' => 'decimal:2',
+        'last_fuel_leftover' => 'decimal:2',
     ];
 
     public function deliveryOrders()

@@ -100,6 +100,11 @@
                                                 <option value="">-- Pilih Supir --</option>
                                             </select>
                                         </div>
+                                        <div class="col-md-6">
+                                            <label class="f-label">Odometer Awal (KM)</label>
+                                            <input type="number" id="modal_odo_start" class="form-control form-control-sm" placeholder="0">
+                                            <small class="text-muted" id="last_odo_hint"></small>
+                                        </div>
 
                                         <div class="col-12">
                                             <hr class="border-light my-2">
@@ -115,6 +120,11 @@
                                             <label class="f-label text-muted">Harga BBM (/L)</label>
                                             <input type="number" id="modal_liter_price"
                                                 class="form-control bg-light border-0" readonly>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="f-label text-muted">Sisa Bensin (L)</label>
+                                            <input type="number" id="modal_fuel_leftover"
+                                                class="form-control bg-light border-0" readonly placeholder="0">
                                         </div>
 
                                         <!-- Estimation Inputs -->
@@ -167,6 +177,15 @@
                                                             <td>
                                                                 <input type="number" id="modal_est_fuel_cost"
                                                                     class="form-control form-control-sm border-0 bg-transparent text-end fw-bold"
+                                                                    readonly value="0">
+                                                            </td>
+                                                            <td></td>
+                                                        </tr>
+                                                        <tr class="bg-light text-success">
+                                                            <td class="align-middle"><small>Potongan Sisa Bensin</small></td>
+                                                            <td>
+                                                                <input type="number" id="modal_fuel_deduction"
+                                                                    class="form-control form-control-sm border-0 bg-transparent text-end fw-bold text-success"
                                                                     readonly value="0">
                                                             </td>
                                                             <td></td>
@@ -261,6 +280,8 @@
                 opt.text = `${f.fleet_name} (${f.license_plate})`;
                 opt.dataset.km = f.km_per_liter || 0;
                 opt.dataset.price = f.liter_price || 0;
+                opt.dataset.last_odo = f.last_odometer || 0;
+                opt.dataset.leftover = f.last_fuel_leftover || 0;
                 fleetEl.appendChild(opt);
             });
         }
@@ -527,12 +548,20 @@
         if (selectedOpt && selectedOpt.value) {
             const km = parseFloat(selectedOpt.dataset.km) || 0;
             const price = parseFloat(selectedOpt.dataset.price) || 0;
+            const lastOdo = parseFloat(selectedOpt.dataset.last_odo) || 0;
+            const leftover = parseFloat(selectedOpt.dataset.leftover) || 0;
 
             document.getElementById('modal_km_per_liter').value = km;
             document.getElementById('modal_liter_price').value = price;
+            document.getElementById('modal_odo_start').value = lastOdo;
+            document.getElementById('modal_fuel_leftover').value = leftover;
+            document.getElementById('last_odo_hint').innerText = `Odometer terakhir: ${lastOdo} KM`;
         } else {
             document.getElementById('modal_km_per_liter').value = '';
             document.getElementById('modal_liter_price').value = '';
+            document.getElementById('modal_odo_start').value = '';
+            document.getElementById('modal_fuel_leftover').value = '';
+            document.getElementById('last_odo_hint').innerText = '';
         }
         calculateFuelCost();
     }
@@ -541,6 +570,7 @@
         const distance = parseFloat(document.getElementById('modal_est_distance').value) || 0;
         const kmPerLiter = parseFloat(document.getElementById('modal_km_per_liter').value) || 0;
         const pricePerLiter = parseFloat(document.getElementById('modal_liter_price').value) || 0;
+        const leftover = parseFloat(document.getElementById('modal_fuel_leftover').value) || 0;
 
         let cost = 0;
         if (distance > 0 && kmPerLiter > 0 && pricePerLiter > 0) {
@@ -549,6 +579,13 @@
         }
 
         document.getElementById('modal_est_fuel_cost').value = cost.toFixed(2);
+        
+        // Calculate Deduction
+        const deduction = leftover * pricePerLiter;
+        if(document.getElementById('modal_fuel_deduction')) {
+            document.getElementById('modal_fuel_deduction').value = deduction.toFixed(2);
+        }
+
         calculateTotalCost();
     }
 
@@ -565,10 +602,15 @@
 
     function calculateTotalCost() {
         let total = parseFloat(document.getElementById('modal_est_fuel_cost').value) || 0;
+        const deduction = parseFloat(document.getElementById('modal_fuel_deduction') ? document.getElementById('modal_fuel_deduction').value : 0) || 0;
 
         document.querySelectorAll('.cost-amount').forEach(inp => {
             total += parseFloat(inp.value) || 0;
         });
+
+        // Subtract deduction
+        total -= deduction;
+        if (total < 0) total = 0; // Cannot give negative cash
 
         estCost = total;
 
@@ -676,7 +718,9 @@
                 driver_id: document.getElementById('modal_driver_id').value,
                 estimated_distance_km: document.getElementById('modal_est_distance').value,
                 estimated_fuel_cost: document.getElementById('modal_est_fuel_cost').value,
-                additional_costs: additionalCosts
+                additional_costs: additionalCosts,
+                odo_start: document.getElementById('modal_odo_start').value,
+                cash_amount: estCost || 0
             };
 
             const resFleet = await fetch("{{ url('api/delivery-order-fleet-api') }}", {
@@ -745,6 +789,7 @@
                     document.getElementById('modal_fleet_id').value = f.fleet_id;
                     onFleetChange();
                     document.getElementById('modal_driver_id').value = f.driver_id;
+                    if(f.odo_start) document.getElementById('modal_odo_start').value = f.odo_start;
                     document.getElementById('modal_est_distance').value = f.estimated_distance_km || 0;
                     document.getElementById('modal_est_fuel_cost').value = f.estimated_fuel_cost || 0;
                     if (f.additional_costs && Array.isArray(f.additional_costs)) {

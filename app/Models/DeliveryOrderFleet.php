@@ -30,6 +30,10 @@ class DeliveryOrderFleet extends Model
         'last_latitude',
         'last_longitude',
         'status',
+        'odo_start',
+        'odo_end',
+        'cash_amount',
+        'gas_leftover',
     ];
 
     protected $casts = [
@@ -47,6 +51,10 @@ class DeliveryOrderFleet extends Model
         'start_longitude' => 'decimal:8',
         'last_latitude' => 'decimal:8',
         'last_longitude' => 'decimal:8',
+        'odo_start' => 'decimal:2',
+        'odo_end' => 'decimal:2',
+        'cash_amount' => 'decimal:2',
+        'gas_leftover' => 'decimal:2',
     ];
 
     public function deliveryOrder()
