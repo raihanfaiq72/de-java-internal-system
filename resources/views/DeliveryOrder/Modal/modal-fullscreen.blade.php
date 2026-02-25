@@ -27,10 +27,10 @@
                     <input type="hidden" id="form_mode" value="create">
                     <input type="hidden" id="edit_do_id" value="">
 
-                    <!-- Leaflet Assets (Local) -->
-                    <link rel="stylesheet" href="/assets/libs/leaflet/leaflet.css" />
+                    <!-- Leaflet Assets (CDN for reliability) -->
+                    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+                    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
                     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
-                    <script src="/assets/libs/leaflet/leaflet.js" onerror="(function(){var s=document.createElement('script');s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';document.head.appendChild(s)})()"></script>
                     <script src="/assets/vendor/leaflet-routing/leaflet-routing-machine.js"></script>
 
                     <div class="row g-4">
@@ -118,12 +118,33 @@
                                         </div>
 
                                         <!-- Estimation Inputs -->
-                                        <div class="col-md-6">
-                                            <label class="f-label text-primary">Jarak Total (KM)</label>
-                                            <div class="input-group">
-                                                <input type="number" id="modal_est_distance"
-                                                    class="form-control f-input fw-bold" placeholder="0" readonly>
-                                                <span class="input-group-text bg-white text-muted">km</span>
+                                        <div class="col-md-12">
+                                            <label class="f-label text-primary">Estimasi Jarak</label>
+                                            <div class="row g-2">
+                                                <div class="col-4">
+                                                    <small class="text-muted d-block">Berangkat</small>
+                                                    <div class="input-group input-group-sm">
+                                                        <input type="number" id="modal_est_distance_outbound"
+                                                            class="form-control fw-bold" placeholder="0" readonly>
+                                                        <span class="input-group-text bg-white text-muted">km</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted d-block">Pulang</small>
+                                                    <div class="input-group input-group-sm">
+                                                        <input type="number" id="modal_est_distance_return"
+                                                            class="form-control fw-bold" placeholder="0" readonly>
+                                                        <span class="input-group-text bg-white text-muted">km</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted d-block">Total</small>
+                                                    <div class="input-group input-group-sm">
+                                                        <input type="number" id="modal_est_distance"
+                                                            class="form-control fw-bold" placeholder="0" readonly>
+                                                        <span class="input-group-text bg-white text-muted">km</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -190,6 +211,26 @@
     // Default Office Location (Semarang)
     const OFFICE_LAT = -6.966667;
     const OFFICE_LNG = 110.416664;
+    
+    // Custom Red Icon for Invoices
+    const redIcon = new L.Icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+    
+    // Custom Blue Icon for Office (Start/End)
+    const blueIcon = new L.Icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
 
     // Store addresses to route
     let routeWaypoints = []; // Array of { lat, lng, title }
@@ -284,8 +325,7 @@
         addBestTileLayer(map);
 
         // Add Office Marker
-        setDefaultMarkerAssets();
-        L.marker([OFFICE_LAT, OFFICE_LNG]).addTo(map)
+        L.marker([OFFICE_LAT, OFFICE_LNG], {icon: blueIcon}).addTo(map)
             .bindPopup("Lokasi Kantor (Start)")
             .openPopup();
     }
@@ -304,6 +344,8 @@
 
         if (!invoiceIds || invoiceIds.length === 0) {
             document.getElementById('modal_est_distance').value = 0;
+            if(document.getElementById('modal_est_distance_outbound')) document.getElementById('modal_est_distance_outbound').value = 0;
+            if(document.getElementById('modal_est_distance_return')) document.getElementById('modal_est_distance_return').value = 0;
             calculateTotalCost();
             return;
         }
@@ -326,7 +368,7 @@
                 if (lat && lng) {
                     const latLng = L.latLng(lat, lng);
                     waypoints.push(latLng);
-                    const m = L.marker(latLng).addTo(map).bindPopup(`<b>${title}</b><br>${address}`);
+                    const m = L.marker(latLng, {icon: redIcon}).addTo(map).bindPopup(`<b>${title}</b><br>${address}`);
                     mapMarkers.push(m);
                 } else if (address) {
                     // Fallback to Geocoding if coordinates missing but address exists
@@ -335,7 +377,7 @@
                         const latLng = L.latLng(coords.lat, coords.lon);
                         waypoints.push(latLng);
 
-                        const m = L.marker(latLng).addTo(map)
+                        const m = L.marker(latLng, {icon: redIcon}).addTo(map)
                             .bindPopup(`<b>${title}</b><br>${address} (Geocoded)`);
                         mapMarkers.push(m);
                     }
@@ -349,7 +391,7 @@
                         if (coords) {
                             const latLng = L.latLng(coords.lat, coords.lon);
                             waypoints.push(latLng);
-                            const m = L.marker(latLng).addTo(map)
+                            const m = L.marker(latLng, {icon: redIcon}).addTo(map)
                                 .bindPopup(`<b>${json.data.mitra.nama}</b><br>${address}`);
                             mapMarkers.push(m);
                         }
@@ -361,6 +403,9 @@
         }
 
         if (waypoints.length > 1) {
+            // Add Return Trip (Back to Office)
+            waypoints.push(L.latLng(OFFICE_LAT, OFFICE_LNG));
+
             routingControl = L.Routing.control({
                 waypoints: waypoints,
                 routeWhileDragging: false,
@@ -369,10 +414,49 @@
                 createMarker: function() { return null; }
             }).on('routesfound', function (e) {
                 const routes = e.routes;
-                const summary = routes[0].summary;
-                // summary.totalDistance is in meters
-                const km = (summary.totalDistance / 1000).toFixed(2);
-                document.getElementById('modal_est_distance').value = km;
+                const route = routes[0];
+                const summary = route.summary;
+
+                // Total Distance (Route)
+                const totalKm = (summary.totalDistance / 1000).toFixed(2);
+                document.getElementById('modal_est_distance').value = totalKm;
+                
+                // Calculate Breakdown (Outbound vs Return)
+                // Use Geometric Estimation for Return Trip to ensure reliability
+                // Logic: Return = Distance from Last Invoice to Office * 1.4 (Road Factor)
+                let returnKm = 0;
+                let outboundKm = totalKm;
+
+                try {
+                    if (waypoints.length >= 2) {
+                         const lastInvPt = waypoints[waypoints.length - 2];
+                         const officePt = waypoints[waypoints.length - 1];
+                         
+                         // distanceTo returns meters
+                         const distMeters = lastInvPt.distanceTo(officePt); 
+                         
+                         // Apply 1.4 factor for road distance approximation
+                         // This is more reliable than trying to split the OSRM route instructions
+                         const returnKmVal = (distMeters * 1.4 / 1000); 
+                         
+                         returnKm = returnKmVal.toFixed(2);
+                         
+                         // Outbound is Total - Return
+                         // If Total is very large (e.g. 4000km), Return might be small (e.g. 10km)
+                         // This ensures Outbound captures the bulk of the trip
+                         const outboundVal = parseFloat(totalKm) - returnKmVal;
+                         outboundKm = (outboundVal > 0 ? outboundVal : 0).toFixed(2);
+                    }
+                } catch (err) {
+                    console.error("Distance breakdown error:", err);
+                    // Fallback: 50-50 split if calculation fails completely
+                    returnKm = (totalKm / 2).toFixed(2);
+                    outboundKm = (totalKm / 2).toFixed(2);
+                }
+
+                document.getElementById('modal_est_distance_outbound').value = outboundKm;
+                document.getElementById('modal_est_distance_return').value = returnKm;
+
                 calculateFuelCost();
             }).addTo(map);
         }
@@ -746,9 +830,9 @@
     function setDefaultMarkerAssets() {
         if (L && L.Icon && L.Icon.Default) {
             L.Icon.Default.mergeOptions({
-                iconRetinaUrl: '/assets/libs/leaflet/images/marker-icon.png',
-                iconUrl: '/assets/libs/leaflet/images/marker-icon.png',
-                shadowUrl: null
+                iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+                iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
             });
         }
     }
