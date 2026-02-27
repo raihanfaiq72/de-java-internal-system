@@ -7,6 +7,9 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\InvoiceItemTax;
 use App\Models\Partner;
+use App\Models\Permission;
+use App\Models\UserOfficeRole;
+use Carbon\Carbon;
 use App\Services\JournalService;
 use App\Services\StockService;
 use Illuminate\Http\Request;
@@ -101,20 +104,93 @@ class InvoiceController extends Controller
             return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
         }
 
+        $officeId = session('active_office_id');
+
         // Validate Partner ownership
         $partner = Partner::where('id', $request->mitra_id)
-            ->where('office_id', session('active_office_id'))
+            ->where('office_id', $officeId)
             ->first();
         if (! $partner) {
             return apiResponse(false, 'Mitra tidak valid untuk outlet ini', null, null, 422);
         }
 
         $input = $request->all();
-        $input['office_id'] = session('active_office_id');
+        $input['office_id'] = $officeId;
+
+        // AR Aging Check (Only for Sales)
+        $warningMessage = '';
+        if ($request->tipe_invoice === 'Sales') {
+            $maxOverdue = $this->getMaxOverdueDays($partner->id);
+            if ($maxOverdue > 60) {
+                // Check if user is owner
+                if (! $this->isOwner(auth()->id(), $officeId)) {
+                    $input['status_dok'] = 'Arsip';
+                    $input['perlu_acc_admin'] = true;
+                    $input['keterangan'] = ($request->keterangan ? $request->keterangan."\n" : '')."Auto-Archived: Umur nota > 60 hari ($maxOverdue hari). Perlu ACC Owner.";
+                    
+                    $warningMessage = "Harus ACC Owner, dikarenakan umur nota ($maxOverdue hari). Invoice masuk ke Arsip.";
+                }
+            }
+        }
 
         $invoice = Invoice::create($input);
 
-        return apiResponse(true, 'Invoice berhasil dibuat', $invoice, null, 201);
+        $msg = 'Invoice berhasil dibuat';
+        if ($warningMessage) {
+            $msg .= '. '.$warningMessage;
+        }
+
+        return apiResponse(true, $msg, $invoice, null, 201);
+    }
+
+    private function getMaxOverdueDays($partnerId)
+    {
+        $invoices = Invoice::where('mitra_id', $partnerId)
+            ->where('tipe_invoice', 'Sales')
+            ->where('status_pembayaran', '!=', 'Paid')
+            ->whereNull('deleted_at')
+            ->with('payment')
+            ->get();
+
+        $maxDays = 0;
+        foreach ($invoices as $inv) {
+            $paid = $inv->payment->sum('jumlah_bayar');
+            $remaining = $inv->total_akhir - $paid;
+
+            if ($remaining <= 0) {
+                continue;
+            }
+
+            // Determine Due Date (Use tgl_invoice if tgl_jatuh_tempo is null)
+            $dueDate = $inv->tgl_jatuh_tempo ? Carbon::parse($inv->tgl_jatuh_tempo) : Carbon::parse($inv->tgl_invoice);
+            
+            if ($dueDate->isPast()) {
+                $days = $dueDate->diffInDays(Carbon::now());
+                if ($days > $maxDays) {
+                    $maxDays = $days;
+                }
+            }
+        }
+
+        return $maxDays;
+    }
+
+    private function isOwner($userId, $officeId)
+    {
+        // Get user's role in this office
+        $userRole = UserOfficeRole::with('role')->where('user_id', $userId)
+            ->where('office_id', $officeId)
+            ->first();
+
+        if (! $userRole || ! $userRole->role) {
+            return false;
+        }
+
+        // Count permissions
+        $rolePermCount = $userRole->role->permissions()->count();
+        $totalPermCount = Permission::count();
+
+        return $rolePermCount >= $totalPermCount;
     }
 
     public function update(Request $request, $id)
@@ -240,6 +316,23 @@ class InvoiceController extends Controller
             return apiResponse(false, 'Mitra tidak valid untuk outlet ini', null, null, 422);
         }
 
+        // AR Aging Check (Only for Sales)
+        $warningMessage = '';
+        $invoiceData = $request->invoice;
+        if (($invoiceData['tipe_invoice'] ?? '') === 'Sales') {
+            $maxOverdue = $this->getMaxOverdueDays($mitra->id);
+            if ($maxOverdue > 60) {
+                // Check if user is owner
+                if (! $this->isOwner(auth()->id(), session('active_office_id'))) {
+                    $invoiceData['status_dok'] = 'Arsip';
+                    $invoiceData['perlu_acc_admin'] = true;
+                    $invoiceData['keterangan'] = ($invoiceData['keterangan'] ?? '')."\nAuto-Archived: Umur nota > 60 hari ($maxOverdue hari). Perlu ACC Owner.";
+
+                    $warningMessage = "Harus ACC Owner, dikarenakan umur nota ($maxOverdue hari). Invoice masuk ke Arsip.";
+                }
+            }
+        }
+
         // Validate Stock Location if provided
         if (! empty($request->invoice['stock_location_id'])) {
             $location = \App\Models\StockLocation::where('id', $request->invoice['stock_location_id'])
@@ -251,9 +344,9 @@ class InvoiceController extends Controller
             }
         }
 
-        return DB::transaction(function () use ($request) {
+        return DB::transaction(function () use ($request, $invoiceData, $warningMessage) {
 
-            $invoiceData = $request->invoice;
+            // $invoiceData = $request->invoice; // Removed because defined above
             $invoiceData['office_id'] = session('active_office_id');
             $invoice = Invoice::create($invoiceData);
 
@@ -287,6 +380,7 @@ class InvoiceController extends Controller
                     }
                 }
 
+                // Tax Logic (Simplified)
                 if (! empty($itemData['taxes'])) {
                     foreach ($itemData['taxes'] as $taxData) {
                         if (! empty($taxData['tax_id'])) {
@@ -307,9 +401,12 @@ class InvoiceController extends Controller
                 $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
             }
 
-            return apiResponse(true, 'Invoice berhasil dibuat lengkap', [
-                'invoice' => $invoice->load('items.taxes.tax'),
-            ], null, 201);
+            $msg = 'Invoice berhasil dibuat';
+            if ($warningMessage) {
+                $msg .= '. '.$warningMessage;
+            }
+
+            return apiResponse(true, $msg, $invoice->load('items'), null, 201);
         });
     }
 }
