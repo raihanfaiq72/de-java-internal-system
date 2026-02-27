@@ -11,6 +11,9 @@
             <button onclick="loadProductData()" class="btn btn-sm btn-dark px-3">
                 <i class="fa fa-filter me-1"></i> Filter
             </button>
+            <button onclick="exportProduk()" class="btn btn-sm btn-white border px-3 text-dark shadow-sm">
+                <i class="fa fa-file-excel me-1 text-success"></i> Export
+            </button>
         </div>
 
         <div class="col text-end">
@@ -653,6 +656,13 @@
                         </td>
                     </tr>`;
             }
+        }
+
+        function exportProduk() {
+            const search = document.getElementById('filter-produk-search').value;
+            let url = '/barang/export?';
+            if (search) url += `search=${encodeURIComponent(search)}`;
+            window.location.href = url;
         }
 
         const formatIDR = (val) => new Intl.NumberFormat('id-ID', {

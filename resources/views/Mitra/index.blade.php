@@ -29,7 +29,7 @@
                                     href="#mitra-deleted">Mitra Terhapus</a></li>
                         </ul>
                         <div class="text-end">
-                            <button class="btn btn-white border fw-bold px-3 me-2 shadow-sm text-dark">
+                            <button class="btn btn-white border fw-bold px-3 me-2 shadow-sm text-dark" onclick="exportMitra()">
                                 <i class="fa fa-file-excel me-1 text-success"></i> Export .xls
                             </button>
                             <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openMitraModal()">
@@ -282,6 +282,29 @@
 
         let tsFilterType;
         let activeTab = 'active'; // 'active' or 'deleted'
+
+        function exportMitra() {
+            let params = new URLSearchParams();
+
+            if (activeTab === 'deleted') {
+                params.append('trashed', '1');
+                let search = document.getElementById('filter-search-deleted').value;
+                if (search) params.append('search', search);
+            } else {
+                let search = document.getElementById('filter-search').value;
+                if (search) params.append('search', search);
+
+                if (tsFilterType) {
+                    let type = tsFilterType.getValue();
+                    if (type) params.append('tipe_mitra', type);
+                } else {
+                    let type = document.getElementById('filter-type').value;
+                    if (type) params.append('tipe_mitra', type);
+                }
+            }
+
+            window.location.href = '/mitra/export?' + params.toString();
+        }
 
         function initFilters() {
             if (typeof TomSelect !== 'undefined') {

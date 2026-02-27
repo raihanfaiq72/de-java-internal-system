@@ -120,4 +120,41 @@ class PurchaseReportController extends Controller
             'payables'
         ));
     }
+
+    public function export(Request $request)
+    {
+        $officeId = session('active_office_id');
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
+        $search = $request->search;
+
+        // --- 4. Payables List (Daftar Invoice Belum Lunas / Hutang) ---
+        $payablesQuery = Invoice::query()
+            ->where('tipe_invoice', 'Purchase')
+            ->where('office_id', $officeId)
+            ->with(['mitra', 'payment']);
+
+        if ($startDate && $endDate) {
+            $payablesQuery->whereBetween('tgl_invoice', [$startDate, $endDate]);
+        }
+
+        if ($search) {
+            $payablesQuery->whereHas('mitra', function ($q) use ($search) {
+                $q->where('nama', 'like', "%$search%");
+            });
+        }
+
+        $payablesQuery->where('status_pembayaran', '!=', 'Paid');
+
+        $payables = $payablesQuery->latest('tgl_invoice')->get()->map(function ($invoice) {
+            $paid = $invoice->payment->sum('jumlah_bayar');
+            $balance = $invoice->total_akhir - $paid;
+            $invoice->sisa_tagihan = $balance;
+            return $invoice;
+        })->filter(function ($invoice) {
+            return $invoice->sisa_tagihan > 0;
+        });
+
+        return view('Report.Purchase.export_payables', compact('payables', 'startDate', 'endDate'));
+    }
 }

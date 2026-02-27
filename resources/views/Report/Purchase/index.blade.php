@@ -152,12 +152,17 @@
             <!-- 4. Daftar Invoice Belum Lunas (Hutang) -->
             <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
                 <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0 fw-bold text-dark">Daftar Invoice Belum Lunas (Hutang)</h6>
-                    <button class="btn btn-white border btn-sm shadow-sm fw-bold text-dark" onclick="window.print()">
-                        <i class="fa fa-file-pdf me-1 text-danger"></i> Export PDF
-                    </button>
-                </div>
-                <div class="table-responsive">
+                            <h6 class="mb-0 fw-bold text-dark">Daftar Invoice Belum Lunas (Hutang)</h6>
+                            <div>
+                                <button class="btn btn-white border btn-sm shadow-sm fw-bold text-dark" onclick="window.print()">
+                                    <i class="fa fa-print me-1"></i> Print
+                                </button>
+                                <button class="btn btn-white border btn-sm shadow-sm fw-bold text-dark ms-2" onclick="exportPurchaseReport()">
+                                    <i class="fa fa-file-excel me-1 text-success"></i> Export
+                                </button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="bg-light">
                             <tr>
@@ -276,6 +281,12 @@
         var chartTrend = new ApexCharts(document.querySelector("#purchaseTrendChart"), optionsTrend);
         chartTrend.render();
     });
+
+    function exportPurchaseReport() {
+        const form = document.getElementById('filterForm');
+        const params = new URLSearchParams(new FormData(form));
+        window.location.href = "{{ route('report.purchase.export') }}?" + params.toString();
+    }
 </script>
 
 <style>

@@ -47,6 +47,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('dashboard-sales/detail/{id}', [DashboardSalesController::class, 'detail'])->name('dashboard.sales.detail');
 
         Route::get('sales', [SalesController::class, 'index'])->name('sales');
+        Route::get('sales/export', [SalesController::class, 'export'])->name('sales.export');
         Route::get('sales/{id}', [SalesController::class, 'show'])->name('sales.show');
         Route::get('sales/print/{id}', [SalesController::class, 'printInvoice'])->name('sales.print');
         Route::get('sales-receipt', [SalesController::class, 'receipt'])->name('sales.receipt');
@@ -57,7 +58,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('purchase/print/{id}', [PurchaseController::class, 'printInvoice'])->name('purchase.print');
         Route::get('purchase-receipt', [PurchaseController::class, 'receipt'])->name('purchase.receipt');
         Route::get('purchase-receipt/print/{id}', [PurchaseController::class, 'printReceipt'])->name('purchase.receipt.print');
+        Route::get('mitra/export', [MitraController::class, 'export'])->name('mitra.export');
         Route::get('mitra', [MitraController::class, 'index'])->name('mitra');
+        Route::get('barang/export', [BarangController::class, 'export'])->name('barang.export');
         Route::get('barang', [BarangController::class, 'index'])->name('barang');
         Route::get('stok', [StockController::class, 'index'])->name('stok');
         Route::get('stok/export', [StockController::class, 'export'])->name('stok.export');
@@ -86,8 +89,10 @@ Route::middleware(['auth'])->group(function () {
 
         // Reports
         Route::get('report/invoice', [App\Http\Controllers\Report\InvoiceReportController::class, 'index'])->name('report.invoice');
+        Route::get('report/invoice/export', [App\Http\Controllers\Report\InvoiceReportController::class, 'export'])->name('report.invoice.export');
         Route::get('report/sales', [ReportController::class, 'salesReport'])->name('report.sales');
         Route::get('report/purchase', [App\Http\Controllers\Report\PurchaseReportController::class, 'index'])->name('report.purchase');
+        Route::get('report/purchase/export', [App\Http\Controllers\Report\PurchaseReportController::class, 'export'])->name('report.purchase.export');
         Route::get('report/stock', [ReportController::class, 'stockReport'])->name('report.stock');
         Route::get('report/stock/export', [ReportController::class, 'stockReportExport'])->name('report.stock.export');
         Route::get('report/ar-aging', [ReportController::class, 'arAging'])->name('report.ar-aging');

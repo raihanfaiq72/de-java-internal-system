@@ -257,6 +257,11 @@
                                         <i class="fa fa-sync"></i>
                                     </button>
                                 </div>
+                                <div class="col-12 col-sm-6 col-md-2">
+                                    <button onclick="exportSales()" class="btn btn-success fw-bold btn-sm w-100 shadow-sm" title="Export Excel">
+                                        <i class="fa fa-file-excel me-1"></i> Export
+                                    </button>
+                                </div>
                             </div>
                             <div id="bulk-action-area" class="d-none border-top pt-2 mt-2">
                                 <button class="btn btn-outline-primary fw-bold btn-sm px-3 me-1" onclick="initBulkEdit()">
@@ -349,6 +354,34 @@
 @push('js')
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <script>
+        function exportSales() {
+            let params = new URLSearchParams();
+
+            // Collect filters similar to loadInvoiceData
+            const search = document.getElementById('filter-search').value;
+            const statusDok = document.getElementById('filter-status-dok').value;
+            const statusBayar = document.getElementById('filter-status-bayar').value;
+            const mitraId = document.getElementById('filter-mitra-id').value;
+            const tglInvoice = document.getElementById('filter-tgl-invoice').value;
+            const tglJatuhTempo = document.getElementById('filter-tgl-jatuh-tempo').value;
+
+            if (search) params.append('search', search);
+            if (statusDok) params.append('status_dok', statusDok);
+            if (statusBayar) params.append('status_pembayaran', statusBayar);
+            // activeTab logic is handled in controller via tab_status or similar if needed
+            // For now assuming default active tab or passing it
+            
+            // Check active tab
+            const activeTabPane = document.querySelector('.tab-pane.active');
+            let tabStatus = 'active';
+            if (activeTabPane.id === 'invoice-archive') tabStatus = 'archive';
+            if (activeTabPane.id === 'invoice-in-trash') tabStatus = 'trash';
+            
+            params.append('tab_status', tabStatus);
+
+            window.location.href = '/sales/export?' + params.toString();
+        }
+
         if (!window.financeApp) {
             window.financeApp = {
                 API_URL: '/api/invoice-api',

@@ -48,17 +48,12 @@
                                 </button>
                             </div>
                         </form>
-                        <div class="text-end">
-                            <button type="button" class="btn btn-white border fw-bold px-3 shadow-sm text-dark" data-bs-toggle="modal" data-bs-target="#printPreviewModal">
-                                <i class="fa fa-print me-1"></i> Cetak
-                            </button>
-                        </div>
                     </div>
                 </div>
 
 
                 <div class="card border-0 shadow-sm rounded-3">
-                    <div class="card-header bg-white border-bottom p-0">
+                    <div class="card-header bg-white border-bottom p-0 d-flex justify-content-between align-items-center">
                         <ul class="nav nav-tabs px-4 pt-3" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link active" data-bs-toggle="tab" href="#tab-ringkasan" role="tab">Ringkasan Umur Piutang</a>
@@ -67,6 +62,11 @@
                                 <a class="nav-link" data-bs-toggle="tab" href="#tab-detail" role="tab">Detail Pelanggan</a>
                             </li>
                         </ul>
+                        <div class="pe-4">
+                            <button type="button" class="btn btn-white border fw-bold px-3 shadow-sm text-dark btn-sm" onclick="printActiveTab()">
+                                <i class="fa fa-print me-1"></i> Print
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body p-0">
                         <div class="tab-content">
@@ -281,5 +281,35 @@
                 dropdownParent: 'body'
             });
         });
+
+        function printActiveTab() {
+            // Check active tab
+            const activeTab = document.querySelector('.nav-link.active').getAttribute('href');
+            
+            // Add a class to body to indicate print mode
+            document.body.classList.add('printing');
+            
+            // Hide all tab panes except active one via CSS or JS manipulation
+            const tabPanes = document.querySelectorAll('.tab-pane');
+            tabPanes.forEach(pane => {
+                if ('#' + pane.id !== activeTab) {
+                    pane.classList.add('d-print-none');
+                } else {
+                    pane.classList.remove('d-print-none');
+                    pane.classList.add('d-print-block');
+                }
+            });
+
+            window.print();
+
+            // Cleanup after print dialog closes
+            setTimeout(() => {
+                document.body.classList.remove('printing');
+                tabPanes.forEach(pane => {
+                    pane.classList.remove('d-print-none', 'd-print-block');
+                });
+            }, 500);
+        }
     </script>
 @endpush
+

@@ -529,54 +529,7 @@ class ReportController extends Controller
     {
         $products = $this->getStockData($request);
 
-        $fileName = 'laporan-stok-'.date('Y-m-d-His').'.csv';
-
-        $headers = [
-            'Content-type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=$fileName",
-            'Pragma' => 'no-cache',
-            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires' => '0',
-        ];
-
-        $columns = ['Produk', 'Kategori', 'Unit', 'Qty Awal', 'Qty Masuk', 'Qty Keluar', 'Qty Akhir', 'Nilai Awal', 'Nilai Masuk', 'Nilai Keluar', 'Nilai Akhir'];
-
-        $callback = function () use ($products, $columns) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, $columns);
-
-            foreach ($products as $product) {
-                $row['Produk'] = $product->nama_produk.($product->sku_kode ? ' ('.$product->sku_kode.')' : '');
-                $row['Kategori'] = $product->nama_kategori;
-                $row['Unit'] = $product->satuan;
-                $row['Qty Awal'] = $product->opening_qty;
-                $row['Qty Masuk'] = $product->qty_in;
-                $row['Qty Keluar'] = $product->qty_out;
-                $row['Qty Akhir'] = $product->closing_qty;
-                $row['Nilai Awal'] = $product->opening_value;
-                $row['Nilai Masuk'] = $product->value_in;
-                $row['Nilai Keluar'] = $product->value_out;
-                $row['Nilai Akhir'] = $product->closing_value;
-
-                fputcsv($file, [
-                    $row['Produk'],
-                    $row['Kategori'],
-                    $row['Unit'],
-                    $row['Qty Awal'],
-                    $row['Qty Masuk'],
-                    $row['Qty Keluar'],
-                    $row['Qty Akhir'],
-                    $row['Nilai Awal'],
-                    $row['Nilai Masuk'],
-                    $row['Nilai Keluar'],
-                    $row['Nilai Akhir'],
-                ]);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return view($this->views.'export_stock', compact('products'));
     }
 
     public function generalLedger(Request $request)
@@ -803,87 +756,7 @@ class ReportController extends Controller
         $date = $request->input('date', date('Y-m-d'));
         $data = $this->getBalanceSheetData($date);
 
-        $fileName = 'neraca-keuangan-'.date('Y-m-d-His').'.csv';
-        $headers = [
-            'Content-type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=$fileName",
-            'Pragma' => 'no-cache',
-            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires' => '0',
-        ];
-
-        $callback = function () use ($data, $date) {
-            $file = fopen('php://output', 'w');
-
-            fputcsv($file, ['Neraca Keuangan']);
-            fputcsv($file, ['Per Tanggal', $date]);
-            fputcsv($file, []);
-
-            // Aktiva
-            fputcsv($file, ['AKTIVA']);
-            foreach ($data['aktivaGroups'] as $group) {
-                // Check if group has any types/accounts or balance
-                if ($group->type->isNotEmpty()) {
-                    fputcsv($file, [$group->nama_kelompok]);
-                    foreach ($group->type as $type) {
-                        if ($type->coas->isNotEmpty()) {
-                            // Indent Type
-                            fputcsv($file, ['', $type->nama_tipe]);
-                            foreach ($type->coas as $acc) {
-                                fputcsv($file, [$acc->kode_akun, $acc->nama_akun, $acc->balance]);
-                            }
-                        }
-                    }
-                    fputcsv($file, ['Total '.$group->nama_kelompok, '', $group->total_balance]);
-                    fputcsv($file, []);
-                }
-            }
-
-            // Kewajiban
-            fputcsv($file, ['KEWAJIBAN']);
-            foreach ($data['kewajibanGroups'] as $group) {
-                if ($group->type->isNotEmpty()) {
-                    fputcsv($file, [$group->nama_kelompok]);
-                    foreach ($group->type as $type) {
-                        if ($type->coas->isNotEmpty()) {
-                            fputcsv($file, ['', $type->nama_tipe]);
-                            foreach ($type->coas as $acc) {
-                                fputcsv($file, [$acc->kode_akun, $acc->nama_akun, $acc->balance]);
-                            }
-                        }
-                    }
-                    fputcsv($file, ['Total '.$group->nama_kelompok, '', $group->total_balance]);
-                    fputcsv($file, []);
-                }
-            }
-
-            // Modal
-            fputcsv($file, ['MODAL']);
-            foreach ($data['modalGroups'] as $group) {
-                if ($group->type->isNotEmpty()) {
-                    fputcsv($file, [$group->nama_kelompok]);
-                    foreach ($group->type as $type) {
-                        if ($type->coas->isNotEmpty()) {
-                            fputcsv($file, ['', $type->nama_tipe]);
-                            foreach ($type->coas as $acc) {
-                                fputcsv($file, [$acc->kode_akun, $acc->nama_akun, $acc->balance]);
-                            }
-                        }
-                    }
-                    fputcsv($file, ['Total '.$group->nama_kelompok, '', $group->total_balance]);
-                    fputcsv($file, []);
-                }
-            }
-
-            // Laba Tahun Berjalan
-            fputcsv($file, ['Laba Tahun Berjalan']);
-            fputcsv($file, ['3202', 'Laba Tahun Berjalan', $data['currentYearEarnings']]);
-            fputcsv($file, []);
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return view($this->views.'export_balance_sheet', array_merge($data, ['date' => $date]));
     }
 
     public function profitAndLoss(Request $request)

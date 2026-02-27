@@ -68,6 +68,9 @@
                             </div>
                             <div class="col-12 mt-3 text-end">
                                 <button type="submit" class="btn btn-primary fw-bold px-4">Hasilkan Laporan</button>
+                                <button type="button" onclick="exportStock()" class="btn btn-success fw-bold px-4 ms-2">
+                                    <i class="fa fa-file-excel me-1"></i> Export Excel
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -205,6 +208,30 @@
         </div>
     </div>
 @endsection
+
+@push('js')
+<script>
+    function exportStock() {
+        // Collect current filters
+        const startDate = document.querySelector('input[name="start_date"]').value;
+        const endDate = document.querySelector('input[name="end_date"]').value;
+        const categoryId = document.querySelector('select[name="category_id"]').value;
+        const productId = document.querySelector('select[name="product_id"]').value;
+        const locationId = document.querySelector('select[name="location_id"]').value;
+
+        // Construct URL
+        const params = new URLSearchParams({
+            start_date: startDate,
+            end_date: endDate,
+            category_id: categoryId,
+            product_id: productId,
+            location_id: locationId
+        });
+
+        window.location.href = "{{ route('report.stock.export') }}?" + params.toString();
+    }
+</script>
+@endpush
 
 @push('css')
     <link href="{{ url('') }}/assets/libs/simple-datatables/style.css" rel="stylesheet" type="text/css" />

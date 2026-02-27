@@ -121,9 +121,19 @@
                         <!-- Line Chart: Income vs Expenditure -->
                         <div class="col-lg-8">
                             <div class="card border-0 shadow-sm rounded-3 h-100">
-                                <div class="card-header bg-white border-0 pt-4 px-4">
-                                    <h6 class="fw-bold mb-0">Income vs Expenditure (Tahun {{ $year }})</h6>
-                                    <small class="text-muted">Perbandingan pemasukan dan pengeluaran per bulan</small>
+                                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="fw-bold mb-0">Income vs Expenditure (Tahun {{ $year }})</h6>
+                                        <small class="text-muted">Perbandingan pemasukan dan pengeluaran per bulan</small>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-white border btn-sm shadow-sm fw-bold text-dark" onclick="window.print()">
+                                            <i class="fa fa-print me-1"></i> Print
+                                        </button>
+                                        <button class="btn btn-white border btn-sm shadow-sm fw-bold text-dark ms-2" onclick="exportReport('general')">
+                                            <i class="fa fa-file-excel me-1 text-success"></i> Export
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="card-body p-4">
                                     <div id="incomeExpenseChart"></div>
@@ -134,9 +144,11 @@
                         <!-- Pie Chart: Receivables Composition -->
                         <div class="col-lg-4">
                             <div class="card border-0 shadow-sm rounded-3 h-100">
-                                <div class="card-header bg-white border-0 pt-4 px-4">
-                                    <h6 class="fw-bold mb-0">Komposisi Piutang (Sales)</h6>
-                                    <small class="text-muted">Status pembayaran tagihan penjualan</small>
+                                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="fw-bold mb-0">Komposisi Piutang (Sales)</h6>
+                                        <small class="text-muted">Status pembayaran tagihan penjualan</small>
+                                    </div>
                                 </div>
                                 <div class="card-body p-4 d-flex align-items-center justify-content-center">
                                     <div id="receivablesPieChart" style="width: 100%;"></div>
@@ -157,9 +169,14 @@
                                     ({{ $totalUniqueInvoices }} Invoice)
                                 </small>
                             </div>
-                            <button class="btn btn-white border btn-sm shadow-sm fw-bold text-dark" onclick="window.print()">
-                                <i class="fa fa-print me-1"></i> Print
-                            </button>
+                            <div>
+                                <button class="btn btn-white border btn-sm shadow-sm fw-bold text-dark" onclick="window.print()">
+                                    <i class="fa fa-print me-1"></i> Print
+                                </button>
+                                <button class="btn btn-white border btn-sm shadow-sm fw-bold text-dark ms-2" onclick="exportReport('payments')">
+                                    <i class="fa fa-file-excel me-1 text-success"></i> Export
+                                </button>
+                            </div>
                         </div>
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
@@ -222,6 +239,9 @@
                             <button class="btn btn-white border btn-sm shadow-sm fw-bold text-dark" onclick="window.print()">
                                 <i class="fa fa-print me-1"></i> Print
                             </button>
+                            <button class="btn btn-white border btn-sm shadow-sm fw-bold text-dark ms-2" onclick="exportReport('sold_products')">
+                                <i class="fa fa-file-excel me-1 text-success"></i> Export
+                            </button>
                         </div>
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
@@ -279,6 +299,9 @@
                             </div>
                             <button class="btn btn-white border btn-sm shadow-sm fw-bold text-dark" onclick="window.print()">
                                 <i class="fa fa-print me-1"></i> Print
+                            </button>
+                            <button class="btn btn-white border btn-sm shadow-sm fw-bold text-dark ms-2" onclick="exportReport('invoice_items')">
+                                <i class="fa fa-file-excel me-1 text-success"></i> Export
                             </button>
                         </div>
                         <div class="table-responsive">
@@ -352,6 +375,76 @@
 
 @push('js')
 <script>
+// Declare charts globally so we can update them
+var incomeExpenseChart = null;
+var pieChart = null;
+
+function exportReport(tab) {
+    const form = document.getElementById('filterForm');
+    const params = new URLSearchParams(new FormData(form));
+    params.append('tab', tab);
+    // Remove Laravel token if present in form to avoid URL clutter
+    params.delete('_token');
+    window.location.href = "{{ route('report.invoice.export') }}?" + params.toString();
+}
+
+function loadReportData() {
+    const form = document.getElementById('filterForm');
+    const formData = new FormData(form);
+    const params = new URLSearchParams(formData);
+
+    // Show loading state (optional: add spinners to tab contents)
+    document.body.style.cursor = 'wait';
+
+    fetch("{{ route('report.invoice') }}?" + params.toString(), {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Update Charts
+        if (data.charts) {
+            if (incomeExpenseChart) {
+                incomeExpenseChart.updateOptions({
+                    series: [{
+                        data: data.charts.income
+                    }, {
+                        data: data.charts.expense
+                    }],
+                    xaxis: {
+                        categories: data.charts.labels
+                    }
+                });
+                // Update title manually if needed, or re-render
+                // incomeExpenseChart.updateOptions({ title: { text: ... } }); 
+            }
+
+            if (pieChart) {
+                pieChart.updateSeries(data.charts.pieSeries);
+            }
+        }
+
+        // Update Tab Contents
+        if (data.html_payments) {
+            document.querySelector('#payments').innerHTML = data.html_payments;
+        }
+        if (data.html_products) {
+            document.querySelector('#products').innerHTML = data.html_products;
+        }
+        if (data.html_invoice_items) {
+            document.querySelector('#invoice-products').innerHTML = data.html_invoice_items;
+        }
+
+        document.body.style.cursor = 'default';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.body.style.cursor = 'default';
+        alert('Gagal memuat data. Silakan coba lagi.');
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     // 1. Income vs Expenditure Chart
     var incomeExpenseOptions = {
@@ -397,7 +490,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     };
-    var incomeExpenseChart = new ApexCharts(document.querySelector("#incomeExpenseChart"), incomeExpenseOptions);
+    incomeExpenseChart = new ApexCharts(document.querySelector("#incomeExpenseChart"), incomeExpenseOptions);
     incomeExpenseChart.render();
 
     // 2. Receivables Composition Pie Chart
@@ -434,11 +527,17 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     };
-    var pieChart = new ApexCharts(document.querySelector("#receivablesPieChart"), pieOptions);
+    pieChart = new ApexCharts(document.querySelector("#receivablesPieChart"), pieOptions);
     pieChart.render();
     
-    // Maintain active tab on refresh (optional, simple implementation)
-    // For now, let it default to first tab or use hash if user clicks
+    // Override Form Submit
+    const filterForm = document.getElementById('filterForm');
+    if (filterForm) {
+        filterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            loadReportData();
+        });
+    }
 });
 </script>
 @endpush
