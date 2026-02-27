@@ -17,10 +17,10 @@ class DatabaseSeeder extends Seeder
         $this->call(UsersSeeder::class); 
 
         // 2. Finance Master Data
-        // $this->call(ChartOfAccountSeeder::class);
-        // $this->call(TaxSeeder::class);
-        // $this->call(FinancialAccountSeeder::class);
-        // $this->call(ExpenseCategorySeeder::class);
+        $this->call(ChartOfAccountSeeder::class);
+        $this->call(TaxSeeder::class);
+        $this->call(FinancialAccountSeeder::class);
+        $this->call(ExpenseCategorySeeder::class);
 
         // // 3. Partners
         // $this->call(MitraSeeder::class);
