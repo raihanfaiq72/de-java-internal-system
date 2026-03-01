@@ -39,6 +39,16 @@
                                     <i class="iconoir-scan-qr-code me-2"></i>Import Sales Receipt (PDF)
                                 </a>
                             </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-purchase" role="tab">
+                                    <i class="iconoir-cart me-2"></i>Import Purchase Invoice
+                                </a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-purchase-receipt" role="tab">
+                                    <i class="iconoir-doc-text me-2"></i>Import Purchase Receipt (PDF)
+                                </a>
+                            </li>
                         </ul>
                     </div>
                     <div class="card-body p-4">
@@ -219,6 +229,92 @@
                                             <strong>Proses Import:</strong>
                                             <ul class="mb-0 ps-3">
                                                 <li>Upload file PDF Kuitansi.</li>
+                                                <li>Sistem akan membaca text dari PDF.</li>
+                                                <li>Mencocokkan Invoice No dengan database.</li>
+                                                <li>Membuat data Pembayaran otomatis jika cocok.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Tab Purchase -->
+                            <div class="tab-pane fade" id="tab-purchase" role="tabpanel">
+                                <div class="row justify-content-center">
+                                    <div class="col-lg-6">
+                                        <div class="text-center mb-4">
+                                            <div class="mb-3">
+                                                <i class="iconoir-cart fs-1 text-warning"></i>
+                                            </div>
+                                            <h5 class="fw-bold">Upload File Excel Purchase Invoice</h5>
+                                            <p class="text-muted">
+                                                Format yang didukung: .xlsx, .xls, .csv<br>
+                                                Pastikan file memiliki header kolom yang sesuai.
+                                            </p>
+                                            <a href="{{ route('import.template', ['type' => 'purchase']) }}" class="btn btn-outline-warning btn-sm fw-bold">
+                                                <i class="iconoir-download me-1"></i> Download Template Purchase Invoice
+                                            </a>
+                                        </div>
+
+                                        <form action="{{ route('import.purchase') }}" method="POST" enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
+                                            @csrf
+                                            <div class="mb-3">
+                                                <label for="file_purchase" class="form-label fw-bold">Pilih File</label>
+                                                <input class="form-control" type="file" id="file_purchase" name="file" required>
+                                            </div>
+                                            <div class="d-grid">
+                                                <button type="submit" class="btn btn-warning fw-bold text-dark">
+                                                    <i class="iconoir-upload me-1"></i> Mulai Import Purchase
+                                                </button>
+                                            </div>
+                                        </form>
+
+                                        <div class="mt-4 alert alert-info small">
+                                            <strong>Catatan:</strong>
+                                            <ul class="mb-0 ps-3">
+                                                <li>Satu Invoice bisa memiliki banyak baris (item).</li>
+                                                <li>Pastikan kolom "number" sama untuk item dalam invoice yang sama.</li>
+                                                <li>Nama Supplier akan dicari otomatis atau dibuat baru jika tidak ditemukan.</li>
+                                                <li>Produk akan dicari berdasarkan nama atau dibuat baru (dengan SKU otomatis) jika tidak ada.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab Purchase Receipt -->
+                            <div class="tab-pane fade" id="tab-purchase-receipt" role="tabpanel">
+                                <div class="row justify-content-center">
+                                    <div class="col-lg-6">
+                                        <div class="text-center mb-4">
+                                            <div class="mb-3">
+                                                <i class="iconoir-doc-text fs-1 text-secondary"></i>
+                                            </div>
+                                            <h5 class="fw-bold">Upload Purchase Receipt (PDF)</h5>
+                                            <p class="text-muted">
+                                                Format yang didukung: .pdf<br>
+                                                Sistem akan membaca Payment No, Invoice No, dan Amount secara otomatis.
+                                            </p>
+                                        </div>
+
+                                        <form action="{{ route('import.purchase.receipt') }}" method="POST" enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
+                                            @csrf
+                                            <div class="mb-3">
+                                                <label for="file_purchase_receipt" class="form-label fw-bold">Pilih File PDF</label>
+                                                <input class="form-control" type="file" id="file_purchase_receipt" name="file[]" multiple required accept=".pdf">
+                                                <div class="form-text">Bisa pilih banyak file sekaligus (Max 20 file per upload).</div>
+                                            </div>
+                                            <div class="d-grid">
+                                                <button type="submit" class="btn btn-secondary fw-bold text-white">
+                                                    <i class="iconoir-upload me-1"></i> Mulai Import Purchase Receipt
+                                                </button>
+                                            </div>
+                                        </form>
+
+                                        <div class="mt-4 alert alert-info small">
+                                            <strong>Proses Import:</strong>
+                                            <ul class="mb-0 ps-3">
+                                                <li>Upload file PDF Kuitansi Pembelian.</li>
                                                 <li>Sistem akan membaca text dari PDF.</li>
                                                 <li>Mencocokkan Invoice No dengan database.</li>
                                                 <li>Membuat data Pembayaran otomatis jika cocok.</li>

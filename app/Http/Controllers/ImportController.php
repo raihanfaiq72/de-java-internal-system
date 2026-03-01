@@ -36,6 +36,11 @@ class ImportController extends Controller
         return $this->handleImport($request, \App\Imports\SalesImport::class, [session('active_office_id'), auth()->id()]);
     }
 
+    public function importPurchase(Request $request)
+    {
+        return $this->handleImport($request, \App\Imports\PurchaseImport::class, [session('active_office_id'), auth()->id()]);
+    }
+
     public function importReceipt(Request $request)
     {
         // Increase memory and time limit for large uploads
@@ -72,6 +77,42 @@ class ImportController extends Controller
         }
 
         return redirect()->back()->with('success', $count . ' File PDF sedang diproses di background.');
+    }
+
+    public function importPurchaseReceipt(Request $request)
+    {
+        // Increase memory and time limit for large uploads
+        ini_set('memory_limit', '1024M');
+        set_time_limit(0);
+
+        $request->validate([
+            'file.*' => 'required|file|mimes:pdf',
+        ]);
+
+        $files = $request->file('file');
+        $officeId = session('active_office_id');
+        $userId = auth()->id();
+
+        if (!$files) {
+            return redirect()->back()->with('error', 'Tidak ada file yang dipilih.');
+        }
+
+        if (!is_array($files)) {
+            $files = [$files];
+        }
+
+        $count = 0;
+        foreach ($files as $file) {
+            // Store file temporarily
+            $path = $file->store('temp_receipts');
+            $originalName = $file->getClientOriginalName();
+
+            // Dispatch Job
+            \App\Jobs\ImportPurchaseReceiptJob::dispatch($path, $originalName, $officeId, $userId);
+            $count++;
+        }
+
+        return redirect()->back()->with('success', $count . ' File PDF Purchase Receipt sedang diproses di background.');
     }
 
     private function handleImport(Request $request, $importClass, $params = [])
@@ -115,6 +156,9 @@ class ImportController extends Controller
         if ($type === 'sales') {
             return $this->downloadSalesTemplate();
         }
+        if ($type === 'purchase') {
+            return $this->downloadPurchaseTemplate();
+        }
 
         return redirect()->back()->with('error', 'Template tidak ditemukan.');
     }
@@ -146,17 +190,64 @@ class ImportController extends Controller
                 public function headings(): array
                 {
                     return [
-                        'invoice_date', 'due_date', 'number', 'status', 'partner_name', 'currency', 'amount_due', 'grand_total', 
-                        'product_name', 'product_description', 'quantity', 'discount', 'discount_amt_per_qty', 'tax', 'amount', 'document_reference'
+                        'invoice_date', 'due_date', 'number', 'status', 'partner_name', 'currency', 
+                        'amount_due', 'grand_total', 'product_name', 'product_description', 'quantity', 'discount', 'discount_amt_per_qty', 'tax', 'amount', 'document_reference'
                     ];
                 }
 
-                public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet)
+                public function styles($sheet)
                 {
-                    return [1 => ['font' => ['bold' => true]]];
+                    return [
+                        1 => ['font' => ['bold' => true]],
+                    ];
                 }
             }, $fileName);
         }
+
+        return redirect()->back()->with('error', 'Library Excel tidak terinstall.');
+    }
+
+    private function downloadPurchaseTemplate()
+    {
+        $fileName = 'Template_Import_Purchase.xlsx';
+        $headers = [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ];
+
+        if (class_exists('Maatwebsite\Excel\Facades\Excel')) {
+            return \Maatwebsite\Excel\Facades\Excel::download(new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithStyles, \Maatwebsite\Excel\Concerns\ShouldAutoSize {
+                public function array(): array
+                {
+                    return [
+                        [
+                            date('Y-m-d'), date('Y-m-d', strtotime('+30 days')), 'PINV-2023-001', 'Sent', 'PT. Supplier Jaya', 'IDR', 
+                            1100000, 1100000, 'Bahan Baku X', 'Material X Grade A', 10, 0, 0, 'PPN 11%', 1000000, 'PO-REF-001'
+                        ],
+                        [
+                            date('Y-m-d'), date('Y-m-d', strtotime('+30 days')), 'PINV-2023-002', 'Draft', 'CV. Vendor Maju', 'IDR', 
+                            550000, 550000, 'Jasa Service', 'Service AC', 1, 0, 0, 'PPN 11%', 500000, 'PO-REF-002'
+                        ],
+                    ];
+                }
+
+                public function headings(): array
+                {
+                    return [
+                        'invoice_date', 'due_date', 'number', 'status', 'supplier', 'currency', 
+                        'amount_due', 'grand_total', 'product_name', 'product_description', 'quantity', 'discount', 'discount_amt_per_qty', 'tax', 'amount', 'document_reference'
+                    ];
+                }
+
+                public function styles($sheet)
+                {
+                    return [
+                        1 => ['font' => ['bold' => true]],
+                    ];
+                }
+            }, $fileName);
+        }
+
         return redirect()->back()->with('error', 'Library Excel tidak terinstall.');
     }
 
