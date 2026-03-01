@@ -202,12 +202,6 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="p-4 border-top bg-light">
-                                <button type="button" class="btn btn-primary w-100 fw-bold py-2 shadow-sm"
-                                    onclick="saveFullInvoice()">
-                                    <i class="fa fa-save me-2"></i> SIMPAN INVOICE
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </form>
@@ -219,9 +213,10 @@
 <div class="modal fade" id="stockModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header bg-white border-bottom py-3">
+            <div class="modal-header bg-dark border-bottom py-3">
                 <h5 class="modal-title fw-bold">Pilih Produk</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
             <div class="modal-body p-0">
                 <div class="p-3 bg-light border-bottom">

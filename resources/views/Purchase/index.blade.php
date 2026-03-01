@@ -137,11 +137,52 @@
     </style>
     <style>
         @media (max-width: 576px) {
-            .page-title-box .breadcrumb { display: none; }
-            .card .card-body { padding: 1rem !important; }
-            .nav-tabs-finance .nav-link { font-size: 12px; padding: 8px 10px; }
-            #invoiceTable { display: block; width: 100%; overflow-x: auto; }
-            .detail-wrapper { padding: 8px; }
+            .page-title-box .breadcrumb {
+                display: none;
+            }
+
+            .card .card-body {
+                padding: 1rem !important;
+            }
+
+            .nav-tabs-finance .nav-link {
+                font-size: 12px;
+                padding: 8px 10px;
+            }
+
+            #invoiceTable {
+                display: block;
+                width: 100%;
+                overflow-x: auto;
+            }
+
+            .detail-wrapper {
+                padding: 8px;
+            }
+
+            /* Header: make tabs and actions stack */
+            .card-header.d-flex {
+                flex-wrap: wrap;
+                gap: .5rem;
+            }
+
+            .card-header .nav-tabs-finance {
+                width: 100%;
+                margin-top: .5rem;
+            }
+
+            .card-header .text-end {
+                width: 100%;
+                text-align: left !important;
+            }
+
+            .card-header .text-end .btn {
+                width: 100%;
+            }
+
+            .card-header .text-end .btn+.btn {
+                margin-top: .5rem;
+            }
         }
     </style>
 @endpush
@@ -164,7 +205,8 @@
                 </div>
 
                 <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
-                    <div class="card-header bg-white border-bottom py-0 px-4 d-flex align-items-center justify-content-between">
+                    <div
+                        class="card-header bg-white border-bottom py-0 px-4 d-flex align-items-center justify-content-between">
                         <ul class="nav nav-tabs nav-tabs-finance" role="tablist">
                             <li class="nav-item"><a class="nav-link active fw-bold py-3" data-bs-toggle="tab"
                                     href="#invoice-active">Invoice Aktif</a></li>
@@ -174,7 +216,8 @@
                                     href="#invoice-in-trash">Invoice Terhapus</a></li>
                         </ul>
                         <div class="text-end">
-                            <button class="btn btn-white border fw-bold px-3 me-2 shadow-sm text-dark">
+                            <button onclick="exportPurchase()"
+                                class="btn btn-white border fw-bold px-3 me-2 shadow-sm text-dark">
                                 <i class="fa fa-file-excel me-1 text-success"></i> Export .xls
                             </button>
                             <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openInvoiceModal()">
@@ -188,7 +231,7 @@
                             <div class="d-flex flex-nowrap align-items-end gap-2 overflow-auto pb-1"
                                 style="scrollbar-width: thin;">
 
-                                <div style="min-width: 0; flex: 1.2;">
+                                <div style="min-width: 0; flex: 1.5;">
                                     <label class="f-label mb-1 fw-bold text-muted"
                                         style="font-size: 11px;">Pencarian</label>
                                     <div class="input-group input-group-sm">
@@ -232,7 +275,7 @@
                                     </select>
                                 </div>
 
-                                <div style="min-width: 0; flex: 1;">
+                                <div style="min-width: 0; flex: 1.5;">
                                     <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Mitra</label>
                                     <select id="filter-mitra-id" class="tom-select-init">
                                         <option value="">Semua Pemasok...</option>
@@ -253,7 +296,7 @@
                                         class="form-control form-control-sm shadow-none">
                                 </div>
 
-                                <div class="d-flex gap-1" style="flex: 1; min-width: 0;">
+                                <div style="min-width: 0; flex: 1;" class="d-flex gap-1">
                                     <button onclick="loadInvoiceData()"
                                         class="btn btn-dark fw-bold btn-sm flex-fill shadow-sm" title="Filter">
                                         <i class="fa fa-filter"></i>
@@ -264,16 +307,14 @@
                                         <i class="fa fa-sync"></i>
                                     </button>
                                 </div>
-
-                                <div id="bulk-action-area" class="d-none flex-shrink-0 ms-2 border-start ps-2">
-                                    <button class="btn btn-outline-primary fw-bold btn-sm px-3 me-1"
-                                        onclick="initBulkEdit()">
-                                        <i class="fa fa-pencil-alt me-1"></i> Edit
-                                    </button>
-                                    <button class="btn btn-outline-danger fw-bold btn-sm px-3" onclick="bulkDelete()">
-                                        <i class="fa fa-trash-can"></i>
-                                    </button>
-                                </div>
+                            </div>
+                            <div id="bulk-action-area" class="d-none border-top pt-2 mt-2">
+                                <button class="btn btn-outline-primary fw-bold btn-sm px-3 me-1" onclick="initBulkEdit()">
+                                    <i class="fa fa-pencil-alt me-1"></i> Edit
+                                </button>
+                                <button class="btn btn-outline-danger fw-bold btn-sm px-3" onclick="bulkDelete()">
+                                    <i class="fa fa-trash-can"></i>
+                                </button>
                             </div>
                         </div>
 
@@ -346,7 +387,8 @@
                     <h5 class="modal-title fw-bold" id="modalPrintPreviewLabel">
                         <i class="fa fa-print text-primary me-2"></i> Preview Cetak Invoice
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="ratio ratio-16x9 border rounded bg-light" style="min-height: 70vh;">
@@ -620,14 +662,14 @@
                 const tr = document.createElement('tr');
                 tr.classList.add('border-bottom', 'border-light');
                 tr.innerHTML = `
-                                                                                <td class="ps-3 py-3">
-                                                                                    <div class="fw-bold text-dark">${it.nama_produk_manual || it.product?.nama_produk || '-'}</div>
-                                                                                    <div class="small text-muted">${it.product?.kode_produk || '-'}</div>
-                                                                                </td>
-                                                                                <td class="text-center py-3">${parseFloat(it.qty)} ${it.product?.unit?.nama_unit || ''}</td>
-                                                                                <td class="text-end py-3">${window.financeApp.formatIDR(it.harga_satuan)}</td>
-                                                                                <td class="text-end pe-3 py-3">${window.financeApp.formatIDR(it.total_harga_item)}</td>
-                                                                            `;
+                                                                                            <td class="ps-3 py-3">
+                                                                                                <div class="fw-bold text-dark">${it.nama_produk_manual || it.product?.nama_produk || '-'}</div>
+                                                                                                <div class="small text-muted">${it.product?.kode_produk || '-'}</div>
+                                                                                            </td>
+                                                                                            <td class="text-center py-3">${parseFloat(it.qty)} ${it.product?.unit?.nama_unit || ''}</td>
+                                                                                            <td class="text-end py-3">${window.financeApp.formatIDR(it.harga_satuan)}</td>
+                                                                                            <td class="text-end pe-3 py-3">${window.financeApp.formatIDR(it.total_harga_item)}</td>
+                                                                                        `;
                 tbody.appendChild(tr);
             });
 
@@ -946,5 +988,33 @@
 
             loadInvoiceData();
         });
+
+        function exportPurchase() {
+            const params = new URLSearchParams();
+
+            const search = document.getElementById('filter-search').value;
+            const statusDok = document.getElementById('filter-status-dok').value;
+            const statusBayar = document.getElementById('filter-status-bayar').value;
+            const mitraId = document.getElementById('filter-mitra-id').value;
+            const tglInvoice = document.getElementById('filter-tgl-invoice').value;
+            const tglJatuhTempo = document.getElementById('filter-tgl-jatuh-tempo').value;
+
+            if (search) params.append('search', search);
+            if (statusDok) params.append('status_dok', statusDok);
+            if (statusBayar) params.append('status_pembayaran', statusBayar);
+            if (mitraId) params.append('mitra_id', mitraId);
+            if (tglInvoice) params.append('tgl_invoice', tglInvoice);
+            if (tglJatuhTempo) params.append('tgl_jatuh_tempo', tglJatuhTempo);
+
+            // Check active tab
+            const activeExportTabPane = document.querySelector('.tab-pane.active');
+            let tabStatus = 'active';
+            if (activeExportTabPane.id === 'invoice-archive') tabStatus = 'archive';
+            if (activeExportTabPane.id === 'invoice-in-trash') tabStatus = 'trash';
+
+            params.append('tab_status', tabStatus);
+
+            window.location.href = '/purchase/export?' + params.toString();
+        }
     </script>
 @endpush
