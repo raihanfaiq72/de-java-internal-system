@@ -40,7 +40,8 @@ class SystemNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast'];
+        // Broadcast disabled temporarily to prevent queue errors in production without Reverb/Pusher
+        return ['database'];
     }
 
     /**

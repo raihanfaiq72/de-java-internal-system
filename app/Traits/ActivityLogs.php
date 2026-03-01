@@ -23,8 +23,22 @@ trait ActivityLogs
 
     protected static function logModelActivity($action, $model, $before, $after)
     {
+        $officeId = session('active_office_id') ?? ($model->office_id ?? null);
+
+        // Fallback: Try to get office_id from relationships if not found
+        if (!$officeId) {
+            if ($model->invoice && $model->invoice->office_id) {
+                $officeId = $model->invoice->office_id;
+            } elseif ($model->office && $model->office->id) {
+                $officeId = $model->office->id;
+            } else {
+                // Last resort fallback to prevent crash in queue jobs
+                $officeId = 1; 
+            }
+        }
+
         ActivityLog::create([
-            'office_id' => session('active_office_id') ?? $model->office_id ?? null,
+            'office_id' => $officeId,
             'user_id' => auth()->id() ?? 1,
             'tindakan' => $action,
             'tabel_terkait' => $model->getTable(),
