@@ -212,6 +212,17 @@ return [
 
     [
         'type' => 'label',
+        'title' => 'Import Data',
+    ],
+    [
+        'type' => 'item',
+        'title' => 'Import',
+        'route' => 'import.index',
+        'icon' => 'iconoir-import',
+    ],
+
+    [
+        'type' => 'label',
         'title' => 'Setting',
     ],
     [
