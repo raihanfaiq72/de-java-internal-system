@@ -34,6 +34,11 @@
                                     <i class="iconoir-page me-2"></i>Import Sales Invoice
                                 </a>
                             </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-receipt" role="tab">
+                                    <i class="iconoir-scan-qr-code me-2"></i>Import Sales Receipt (PDF)
+                                </a>
+                            </li>
                         </ul>
                     </div>
                     <div class="card-body p-4">
@@ -175,6 +180,48 @@
                                                 <li>Pastikan kolom "number" sama untuk item dalam invoice yang sama.</li>
                                                 <li>Nama Partner akan dicari otomatis atau dibuat baru jika tidak ditemukan.</li>
                                                 <li>Produk akan dicari berdasarkan nama atau dibuat baru (dengan SKU otomatis) jika tidak ada.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Tab Receipt -->
+                            <div class="tab-pane fade" id="tab-receipt" role="tabpanel">
+                                <div class="row justify-content-center">
+                                    <div class="col-lg-6">
+                                        <div class="text-center mb-4">
+                                            <div class="mb-3">
+                                                <i class="iconoir-scan-qr-code fs-1 text-danger"></i>
+                                            </div>
+                                            <h5 class="fw-bold">Upload Sales Receipt (PDF)</h5>
+                                            <p class="text-muted">
+                                                Format yang didukung: .pdf<br>
+                                                Sistem akan membaca Payment No, Invoice No, dan Amount secara otomatis.
+                                            </p>
+                                        </div>
+
+                                        <form action="{{ route('import.receipt') }}" method="POST" enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
+                                            @csrf
+                                            <div class="mb-3">
+                                                <label for="file_receipt" class="form-label fw-bold">Pilih File PDF</label>
+                                                <input class="form-control" type="file" id="file_receipt" name="file[]" multiple required accept=".pdf">
+                                                <div class="form-text">Bisa pilih banyak file sekaligus (Max 20 file per upload).</div>
+                                            </div>
+                                            <div class="d-grid">
+                                                <button type="submit" class="btn btn-danger fw-bold text-white">
+                                                    <i class="iconoir-upload me-1"></i> Mulai Import Receipt
+                                                </button>
+                                            </div>
+                                        </form>
+
+                                        <div class="mt-4 alert alert-info small">
+                                            <strong>Proses Import:</strong>
+                                            <ul class="mb-0 ps-3">
+                                                <li>Upload file PDF Kuitansi.</li>
+                                                <li>Sistem akan membaca text dari PDF.</li>
+                                                <li>Mencocokkan Invoice No dengan database.</li>
+                                                <li>Membuat data Pembayaran otomatis jika cocok.</li>
                                             </ul>
                                         </div>
                                     </div>

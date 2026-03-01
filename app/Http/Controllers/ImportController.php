@@ -36,6 +36,36 @@ class ImportController extends Controller
         return $this->handleImport($request, \App\Imports\SalesImport::class, [session('active_office_id'), auth()->id()]);
     }
 
+    public function importReceipt(Request $request)
+    {
+        $request->validate([
+            'file.*' => 'required|file|mimes:pdf',
+        ]);
+
+        $files = $request->file('file');
+        $officeId = session('active_office_id');
+        $userId = auth()->id();
+
+        if (!$files) {
+            return redirect()->back()->with('error', 'Tidak ada file yang dipilih.');
+        }
+
+        if (!is_array($files)) {
+            $files = [$files];
+        }
+
+        foreach ($files as $file) {
+            // Store file temporarily
+            $path = $file->store('temp_receipts');
+            $originalName = $file->getClientOriginalName();
+
+            // Dispatch Job
+            \App\Jobs\ImportReceiptJob::dispatch($path, $originalName, $officeId, $userId);
+        }
+
+        return redirect()->back()->with('success', count($files) . ' File PDF sedang diproses di background.');
+    }
+
     private function handleImport(Request $request, $importClass, $params = [])
     {
         $request->validate([
