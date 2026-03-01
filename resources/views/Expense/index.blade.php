@@ -1,5 +1,22 @@
 @extends('Layout.main')
 
+@push('css')
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        .ts-dropdown {
+            z-index: 9999 !important;
+        }
+
+        .ts-wrapper.form-control {
+            overflow: visible !important;
+        }
+
+        .ts-dropdown-content {
+            z-index: 2001 !important;
+        }
+    </style>
+@endpush
+
 @section('main')
     <div class="page-wrapper">
         <div class="page-content">
@@ -17,169 +34,173 @@
                     </div>
                 </div>
 
-                <ul class="nav nav-tabs nav-tabs-custom mb-4 d-flex justify-content-between align-items-center" id="expenseTab" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active fw-bold" id="biaya-tab" data-bs-toggle="tab" data-bs-target="#biaya"
-                            type="button" role="tab" aria-controls="biaya" aria-selected="true">Biaya</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link fw-bold" id="analitik-tab" data-bs-toggle="tab" data-bs-target="#analitik"
-                            type="button" role="tab" aria-controls="analitik" aria-selected="false">Analitik</button>
-                    </li>
-                    <li class="ms-auto">
-                        <button class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal"
-                            data-bs-target="#modalExpense">
-                            <i class="fa fa-plus-circle me-1"></i> Tambah Biaya
-                        </button>
-                    </li>
-                </ul>
-
-                <div class="tab-content" id="expenseTabContent">
-                    <!-- Tab Biaya -->
-                    <div class="tab-pane fade show active" id="biaya" role="tabpanel" aria-labelledby="biaya-tab">
-                        <div class="card border-0 shadow-sm rounded-3">
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-hover align-middle" id="tableExpenses">
-                                        <thead class="bg-light text-muted">
-                                            <tr>
-                                                <th>Tanggal</th>
-                                                <th>Nama Biaya</th>
-                                                <th>Kategori</th>
-                                                <th>Vendor</th>
-                                                <th>Akun Bayar</th>
-                                                <th>Akun Beban</th>
-                                                <th class="text-end">Jumlah</th>
-                                                <th class="text-end">Aksi</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="expenseList">
-                                            <!-- Data will be loaded via JS -->
-                                            <tr>
-                                                <td colspan="8" class="text-center py-4">Memuat data...</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <!-- Pagination -->
-                                <div class="d-flex justify-content-between align-items-center mt-3" id="pagination">
+                <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+                    <div
+                        class="card-header bg-white border-bottom py-0 px-4 d-flex align-items-center justify-content-between">
+                        <ul class="nav nav-tabs nav-tabs-finance" id="expenseTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link active fw-bold py-3" id="biaya-tab" data-bs-toggle="tab" href="#biaya"
+                                    role="tab" aria-controls="biaya" aria-selected="true">Biaya</a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link fw-bold py-3" id="analitik-tab" data-bs-toggle="tab" href="#analitik"
+                                    role="tab" aria-controls="analitik" aria-selected="false">Analitik</a>
+                            </li>
+                        </ul>
+                        <div class="text-end">
+                            <button class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal"
+                                data-bs-target="#modalExpense">
+                                <i class="fa fa-plus-circle me-1"></i> Tambah Biaya
+                            </button>
+                        </div>
+                    </div>
+                    <div class="tab-content" id="expenseTabContent">
+                        <!-- Tab Biaya -->
+                        <div class="tab-pane fade show active" id="biaya" role="tabpanel" aria-labelledby="biaya-tab">
+                            <div class="card border-0 shadow-sm rounded-3">
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle" id="tableExpenses">
+                                            <thead class="bg-light text-muted">
+                                                <tr>
+                                                    <th>Tanggal</th>
+                                                    <th>Nama Biaya</th>
+                                                    <th>Kategori</th>
+                                                    <th>Vendor</th>
+                                                    <th>Akun Bayar</th>
+                                                    <th>Akun Beban</th>
+                                                    <th class="text-end">Jumlah</th>
+                                                    <th class="text-end">Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="expenseList">
+                                                <!-- Data will be loaded via JS -->
+                                                <tr>
+                                                    <td colspan="8" class="text-center py-4">Memuat data...</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <!-- Pagination -->
+                                    <div class="d-flex justify-content-between align-items-center mt-3" id="pagination">
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Tab Analitik -->
-                    <div class="tab-pane fade" id="analitik" role="tabpanel" aria-labelledby="analitik-tab">
-                        <div class="row">
-                            <!-- Rincian Biaya (Donut) -->
-                            <div class="col-lg-6 mb-4">
-                                <div class="card border-0 shadow-sm rounded-3 h-100">
-                                    <div
-                                        class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                                        <h5 class="fw-bold mb-0">Rincian Biaya</h5>
-                                        <button class="btn btn-sm btn-link text-muted text-decoration-none"
-                                            onclick="resetFilters('pie')">Hapus Filter</button>
-                                    </div>
-                                    <div class="card-body p-4">
-                                        <div class="row g-2 mb-3">
-                                            <div class="col-6">
-                                                <label class="small fw-bold text-muted">Tanggal Mulai <span
-                                                        class="text-danger">*</span></label>
-                                                <input type="date" class="form-control form-control-sm filter-pie"
-                                                    id="filter_start_date_pie" value="{{ date('Y-m-01') }}">
-                                            </div>
-                                            <div class="col-6">
-                                                <label class="small fw-bold text-muted">Tanggal Berakhir <span
-                                                        class="text-danger">*</span></label>
-                                                <input type="date" class="form-control form-control-sm filter-pie"
-                                                    id="filter_end_date_pie" value="{{ date('Y-m-t') }}">
-                                            </div>
-                                            <div class="col-12">
-                                                <label class="small fw-bold text-muted">Kategori <span
-                                                        class="text-danger">*</span></label>
-                                                <select class="form-select form-select-sm filter-pie"
-                                                    id="filter_category_pie">
-                                                    <option value="">Semua Kategori</option>
-                                                    @foreach ($categories as $cat)
-                                                        <option value="{{ $cat->name }}">{{ $cat->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
+                        <!-- Tab Analitik -->
+                        <div class="tab-pane fade" id="analitik" role="tabpanel" aria-labelledby="analitik-tab">
+                            <div class="row">
+                                <!-- Rincian Biaya (Donut) -->
+                                <div class="col-lg-6 mb-4">
+                                    <div class="card border-0 shadow-sm rounded-3 h-100">
+                                        <div
+                                            class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                                            <h5 class="fw-bold mb-0">Rincian Biaya</h5>
+                                            <button class="btn btn-sm btn-link text-muted text-decoration-none"
+                                                onclick="resetFilters('pie')">Hapus Filter</button>
                                         </div>
-                                        <div id="chartRincian" class="apex-charts"></div>
+                                        <div class="card-body p-4">
+                                            <div class="row g-2 mb-3">
+                                                <div class="col-6">
+                                                    <label class="small fw-bold text-muted">Tanggal Mulai <span
+                                                            class="text-danger">*</span></label>
+                                                    <input type="date" class="form-control form-control-sm filter-pie"
+                                                        id="filter_start_date_pie" value="{{ date('Y-m-01') }}">
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="small fw-bold text-muted">Tanggal Berakhir <span
+                                                            class="text-danger">*</span></label>
+                                                    <input type="date" class="form-control form-control-sm filter-pie"
+                                                        id="filter_end_date_pie" value="{{ date('Y-m-t') }}">
+                                                </div>
+                                                <div class="col-12">
+                                                    <label class="small fw-bold text-muted">Kategori <span
+                                                            class="text-danger">*</span></label>
+                                                    <select class="form-select form-select-sm filter-pie"
+                                                        id="filter_category_pie">
+                                                        <option value="">Semua Kategori</option>
+                                                        @foreach ($categories as $cat)
+                                                            <option value="{{ $cat->name }}">{{ $cat->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div id="chartRincian" class="apex-charts"></div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Jumlah Biaya (Bar) -->
-                            <div class="col-lg-6 mb-4">
-                                <div class="card border-0 shadow-sm rounded-3 h-100">
-                                    <div
-                                        class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                                        <h5 class="fw-bold mb-0">Jumlah Biaya</h5>
-                                        <button class="btn btn-sm btn-link text-muted text-decoration-none"
-                                            onclick="resetFilters('bar')">Hapus Filter</button>
-                                    </div>
-                                    <div class="card-body p-4">
-                                        <div class="row g-2 mb-3">
-                                            <div class="col-6">
-                                                <label class="small fw-bold text-muted">Tanggal Mulai <span
-                                                        class="text-danger">*</span></label>
-                                                <input type="date" class="form-control form-control-sm filter-bar"
-                                                    id="filter_start_date_bar" value="{{ date('Y-m-01') }}">
-                                            </div>
-                                            <div class="col-6">
-                                                <label class="small fw-bold text-muted">Tanggal Berakhir <span
-                                                        class="text-danger">*</span></label>
-                                                <input type="date" class="form-control form-control-sm filter-bar"
-                                                    id="filter_end_date_bar" value="{{ date('Y-m-t') }}">
-                                            </div>
-                                            <div class="col-12">
-                                                <label class="small fw-bold text-muted">Kategori <span
-                                                        class="text-danger">*</span></label>
-                                                <select class="form-select form-select-sm filter-bar"
-                                                    id="filter_category_bar">
-                                                    <option value="">Semua Kategori</option>
-                                                    @foreach ($categories as $cat)
-                                                        <option value="{{ $cat->name }}">{{ $cat->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
+                                <!-- Jumlah Biaya (Bar) -->
+                                <div class="col-lg-6 mb-4">
+                                    <div class="card border-0 shadow-sm rounded-3 h-100">
+                                        <div
+                                            class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                                            <h5 class="fw-bold mb-0">Jumlah Biaya</h5>
+                                            <button class="btn btn-sm btn-link text-muted text-decoration-none"
+                                                onclick="resetFilters('bar')">Hapus Filter</button>
                                         </div>
-                                        <div id="chartJumlah" class="apex-charts"></div>
+                                        <div class="card-body p-4">
+                                            <div class="row g-2 mb-3">
+                                                <div class="col-6">
+                                                    <label class="small fw-bold text-muted">Tanggal Mulai <span
+                                                            class="text-danger">*</span></label>
+                                                    <input type="date" class="form-control form-control-sm filter-bar"
+                                                        id="filter_start_date_bar" value="{{ date('Y-m-01') }}">
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="small fw-bold text-muted">Tanggal Berakhir <span
+                                                            class="text-danger">*</span></label>
+                                                    <input type="date" class="form-control form-control-sm filter-bar"
+                                                        id="filter_end_date_bar" value="{{ date('Y-m-t') }}">
+                                                </div>
+                                                <div class="col-12">
+                                                    <label class="small fw-bold text-muted">Kategori <span
+                                                            class="text-danger">*</span></label>
+                                                    <select class="form-select form-select-sm filter-bar"
+                                                        id="filter_category_bar">
+                                                        <option value="">Semua Kategori</option>
+                                                        @foreach ($categories as $cat)
+                                                            <option value="{{ $cat->name }}">{{ $cat->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div id="chartJumlah" class="apex-charts"></div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Tren Biaya (Line) -->
-                            <div class="col-12">
-                                <div class="card border-0 shadow-sm rounded-3">
-                                    <div
-                                        class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                                        <h5 class="fw-bold mb-0">Tren Biaya</h5>
-                                        <button class="btn btn-sm btn-link text-muted text-decoration-none"
-                                            onclick="resetFilters('trend')">Hapus Filter</button>
-                                    </div>
-                                    <div class="card-body p-4">
-                                        <div class="row justify-content-end mb-3">
-                                            <div class="col-auto">
-                                                <label class="small fw-bold text-muted">Tahun <span
-                                                        class="text-danger">*</span></label>
-                                                <select class="form-select form-select-sm filter-trend" id="filter_year">
-                                                    @for ($y = date('Y'); $y >= 2020; $y--)
-                                                        <option value="{{ $y }}">{{ $y }}</option>
-                                                    @endfor
-                                                </select>
-                                            </div>
+                                <!-- Tren Biaya (Line) -->
+                                <div class="col-12">
+                                    <div class="card border-0 shadow-sm rounded-3">
+                                        <div
+                                            class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                                            <h5 class="fw-bold mb-0">Tren Biaya</h5>
+                                            <button class="btn btn-sm btn-link text-muted text-decoration-none"
+                                                onclick="resetFilters('trend')">Hapus Filter</button>
                                         </div>
-                                        <div id="chartTren" class="apex-charts"></div>
+                                        <div class="card-body p-4">
+                                            <div class="row justify-content-end mb-3">
+                                                <div class="col-auto">
+                                                    <label class="small fw-bold text-muted">Tahun <span
+                                                            class="text-danger">*</span></label>
+                                                    <select class="form-select form-select-sm filter-trend"
+                                                        id="filter_year">
+                                                        @for ($y = date('Y'); $y >= 2020; $y--)
+                                                            <option value="{{ $y }}">{{ $y }}</option>
+                                                        @endfor
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div id="chartTren" class="apex-charts"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -201,7 +222,7 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small">Akun Keuangan (Sumber Dana) <span
                                         class="text-danger">*</span></label>
-                                <select class="form-select" name="akun_keuangan_id" required>
+                                <select class="form-select" name="akun_keuangan_id" id="akun_keuangan_id" required>
                                     <option value="">-- Pilih Kas / Bank --</option>
                                     @foreach ($financialAccounts as $acc)
                                         <option value="{{ $acc->id }}">{{ $acc->code }} -
@@ -250,7 +271,7 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small">Akun Beban <span
                                         class="text-danger">*</span></label>
-                                <select class="form-select" name="akun_beban_id" required>
+                                <select class="form-select" name="akun_beban_id" id="akun_beban_id" required>
                                     <option value="">-- Pilih Akun Beban --</option>
                                     @foreach ($expenseAccounts as $acc)
                                         <option value="{{ $acc->id }}">{{ $acc->kode_akun }} -
@@ -264,8 +285,8 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small">Jumlah (Rp) <span
                                         class="text-danger">*</span></label>
-                                <input type="number" class="form-control" name="jumlah" step="0.01" min="0" placeholder="0"
-                                    required>
+                                <input type="text" class="form-control" name="jumlah" id="jumlah_input" placeholder="0"
+                                    required onkeyup="this.value = formatRupiah(this.value);">
                             </div>
 
                             <!-- Keterangan -->
@@ -381,19 +402,42 @@
     </div>
 
     @push('js')
+        <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
         <script src="{{ url('assets/libs/apexcharts/apexcharts.min.js') }}"></script>
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
         <script>
+            function formatRupiah(angka) {
+                if (!angka) return '';
+                let number_string = String(angka).replace(/[^,\d]/g, '').toString();
+                let split = number_string.split(',');
+                let sisa = split[0].length % 3;
+                let rupiah = split[0].substr(0, sisa);
+                let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+                if (ribuan) {
+                    let separator = sisa ? '.' : '';
+                    rupiah += separator + ribuan.join('.');
+                }
+                return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+            }
+
+            function cleanNumber(angka) {
+                if (!angka) return 0;
+                return parseFloat(String(angka).replace(/\./g, '').replace(',', '.')) || 0;
+            }
+
             $(document).ready(function () {
                 console.log("Expense script loaded");
                 loadExpenses();
                 initCharts();
+                initTomSelects();
 
                 // Reset Modal on Close
                 $('#modalExpense').on('hidden.bs.modal', function () {
                     $('#formExpense')[0].reset();
                     $('#expense_id').val('');
                     $('#modalExpenseLabel').text('Catat Biaya Baru');
+                    if (tomSelectAkunKeuangan) tomSelectAkunKeuangan.clear();
+                    if (tomSelectAkunBeban) tomSelectAkunBeban.clear();
                 });
 
                 // Filter Events
@@ -403,6 +447,22 @@
             });
 
             var chartPie, chartBar, chartTrend;
+            var tomSelectAkunKeuangan, tomSelectAkunBeban;
+
+            function initTomSelects() {
+                if (typeof TomSelect !== 'undefined') {
+                    tomSelectAkunKeuangan = new TomSelect('#akun_keuangan_id', {
+                        create: false,
+                        allowEmptyOption: true,
+                        dropdownParent: 'body'
+                    });
+                    tomSelectAkunBeban = new TomSelect('#akun_beban_id', {
+                        create: false,
+                        allowEmptyOption: true,
+                        dropdownParent: 'body'
+                    });
+                }
+            }
 
             function initCharts() {
                 // Pie/Donut Options
@@ -584,29 +644,29 @@
                             if (response.data && response.data.data && Array.isArray(response.data.data)) {
                                 response.data.data.forEach(item => {
                                     rows += `
-                                                                            <tr>
-                                                                                <td>${item.tgl_biaya}</td>
-                                                                                <td class="fw-bold text-dark">${item.nama_biaya}</td>
-                                                                                <td><span class="badge bg-light text-dark border">${item.kategori_biaya || '-'}</span></td>
-                                                                                <td>${item.nama_vendor || '-'}</td>
-                                                                                <td>${item.akun_keuangan?.nama_akun || item.akun_keuangan_id || '-'}</td>
-                                                                                <td>${item.akun_beban?.nama_akun || item.akun_beban_id || '-'}</td>
-                                                                                <td class="text-end fw-bold">Rp ${parseFloat(item.jumlah).toLocaleString('id-ID')}</td>
-                                                                                <td class="text-end">
-                                                                                    <div class="btn-group btn-group-sm">
-                                                                                        <button class="btn btn-light border text-info" onclick="showExpense(${item.id})">
-                                                                                            <i class="fa fa-eye"></i>
-                                                                                        </button>
-                                                                                        <button class="btn btn-light border text-primary" onclick="editExpense(${item.id})">
-                                                                                            <i class="fa fa-edit"></i>
-                                                                                        </button>
-                                                                                        <button class="btn btn-light border text-danger" onclick="deleteExpense(${item.id})">
-                                                                                            <i class="fa fa-trash"></i>
-                                                                                        </button>
-                                                                                    </div>
-                                                                                </td>
-                                                                            </tr>
-                                                                        `;
+                                                                                                                                                                            <tr>
+                                                                                                                                                                                <td>${item.tgl_biaya}</td>
+                                                                                                                                                                                <td class="fw-bold text-dark">${item.nama_biaya}</td>
+                                                                                                                                                                                <td><span class="badge bg-light text-dark border">${item.kategori_biaya || '-'}</span></td>
+                                                                                                                                                                                <td>${item.nama_vendor || '-'}</td>
+                                                                                                                                                                                <td>${item.akun_keuangan?.nama_akun || item.akun_keuangan_id || '-'}</td>
+                                                                                                                                                                                <td>${item.akun_beban?.nama_akun || item.akun_beban_id || '-'}</td>
+                                                                                                                                                                                <td class="text-end fw-bold">Rp ${parseFloat(item.jumlah).toLocaleString('id-ID')}</td>
+                                                                                                                                                                                <td class="text-end">
+                                                                                                                                                                                    <div class="btn-group btn-group-sm">
+                                                                                                                                                                                        <button class="btn btn-light border text-info" onclick="showExpense(${item.id})">
+                                                                                                                                                                                            <i class="fa fa-eye"></i>
+                                                                                                                                                                                        </button>
+                                                                                                                                                                                        <button class="btn btn-light border text-primary" onclick="editExpense(${item.id})">
+                                                                                                                                                                                            <i class="fa fa-edit"></i>
+                                                                                                                                                                                        </button>
+                                                                                                                                                                                        <button class="btn btn-light border text-danger" onclick="deleteExpense(${item.id})">
+                                                                                                                                                                                            <i class="fa fa-trash"></i>
+                                                                                                                                                                                        </button>
+                                                                                                                                                                                    </div>
+                                                                                                                                                                                </td>
+                                                                                                                                                                            </tr>
+                                                                                                                                                                        `;
                                 });
 
                                 if (response.data.data.length === 0) {
@@ -631,6 +691,13 @@
                 // Use FormData for file upload
                 let form = document.getElementById('formExpense');
                 let formData = new FormData(form);
+
+                // Clean formatRupiah string back to standard number for backend
+                let rawJumlah = formData.get('jumlah');
+                if (rawJumlah) {
+                    formData.set('jumlah', cleanNumber(rawJumlah));
+                }
+
                 let id = $('#expense_id').val();
                 let url = "{{ route('expense-api.store') }}";
 
@@ -682,8 +749,10 @@
                         $('input[name="nama_vendor"]').val(d.nama_vendor);
                         $('input[name="kategori_biaya"]').val(d.kategori_biaya);
                         $('select[name="akun_keuangan_id"]').val(d.akun_keuangan_id);
+                        if (tomSelectAkunKeuangan) tomSelectAkunKeuangan.setValue(d.akun_keuangan_id);
                         $('select[name="akun_beban_id"]').val(d.akun_beban_id);
-                        $('input[name="jumlah"]').val(d.jumlah);
+                        if (tomSelectAkunBeban) tomSelectAkunBeban.setValue(d.akun_beban_id);
+                        $('input[name="jumlah"]').val(formatRupiah(Math.round(d.jumlah)));
                         $('textarea[name="keterangan"]').val(d.keterangan);
                         $('input[name="lampiran"]').val(''); // Reset file input
 
@@ -704,8 +773,8 @@
                         $('#show_nama_vendor').text(d.nama_vendor || '-');
 
                         // Use relationship data if available, otherwise fallback to ID
-                        let akunKeuangan = d.akun_keuangan ? (d.akun_keuangan.kode_akun + ' - ' + d.akun_keuangan
-                            .nama_akun) : (d.akun_keuangan_id || '-');
+                        let akunKeuangan = d.akun_keuangan ? (d.akun_keuangan.code + ' - ' + d.akun_keuangan
+                            .name) : (d.akun_keuangan_id || '-');
                         let akunBeban = d.akun_beban ? (d.akun_beban.kode_akun + ' - ' + d.akun_beban.nama_akun) : (d
                             .akun_beban_id || '-');
 
@@ -719,18 +788,18 @@
                         if (d.lampiran) {
                             let url = "{{ asset('storage') }}/" + d.lampiran;
                             lampiranHtml = `
-                                                                        <div class="d-flex align-items-center justify-content-between p-2 border rounded bg-white">
-                                                                            <div class="d-flex align-items-center text-truncate me-2">
-                                                                                <i class="fa fa-file-alt text-primary fs-4 me-2"></i>
-                                                                                <div class="small text-truncate" style="max-width: 150px;">
-                                                                                    ${d.lampiran.split('/').pop()}
-                                                                                </div>
-                                                                            </div>
-                                                                            <a href="${url}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                                                <i class="fa fa-download"></i> Unduh
-                                                                            </a>
-                                                                        </div>
-                                                                    `;
+                                                                                                                                                                        <div class="d-flex align-items-center justify-content-between p-2 border rounded bg-white">
+                                                                                                                                                                            <div class="d-flex align-items-center text-truncate me-2">
+                                                                                                                                                                                <i class="fa fa-file-alt text-primary fs-4 me-2"></i>
+                                                                                                                                                                                <div class="small text-truncate" style="max-width: 150px;">
+                                                                                                                                                                                    ${d.lampiran.split('/').pop()}
+                                                                                                                                                                                </div>
+                                                                                                                                                                            </div>
+                                                                                                                                                                            <a href="${url}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                                                                                                                                                <i class="fa fa-download"></i> Unduh
+                                                                                                                                                                            </a>
+                                                                                                                                                                        </div>
+                                                                                                                                                                    `;
                         }
                         $('#show_lampiran_container').html(lampiranHtml);
 
