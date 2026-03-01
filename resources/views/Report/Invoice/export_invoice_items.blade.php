@@ -22,39 +22,44 @@ header("Content-Disposition: attachment; filename=Laporan_Invoice_Per_Produk_" .
         <thead>
             <tr>
                 <th>No</th>
-                <th>Status Pembayaran</th>
-                <th>Tanggal Invoice</th>
-                <th>Nomor Invoice</th>
-                <th>Nama Mitra</th>
-                <th>Nama Produk</th>
-                <th>Qty</th>
-                <th>Harga Satuan</th>
-                <th>Diskon Item</th>
-                <th>Total Diskon</th>
-                <th>Total Akhir</th>
+                @if(!in_array(0, $hiddenColumns)) <th>Status Pembayaran</th> @endif
+                @if(!in_array(1, $hiddenColumns)) <th>Tanggal Invoice</th> @endif
+                @if(!in_array(4, $hiddenColumns)) <th>Nomor Invoice</th> @endif
+                @if(!in_array(3, $hiddenColumns)) <th>Nama Mitra</th> @endif
+                @if(!in_array(2, $hiddenColumns)) <th>Nama Produk</th> @endif
+                @if(!in_array(5, $hiddenColumns)) <th>Qty</th> @endif
+                @if(!in_array(6, $hiddenColumns)) <th>Harga Satuan</th> @endif
+                @if(!in_array(7, $hiddenColumns)) <th>Diskon Item</th> @endif
+                @if(!in_array(8, $hiddenColumns)) <th>Total Diskon</th> @endif
+                @if(!in_array(9, $hiddenColumns)) <th>Total Akhir</th> @endif
             </tr>
         </thead>
         <tbody>
             @foreach($invoiceItems as $index => $item)
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
-                <td>{{ $item->status_pembayaran }}</td>
-                <td>{{ \Carbon\Carbon::parse($item->tgl_invoice)->format('d M Y') }}</td>
-                <td>{{ $item->nomor_invoice }}</td>
-                <td>{{ $item->nama_mitra }}</td>
-                <td>{{ $item->nama_produk }}</td>
-                <td class="text-right">{{ number_format($item->qty, 0, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($item->harga_satuan, 0, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($item->diskon_nilai, 0, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($item->total_diskon, 0, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($item->total_akhir, 0, ',', '.') }}</td>
+                @if(!in_array(0, $hiddenColumns)) <td>{{ $item->status_pembayaran }}</td> @endif
+                @if(!in_array(1, $hiddenColumns)) <td>{{ \Carbon\Carbon::parse($item->tgl_invoice)->format('d M Y') }}</td> @endif
+                @if(!in_array(4, $hiddenColumns)) <td>{{ $item->nomor_invoice }}</td> @endif
+                @if(!in_array(3, $hiddenColumns)) <td>{{ $item->nama_mitra }}</td> @endif
+                @if(!in_array(2, $hiddenColumns)) <td>{{ $item->nama_produk }}</td> @endif
+                @if(!in_array(5, $hiddenColumns)) <td class="text-right">{{ number_format($item->qty, 0, ',', '.') }}</td> @endif
+                @if(!in_array(6, $hiddenColumns)) <td class="text-right">{{ number_format($item->harga_satuan, 0, ',', '.') }}</td> @endif
+                @if(!in_array(7, $hiddenColumns)) <td class="text-right">{{ number_format($item->diskon_nilai, 0, ',', '.') }}</td> @endif
+                @if(!in_array(8, $hiddenColumns)) <td class="text-right">{{ number_format($item->total_diskon, 0, ',', '.') }}</td> @endif
+                @if(!in_array(9, $hiddenColumns)) <td class="text-right">{{ number_format($item->total_akhir, 0, ',', '.') }}</td> @endif
             </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr>
-                <th colspan="10" class="text-right">Total Transaksi</th>
-                <th class="text-right">{{ number_format($summaryTotalTransaction, 0, ',', '.') }}</th>
+                @php 
+                    $footSpan = empty($hiddenColumns) ? 10 : (10 - count($hiddenColumns));
+                @endphp
+                <th colspan="{{ $footSpan }}" class="text-right">Total Transaksi</th>
+                @if(!in_array(9, $hiddenColumns))
+                    <th class="text-right">{{ number_format($summaryTotalTransaction, 0, ',', '.') }}</th>
+                @endif
             </tr>
         </tfoot>
     </table>

@@ -497,6 +497,7 @@ class InvoiceReportController extends Controller
         $mitraId = $request->mitra_id;
         $search = $request->search;
         $tab = $request->tab ?? 'general';
+        $hiddenColumns = $request->hidden_columns ?? [];
 
         switch ($tab) {
             case 'general':
@@ -586,7 +587,7 @@ class InvoiceReportController extends Controller
                 $payments = $paymentsQuery->orderBy('payments.tgl_pembayaran', 'desc')->get();
                 $totalPaymentAmount = $payments->sum('jumlah_bayar');
 
-                return view('Report.Invoice.export_payments', compact('startDate', 'endDate', 'payments', 'totalPaymentAmount'));
+                return view('Report.Invoice.export_payments', compact('startDate', 'endDate', 'payments', 'totalPaymentAmount', 'hiddenColumns'));
 
             case 'sold_products':
                 $invoiceIdsQuery = DB::table('invoices')
@@ -629,7 +630,7 @@ class InvoiceReportController extends Controller
 
                 $totalSoldQty = $soldProducts->sum('total_qty');
 
-                return view('Report.Invoice.export_sold_products', compact('startDate', 'endDate', 'soldProducts', 'totalSoldQty'));
+                return view('Report.Invoice.export_sold_products', compact('startDate', 'endDate', 'soldProducts', 'totalSoldQty', 'hiddenColumns'));
 
             case 'invoice_items':
                 $prodIdFilter = $request->product_id;
@@ -699,7 +700,7 @@ class InvoiceReportController extends Controller
                     $summaryTotalTransaction += $item->total_akhir;
                 }
 
-                return view('Report.Invoice.export_invoice_items', compact('startDate', 'endDate', 'invoiceItems', 'summaryTotalTransaction'));
+                return view('Report.Invoice.export_invoice_items', compact('startDate', 'endDate', 'invoiceItems', 'summaryTotalTransaction', 'hiddenColumns'));
         }
     }
 }

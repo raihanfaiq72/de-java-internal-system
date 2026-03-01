@@ -1,23 +1,37 @@
 <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-    <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+    <div
+        class="card-header bg-white border-bottom py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
             <h6 class="mb-0 fw-bold text-dark">Daftar Pembayaran</h6>
             <small class="text-muted">
-                Total: <span class="fw-bold text-primary">Rp {{ number_format($totalPaymentAmount, 0, ',', '.') }}</span> 
+                Total: <span class="fw-bold text-primary">Rp
+                    {{ number_format($totalPaymentAmount, 0, ',', '.') }}</span>
                 ({{ $totalUniqueInvoices }} Invoice)
             </small>
         </div>
-        <div>
-            <button class="btn btn-white border btn-sm shadow-sm fw-bold text-dark" onclick="window.print()">
-                <i class="fa fa-print me-1"></i> Print
-            </button>
-            <button class="btn btn-white border btn-sm shadow-sm fw-bold text-dark ms-2" onclick="exportReport('payments')">
-                <i class="fa fa-file-excel me-1 text-success"></i> Export
-            </button>
+        <div class="d-flex align-items-center gap-2">
+            <div class="dropdown">
+                <button class="btn btn-light border btn-sm shadow-sm fw-bold dropdown-toggle text-dark" type="button"
+                    data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                    <i class="iconoir-view-columns-3 me-1"></i> Kolom
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow p-2 colToggleMenu" data-target="#table-payments"
+                    style="min-width: 200px; max-height: 300px; overflow-y: auto;">
+                    <!-- Column toggles via JS -->
+                </ul>
+            </div>
+            <div class="btn-group shadow-sm">
+                <button class="btn btn-white border btn-sm fw-bold text-dark" onclick="printTable('payments')">
+                    <i class="fa fa-print me-1"></i> Print
+                </button>
+                <button class="btn btn-white border btn-sm fw-bold text-dark" onclick="exportReport('payments')">
+                    <i class="fa fa-file-excel me-1 text-success"></i> Export
+                </button>
+            </div>
         </div>
     </div>
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table table-hover align-middle mb-0" id="table-payments">
             <thead class="bg-light">
                 <tr>
                     <th class="px-4 py-3 text-muted small fw-bold text-uppercase">Tanggal</th>
@@ -34,7 +48,8 @@
                         <td class="px-4">{{ \Carbon\Carbon::parse($payment->tgl_pembayaran)->format('d M Y') }}</td>
                         <td class="fw-bold text-primary">{{ $payment->nomor_invoice }}</td>
                         <td>
-                            <span class="badge bg-soft-info text-info border border-info border-opacity-25 rounded-pill px-2">
+                            <span
+                                class="badge bg-soft-info text-info border border-info border-opacity-25 rounded-pill px-2">
                                 {{ $payment->metode_pembayaran }}
                             </span>
                         </td>

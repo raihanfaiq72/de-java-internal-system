@@ -22,29 +22,34 @@ header("Content-Disposition: attachment; filename=Laporan_Produk_Terjual_" . dat
         <thead>
             <tr>
                 <th>No</th>
-                <th>Nama Produk</th>
-                <th>Kode (SKU)</th>
-                <th>Kategori</th>
-                <th>Satuan</th>
-                <th>Kuantitas Terjual</th>
+                @if(!in_array(0, $hiddenColumns)) <th>Nama Produk</th> @endif
+                @if(!in_array(1, $hiddenColumns)) <th>Kode (SKU)</th> @endif
+                @if(!in_array(2, $hiddenColumns)) <th>Kategori</th> @endif
+                @if(!in_array(3, $hiddenColumns)) <th>Satuan</th> @endif
+                @if(!in_array(4, $hiddenColumns)) <th>Kuantitas Terjual</th> @endif
             </tr>
         </thead>
         <tbody>
             @foreach($soldProducts as $index => $product)
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
-                <td>{{ $product->nama_produk }}</td>
-                <td>{{ $product->sku_kode }}</td>
-                <td>{{ $product->nama_kategori ?? '-' }}</td>
-                <td>{{ $product->satuan }}</td>
-                <td class="text-right">{{ number_format($product->total_qty, 0, ',', '.') }}</td>
+                @if(!in_array(0, $hiddenColumns)) <td>{{ $product->nama_produk }}</td> @endif
+                @if(!in_array(1, $hiddenColumns)) <td>{{ $product->sku_kode }}</td> @endif
+                @if(!in_array(2, $hiddenColumns)) <td>{{ $product->nama_kategori ?? '-' }}</td> @endif
+                @if(!in_array(3, $hiddenColumns)) <td>{{ $product->satuan }}</td> @endif
+                @if(!in_array(4, $hiddenColumns)) <td class="text-right">{{ number_format($product->total_qty, 0, ',', '.') }}</td> @endif
             </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr>
-                <th colspan="5" class="text-right">Total Kuantitas</th>
-                <th class="text-right">{{ number_format($totalSoldQty, 0, ',', '.') }}</th>
+                @php 
+                    $footSpan = empty($hiddenColumns) ? 5 : (5 - count($hiddenColumns));
+                @endphp
+                <th colspan="{{ $footSpan }}" class="text-right">Total Kuantitas</th>
+                @if(!in_array(4, $hiddenColumns))
+                    <th class="text-right">{{ number_format($totalSoldQty, 0, ',', '.') }}</th>
+                @endif
             </tr>
         </tfoot>
     </table>

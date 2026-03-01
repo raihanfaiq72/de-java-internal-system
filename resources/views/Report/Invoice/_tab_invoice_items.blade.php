@@ -1,5 +1,5 @@
 <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-    <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+    <div class="card-header bg-white border-bottom py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
             <h6 class="mb-0 fw-bold text-dark">Laporan Invoice Per Produk</h6>
             <small class="text-muted me-3">
@@ -9,17 +9,27 @@
                 Invoice Terlibat: <span class="fw-bold text-dark">{{ $summaryTotalInvoices }}</span>
             </small>
         </div>
-        <div>
-            <button class="btn btn-white border btn-sm shadow-sm fw-bold text-dark" onclick="window.print()">
-                <i class="fa fa-print me-1"></i> Print
-            </button>
-            <button class="btn btn-white border btn-sm shadow-sm fw-bold text-dark ms-2" onclick="exportReport('invoice_items')">
-                <i class="fa fa-file-excel me-1 text-success"></i> Export
-            </button>
+        <div class="d-flex align-items-center gap-2">
+            <div class="dropdown">
+                <button class="btn btn-light border btn-sm shadow-sm fw-bold dropdown-toggle text-dark" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                    <i class="iconoir-view-columns-3 me-1"></i> Kolom
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow p-2 colToggleMenu" data-target="#table-invoice-products" style="min-width: 200px; max-height: 250px; overflow-y: auto;">
+                    <!-- Column toggles via JS -->
+                </ul>
+            </div>
+            <div class="btn-group shadow-sm">
+                <button class="btn btn-white border btn-sm fw-bold text-dark" onclick="printTable('invoice-products')">
+                    <i class="fa fa-print me-1"></i> Print
+                </button>
+                <button class="btn btn-white border btn-sm fw-bold text-dark" onclick="exportReport('invoice_items')">
+                    <i class="fa fa-file-excel me-1 text-success"></i> Export
+                </button>
+            </div>
         </div>
     </div>
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table table-hover align-middle mb-0" id="table-invoice-products">
             <thead class="bg-light">
                 <tr>
                     <th class="px-4 py-3 text-muted small fw-bold text-uppercase">Status</th>
