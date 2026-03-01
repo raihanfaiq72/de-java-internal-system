@@ -84,7 +84,7 @@
                     <button type="button" class="btn btn-outline-danger" id="btnDetailDelete">
                         <i class="fa fa-trash me-1"></i> Hapus
                     </button>
-                    <a href="#" target="_blank" class="btn btn-outline-secondary" id="btnDetailPrint">
+                    <a href="#" class="btn btn-outline-secondary" id="btnDetailPrint">
                         <i class="fa fa-print me-1"></i> Print
                     </a>
                     <button type="button" class="btn btn-primary" id="btnDetailEdit">

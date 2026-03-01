@@ -143,18 +143,52 @@
     </style>
     <style>
         @media (max-width: 576px) {
-            .page-title-box .breadcrumb { display: none; }
-            .card .card-body { padding: 1rem !important; }
-            .nav-tabs-finance .nav-link { font-size: 12px; padding: 8px 10px; }
-            #invoiceTable { display: block; width: 100%; overflow-x: auto; }
-            .detail-wrapper { padding: 8px; }
+            .page-title-box .breadcrumb {
+                display: none;
+            }
+
+            .card .card-body {
+                padding: 1rem !important;
+            }
+
+            .nav-tabs-finance .nav-link {
+                font-size: 12px;
+                padding: 8px 10px;
+            }
+
+            #invoiceTable {
+                display: block;
+                width: 100%;
+                overflow-x: auto;
+            }
+
+            .detail-wrapper {
+                padding: 8px;
+            }
 
             /* Header: make tabs and actions stack */
-            .card-header.d-flex { flex-wrap: wrap; gap: .5rem; }
-            .card-header .nav-tabs-finance { width: 100%; margin-top: .5rem; }
-            .card-header .text-end { width: 100%; text-align: left !important; }
-            .card-header .text-end .btn { width: 100%; }
-            .card-header .text-end .btn + .btn { margin-top: .5rem; }
+            .card-header.d-flex {
+                flex-wrap: wrap;
+                gap: .5rem;
+            }
+
+            .card-header .nav-tabs-finance {
+                width: 100%;
+                margin-top: .5rem;
+            }
+
+            .card-header .text-end {
+                width: 100%;
+                text-align: left !important;
+            }
+
+            .card-header .text-end .btn {
+                width: 100%;
+            }
+
+            .card-header .text-end .btn+.btn {
+                margin-top: .5rem;
+            }
         }
     </style>
 @endpush
@@ -177,7 +211,8 @@
                 </div>
 
                 <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
-                    <div class="card-header bg-white border-bottom py-0 px-4 d-flex align-items-center justify-content-between">
+                    <div
+                        class="card-header bg-white border-bottom py-0 px-4 d-flex align-items-center justify-content-between">
                         <ul class="nav nav-tabs nav-tabs-finance" role="tablist">
                             <li class="nav-item"><a class="nav-link active fw-bold py-3" data-bs-toggle="tab"
                                     href="#invoice-active">Invoice Aktif</a></li>
@@ -187,7 +222,8 @@
                                     href="#invoice-in-trash">Invoice Terhapus</a></li>
                         </ul>
                         <div class="text-end">
-                            <button class="btn btn-white border fw-bold px-3 me-2 shadow-sm text-dark">
+                            <button onclick="exportSales()"
+                                class="btn btn-white border fw-bold px-3 me-2 shadow-sm text-dark">
                                 <i class="fa fa-file-excel me-1 text-success"></i> Export .xls
                             </button>
                             <button class="btn btn-primary fw-bold px-4 shadow-sm"
@@ -199,16 +235,23 @@
 
                     <div class="card-body p-4 bg-white">
                         <div class="mb-4 p-3 rounded-3 bg-light border shadow-sm">
-                            <div class="row g-2 align-items-end">
-                                <div class="col-12 col-md-4">
-                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Pencarian</label>
+                            <div class="d-flex flex-nowrap align-items-end gap-2 overflow-auto pb-1"
+                                style="scrollbar-width: thin;">
+
+                                <div style="min-width: 0; flex: 1.5;">
+                                    <label class="f-label mb-1 fw-bold text-muted"
+                                        style="font-size: 11px;">Pencarian</label>
                                     <div class="input-group input-group-sm">
-                                        <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"></i></span>
-                                        <input type="text" id="filter-search" class="form-control border-start-0 ps-0 shadow-none" placeholder="No. Invoice / Mitra...">
+                                        <span class="input-group-text bg-white border-end-0"><i
+                                                class="fa fa-search text-muted"></i></span>
+                                        <input type="text" id="filter-search"
+                                            class="form-control border-start-0 ps-0 shadow-none"
+                                            placeholder="No. Invoice / Mitra...">
                                     </div>
                                 </div>
-                                <div class="col-12 col-sm-6 col-md-2">
-                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Status Dok</label>
+                                <div style="min-width: 0; flex: 1;">
+                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Status
+                                        Dok</label>
                                     <select id="filter-status-dok" class="tom-select-init">
                                         @php $documentStatus = ['Draft', 'Sent', 'Failed', 'Approved', 'Rejected']; @endphp
                                         <option value="">Semua</option>
@@ -217,8 +260,9 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-12 col-sm-6 col-md-2">
-                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Pembayaran</label>
+                                <div style="min-width: 0; flex: 1;">
+                                    <label class="f-label mb-1 fw-bold text-muted"
+                                        style="font-size: 11px;">Pembayaran</label>
                                     <select id="filter-status-bayar" class="tom-select-init">
                                         @php
                                             $paymentStatus = [
@@ -235,31 +279,35 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-12 col-sm-6 col-md-2">
-                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Mitra</label>
+                                <div style="min-width: 0; flex: 1.5;>
+                                                        <label class=" f-label mb-1 fw-bold text-muted"
+                                    style="font-size: 11px;">
+                                    Mitra</label>
                                     <select id="filter-mitra-id" class="tom-select-init">
                                         <option value="">Semua Pemasok...</option>
                                     </select>
                                 </div>
-                                <div class="col-6 col-md-2">
-                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Tgl. Invoice</label>
-                                    <input type="date" id="filter-tgl-invoice" class="form-control form-control-sm shadow-none">
+                                <div style="min-width: 0; flex: 1;">
+                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Tgl.
+                                        Invoice</label>
+                                    <input type="date" id="filter-tgl-invoice"
+                                        class="form-control form-control-sm shadow-none">
                                 </div>
-                                <div class="col-6 col-md-2">
-                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Jatuh Tempo</label>
-                                    <input type="date" id="filter-tgl-jatuh-tempo" class="form-control form-control-sm shadow-none">
+                                <div style="min-width: 0; flex: 1;">
+                                    <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Jatuh
+                                        Tempo</label>
+                                    <input type="date" id="filter-tgl-jatuh-tempo"
+                                        class="form-control form-control-sm shadow-none">
                                 </div>
-                                <div class="col-12 col-sm-6 col-md-2 d-flex gap-2">
-                                    <button onclick="loadInvoiceData()" class="btn btn-dark fw-bold btn-sm flex-fill shadow-sm" title="Filter">
+                                <div style="min-width: 0; flex: 1;" class="d-flex gap-1">
+                                    <button onclick="loadInvoiceData()"
+                                        class="btn btn-dark fw-bold btn-sm flex-fill shadow-sm" title="Filter">
                                         <i class="fa fa-filter"></i>
                                     </button>
-                                    <button onclick="resetFilter()" class="btn btn-light border border-danger fw-bold text-danger btn-sm flex-fill" title="Reset">
+                                    <button onclick="resetFilter()"
+                                        class="btn btn-light border border-danger fw-bold text-danger btn-sm flex-fill"
+                                        title="Reset">
                                         <i class="fa fa-sync"></i>
-                                    </button>
-                                </div>
-                                <div class="col-12 col-sm-6 col-md-2">
-                                    <button onclick="exportSales()" class="btn btn-success fw-bold btn-sm w-100 shadow-sm" title="Export Excel">
-                                        <i class="fa fa-file-excel me-1"></i> Export
                                     </button>
                                 </div>
                             </div>
@@ -331,7 +379,8 @@
                     <h5 class="modal-title fw-bold" id="modalPrintPreviewLabel">
                         <i class="fa fa-print text-primary me-2"></i> Preview Cetak Nota
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="ratio ratio-16x9 border rounded bg-light" style="min-height: 70vh;">
@@ -370,13 +419,13 @@
             if (statusBayar) params.append('status_pembayaran', statusBayar);
             // activeTab logic is handled in controller via tab_status or similar if needed
             // For now assuming default active tab or passing it
-            
+
             // Check active tab
             const activeTabPane = document.querySelector('.tab-pane.active');
             let tabStatus = 'active';
             if (activeTabPane.id === 'invoice-archive') tabStatus = 'archive';
             if (activeTabPane.id === 'invoice-in-trash') tabStatus = 'trash';
-            
+
             params.append('tab_status', tabStatus);
 
             window.location.href = '/sales/export?' + params.toString();
@@ -550,14 +599,14 @@
                 const tr = document.createElement('tr');
                 tr.classList.add('border-bottom', 'border-light');
                 tr.innerHTML = `
-                                                                                                                                                                <td class="ps-3 py-3">
-                                                                                                                                                                    <div class="fw-bold text-dark">${it.nama_produk_manual || it.product?.nama_produk || '-'}</div>
-                                                                                                                                                                    <div class="small text-muted">${it.product?.kode_produk || '-'}</div>
-                                                                                                                                                                </td>
-                                                                                                                                                                <td class="text-center py-3">${parseFloat(it.qty)} ${it.product?.unit?.nama_unit || ''}</td>
-                                                                                                                                                                <td class="text-end py-3">${window.financeApp.formatIDR(it.harga_satuan)}</td>
-                                                                                                                                                                <td class="text-end pe-3 py-3">${window.financeApp.formatIDR(it.total_harga_item)}</td>
-                                                                                                                                                            `;
+                                                                                                                                                                                                                                    <td class="ps-3 py-3">
+                                                                                                                                                                                                                                        <div class="fw-bold text-dark">${it.nama_produk_manual || it.product?.nama_produk || '-'}</div>
+                                                                                                                                                                                                                                        <div class="small text-muted">${it.product?.kode_produk || '-'}</div>
+                                                                                                                                                                                                                                    </td>
+                                                                                                                                                                                                                                    <td class="text-center py-3">${parseFloat(it.qty)} ${it.product?.unit?.nama_unit || ''}</td>
+                                                                                                                                                                                                                                    <td class="text-end py-3">${window.financeApp.formatIDR(it.harga_satuan)}</td>
+                                                                                                                                                                                                                                    <td class="text-end pe-3 py-3">${window.financeApp.formatIDR(it.total_harga_item)}</td>
+                                                                                                                                                                                                                                `;
                 tbody.appendChild(tr);
             });
 
