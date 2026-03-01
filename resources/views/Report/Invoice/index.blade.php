@@ -91,13 +91,13 @@
 
             <!-- Tabs -->
             <ul class="nav nav-tabs nav-fill mb-4 border-bottom-0" id="reportTabs" role="tablist">
-                <li class="nav-item" role="presentation">
+                {{-- <li class="nav-item" role="presentation">
                     <button class="nav-link active fw-bold py-3 rounded-top-3" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab">
                         <i class="iconoir-stats-report me-2"></i>Rekap Umum
                     </button>
-                </li>
+                </li> --}}
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link fw-bold py-3 rounded-top-3" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab">
+                    <button class="nav-link active fw-bold py-3 rounded-top-3" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab">
                         <i class="iconoir-wallet me-2"></i>Rekap Pembayaran
                     </button>
                 </li>
@@ -116,7 +116,7 @@
             <div class="tab-content" id="reportTabsContent">
                 
                 <!-- Tab 1: Rekap Umum -->
-                <div class="tab-pane fade show active" id="general" role="tabpanel">
+                {{-- <div class="tab-pane fade show active" id="general" role="tabpanel">
                     <div class="row g-4">
                         <!-- Line Chart: Income vs Expenditure -->
                         <div class="col-lg-8">
@@ -156,10 +156,10 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> --}}
 
                 <!-- Tab 2: Rekap Pembayaran -->
-                <div class="tab-pane fade" id="payments" role="tabpanel">
+                <div class="tab-pane fade show active" id="payments" role="tabpanel">
                     <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
                         <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
                             <div>
