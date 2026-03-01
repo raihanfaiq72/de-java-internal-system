@@ -23,19 +23,26 @@ class ImportController extends Controller
 
     public function importStock(Request $request)
     {
+        return $this->handleImport($request, new \App\Imports\StockImport);
+    }
+
+    public function importMitra(Request $request)
+    {
+        return $this->handleImport($request, new \App\Imports\MitraImport);
+    }
+
+    private function handleImport(Request $request, $importClass)
+    {
         $request->validate([
             'file' => 'required|file|mimes:xlsx,xls,csv',
         ]);
 
         $file = $request->file('file');
-        $path = $file->getRealPath();
         
-        // Check if Maatwebsite Excel is installed
         if (class_exists('Maatwebsite\Excel\Facades\Excel')) {
             try {
-                // Use Maatwebsite Excel
-                \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\StockImport, $file);
-                return redirect()->back()->with('success', 'Data stok berhasil diimport!');
+                \Maatwebsite\Excel\Facades\Excel::import($importClass, $file);
+                return redirect()->back()->with('success', 'Data berhasil diimport!');
             } catch (\Exception $e) {
                 return redirect()->back()->with('error', 'Gagal import: ' . $e->getMessage());
             }
@@ -49,8 +56,45 @@ class ImportController extends Controller
         if ($type === 'stock') {
             return $this->downloadStockTemplate();
         }
+        if ($type === 'mitra') {
+            return $this->downloadMitraTemplate();
+        }
 
         return redirect()->back()->with('error', 'Template tidak ditemukan.');
+    }
+
+    private function downloadMitraTemplate()
+    {
+        $fileName = 'Template_Import_Mitra.xlsx';
+        $headers = [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ];
+
+        if (class_exists('Maatwebsite\Excel\Facades\Excel')) {
+            return \Maatwebsite\Excel\Facades\Excel::download(new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithStyles, \Maatwebsite\Excel\Concerns\ShouldAutoSize {
+                public function array(): array
+                {
+                    return [
+                        ['Client', 'M-0001', 'PT. Maju Jaya', '08123456789'],
+                        ['Supplier', 'S-0001', 'CV. Abadi Sentosa', '08987654321'],
+                        ['Client', '', 'Toko Berkah', '08111222333'],
+                    ];
+                }
+
+                public function headings(): array
+                {
+                    // Minimal required fields: Type, No Mitra, Nama, Telp
+                    return ['Type', 'No Mitra', 'Nama', 'Telp'];
+                }
+
+                public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet)
+                {
+                    return [1 => ['font' => ['bold' => true]]];
+                }
+            }, $fileName);
+        }
+        return redirect()->back()->with('error', 'Library Excel tidak terinstall.');
     }
 
     private function downloadStockTemplate()

@@ -25,8 +25,8 @@
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <a class="nav-link fw-bold disabled" data-bs-toggle="tab" href="#tab-mitra" role="tab" aria-disabled="true">
-                                    <i class="iconoir-group me-2"></i>Import Mitra (Soon)
+                                <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-mitra" role="tab">
+                                    <i class="iconoir-group me-2"></i>Import Mitra
                                 </a>
                             </li>
                         </ul>
@@ -89,9 +89,47 @@
                                 </div>
                             </div>
                             
-                            <!-- Tab Mitra (Placeholder) -->
+                            <!-- Tab Mitra -->
                             <div class="tab-pane fade" id="tab-mitra" role="tabpanel">
-                                <p class="text-center text-muted py-5">Fitur import mitra akan segera tersedia.</p>
+                                <div class="row justify-content-center">
+                                    <div class="col-lg-6">
+                                        <div class="text-center mb-4">
+                                            <div class="mb-3">
+                                                <i class="iconoir-group fs-1 text-info"></i>
+                                            </div>
+                                            <h5 class="fw-bold">Upload File Excel Mitra</h5>
+                                            <p class="text-muted">
+                                                Format yang didukung: .xlsx, .xls, .csv<br>
+                                                Pastikan file memiliki header kolom yang sesuai.
+                                            </p>
+                                            <a href="{{ route('import.template', ['type' => 'mitra']) }}" class="btn btn-outline-success btn-sm fw-bold">
+                                                <i class="iconoir-download me-1"></i> Download Template Import Mitra
+                                            </a>
+                                        </div>
+
+                                        <form action="{{ route('import.mitra') }}" method="POST" enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
+                                            @csrf
+                                            <div class="mb-3">
+                                                <label for="file_mitra" class="form-label fw-bold">Pilih File</label>
+                                                <input class="form-control" type="file" id="file_mitra" name="file" required>
+                                            </div>
+                                            <div class="d-grid">
+                                                <button type="submit" class="btn btn-info fw-bold text-white">
+                                                    <i class="iconoir-upload me-1"></i> Mulai Import Mitra
+                                                </button>
+                                            </div>
+                                        </form>
+
+                                        <div class="mt-4 alert alert-info small">
+                                            <strong>Catatan:</strong>
+                                            <ul class="mb-0 ps-3">
+                                                <li>Data mitra akan diupdate berdasarkan Nama.</li>
+                                                <li>Nama mitra akan dipisahkan otomatis dari Badan Usaha (PT, CV, dll).</li>
+                                                <li>Jika tidak ada Badan Usaha, akan diset default.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

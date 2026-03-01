@@ -65,6 +65,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('mitra/export', [MitraController::class, 'export'])->name('mitra.export');
         Route::get('import', [App\Http\Controllers\ImportController::class, 'index'])->name('import.index');
         Route::post('import/stock', [App\Http\Controllers\ImportController::class, 'importStock'])->name('import.stock');
+        Route::post('import/mitra', [App\Http\Controllers\ImportController::class, 'importMitra'])->name('import.mitra');
         Route::get('import/template/{type}', [App\Http\Controllers\ImportController::class, 'downloadTemplate'])->name('import.template');
         Route::get('mitra', [MitraController::class, 'index'])->name('mitra');
         Route::get('barang/export', [BarangController::class, 'export'])->name('barang.export');
