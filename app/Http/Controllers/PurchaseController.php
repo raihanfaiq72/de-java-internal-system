@@ -72,6 +72,11 @@ class PurchaseController extends Controller
         return view($this->views.'receipt', compact('mitras', 'accounts'));
     }
 
+    public function showReceipt($id)
+    {
+        return view($this->views.'receipt-detail', compact('id'));
+    }
+
     public function printInvoice($id)
     {
         $invoice = Invoice::with(['mitra', 'items.product'])->find($id);

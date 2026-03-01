@@ -51,6 +51,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('sales/{id}', [SalesController::class, 'show'])->name('sales.show');
         Route::get('sales/print/{id}', [SalesController::class, 'printInvoice'])->name('sales.print');
         Route::get('sales-receipt', [SalesController::class, 'receipt'])->name('sales.receipt');
+        Route::get('sales-receipt/{id}', [SalesController::class, 'showReceipt'])->name('sales.receipt.show');
         Route::get('sales-receipt/print/{id}', [SalesController::class, 'printReceipt'])->name('sales.receipt.print');
 
         Route::get('purchase', [PurchaseController::class, 'index'])->name('purchase');
@@ -58,7 +59,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('purchase/{id}', [PurchaseController::class, 'show'])->name('purchase.show');
         Route::get('purchase/print/{id}', [PurchaseController::class, 'printInvoice'])->name('purchase.print');
         Route::get('purchase-receipt', [PurchaseController::class, 'receipt'])->name('purchase.receipt');
+        Route::get('purchase-receipt/{id}', [PurchaseController::class, 'showReceipt'])->name('purchase.receipt.show');
         Route::get('purchase-receipt/print/{id}', [PurchaseController::class, 'printReceipt'])->name('purchase.receipt.print');
+
         Route::get('mitra/export', [MitraController::class, 'export'])->name('mitra.export');
         Route::get('mitra', [MitraController::class, 'index'])->name('mitra');
         Route::get('barang/export', [BarangController::class, 'export'])->name('barang.export');

@@ -55,18 +55,19 @@
                                 </div>
 
                                 <!-- List Header -->
-                                <div class="bg-light border-bottom header-table-custom py-2 px-1 rounded-top border">
-                                    <div class="d-flex align-items-center">
+                                <div class="bg-light border-bottom header-table-custom py-3 rounded-top border d-none d-md-block"
+                                    style="padding-left: 1.25rem; padding-right: 1.25rem;">
+                                    <div class="d-flex align-items-center w-100">
                                         <div class="col-fixed-check text-center px-2">#</div>
-                                        <div class="row flex-grow-1 m-0 text-uppercase fw-bold text-muted text-center"
+                                        <div class="row flex-grow-1 m-0 text-uppercase fw-bold text-muted text-center align-items-center"
                                             style="font-size: 10px; letter-spacing: 1px;">
                                             <div class="col-3 text-start ps-0">No. Kuitansi & Pelanggan</div>
                                             <div class="col-2">Metode / Akun</div>
                                             <div class="col-2">Status</div>
                                             <div class="col-2">Tgl Bayar</div>
-                                            <div class="col-3 text-end">Jumlah Bayar</div>
+                                            <div class="col-3 text-end pe-4">Jumlah Bayar</div>
                                         </div>
-                                        <div class="col-fixed-aksi text-center">Aksi</div>
+                                        <div style="width: 1.25rem; flex-shrink: 0; margin-left: auto;"></div>
                                     </div>
                                 </div>
 
@@ -258,6 +259,71 @@
             </div>
         </div>
     </div>
+    <template id="receipt-template">
+        <div class="accordion-item shadow-sm border-0 overflow-hidden mb-3">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed bg-white py-3" type="button" data-bs-toggle="collapse">
+                    <div class="d-flex align-items-center w-100">
+                        <div class="col-fixed-check text-center fw-bold text-muted tpl-index"></div>
+                        <div class="row flex-grow-1 m-0 align-items-center text-center">
+                            <div class="col-3 text-start ps-0">
+                                <div class="fw-bold text-dark tpl-nomor-pembayaran"></div>
+                                <div class="small text-muted text-uppercase tpl-mitra"></div>
+                            </div>
+                            <div class="col-2">
+                                <div class="badge bg-light text-dark border px-2 py-1 tpl-metode"></div>
+                                <div class="small text-muted mt-1 tpl-akun"></div>
+                            </div>
+                            <div class="col-2">
+                                <span
+                                    class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">
+                                    SETTLED
+                                </span>
+                            </div>
+                            <div class="col-2 small text-muted">
+                                <i class="fa fa-calendar-alt me-1"></i> <span class="tpl-tanggal"></span>
+                            </div>
+                            <div class="col-3 text-end pe-4">
+                                <div class="fw-bold text-dark tpl-jumlah" style="font-size: 1.1em;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </button>
+            </h2>
+            <div class="accordion-collapse collapse">
+                <div class="accordion-body bg-light border-top p-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold text-muted mb-3">Informasi Invoice</h6>
+                            <table class="table table-sm table-borderless mb-0">
+                                <tr>
+                                    <td class="text-muted" width="120">No. Invoice</td>
+                                    <td class="fw-bold tpl-no-invoice"></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Total Tagihan</td>
+                                    <td class="fw-bold tpl-total-tagihan"></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Catatan</td>
+                                    <td class="tpl-catatan"></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6 text-end d-flex flex-column justify-content-center align-items-end">
+                            <a href="#" class="btn btn-primary btn-sm fw-bold mb-2 tpl-link-detail" style="width: 170px;">
+                                <i class="fa fa-arrow-right me-1"></i> LIHAT DETAIL
+                            </a>
+                            <a href="javascript:void(0)" class="btn btn-outline-dark btn-sm fw-bold tpl-btn-print"
+                                style="width: 170px;">
+                                <i class="fa fa-print me-1"></i> CETAK KUITANSI
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
 @endsection
 
 @push('css')
@@ -298,12 +364,37 @@
     </style>
     <style>
         @media (max-width: 576px) {
-            .page-title-box .breadcrumb { display: none; }
-            .card .card-body { padding: 1rem !important; }
-            .row.g-2 .col-md-4, .row.g-2 .col-md-3, .row.g-2 .col-md-2 { flex: 0 0 100%; max-width: 100%; }
-            .header-grid, .header-table-custom { display: none; }
-            .accordion-button .row > [class^="col-"] { flex: 0 0 100%; max-width: 100%; margin-bottom: 6px; }
-            .col-fixed-check, .col-fixed-aksi { text-align: left !important; width: auto; }
+            .page-title-box .breadcrumb {
+                display: none;
+            }
+
+            .card .card-body {
+                padding: 1rem !important;
+            }
+
+            .row.g-2 .col-md-4,
+            .row.g-2 .col-md-3,
+            .row.g-2 .col-md-2 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+
+            .header-grid,
+            .header-table-custom {
+                display: none;
+            }
+
+            .accordion-button .row>[class^="col-"] {
+                flex: 0 0 100%;
+                max-width: 100%;
+                margin-bottom: 6px;
+            }
+
+            .col-fixed-check,
+            .col-fixed-aksi {
+                text-align: left !important;
+                width: auto;
+            }
         }
     </style>
 @endpush
@@ -367,8 +458,8 @@
             modal.show();
 
             try {
-                // Use Mitra Name for search
-                const url = `${API_INVOICE}?search=${encodeURIComponent(mitraName)}&tipe_invoice=Sales&status_pembayaran=Unpaid&per_page=100`;
+                // Use Mitra ID for search
+                const url = `${API_INVOICE}?mitra_id=${mitraId}&tipe_invoice=Sales&status_pembayaran=Unpaid&per_page=100`;
 
                 const res = await fetch(url);
                 const result = await res.json();
@@ -390,23 +481,23 @@
                         const sisa = inv.total_akhir - (inv.payment_sum_jumlah_bayar || 0);
 
                         html += `
-                                                                                                                <label class="list-group-item d-flex gap-3">
-                                                                                                                    <input class="form-check-input flex-shrink-0" type="checkbox" 
-                                                                                                                        value="${inv.id}" 
-                                                                                                                        data-json='${JSON.stringify(inv).replace(/'/g, "&apos;")}' 
-                                                                                                                        ${isSelected}>
-                                                                                                                    <span class="pt-1 form-checked-content w-100">
-                                                                                                                        <div class="d-flex justify-content-between w-100">
-                                                                                                                            <strong>${inv.nomor_invoice}</strong>
-                                                                                                                            <small class="text-muted">${inv.tgl_invoice}</small>
-                                                                                                                        </div>
-                                                                                                                        <div class="d-flex justify-content-between w-100 small">
-                                                                                                                            <span>Total: ${formatIDR(inv.total_akhir)}</span>
-                                                                                                                            <span class="text-danger fw-bold">Sisa: ${formatIDR(sisa)}</span>
-                                                                                                                        </div>
-                                                                                                                    </span>
-                                                                                                                </label>
-                                                                                                            `;
+                                                                                                                                                <label class="list-group-item d-flex gap-3">
+                                                                                                                                                    <input class="form-check-input flex-shrink-0" type="checkbox" 
+                                                                                                                                                        value="${inv.id}" 
+                                                                                                                                                        data-json='${JSON.stringify(inv).replace(/'/g, "&apos;")}' 
+                                                                                                                                                        ${isSelected}>
+                                                                                                                                                    <span class="pt-1 form-checked-content w-100">
+                                                                                                                                                        <div class="d-flex justify-content-between w-100">
+                                                                                                                                                            <strong>${inv.nomor_invoice}</strong>
+                                                                                                                                                            <small class="text-muted">${inv.tgl_invoice}</small>
+                                                                                                                                                        </div>
+                                                                                                                                                        <div class="d-flex justify-content-between w-100 small">
+                                                                                                                                                            <span>Total: ${formatIDR(inv.total_akhir)}</span>
+                                                                                                                                                            <span class="text-danger fw-bold">Sisa: ${formatIDR(sisa)}</span>
+                                                                                                                                                        </div>
+                                                                                                                                                    </span>
+                                                                                                                                                </label>
+                                                                                                                                            `;
                     });
                     html += '</div>';
                     container.innerHTML = html;
@@ -453,24 +544,24 @@
             selectedInvoices.forEach((inv, index) => {
                 totalBayar += parseFloat(inv.bayar);
                 tbody.innerHTML += `
-                                                                                                        <tr>
-                                                                                                            <td>${inv.nomor_invoice}</td>
-                                                                                                            <td>${inv.pelanggan}</td>
-                                                                                                            <td class="text-center">${inv.tgl}</td>
-                                                                                                            <td class="text-end">${formatNumber(inv.total)}</td>
-                                                                                                            <td class="text-end">${formatNumber(inv.tertagih)}</td>
-                                                                                                            <td class="text-end pe-3">
-                                                                                                                <div class="input-group input-group-sm">
-                                                                                                                    <span class="input-group-text">Rp</span>
-                                                                                                                    <input type="text" class="form-control text-end" 
-                                                                                                                        value="${formatRupiahSimple(inv.bayar)}" 
-                                                                                                                        onkeyup="formatRupiahInput(this); updateBayar(${index}, this.value)"
-                                                                                                                        >
-                                                                                                                    <button class="btn btn-outline-danger" onclick="removeInvoice(${index})"><i class="fa fa-times"></i></button>
-                                                                                                                </div>
-                                                                                                            </td>
-                                                                                                        </tr>
-                                                                                                    `;
+                                                                                                                                        <tr>
+                                                                                                                                            <td>${inv.nomor_invoice}</td>
+                                                                                                                                            <td>${inv.pelanggan}</td>
+                                                                                                                                            <td class="text-center">${inv.tgl}</td>
+                                                                                                                                            <td class="text-end">${formatNumber(inv.total)}</td>
+                                                                                                                                            <td class="text-end">${formatNumber(inv.tertagih)}</td>
+                                                                                                                                            <td class="text-end pe-3">
+                                                                                                                                                <div class="input-group input-group-sm">
+                                                                                                                                                    <span class="input-group-text">Rp</span>
+                                                                                                                                                    <input type="text" class="form-control text-end" 
+                                                                                                                                                        value="${formatRupiahSimple(inv.bayar)}" 
+                                                                                                                                                        onkeyup="formatRupiahInput(this); updateBayar(${index}, this.value)"
+                                                                                                                                                        >
+                                                                                                                                                    <button class="btn btn-outline-danger" onclick="removeInvoice(${index})"><i class="fa fa-times"></i></button>
+                                                                                                                                                </div>
+                                                                                                                                            </td>
+                                                                                                                                        </tr>
+                                                                                                                                    `;
             });
 
             document.getElementById('total-payment-display').innerText = formatIDR(totalBayar);
@@ -582,89 +673,72 @@
             }
         }
 
+        function formatDateToDMY(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
         // --- RENDER LIST ---
         function renderReceiptList(data) {
             const accordion = document.getElementById('receiptAccordion');
+            const template = document.getElementById('receipt-template');
+            const baseUrl = '{{ url('sales-receipt') }}';
+
+            accordion.innerHTML = '';
+
             if (!data || data.length === 0) {
                 accordion.innerHTML = '<div class="text-center p-5 text-muted">Belum ada data kuitansi.</div>';
                 return;
             }
 
-            let html = '';
             data.forEach((item, index) => {
+                const clone = template.content.cloneNode(true);
                 const invoice = item.invoice || {};
                 const mitra = invoice.mitra || {};
                 const account = item.akun_keuangan || {};
 
-                html += `
-                                                                                                    <div class="accordion-item shadow-sm border-0 overflow-hidden mb-3">
-                                                                                                        <h2 class="accordion-header" id="heading${item.id}">
-                                                                                                            <button class="accordion-button collapsed bg-white py-3" type="button" data-bs-toggle="collapse"
-                                                                                                                data-bs-target="#collapse${item.id}">
-                                                                                                                <div class="d-flex align-items-center w-100">
-                                                                                                                    <div class="col-fixed-check text-center fw-bold text-muted">${index + 1}</div>
-                                                                                                                    <div class="row flex-grow-1 m-0 align-items-center">
-                                                                                                                        <div class="col-3">
-                                                                                                                            <div class="fw-bold text-dark">${item.nomor_pembayaran}</div>
-                                                                                                                            <div class="small text-muted text-uppercase">${mitra.nama || '-'}</div>
-                                                                                                                        </div>
-                                                                                                                        <div class="col-2">
-                                                                                                                            <div class="badge bg-light text-dark border px-2 py-1">${item.metode_pembayaran}</div>
-                                                                                                                            <div class="small text-muted mt-1">${account.nama_akun || '-'}</div>
-                                                                                                                        </div>
-                                                                                                                        <div class="col-2">
-                                                                                                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">
-                                                                                                                                SETTLED
-                                                                                                                            </span>
-                                                                                                                        </div>
-                                                                                                                        <div class="col-2 small text-muted">
-                                                                                                                            <i class="fa fa-calendar-alt me-1"></i> ${item.tgl_pembayaran}
-                                                                                                                        </div>
-                                                                                                                        <div class="col-3 text-end pe-4">
-                                                                                                                            <div class="fw-bold text-dark" style="font-size: 1.1em;">${formatIDR(item.jumlah_bayar)}</div>
-                                                                                                                        </div>
-                                                                                                                    </div>
-                                                                                                                    <div class="col-fixed-aksi text-center">
-                                                                                                                        <a href="{{ url('sales-receipt') }}/${item.id}" class="btn btn-sm btn-light border text-primary rounded-circle shadow-sm"
-                                                                                                                            title="Lihat Detail" target="_blank">
-                                                                                                                            <i class="fa fa-arrow-right"></i>
-                                                                                                                        </a>
-                                                                                                                    </div>
-                                                                                                                </div>
-                                                                                                            </button>
-                                                                                                        </h2>
-                                                                                                        <div id="collapse${item.id}" class="accordion-collapse collapse" data-bs-parent="#receiptAccordion">
-                                                                                                            <div class="accordion-body bg-light border-top p-4">
-                                                                                                                <div class="row">
-                                                                                                                    <div class="col-md-6">
-                                                                                                                        <h6 class="fw-bold text-muted mb-3">Informasi Invoice</h6>
-                                                                                                                        <table class="table table-sm table-borderless mb-0">
-                                                                                                                            <tr>
-                                                                                                                                <td class="text-muted" width="120">No. Invoice</td>
-                                                                                                                                <td class="fw-bold">: ${invoice.nomor_invoice || '-'}</td>
-                                                                                                                            </tr>
-                                                                                                                            <tr>
-                                                                                                                                <td class="text-muted">Total Tagihan</td>
-                                                                                                                                <td class="fw-bold">: ${formatIDR(invoice.total_akhir)}</td>
-                                                                                                                            </tr>
-                                                                                                                            <tr>
-                                                                                                                                <td class="text-muted">Catatan</td>
-                                                                                                                                <td>: ${item.catatan || '-'}</td>
-                                                                                                                            </tr>
-                                                                                                                        </table>
-                                                                                                                    </div>
-                                                                                                                    <div class="col-md-6 text-end">
-                                                                                                                        <a href="javascript:void(0)" onclick="openPrintPreview(${item.id})"
-                                                                                                                           class="btn btn-outline-dark btn-sm fw-bold">
-                                                                                                                            <i class="fa fa-print me-1"></i> CETAK KUITANSI
-                                                                                                                        </a>
-                                                                                                                    </div>
-                                                                                                                </div>
-                                                                                                            </div>
-                                                                                                        </div>
-                                                                                                    </div>`;
+                const headerId = `heading${item.id}`;
+                const collapseId = `collapse${item.id}`;
+
+                const header = clone.querySelector('.accordion-header');
+                header.id = headerId;
+
+                const button = clone.querySelector('.accordion-button');
+                button.setAttribute('data-bs-target', `#${collapseId}`);
+
+                const collapse = clone.querySelector('.accordion-collapse');
+                collapse.id = collapseId;
+                collapse.setAttribute('data-bs-parent', '#receiptAccordion');
+
+                clone.querySelector('.tpl-index').textContent = index + 1;
+                clone.querySelector('.tpl-nomor-pembayaran').textContent = item.nomor_pembayaran;
+                clone.querySelector('.tpl-mitra').textContent = mitra.nama || '-';
+                clone.querySelector('.tpl-metode').textContent = item.metode_pembayaran;
+                clone.querySelector('.tpl-akun').textContent = account.nama_akun || '-';
+                clone.querySelector('.tpl-tanggal').textContent = formatDateToDMY(item.tgl_pembayaran);
+                clone.querySelector('.tpl-jumlah').textContent = formatIDR(item.jumlah_bayar);
+
+                const linkDetail = clone.querySelector('.tpl-link-detail');
+                linkDetail.href = `${baseUrl}/${item.id}`;
+
+                const noInvoice = clone.querySelector('.tpl-no-invoice');
+                noInvoice.textContent = `: ${invoice.nomor_invoice || '-'}`;
+
+                const totalTagihan = clone.querySelector('.tpl-total-tagihan');
+                totalTagihan.textContent = `: ${formatIDR(invoice.total_akhir)}`;
+
+                const catatan = clone.querySelector('.tpl-catatan');
+                catatan.textContent = `: ${item.catatan || '-'}`;
+
+                const btnPrint = clone.querySelector('.tpl-btn-print');
+                btnPrint.onclick = function () { openPrintPreview(item.id); };
+
+                accordion.appendChild(clone);
             });
-            accordion.innerHTML = html;
         }
 
         function renderPagination(meta) {
@@ -680,12 +754,12 @@
                 const activeClass = link.active ? 'active' : '';
                 const disabledClass = link.url ? '' : 'disabled';
                 html += `
-                                                                                                        <li class="page-item ${activeClass} ${disabledClass}">
-                                                                                                            <button class="page-link" onclick="loadReceiptData('${link.url}')" ${!link.url ? 'disabled' : ''}>
-                                                                                                                ${link.label}
-                                                                                                            </button>
-                                                                                                        </li>
-                                                                                                    `;
+                                                                                                                                        <li class="page-item ${activeClass} ${disabledClass}">
+                                                                                                                                            <button class="page-link" onclick="loadReceiptData('${link.url}')" ${!link.url ? 'disabled' : ''}>
+                                                                                                                                                ${link.label}
+                                                                                                                                            </button>
+                                                                                                                                        </li>
+                                                                                                                                    `;
             });
             container.innerHTML = html;
         }

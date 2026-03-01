@@ -44,6 +44,10 @@ class InvoiceController extends Controller
             $query->where('tipe_invoice', $request->tipe_invoice);
         }
 
+        if ($request->mitra_id) {
+            $query->where('mitra_id', $request->mitra_id);
+        }
+
         if ($request->exclude_delivered) {
             $query->whereDoesntHave('deliveryOrderInvoices', function ($q) {
                 $q->whereNotIn('delivery_status', ['failed', 'rejected', 'returned']);

@@ -55,18 +55,19 @@
                                 </div>
 
                                 <!-- List Header -->
-                                <div class="bg-light border-bottom header-table-custom py-2 px-1 rounded-top border">
-                                    <div class="d-flex align-items-center">
+                                <div class="bg-light border-bottom header-table-custom py-3 rounded-top border d-none d-md-block"
+                                    style="padding-left: 1.25rem; padding-right: 1.25rem;">
+                                    <div class="d-flex align-items-center w-100">
                                         <div class="col-fixed-check text-center px-2">#</div>
-                                        <div class="row flex-grow-1 m-0 text-uppercase fw-bold text-muted text-center"
+                                        <div class="row flex-grow-1 m-0 text-uppercase fw-bold text-muted text-center align-items-center"
                                             style="font-size: 10px; letter-spacing: 1px;">
                                             <div class="col-3 text-start ps-0">No. Kuitansi & Supplier</div>
                                             <div class="col-2">Metode / Akun</div>
                                             <div class="col-2">Status</div>
                                             <div class="col-2">Tgl Bayar</div>
-                                            <div class="col-3 text-end">Jumlah Bayar</div>
+                                            <div class="col-3 text-end pe-4">Jumlah Bayar</div>
                                         </div>
-                                        <div class="col-fixed-aksi text-center">Aksi</div>
+                                        <div style="width: 1.25rem; flex-shrink: 0; margin-left: auto;"></div>
                                     </div>
                                 </div>
 
@@ -285,13 +286,6 @@
                                 <div class="fw-bold text-dark tpl-jumlah" style="font-size: 1.1em;"></div>
                             </div>
                         </div>
-                        <div class="col-fixed-aksi text-center">
-                            <a href="#"
-                                class="btn btn-sm btn-light border text-primary rounded-circle shadow-sm tpl-link-detail"
-                                title="Lihat Detail">
-                                <i class="fa fa-arrow-right"></i>
-                            </a>
-                        </div>
                     </div>
                 </button>
             </h2>
@@ -315,8 +309,13 @@
                                 </tr>
                             </table>
                         </div>
-                        <div class="col-md-6 text-end">
-                            <a href="javascript:void(0)" class="btn btn-outline-dark btn-sm fw-bold tpl-btn-print">
+                        <div class="col-md-6 text-end d-flex flex-column justify-content-center align-items-end">
+                            <a href="#" target="_blank" class="btn btn-primary btn-sm fw-bold mb-2 tpl-link-detail"
+                                style="width: 170px;">
+                                <i class="fa fa-arrow-right me-1"></i> LIHAT DETAIL
+                            </a>
+                            <a href="javascript:void(0)" class="btn btn-outline-dark btn-sm fw-bold tpl-btn-print"
+                                style="width: 170px;">
                                 <i class="fa fa-print me-1"></i> CETAK KUITANSI
                             </a>
                         </div>
@@ -365,12 +364,38 @@
     </style>
     <style>
         @media (max-width: 576px) {
-            .page-title-box .breadcrumb { display: none; }
-            .card .card-body { padding: 1rem !important; }
-            .row.g-2 .col-md-4, .row.g-2 .col-md-3, .row.g-2 .col-md-2, .row.g-2 .col-md-3.text-end { flex: 0 0 100%; max-width: 100%; text-align: left !important; }
-            .header-grid, .header-table-custom { display: none; }
-            .accordion-button .row > [class^="col-"] { flex: 0 0 100%; max-width: 100%; margin-bottom: 6px; }
-            .col-fixed-aksi { text-align: left !important; width: auto; }
+            .page-title-box .breadcrumb {
+                display: none;
+            }
+
+            .card .card-body {
+                padding: 1rem !important;
+            }
+
+            .row.g-2 .col-md-4,
+            .row.g-2 .col-md-3,
+            .row.g-2 .col-md-2,
+            .row.g-2 .col-md-3.text-end {
+                flex: 0 0 100%;
+                max-width: 100%;
+                text-align: left !important;
+            }
+
+            .header-grid,
+            .header-table-custom {
+                display: none;
+            }
+
+            .accordion-button .row>[class^="col-"] {
+                flex: 0 0 100%;
+                max-width: 100%;
+                margin-bottom: 6px;
+            }
+
+            .col-fixed-aksi {
+                text-align: left !important;
+                width: auto;
+            }
         }
     </style>
 @endpush
@@ -415,6 +440,34 @@
                 }
             });
 
+            // Handle params from redirect
+            const urlParams = new URLSearchParams(window.location.search);
+            const openCreate = urlParams.get('open_create');
+            const invoiceId = urlParams.get('invoice_id');
+            const mitraId = urlParams.get('mitra_id');
+
+            if (openCreate === 'true') {
+                openCreateModal();
+                if (mitraId && tomMitra) {
+                    tomMitra.setValue(mitraId);
+                    // Slight delay to ensure TomSelect is updated before opening invoice selection
+                    setTimeout(() => {
+                        openInvoiceSelection().then(() => {
+                            // Automatically check the invoice if invoice_id is provided
+                            if (invoiceId) {
+                                setTimeout(() => {
+                                    const checkbox = document.querySelector(`#selection-list-container input[type="checkbox"][value="${invoiceId}"]`);
+                                    if (checkbox) {
+                                        checkbox.checked = true;
+                                        addSelectedInvoices();
+                                    }
+                                }, 500); // Wait for modal content to load
+                            }
+                        });
+                    }, 300);
+                }
+            }
+
             loadReceiptData();
         });
 
@@ -457,6 +510,15 @@
             return new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2 }).format(val);
         }
 
+        // Add formatDateToDMY
+        function formatDateToDMY(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            const pad = (n) => n.toString().padStart(2, '0');
+            return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+        }
+
         // --- LOGIKA LIST ---
         async function loadReceiptData(url = API_PAYMENT) {
             const accordion = document.getElementById('receiptAccordion');
@@ -481,6 +543,7 @@
                     renderPagination(result.data);
                 }
             } catch (e) {
+                console.error("Error loading receipt data:", e);
                 accordion.innerHTML = '<div class="alert alert-danger">Gagal memuat data.</div>';
             }
         }
@@ -522,7 +585,7 @@
                 clone.querySelector('.tpl-mitra').textContent = mitra.nama || '-';
                 clone.querySelector('.tpl-metode').textContent = item.metode_pembayaran;
                 clone.querySelector('.tpl-akun').textContent = account.nama_akun || '-';
-                clone.querySelector('.tpl-tanggal').textContent = item.tgl_pembayaran;
+                clone.querySelector('.tpl-tanggal').textContent = formatDateToDMY(item.tgl_pembayaran);
                 clone.querySelector('.tpl-jumlah').textContent = formatIDR(item.jumlah_bayar);
 
                 const linkDetail = clone.querySelector('.tpl-link-detail');
@@ -545,7 +608,15 @@
         }
         // --- LOGIKA MODAL CREATE ---
         function openCreateModal() {
-            new bootstrap.Modal(document.getElementById('modalCreateReceipt')).show();
+            document.getElementById('form-receipt').reset();
+            selectedInvoices = [];
+            renderSelectedTable();
+            if (tomMitra) tomMitra.clear();
+            document.getElementById('upload-signature-area').classList.remove('d-none');
+            document.getElementById('signature-preview').classList.add('d-none');
+
+            const modal = new bootstrap.Modal(document.getElementById('modalCreateReceipt'));
+            modal.show();
         }
 
         // --- INVOICE SELECTION ---
@@ -579,9 +650,8 @@
             modal.show();
 
             try {
-                // Fetch UNPAID invoices Searching by Mitra Name
-                // Backend search handles 'mitra.nama' so this is better for user experience
-                const url = `${API_INVOICE}?search=${encodeURIComponent(mitraName)}&tipe_invoice=Purchase&status_pembayaran=Unpaid&per_page=100`;
+                // Fetch UNPAID invoices by exact Mitra ID
+                const url = `${API_INVOICE}?mitra_id=${mitraId}&tipe_invoice=Purchase&status_pembayaran=Unpaid&per_page=100`;
 
                 const res = await fetch(url);
                 const result = await res.json();
@@ -590,7 +660,7 @@
                     let html = '<div class="list-group">';
                     // Client side filter double check
                     const invoices = result.data.data.filter(inv =>
-                        (inv.mitra_id == mitraId || inv.mitra?.id == mitraId) &&
+                        (inv.mitra_id == mitraId || (inv.mitra && inv.mitra.id == mitraId)) &&
                         inv.status_pembayaran !== 'Paid' &&
                         inv.tipe_invoice === 'Purchase'
                     );
@@ -605,23 +675,23 @@
                         const sisa = inv.total_akhir - (inv.payment_sum_jumlah_bayar || 0);
 
                         html += `
-                                <label class="list-group-item d-flex gap-3">
-                                    <input class="form-check-input flex-shrink-0" type="checkbox" 
-                                        value="${inv.id}" 
-                                        data-json='${JSON.stringify(inv).replace(/'/g, "&apos;")}' 
-                                        ${isSelected}>
-                                    <span class="pt-1 form-checked-content w-100">
-                                        <div class="d-flex justify-content-between w-100">
-                                            <strong>${inv.nomor_invoice}</strong>
-                                            <small class="text-muted">${inv.tgl_invoice}</small>
-                                        </div>
-                                        <div class="d-flex justify-content-between w-100 small">
-                                            <span>Total: ${formatIDR(inv.total_akhir)}</span>
-                                            <span class="text-danger fw-bold">Sisa: ${formatIDR(sisa)}</span>
-                                        </div>
-                                    </span>
-                                </label>
-                            `;
+                                                                        <label class="list-group-item d-flex gap-3">
+                                                                            <input class="form-check-input flex-shrink-0" type="checkbox" 
+                                                                                value="${inv.id}" 
+                                                                                data-json='${JSON.stringify(inv).replace(/'/g, "&apos;")}' 
+                                                                                ${isSelected}>
+                                                                            <span class="pt-1 form-checked-content w-100">
+                                                                                <div class="d-flex justify-content-between w-100">
+                                                                                    <strong>${inv.nomor_invoice}</strong>
+                                                                                    <small class="text-muted">${inv.tgl_invoice}</small>
+                                                                                </div>
+                                                                                <div class="d-flex justify-content-between w-100 small">
+                                                                                    <span>Total: ${formatIDR(inv.total_akhir)}</span>
+                                                                                    <span class="text-danger fw-bold">Sisa: ${formatIDR(sisa)}</span>
+                                                                                </div>
+                                                                            </span>
+                                                                        </label>
+                                                                    `;
                     });
                     html += '</div>';
                     container.innerHTML = html;
@@ -777,12 +847,12 @@
                 if (label.includes('&raquo;')) label = '»';
 
                 html += `
-                                                                                    <li class="page-item ${activeClass} ${disabledClass}">
-                                                                                        <button class="page-link" onclick="loadReceiptData('${link.url}')" ${!link.url ? 'disabled' : ''}>
-                                                                                            ${label}
-                                                                                        </button>
-                                                                                    </li>
-                                                                                `;
+                                                                                                                            <li class="page-item ${activeClass} ${disabledClass}">
+                                                                                                                                <button class="page-link" onclick="loadReceiptData('${link.url}')" ${!link.url ? 'disabled' : ''}>
+                                                                                                                                    ${label}
+                                                                                                                                </button>
+                                                                                                                            </li>
+                                                                                                                        `;
             });
             container.innerHTML = html;
         }
