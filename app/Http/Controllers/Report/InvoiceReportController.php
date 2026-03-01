@@ -91,7 +91,7 @@ class InvoiceReportController extends Controller
         // --- Tab 2: Rekap Pembayaran ---
         $paymentsQuery = DB::table('payments')
             ->join('invoices', 'payments.invoice_id', '=', 'invoices.id')
-            ->join('mitras', 'invoices.mitra_id', '=', 'mitras.id')
+            ->leftJoin('mitras', 'invoices.mitra_id', '=', 'mitras.id') // Changed to leftJoin
             ->where('invoices.office_id', $officeId)
             ->whereNull('payments.deleted_at')
             ->whereBetween('payments.tgl_pembayaran', [$startDate, $endDate])
@@ -136,7 +136,7 @@ class InvoiceReportController extends Controller
             $invoiceIdsQuery->where('invoices.mitra_id', $mitraId);
         }
         if ($search) {
-            $invoiceIdsQuery->join('mitras', 'invoices.mitra_id', '=', 'mitras.id')
+            $invoiceIdsQuery->leftJoin('mitras', 'invoices.mitra_id', '=', 'mitras.id') // Changed to leftJoin
                 ->where(function ($q) use ($search) {
                     $q->where('invoices.nomor_invoice', 'like', "%$search%")
                         ->orWhere('mitras.nama', 'like', "%$search%")
@@ -172,7 +172,7 @@ class InvoiceReportController extends Controller
         $itemsQuery = DB::table('invoice_items')
             ->join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
             ->join('products', 'invoice_items.produk_id', '=', 'products.id')
-            ->join('mitras', 'invoices.mitra_id', '=', 'mitras.id')
+            ->leftJoin('mitras', 'invoices.mitra_id', '=', 'mitras.id') // Changed to leftJoin
             ->where('invoices.office_id', $officeId)
             ->whereNull('invoice_items.deleted_at')
             ->whereNull('invoices.deleted_at')
