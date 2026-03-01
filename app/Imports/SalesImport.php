@@ -23,7 +23,13 @@ use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class SalesImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChunkReading
+use App\Models\User;
+use App\Notifications\SystemNotification;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\AfterImport;
+use Maatwebsite\Excel\Events\ImportFailed;
+
+class SalesImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChunkReading, WithEvents
 {
     protected $officeId;
     protected $userId;
@@ -36,11 +42,57 @@ class SalesImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
 
     public function chunkSize(): int
     {
-        return 500;
+        return 200;
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            AfterImport::class => function(AfterImport $event) {
+                $user = User::find($this->userId);
+                if ($user) {
+                    $user->notify(new SystemNotification(
+                        'Import Sales Selesai',
+                        'Proses import data sales telah berhasil diselesaikan.',
+                        route('import.index'),
+                        'success'
+                    ));
+                }
+            },
+            ImportFailed::class => function(ImportFailed $event) {
+                $user = User::find($this->userId);
+                if ($user) {
+                    $user->notify(new SystemNotification(
+                        'Import Sales Gagal',
+                        'Terjadi kesalahan saat import data sales: ' . $event->getException()->getMessage(),
+                        route('import.index'),
+                        'error'
+                    ));
+                }
+                Log::error('SalesImport Failed Event: ' . $event->getException()->getMessage());
+            },
+        ];
+    }
+
+    public function failed(\Throwable $e)
+    {
+        $user = User::find($this->userId);
+        if ($user) {
+            $user->notify(new SystemNotification(
+                'Import Sales Gagal',
+                'Job import gagal diproses: ' . $e->getMessage(),
+                route('import.index'),
+                'error'
+            ));
+        }
+        Log::error('SalesImport Job Failed: ' . $e->getMessage());
     }
 
     public function collection(Collection $rows)
     {
+        ini_set('memory_limit', '1024M');
+        set_time_limit(0);
+
         try {
             $officeId = $this->officeId;
             $userId = $this->userId;

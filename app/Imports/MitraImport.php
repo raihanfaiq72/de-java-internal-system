@@ -12,22 +12,76 @@ use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class MitraImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChunkReading
+use App\Models\User;
+use App\Notifications\SystemNotification;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\AfterImport;
+use Maatwebsite\Excel\Events\ImportFailed;
+
+class MitraImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChunkReading, WithEvents
 {
     protected $officeId;
+    protected $userId;
 
-    public function __construct($officeId)
+    public function __construct($officeId, $userId)
     {
         $this->officeId = $officeId;
+        $this->userId = $userId;
     }
 
     public function chunkSize(): int
     {
-        return 500;
+        return 200;
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            AfterImport::class => function(AfterImport $event) {
+                $user = User::find($this->userId);
+                if ($user) {
+                    $user->notify(new SystemNotification(
+                        'Import Mitra Selesai',
+                        'Proses import data mitra telah berhasil diselesaikan.',
+                        route('import.index'),
+                        'success'
+                    ));
+                }
+            },
+            ImportFailed::class => function(ImportFailed $event) {
+                $user = User::find($this->userId);
+                if ($user) {
+                    $user->notify(new SystemNotification(
+                        'Import Mitra Gagal',
+                        'Terjadi kesalahan saat import data mitra: ' . $event->getException()->getMessage(),
+                        route('import.index'),
+                        'error'
+                    ));
+                }
+                Log::error('MitraImport Failed Event: ' . $event->getException()->getMessage());
+            },
+        ];
+    }
+
+    public function failed(\Throwable $e)
+    {
+        $user = User::find($this->userId);
+        if ($user) {
+            $user->notify(new SystemNotification(
+                'Import Mitra Gagal',
+                'Job import gagal diproses: ' . $e->getMessage(),
+                route('import.index'),
+                'error'
+            ));
+        }
+        Log::error('MitraImport Job Failed: ' . $e->getMessage());
     }
 
     public function collection(Collection $rows)
     {
+        ini_set('memory_limit', '1024M');
+        set_time_limit(0);
+
         try {
             $officeId = $this->officeId;
 

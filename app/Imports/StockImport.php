@@ -18,22 +18,76 @@ use Illuminate\Support\Facades\Log;
 
 use App\Models\COA;
 
-class StockImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChunkReading
+use App\Models\User;
+use App\Notifications\SystemNotification;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\AfterImport;
+use Maatwebsite\Excel\Events\ImportFailed;
+
+class StockImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChunkReading, WithEvents
 {
     protected $officeId;
+    protected $userId;
 
-    public function __construct($officeId)
+    public function __construct($officeId, $userId)
     {
         $this->officeId = $officeId;
+        $this->userId = $userId;
     }
 
     public function chunkSize(): int
     {
-        return 500;
+        return 200;
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            AfterImport::class => function(AfterImport $event) {
+                $user = User::find($this->userId);
+                if ($user) {
+                    $user->notify(new SystemNotification(
+                        'Import Stock Selesai',
+                        'Proses import data stok telah berhasil diselesaikan.',
+                        route('import.index'),
+                        'success'
+                    ));
+                }
+            },
+            ImportFailed::class => function(ImportFailed $event) {
+                $user = User::find($this->userId);
+                if ($user) {
+                    $user->notify(new SystemNotification(
+                        'Import Stock Gagal',
+                        'Terjadi kesalahan saat import data stok: ' . $event->getException()->getMessage(),
+                        route('import.index'),
+                        'error'
+                    ));
+                }
+                Log::error('StockImport Failed Event: ' . $event->getException()->getMessage());
+            },
+        ];
+    }
+
+    public function failed(\Throwable $e)
+    {
+        $user = User::find($this->userId);
+        if ($user) {
+            $user->notify(new SystemNotification(
+                'Import Stock Gagal',
+                'Job import gagal diproses: ' . $e->getMessage(),
+                route('import.index'),
+                'error'
+            ));
+        }
+        Log::error('StockImport Job Failed: ' . $e->getMessage());
     }
 
     public function collection(Collection $rows)
     {
+        ini_set('memory_limit', '1024M');
+        set_time_limit(0);
+
         try {
             $officeId = $this->officeId;
             $defaultLocation = StockLocation::firstOrCreate(

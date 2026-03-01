@@ -23,12 +23,12 @@ class ImportController extends Controller
 
     public function importStock(Request $request)
     {
-        return $this->handleImport($request, \App\Imports\StockImport::class, [session('active_office_id')]);
+        return $this->handleImport($request, \App\Imports\StockImport::class, [session('active_office_id'), auth()->id()]);
     }
 
     public function importMitra(Request $request)
     {
-        return $this->handleImport($request, \App\Imports\MitraImport::class, [session('active_office_id')]);
+        return $this->handleImport($request, \App\Imports\MitraImport::class, [session('active_office_id'), auth()->id()]);
     }
 
     public function importSales(Request $request)
