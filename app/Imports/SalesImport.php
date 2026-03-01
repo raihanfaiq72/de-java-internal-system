@@ -14,19 +14,35 @@ use App\Models\Partner;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Tax;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class SalesImport implements ToCollection, WithHeadingRow
+class SalesImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChunkReading
 {
+    protected $officeId;
+    protected $userId;
+
+    public function __construct($officeId, $userId)
+    {
+        $this->officeId = $officeId;
+        $this->userId = $userId;
+    }
+
+    public function chunkSize(): int
+    {
+        return 500;
+    }
+
     public function collection(Collection $rows)
     {
-        $officeId = session('active_office_id');
-        $userId = auth()->id();
+        $officeId = $this->officeId;
+        $userId = $this->userId;
 
         // Ensure default Category exists
         $defaultCategory = ProductCategory::firstOrCreate(

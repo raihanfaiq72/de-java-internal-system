@@ -9,18 +9,31 @@ use App\Models\ProductCategory;
 use App\Models\StockLocation;
 use App\Models\StockMutation;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Illuminate\Support\Facades\Log;
 
 use App\Models\COA;
 
-class StockImport implements ToCollection, WithHeadingRow
+class StockImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChunkReading
 {
+    protected $officeId;
+
+    public function __construct($officeId)
+    {
+        $this->officeId = $officeId;
+    }
+
+    public function chunkSize(): int
+    {
+        return 500;
+    }
+
     public function collection(Collection $rows)
     {
-        $officeId = session('active_office_id');
+        $officeId = $this->officeId;
         $defaultLocation = StockLocation::firstOrCreate(
             ['office_id' => $officeId, 'is_active' => true],
             ['name' => 'Gudang Utama', 'type' => 'stock']

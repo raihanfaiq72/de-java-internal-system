@@ -4,16 +4,30 @@ namespace App\Imports;
 
 use App\Models\Mitra;
 use App\Models\Partner;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class MitraImport implements ToCollection, WithHeadingRow
+class MitraImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChunkReading
 {
+    protected $officeId;
+
+    public function __construct($officeId)
+    {
+        $this->officeId = $officeId;
+    }
+
+    public function chunkSize(): int
+    {
+        return 500;
+    }
+
     public function collection(Collection $rows)
     {
-        $officeId = session('active_office_id');
+        $officeId = $this->officeId;
 
         foreach ($rows as $row) {
             $rawName = $row['nama'] ?? $row['nama_mitra'] ?? $row['partner_name'] ?? null;

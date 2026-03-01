@@ -23,20 +23,20 @@ class ImportController extends Controller
 
     public function importStock(Request $request)
     {
-        return $this->handleImport($request, new \App\Imports\StockImport);
+        return $this->handleImport($request, \App\Imports\StockImport::class, [session('active_office_id')]);
     }
 
     public function importMitra(Request $request)
     {
-        return $this->handleImport($request, new \App\Imports\MitraImport);
+        return $this->handleImport($request, \App\Imports\MitraImport::class, [session('active_office_id')]);
     }
 
     public function importSales(Request $request)
     {
-        return $this->handleImport($request, new \App\Imports\SalesImport);
+        return $this->handleImport($request, \App\Imports\SalesImport::class, [session('active_office_id'), auth()->id()]);
     }
 
-    private function handleImport(Request $request, $importClass)
+    private function handleImport(Request $request, $importClass, $params = [])
     {
         $request->validate([
             'file' => 'required|file|mimes:xlsx,xls,csv',
@@ -46,10 +46,20 @@ class ImportController extends Controller
         
         if (class_exists('Maatwebsite\Excel\Facades\Excel')) {
             try {
-                \Maatwebsite\Excel\Facades\Excel::import($importClass, $file);
-                return redirect()->back()->with('success', 'Data berhasil diimport!');
+                // Instantiate the import class with parameters
+                // For SalesImport, we need both officeId and userId
+                // For others, just officeId
+                
+                // We need to store the file temporarily to queue it properly
+                // Or let Excel::queueImport handle it.
+                // However, queueImport needs an object instance.
+                
+                $importInstance = new $importClass(...$params);
+                
+                \Maatwebsite\Excel\Facades\Excel::queueImport($importInstance, $file);
+                return redirect()->back()->with('success', 'Data sedang diproses di background. Silakan cek beberapa saat lagi.');
             } catch (\Exception $e) {
-                return redirect()->back()->with('error', 'Gagal import: ' . $e->getMessage());
+                return redirect()->back()->with('error', 'Gagal memulai import: ' . $e->getMessage());
             }
         }
         
