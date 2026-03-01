@@ -35,6 +35,29 @@ class StockImport implements ToCollection, WithHeadingRow
             $defaultCoa = COA::where('office_id', $officeId)->first();
         }
 
+        // If still no COA, create a default one to prevent error
+        if (!$defaultCoa) {
+            // Ensure Group exists
+            $group = \App\Models\COAGroup::firstOrCreate(
+                ['office_id' => $officeId, 'nama_kelompok' => 'Aktiva Lancar'],
+                ['kode_kelompok' => '10000']
+            );
+
+            // Ensure Type exists
+            $type = \App\Models\COAType::firstOrCreate(
+                ['kelompok_id' => $group->id, 'nama_tipe' => 'Persediaan Barang']
+            );
+
+            // Create COA
+            $defaultCoa = COA::create([
+                'office_id' => $officeId,
+                'tipe_id' => $type->id,
+                'kode_akun' => '11300',
+                'nama_akun' => 'Persediaan Barang',
+                'is_kas_bank' => 0,
+            ]);
+        }
+
         foreach ($rows as $row) {
             // Flexible Column Mapping
             $sku = $row['sku'] ?? $row['kode'] ?? $row['kode_barang'] ?? $row['sku_kode'] ?? null;

@@ -84,13 +84,29 @@ class MitraImport implements ToCollection, WithHeadingRow
 
     private function generateNomorMitra($officeId)
     {
-        // Simple generation: M-Timestamp-Random
-        // Or check last one.
-        $latest = Partner::where('office_id', $officeId)->latest()->first();
+        // Find the highest number used in M-XXXXX format
+        // We use a raw query to extract the number part for correct sorting
+        $lastPartner = Partner::where('office_id', $officeId)
+            ->where('nomor_mitra', 'like', 'M-%')
+            ->orderByRaw('CAST(SUBSTRING(nomor_mitra, 3) AS UNSIGNED) DESC')
+            ->first();
+
         $nextId = 1;
-        if ($latest && preg_match('/(\d+)$/', $latest->nomor_mitra, $matches)) {
-            $nextId = intval($matches[1]) + 1;
+        if ($lastPartner) {
+            // Extract number from M-XXXXX
+            $lastNumber = (int) substr($lastPartner->nomor_mitra, 2);
+            $nextId = $lastNumber + 1;
         }
-        return 'M-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
+
+        // Ensure uniqueness (loop to find next available)
+        do {
+            $code = 'M-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
+            $exists = Partner::where('office_id', $officeId)->where('nomor_mitra', $code)->exists();
+            if ($exists) {
+                $nextId++;
+            }
+        } while ($exists);
+
+        return $code;
     }
 }

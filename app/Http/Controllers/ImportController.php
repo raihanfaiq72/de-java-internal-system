@@ -31,6 +31,11 @@ class ImportController extends Controller
         return $this->handleImport($request, new \App\Imports\MitraImport);
     }
 
+    public function importSales(Request $request)
+    {
+        return $this->handleImport($request, new \App\Imports\SalesImport);
+    }
+
     private function handleImport(Request $request, $importClass)
     {
         $request->validate([
@@ -59,8 +64,52 @@ class ImportController extends Controller
         if ($type === 'mitra') {
             return $this->downloadMitraTemplate();
         }
+        if ($type === 'sales') {
+            return $this->downloadSalesTemplate();
+        }
 
         return redirect()->back()->with('error', 'Template tidak ditemukan.');
+    }
+
+    private function downloadSalesTemplate()
+    {
+        $fileName = 'Template_Import_Sales.xlsx';
+        $headers = [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ];
+
+        if (class_exists('Maatwebsite\Excel\Facades\Excel')) {
+            return \Maatwebsite\Excel\Facades\Excel::download(new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithStyles, \Maatwebsite\Excel\Concerns\ShouldAutoSize {
+                public function array(): array
+                {
+                    return [
+                        [
+                            date('Y-m-d'), date('Y-m-d', strtotime('+30 days')), 'INV-2023-001', 'Sent', 'PT. Pelanggan Setia', 'IDR', 
+                            1100000, 1100000, 'Jasa Konsultasi', 'Konsultasi IT Bulan Januari', 1, 0, 0, 'PPN 11%', 1000000, 'PO-001'
+                        ],
+                        [
+                            date('Y-m-d'), date('Y-m-d', strtotime('+30 days')), 'INV-2023-002', 'Draft', 'CV. Mitra Baru', 'IDR', 
+                            550000, 550000, 'Produk A', 'Deskripsi Produk A', 5, 0, 0, 'PPN 11%', 500000, 'PO-002'
+                        ],
+                    ];
+                }
+
+                public function headings(): array
+                {
+                    return [
+                        'invoice_date', 'due_date', 'number', 'status', 'partner_name', 'currency', 'amount_due', 'grand_total', 
+                        'product_name', 'product_description', 'quantity', 'discount', 'discount_amt_per_qty', 'tax', 'amount', 'document_reference'
+                    ];
+                }
+
+                public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet)
+                {
+                    return [1 => ['font' => ['bold' => true]]];
+                }
+            }, $fileName);
+        }
+        return redirect()->back()->with('error', 'Library Excel tidak terinstall.');
     }
 
     private function downloadMitraTemplate()

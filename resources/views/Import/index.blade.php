@@ -29,6 +29,11 @@
                                     <i class="iconoir-group me-2"></i>Import Mitra
                                 </a>
                             </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-sales" role="tab">
+                                    <i class="iconoir-page me-2"></i>Import Sales Invoice
+                                </a>
+                            </li>
                         </ul>
                     </div>
                     <div class="card-body p-4">
@@ -126,6 +131,50 @@
                                                 <li>Data mitra akan diupdate berdasarkan Nama.</li>
                                                 <li>Nama mitra akan dipisahkan otomatis dari Badan Usaha (PT, CV, dll).</li>
                                                 <li>Jika tidak ada Badan Usaha, akan diset default.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Tab Sales -->
+                            <div class="tab-pane fade" id="tab-sales" role="tabpanel">
+                                <div class="row justify-content-center">
+                                    <div class="col-lg-6">
+                                        <div class="text-center mb-4">
+                                            <div class="mb-3">
+                                                <i class="iconoir-page fs-1 text-success"></i>
+                                            </div>
+                                            <h5 class="fw-bold">Upload File Excel Sales Invoice</h5>
+                                            <p class="text-muted">
+                                                Format yang didukung: .xlsx, .xls, .csv<br>
+                                                Pastikan file memiliki header kolom yang sesuai.
+                                            </p>
+                                            <a href="{{ route('import.template', ['type' => 'sales']) }}" class="btn btn-outline-success btn-sm fw-bold">
+                                                <i class="iconoir-download me-1"></i> Download Template Sales Invoice
+                                            </a>
+                                        </div>
+
+                                        <form action="{{ route('import.sales') }}" method="POST" enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
+                                            @csrf
+                                            <div class="mb-3">
+                                                <label for="file_sales" class="form-label fw-bold">Pilih File</label>
+                                                <input class="form-control" type="file" id="file_sales" name="file" required>
+                                            </div>
+                                            <div class="d-grid">
+                                                <button type="submit" class="btn btn-success fw-bold text-white">
+                                                    <i class="iconoir-upload me-1"></i> Mulai Import Sales
+                                                </button>
+                                            </div>
+                                        </form>
+
+                                        <div class="mt-4 alert alert-info small">
+                                            <strong>Catatan:</strong>
+                                            <ul class="mb-0 ps-3">
+                                                <li>Satu Invoice bisa memiliki banyak baris (item).</li>
+                                                <li>Pastikan kolom "number" sama untuk item dalam invoice yang sama.</li>
+                                                <li>Nama Partner akan dicari otomatis atau dibuat baru jika tidak ditemukan.</li>
+                                                <li>Produk akan dicari berdasarkan nama atau dibuat baru (dengan SKU otomatis) jika tidak ada.</li>
                                             </ul>
                                         </div>
                                     </div>
