@@ -38,6 +38,10 @@ class ImportController extends Controller
 
     public function importReceipt(Request $request)
     {
+        // Increase memory and time limit for large uploads
+        ini_set('memory_limit', '1024M');
+        set_time_limit(0);
+
         $request->validate([
             'file.*' => 'required|file|mimes:pdf',
         ]);
@@ -54,16 +58,20 @@ class ImportController extends Controller
             $files = [$files];
         }
 
+        $count = 0;
         foreach ($files as $file) {
             // Store file temporarily
+            // Use unique hash to avoid collisions
             $path = $file->store('temp_receipts');
             $originalName = $file->getClientOriginalName();
 
             // Dispatch Job
+            // We dispatch individually so queue workers can process in parallel
             \App\Jobs\ImportReceiptJob::dispatch($path, $originalName, $officeId, $userId);
+            $count++;
         }
 
-        return redirect()->back()->with('success', count($files) . ' File PDF sedang diproses di background.');
+        return redirect()->back()->with('success', $count . ' File PDF sedang diproses di background.');
     }
 
     private function handleImport(Request $request, $importClass, $params = [])
