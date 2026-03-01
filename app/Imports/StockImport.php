@@ -9,6 +9,7 @@ use App\Models\ProductCategory;
 use App\Models\StockLocation;
 use App\Models\StockMutation;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
