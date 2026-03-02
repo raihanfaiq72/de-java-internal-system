@@ -2,7 +2,7 @@
 <html lang="en" dir="ltr" data-startbar="dark" data-bs-theme="light">
 <head>
     <meta charset="utf-8" />
-    <title>Login | Dejava System</title>
+    <title>Login | Djava System</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="shortcut icon" href="{{url('')}}/assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -86,7 +86,7 @@
                 <div class="login-card">
                     <div class="text-center mb-4">
                         <img src="{{url('assets/images/logo-sm.png')}}" height="60" alt="logo">
-                        <h4 class="mt-3 mb-1">Dejava System</h4>
+                        <h4 class="mt-3 mb-1">Djava System</h4>
                         <p class="text-muted small">Silakan masuk ke akun Anda</p>
                     </div>
 
