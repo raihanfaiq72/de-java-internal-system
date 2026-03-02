@@ -11,7 +11,28 @@ class SalesController extends Controller
 
     public function index()
     {
-        return view($this->views.'index');
+        $users = \App\Models\User::select('id', 'name')->get();
+        // Check if current user is superadmin (role id 1) or has permission
+        $user = auth()->user();
+        // Assuming role_id 1 is Super Admin based on standard seeding, or check relationship
+        // Logic: if role name 'superadmin' -> can select. Else fixed to self.
+        // Let's pass the flag to view
+        $canSelectSales = false;
+        
+        // Ensure roles relationship is loaded or handle null
+        // The error "Call to a member function contains() on null" means $user->roles is null.
+        // This happens if roles relationship is not eager loaded or user model doesn't have roles property set correctly as a collection.
+        // If using standard Laravel relationship, it should return Collection or null if not loaded but usually it returns empty collection.
+        // Unless roles is not defined in User model or it's returning null.
+        
+        // Safest check:
+        if ($user && $user->id == 1) {
+             $canSelectSales = true;
+        } elseif ($user && $user->roles && $user->roles->contains('name', 'superadmin')) {
+             $canSelectSales = true;
+        }
+
+        return view($this->views.'index', compact('users', 'canSelectSales'));
     }
 
     public function export(Request $request)

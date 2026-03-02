@@ -97,9 +97,17 @@
 
                                                 <div class="col-12">
                                                     <label class="f-label">Salesperson</label>
-                                                    <select id="modal_sales_id" class="form-select f-input">
-                                                        <option value="">Pilih Sales...</option>
-                                                    </select>
+                                                    @if(isset($canSelectSales) && $canSelectSales)
+                                                        <select id="modal_sales_id" class="form-select f-input">
+                                                            <option value="">Pilih Sales...</option>
+                                                            @foreach($users ?? [] as $u)
+                                                                <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    @else
+                                                        <input type="text" class="form-control f-input bg-light" value="{{ auth()->user()->name }}" readonly>
+                                                        <input type="hidden" id="modal_sales_id" value="{{ auth()->id() }}">
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
