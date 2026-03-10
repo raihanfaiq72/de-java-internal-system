@@ -37,68 +37,16 @@
 
             <div class="row">
                 <div class="col-12">
-                    @if($assigned->isEmpty() && $completed->isEmpty())
-                        <div class="alert alert-info">Belum ada tugas pengiriman yang diberikan.</div>
-                    @endif
+                    <div id="driverNoJobs" class="alert alert-info d-none">Belum ada tugas pengiriman yang diberikan.</div>
 
-                    @if(!$assigned->isEmpty())
-                        <h5 class="mb-3">Tugas Aktif</h5>
-                        <div class="row">
-                            @foreach($assigned as $fleet)
-                            <div class="col-md-6 col-lg-4 mb-3">
-                                <div class="card h-100 shadow-sm border-0">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <h5 class="card-title text-primary">{{ $fleet->deliveryOrder->delivery_order_number }}</h5>
-                                            <span class="badge bg-{{ $fleet->status == 'assigned' ? 'warning' : 'info' }}">
-                                                {{ ucfirst(str_replace('_', ' ', $fleet->status)) }}
-                                            </span>
-                                        </div>
-                                        <p class="card-text text-muted mb-1">
-                                            <i class="iconoir-calendar me-1"></i> {{ $fleet->deliveryOrder->delivery_date->format('d M Y') }}
-                                        </p>
-                                        <p class="card-text text-muted mb-3">
-                                            <i class="iconoir-truck me-1"></i> {{ $fleet->fleet->fleet_name }} ({{ $fleet->fleet->license_plate }})
-                                        </p>
-                                        <a href="{{ route('driver.delivery.show', $fleet->delivery_order_id) }}" class="btn btn-primary w-100">
-                                            <i class="iconoir-map me-1"></i> Lihat Rute & Tugas
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                    @endif
+                    <h5 class="mb-3">Tugas Aktif</h5>
+                    <div class="row" id="driverActiveJobsRow"></div>
 
                     <div class="mt-4">
                         <span class="driver-section-title"><i class="iconoir-clock-solid"></i> Riwayat Selesai (10 Terakhir)</span>
                         <div class="row mt-3">
-                            @forelse($completed as $fleet)
-                            <div class="col-md-6 col-lg-4 mb-3">
-                                <div class="card h-100 shadow-sm border-0 driver-completed-card"
-                                     data-do-id="{{ $fleet->delivery_order_id }}">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <h6 class="mb-0 fw-bold">{{ $fleet->deliveryOrder->delivery_order_number }}</h6>
-                                                <div class="text-muted small">
-                                                    <i class="iconoir-calendar me-1"></i> {{ optional($fleet->deliveryOrder->delivery_date)->format('d M Y') }}
-                                                </div>
-                                                <div class="text-muted small">
-                                                    <i class="iconoir-truck me-1"></i> {{ $fleet->fleet->fleet_name ?? '-' }} ({{ $fleet->fleet->license_plate ?? '-' }})
-                                                </div>
-                                            </div>
-                                            <span class="badge bg-success">Completed</span>
-                                        </div>
-                                        <div class="mt-3 text-end">
-                                            <button type="button" class="btn btn-sm btn-outline-primary driver-completed-detail" data-do-id="{{ $fleet->delivery_order_id }}">Detail</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            @empty
-                            <div class="text-muted small">Belum ada riwayat selesai.</div>
-                            @endforelse
+                            <div class="text-muted small d-none" id="driverNoCompleted">Belum ada riwayat selesai.</div>
+                            <div class="row" id="driverCompletedJobsRow"></div>
                         </div>
                     </div>
                 </div>
@@ -163,6 +111,7 @@
 @push('js')
 <script>
     const DO_API_BASE = "{{ url('api/delivery-order-api') }}";
+    const FLEET_API_INDEX = "{{ route('delivery-order-fleet-api.index') }}";
     const openDetail = async (doId) => {
         try {
             const res = await fetch(`${DO_API_BASE}/${doId}`);
@@ -213,19 +162,123 @@
             alert(e.message || 'Gagal membuka detail DO');
         }
     };
-    document.querySelectorAll('.driver-completed-card').forEach(el => {
-        el.addEventListener('click', () => {
-            const id = el.dataset.doId;
-            openDetail(id);
-        });
-    });
-    document.querySelectorAll('.driver-completed-detail').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+
+    function formatDate(v) {
+        if (!v) return '-';
+        const d = new Date(v);
+        if (Number.isNaN(d.getTime())) return '-';
+        return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function escapeHtml(s) {
+        return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function renderActiveCard(item) {
+        const doNum = item.delivery_order?.delivery_order_number || '-';
+        const dateStr = item.delivery_order?.delivery_date ? formatDate(item.delivery_order.delivery_date) : '-';
+        const fleetName = item.fleet?.fleet_name || '-';
+        const plate = item.fleet?.license_plate || item.fleet?.plate_number || '-';
+        const status = (item.status || '').replace(/_/g, ' ');
+        const badge = item.status === 'assigned' ? 'warning' : 'info';
+        const href = "{{ route('driver.delivery.show', '__ID__') }}".replace('__ID__', item.delivery_order_id);
+        return `
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title text-primary">${escapeHtml(doNum)}</h5>
+                            <span class="badge bg-${badge}">${escapeHtml(status.charAt(0).toUpperCase() + status.slice(1))}</span>
+                        </div>
+                        <p class="card-text text-muted mb-1">
+                            <i class="iconoir-calendar me-1"></i> ${escapeHtml(dateStr)}
+                        </p>
+                        <p class="card-text text-muted mb-3">
+                            <i class="iconoir-truck me-1"></i> ${escapeHtml(fleetName)} (${escapeHtml(plate)})
+                        </p>
+                        <a href="${href}" class="btn btn-primary w-100">
+                            <i class="iconoir-map me-1"></i> Lihat Rute & Tugas
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderCompletedCard(item) {
+        const doNum = item.delivery_order?.delivery_order_number || '-';
+        const dateStr = item.delivery_order?.delivery_date ? formatDate(item.delivery_order.delivery_date) : '-';
+        const fleetName = item.fleet?.fleet_name || '-';
+        const plate = item.fleet?.license_plate || item.fleet?.plate_number || '-';
+        const doId = item.delivery_order_id;
+        return `
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100 shadow-sm border-0 driver-completed-card" data-do-id="${doId}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-0 fw-bold">${escapeHtml(doNum)}</h6>
+                                <div class="text-muted small">
+                                    <i class="iconoir-calendar me-1"></i> ${escapeHtml(dateStr)}
+                                </div>
+                                <div class="text-muted small">
+                                    <i class="iconoir-truck me-1"></i> ${escapeHtml(fleetName)} (${escapeHtml(plate)})
+                                </div>
+                            </div>
+                            <span class="badge bg-success">Completed</span>
+                        </div>
+                        <div class="mt-3 text-end">
+                            <button type="button" class="btn btn-sm btn-outline-primary driver-completed-detail" data-do-id="${doId}">Detail</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async function fetchFleet(status, perPage) {
+        const url = new URL(FLEET_API_INDEX, window.location.origin);
+        url.searchParams.set('mine', '1');
+        url.searchParams.set('per_page', String(perPage));
+        if (status) url.searchParams.set('status', status);
+        const res = await fetch(url);
+        const json = await res.json();
+        if (!json.success) throw new Error(json.message || 'Gagal memuat data');
+        return json.data?.data || [];
+    }
+
+    async function loadDriverJobs() {
+        const [assigned, inTransit, completed] = await Promise.all([
+            fetchFleet('assigned', 50),
+            fetchFleet('in_transit', 50),
+            fetchFleet('completed', 10),
+        ]);
+
+        const active = [...assigned, ...inTransit];
+        const activeRow = document.getElementById('driverActiveJobsRow');
+        const completedRow = document.getElementById('driverCompletedJobsRow');
+        activeRow.innerHTML = active.length ? active.map(renderActiveCard).join('') : '<div class="text-muted small">Belum ada tugas aktif.</div>';
+        completedRow.innerHTML = completed.length ? completed.map(renderCompletedCard).join('') : '';
+        document.getElementById('driverNoCompleted').classList.toggle('d-none', completed.length > 0);
+        document.getElementById('driverNoJobs').classList.toggle('d-none', (active.length + completed.length) > 0);
+    }
+
+    document.addEventListener('click', (e) => {
+        const detailBtn = e.target.closest('.driver-completed-detail');
+        if (detailBtn) {
             e.preventDefault();
             e.stopPropagation();
-            const id = btn.dataset.doId;
-            openDetail(id);
-        });
+            openDetail(detailBtn.dataset.doId);
+            return;
+        }
+        const card = e.target.closest('.driver-completed-card');
+        if (card) {
+            openDetail(card.dataset.doId);
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        loadDriverJobs().catch(e => console.error(e));
     });
 </script>
 @endpush

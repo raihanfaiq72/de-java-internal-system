@@ -63,7 +63,7 @@ class DeliveryOrderController extends Controller
     public function show($id)
     {
         try {
-            $do = DeliveryOrder::with(['invoices.invoice.mitra', 'fleets.fleet'])
+            $do = DeliveryOrder::with(['office', 'invoices.invoice.mitra', 'fleets.fleet', 'fleets.driver'])
                 ->where('office_id', session('active_office_id'))
                 ->find($id);
 

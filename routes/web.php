@@ -44,7 +44,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('dashboard-piutang', [DashboardPiutangController::class, 'index'])->name('dashboard.piutang');
         Route::get('dashboard-sales', [DashboardSalesController::class, 'index'])->name('dashboard.sales');
-        Route::get('dashboard-sales/detail/{id}', [DashboardSalesController::class, 'detail'])->name('dashboard.sales.detail');
 
         Route::get('sales', [SalesController::class, 'index'])->name('sales');
         Route::get('sales/export', [SalesController::class, 'export'])->name('sales.export');
@@ -124,11 +123,6 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('driver')->name('driver.')->group(function () {
             Route::get('/delivery', [App\Http\Controllers\DriverDeliveryController::class, 'index'])->name('delivery.index');
             Route::get('/delivery/{id}', [App\Http\Controllers\DriverDeliveryController::class, 'show'])->name('delivery.show');
-            Route::post('/delivery/{id}/start', [App\Http\Controllers\DriverDeliveryController::class, 'startTrip'])->name('delivery.start');
-            Route::post('/delivery/{id}/location', [App\Http\Controllers\DriverDeliveryController::class, 'updateLocation'])->name('delivery.location');
-            Route::post('/delivery/{id}/invoice/{invoiceId}/arrive', [App\Http\Controllers\DriverDeliveryController::class, 'arriveAtStop'])->name('delivery.arrive');
-            Route::get('/delivery/{id}/invoice/{invoiceId}/proof', [App\Http\Controllers\DriverDeliveryController::class, 'getProof'])->name('delivery.proof');
-            Route::post('/delivery/{id}/finish', [App\Http\Controllers\DriverDeliveryController::class, 'finishTrip'])->name('delivery.finish');
         });
 
         Route::prefix('admin')->group(function () {

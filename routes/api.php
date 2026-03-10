@@ -2,9 +2,13 @@
 
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\ChartOfAccountController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\DashboardPiutangController;
+use App\Http\Controllers\Api\DashboardSalesController;
 use App\Http\Controllers\Api\DeliveryOrderController;
 use App\Http\Controllers\Api\DeliveryOrderFleetController;
 use App\Http\Controllers\Api\DeliveryOrderInvoiceController;
+use App\Http\Controllers\Api\DriverDeliveryController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\FinancialAccountController;
 use App\Http\Controllers\Api\FleetController;
@@ -234,6 +238,28 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/{id}', [DeliveryOrderFleetController::class, 'show'])->name('show');
         Route::put('/{id}', [DeliveryOrderFleetController::class, 'update'])->name('update');
         Route::delete('/{id}', [DeliveryOrderFleetController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('dashboard-api')->name('dashboard-api.')->group(function () {
+        Route::get('/summary', [DashboardController::class, 'summary'])->name('summary');
+    });
+
+    Route::prefix('dashboard-piutang-api')->name('dashboard-piutang-api.')->group(function () {
+        Route::get('/summary', [DashboardPiutangController::class, 'summary'])->name('summary');
+    });
+
+    Route::prefix('dashboard-sales-api')->name('dashboard-sales-api.')->group(function () {
+        Route::get('/', [DashboardSalesController::class, 'index'])->name('index');
+        Route::get('/detail/{id}', [DashboardSalesController::class, 'detail'])->name('detail');
+    });
+
+    Route::prefix('driver-delivery-api')->name('driver-delivery-api.')->group(function () {
+        Route::get('/{id}', [DriverDeliveryController::class, 'show'])->name('show');
+        Route::post('/{id}/start', [DriverDeliveryController::class, 'startTrip'])->name('start');
+        Route::post('/{id}/location', [DriverDeliveryController::class, 'updateLocation'])->name('location');
+        Route::post('/{id}/invoice/{invoiceId}/arrive', [DriverDeliveryController::class, 'arriveAtStop'])->name('arrive');
+        Route::get('/{id}/invoice/{invoiceId}/proof', [DriverDeliveryController::class, 'getProof'])->name('proof');
+        Route::post('/{id}/finish', [DriverDeliveryController::class, 'finishTrip'])->name('finish');
     });
 
     Route::prefix('fleet-api')

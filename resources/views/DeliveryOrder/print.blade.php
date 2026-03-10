@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delivery Note - {{ $do->delivery_order_number }}</title>
+    <title>Delivery Note</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -122,70 +122,52 @@
     <div class="container">
         <div class="header">
             <h1>Delivery Order</h1>
-            <p>{{ $do->office->name ?? 'De Java Internal System' }}</p>
+            <p id="printOfficeName">De Java Internal System</p>
         </div>
 
         <div class="info-grid">
             <div>
                 <div class="info-group">
                     <strong>Nomor DO:</strong>
-                    {{ $do->delivery_order_number }}
+                    <span id="printDoNumber">-</span>
                 </div>
                 <div class="info-group" style="margin-top: 10px;">
                     <strong>Tanggal Pengiriman:</strong>
-                    {{ \Carbon\Carbon::parse($do->delivery_date)->format('d F Y') }}
+                    <span id="printDeliveryDate">-</span>
                 </div>
             </div>
             <div class="text-end">
-                @php
-                    $statusMap = [
-                        'draft' => 'Draft',
-                        'scheduled' => 'Scheduled',
-                        'in_transit' => 'In Transit',
-                        'delivering' => 'Delivering',
-                        'partially_delivered' => 'Partially Delivered',
-                        'completed' => 'Completed',
-                        'returned' => 'Returned',
-                        'cancelled' => 'Cancelled',
-                    ];
-                @endphp
                 <div class="info-group">
                     <strong>Status:</strong>
-                    {{ $statusMap[$do->status] ?? ucfirst($do->status) }}
+                    <span id="printStatus">-</span>
                 </div>
             </div>
         </div>
 
         <div class="section-title">Informasi Armada & Pengemudi</div>
-        @php
-            $fleetData = $do->fleets->first();
-        @endphp
-        @if($fleetData)
-            <div class="info-grid">
-                <div>
-                    <div class="info-group">
-                        <strong>Armada:</strong>
-                        {{ $fleetData->fleet->fleet_name ?? '-' }} ({{ $fleetData->fleet->license_plate ?? '-' }})
-                    </div>
-                    <div class="info-group" style="margin-top: 10px;">
-                        <strong>Pengemudi:</strong>
-                        {{ $fleetData->driver->name ?? '-' }}
-                    </div>
+        <div class="info-grid" id="printFleetInfo">
+            <div>
+                <div class="info-group">
+                    <strong>Armada:</strong>
+                    <span id="printFleetName">-</span>
                 </div>
-                <div>
-                    <div class="info-group">
-                        <strong>Estimasi Jarak:</strong>
-                        {{ $fleetData->estimated_distance_km }} KM
-                    </div>
-                    <div class="info-group" style="margin-top: 10px;">
-                        <strong>Estimasi BBM:</strong>
-                        Rp {{ number_format($fleetData->estimated_fuel_cost, 0, ',', '.') }}
-                    </div>
+                <div class="info-group" style="margin-top: 10px;">
+                    <strong>Pengemudi:</strong>
+                    <span id="printDriverName">-</span>
                 </div>
             </div>
-        @else
-            <p>Belum ada data armada.</p>
-        @endif
+            <div>
+                <div class="info-group">
+                    <strong>Estimasi Jarak:</strong>
+                    <span id="printDistance">-</span>
+                </div>
+                <div class="info-group" style="margin-top: 10px;">
+                    <strong>Estimasi BBM:</strong>
+                    Rp <span id="printFuelCost">0</span>
+                </div>
+            </div>
+        </div>
+        <div id="printNoFleet" style="display:none;">Belum ada data armada.</div>
 
         <div class="section-title">Daftar Invoice (Tujuan)</div>
         <table>
@@ -197,19 +179,10 @@
                     <th>Alamat</th>
                 </tr>
             </thead>
-            <tbody>
-                @foreach($do->invoices as $idx => $inv)
-                    <tr>
-                        <td class="text-center">{{ $idx + 1 }}</td>
-                        <td>{{ $inv->invoice->nomor_invoice ?? '-' }}</td>
-                        <td>{{ $inv->invoice->mitra->nama ?? 'Umum' }}</td>
-                        <td>{{ $inv->invoice->mitra->alamat ?? '-' }}</td>
-                    </tr>
-                @endforeach
-            </tbody>
+            <tbody id="printInvoicesTbody"></tbody>
         </table>
 
-        @if($fleetData && !empty($fleetData->additional_costs))
+        <div id="printCostsWrap" style="display:none;">
             <div class="section-title">Rincian Biaya Operasional</div>
             <table style="width: 60%;">
                 <thead>
@@ -218,31 +191,14 @@
                         <th class="text-end" width="150">Jumlah</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>Estimasi BBM</td>
-                        <td class="text-end">Rp {{ number_format($fleetData->estimated_fuel_cost, 0, ',', '.') }}</td>
-                    </tr>
-                    @php $totalCost = $fleetData->estimated_fuel_cost; @endphp
-                    @foreach($fleetData->additional_costs as $cost)
-                        <tr>
-                            <td>{{ $cost['name'] }}</td>
-                            <td class="text-end">Rp {{ number_format($cost['amount'], 0, ',', '.') }}</td>
-                        </tr>
-                        @php $totalCost += $cost['amount']; @endphp
-                    @endforeach
-                    <tr class="total-row">
-                        <td>Total Estimasi Biaya</td>
-                        <td class="text-end">Rp {{ number_format($totalCost, 0, ',', '.') }}</td>
-                    </tr>
-                </tbody>
+                <tbody id="printCostsTbody"></tbody>
             </table>
-        @endif
+        </div>
 
-        @if($do->notes)
+        <div id="printNotesWrap" style="display:none;">
             <div class="section-title">Catatan</div>
-            <p>{{ $do->notes }}</p>
-        @endif
+            <p id="printNotes"></p>
+        </div>
 
         <div class="signature-section">
             <div>
@@ -259,6 +215,100 @@
             </div>
         </div>
     </div>
+    <script>
+        const DO_ID = {{ $doId }};
+        const DO_API_SHOW = "{{ route('delivery-order-api.show', ['id' => '__ID__']) }}";
+        const DO_FLEET_API_BY_DO = "{{ route('delivery-order-fleet-api.by-do', ['doId' => '__ID__']) }}";
+
+        function rupiah(n) {
+            return Number(n || 0).toLocaleString('id-ID');
+        }
+        function rupiah2(n) {
+            return Number(n || 0).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        function escapeHtml(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            try {
+                const doRes = await fetch(DO_API_SHOW.replace('__ID__', DO_ID));
+                const doJson = await doRes.json();
+                if (!doJson.success) throw new Error(doJson.message || 'Gagal memuat DO');
+                const d = doJson.data || {};
+                document.title = 'Delivery Note - ' + (d.delivery_order_number || 'DO');
+                document.getElementById('printOfficeName').textContent = d.office?.name || 'De Java Internal System';
+                document.getElementById('printDoNumber').textContent = d.delivery_order_number || '-';
+                document.getElementById('printDeliveryDate').textContent = d.delivery_date ? new Date(d.delivery_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '-';
+                const statusMap = {
+                    draft: 'Draft',
+                    scheduled: 'Scheduled',
+                    in_transit: 'In Transit',
+                    delivering: 'Delivering',
+                    partially_delivered: 'Partially Delivered',
+                    completed: 'Completed',
+                    returned: 'Returned',
+                    cancelled: 'Cancelled',
+                    Scheduled: 'Scheduled'
+                };
+                const st = d.status || 'draft';
+                document.getElementById('printStatus').textContent = statusMap[st] || String(st);
+
+                const fRes = await fetch(DO_FLEET_API_BY_DO.replace('__ID__', DO_ID));
+                const fJson = await fRes.json();
+                const fleet = fJson.success ? fJson.data : null;
+                if (!fleet) {
+                    document.getElementById('printFleetInfo').style.display = 'none';
+                    document.getElementById('printNoFleet').style.display = 'block';
+                } else {
+                    const fn = fleet.fleet ? `${fleet.fleet.fleet_name || '-'} (${fleet.fleet.license_plate || fleet.fleet.plate_number || '-'})` : '-';
+                    document.getElementById('printFleetName').textContent = fn;
+                    document.getElementById('printDriverName').textContent = fleet.driver?.name || '-';
+                    document.getElementById('printDistance').textContent = `${rupiah2(fleet.estimated_distance_km || 0)} KM`;
+                    document.getElementById('printFuelCost').textContent = rupiah(fleet.estimated_fuel_cost || 0);
+
+                    const costs = Array.isArray(fleet.additional_costs) ? fleet.additional_costs : [];
+                    if (costs.length) {
+                        const wrap = document.getElementById('printCostsWrap');
+                        const tbody = document.getElementById('printCostsTbody');
+                        wrap.style.display = 'block';
+                        tbody.innerHTML = '';
+                        let total = Number(fleet.estimated_fuel_cost || 0);
+                        tbody.innerHTML += `<tr><td>Estimasi BBM</td><td class="text-end">Rp ${rupiah(fleet.estimated_fuel_cost || 0)}</td></tr>`;
+                        costs.forEach(c => {
+                            total += Number(c.amount || 0);
+                            tbody.innerHTML += `<tr><td>${escapeHtml(c.name || '-')}</td><td class="text-end">Rp ${rupiah(c.amount || 0)}</td></tr>`;
+                        });
+                        tbody.innerHTML += `<tr class="total-row"><td>Total Estimasi Biaya</td><td class="text-end">Rp ${rupiah(total)}</td></tr>`;
+                    }
+                }
+
+                const notes = d.notes || '';
+                if (notes) {
+                    document.getElementById('printNotesWrap').style.display = 'block';
+                    document.getElementById('printNotes').textContent = notes;
+                }
+
+                const inv = Array.isArray(d.invoices) ? d.invoices : [];
+                const tbody = document.getElementById('printInvoicesTbody');
+                tbody.innerHTML = '';
+                inv.forEach((x, idx) => {
+                    const invNo = x.invoice?.nomor_invoice || '-';
+                    const m = x.invoice?.mitra || {};
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="text-center">${idx + 1}</td>
+                            <td>${escapeHtml(invNo)}</td>
+                            <td>${escapeHtml(m.nama || 'Umum')}</td>
+                            <td>${escapeHtml(m.alamat || '-')}</td>
+                        </tr>
+                    `;
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        });
+    </script>
 </body>
 
 </html>

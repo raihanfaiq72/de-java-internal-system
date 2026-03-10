@@ -23,22 +23,15 @@
                 <div class="col-lg-8">
                     <h4 class="fw-bold text-dark mb-1">Live Tracking Delivery Order</h4>
                     <p class="text-muted small mb-0">
-                        {{ $do->delivery_order_number }} •
-                        {{ $do->office->nama_office ?? 'Kantor' }}
+                        <span id="trackDoNumber">-</span> •
+                        <span id="trackOfficeName">Kantor</span>
                     </p>
                 </div>
                 <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
                     <a href="{{ route('delivery-order.index') }}" class="btn btn-light border me-2">
                         <i class="iconoir-arrow-left me-1"></i> Kembali
                     </a>
-                    @php
-                        $fleet = $do->fleets->first();
-                    @endphp
-                    @if($fleet)
-                        <span class="badge bg-{{ $do->status === 'completed' ? 'success' : 'info' }} do-track-badge">
-                            Status: {{ ucfirst($do->status ?? 'draft') }}
-                        </span>
-                    @endif
+                    <span class="badge do-track-badge d-none" id="trackStatusBadge">Status: -</span>
                 </div>
             </div>
 
@@ -63,10 +56,10 @@
                                 <div class="flex-grow-1">
                                     <div class="text-muted small">Driver</div>
                                     <div class="fw-bold">
-                                        {{ $fleet->driver->name ?? 'Belum ditentukan' }}
+                                        <span id="trackDriverName">Belum ditentukan</span>
                                     </div>
                                     <div class="text-muted small">
-                                        Armada: {{ $fleet->fleet->fleet_name ?? '-' }} ({{ $fleet->fleet->license_plate ?? '-' }})
+                                        Armada: <span id="trackFleetName">-</span>
                                     </div>
                                 </div>
                             </div>
@@ -75,7 +68,7 @@
                                     <div class="border rounded-3 px-3 py-2">
                                         <div class="text-muted small">Estimasi Jarak</div>
                                         <div class="fw-bold">
-                                            {{ number_format($fleet->estimated_distance_km ?? 0, 2, ',', '.') }} km
+                                            <span id="trackDistance">0</span> km
                                         </div>
                                     </div>
                                 </div>
@@ -83,7 +76,7 @@
                                     <div class="border rounded-3 px-3 py-2">
                                         <div class="text-muted small">Estimasi BBM</div>
                                         <div class="fw-bold">
-                                            Rp {{ number_format($fleet->estimated_fuel_cost ?? 0, 0, ',', '.') }}
+                                            Rp <span id="trackFuelCost">0</span>
                                         </div>
                                     </div>
                                 </div>
@@ -91,8 +84,7 @@
                                     <div class="border rounded-3 px-3 py-2">
                                         <div class="text-muted small mb-1">Ringkasan Tujuan</div>
                                         <div class="fw-bold small">
-                                            {{ $do->invoices->count() }} tujuan •
-                                            {{ $do->invoices->where('delivery_status', 'delivered')->count() }} selesai
+                                            <span id="trackStopsSummary">0 tujuan • 0 selesai</span>
                                         </div>
                                     </div>
                                 </div>
@@ -122,29 +114,57 @@
 @endsection
 
 @section('scripts')
-@php
-    $stops = $do->invoices->map(function ($i) {
-        return [
-            'name' => $i->invoice->mitra->nama,
-            'lat' => $i->invoice->mitra->latitude,
-            'lng' => $i->invoice->mitra->longitude,
-            'status' => $i->delivery_status,
-        ];
-    });
-@endphp
 <script src="/assets/libs/leaflet/leaflet.js" onerror="(function(){var s=document.createElement('script');s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';document.head.appendChild(s)})()"></script>
 <script src="/assets/vendor/leaflet-routing/leaflet-routing-machine.js" onerror="(function(){var s=document.createElement('script');s.src='https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js';document.head.appendChild(s)})()"></script>
 <script>
-    const deliveryId = {{ $do->id }};
-    const fleet = @json($do->fleets->first());
-    const stops = @json($stops);
+    const deliveryId = {{ $doId }};
+    const DO_API_SHOW = "{{ route('delivery-order-api.show', ['id' => '__ID__']) }}";
+    const DO_FLEET_API_BY_DO = "{{ route('delivery-order-fleet-api.by-do', ['doId' => '__ID__']) }}";
+    let fleet = null;
+    let stops = [];
 
     const OFFICE_LAT = -6.966667;
     const OFFICE_LNG = 110.416664;
 
     let map, driverMarker, routingControl;
 
+    async function loadData() {
+        const doRes = await fetch(DO_API_SHOW.replace('__ID__', deliveryId));
+        const doJson = await doRes.json();
+        if (!doJson.success) throw new Error(doJson.message || 'Gagal memuat data DO');
+        const doData = doJson.data;
+
+        const fRes = await fetch(DO_FLEET_API_BY_DO.replace('__ID__', deliveryId));
+        const fJson = await fRes.json();
+        if (fJson.success) fleet = fJson.data;
+
+        document.getElementById('trackDoNumber').textContent = doData.delivery_order_number || '-';
+        document.getElementById('trackOfficeName').textContent = doData.office?.name || 'Kantor';
+        const badge = document.getElementById('trackStatusBadge');
+        badge.classList.remove('d-none', 'bg-success', 'bg-info', 'bg-secondary');
+        const st = (doData.status || 'draft');
+        badge.classList.add(st === 'completed' ? 'bg-success' : 'bg-info');
+        badge.textContent = 'Status: ' + st;
+
+        document.getElementById('trackDriverName').textContent = fleet?.driver?.name || 'Belum ditentukan';
+        const fn = fleet?.fleet ? `${fleet.fleet.fleet_name} (${fleet.fleet.license_plate || fleet.fleet.plate_number || '-'})` : '-';
+        document.getElementById('trackFleetName').textContent = fn;
+        document.getElementById('trackDistance').textContent = Number(fleet?.estimated_distance_km || 0).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById('trackFuelCost').textContent = Number(fleet?.estimated_fuel_cost || 0).toLocaleString('id-ID');
+
+        const inv = Array.isArray(doData.invoices) ? doData.invoices : [];
+        const deliveredCount = inv.filter(i => i.delivery_status === 'delivered').length;
+        document.getElementById('trackStopsSummary').textContent = `${inv.length} tujuan • ${deliveredCount} selesai`;
+        stops = inv.map(i => ({
+            name: i.invoice?.mitra?.nama || 'Tujuan',
+            lat: i.invoice?.mitra?.latitude,
+            lng: i.invoice?.mitra?.longitude,
+            status: i.delivery_status
+        }));
+    }
+
     async function initMap() {
+        await loadData();
         if (typeof L === 'undefined') {
             await new Promise(r => setTimeout(r, 100));
         }

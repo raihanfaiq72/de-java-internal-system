@@ -22,30 +22,25 @@
                         <div class="col-md-3">
                             <label class="small fw-bold text-muted">Periode Tanggal</label>
                             <div class="input-group input-group-sm">
-                                <input type="date" name="start_date" class="form-control" value="{{ $startDate }}">
+                                <input type="date" name="start_date" class="form-control" value="">
                                 <span class="input-group-text">s/d</span>
-                                <input type="date" name="end_date" class="form-control" value="{{ $endDate }}">
+                                <input type="date" name="end_date" class="form-control" value="">
                             </div>
                         </div>
                         <div class="col-md-3">
                             <label class="small fw-bold text-muted">Cari Pelanggan</label>
                             <select name="mitra_id" id="tom-mitra" placeholder="Ketik nama PT atau orang...">
                                 <option value="">Semua Pelanggan</option>
-                                @foreach($listMitra as $m)
-                                    <option value="{{ $m->id }}" {{ request('mitra_id') == $m->id ? 'selected' : '' }}>
-                                        {{ $m->nama }}
-                                    </option>
-                                @endforeach
                             </select>
                         </div>
                         <div class="col-md-3">
                             <label class="small fw-bold text-muted">Status Pembayaran</label>
                             <select name="status" id="tom-status">
                                 <option value="">Semua Status</option>
-                                <option value="NOT_PAID" {{ request('status') == 'NOT_PAID' ? 'selected' : '' }}>Belum Lunas (Bukan Paid)</option>
-                                <option value="Unpaid" {{ request('status') == 'Unpaid' ? 'selected' : '' }}>Unpaid</option>
-                                <option value="Partially Paid" {{ request('status') == 'Partially Paid' ? 'selected' : '' }}>Partially Paid</option>
-                                <option value="Paid" {{ request('status') == 'Paid' ? 'selected' : '' }}>Paid</option>
+                                <option value="NOT_PAID">Belum Lunas (Bukan Paid)</option>
+                                <option value="Unpaid">Unpaid</option>
+                                <option value="Partially Paid">Partially Paid</option>
+                                <option value="Paid">Paid</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -67,7 +62,7 @@
                     <div class="card border-0 bg-primary shadow-sm">
                         <div class="card-body text-white">
                             <p class="mb-1 opacity-75 small text-uppercase">Total Sales Periode</p>
-                            <h3 class="fw-bold">Rp {{ number_format($summary->total_sales, 0, ',', '.') }}</h3>
+                            <h3 class="fw-bold">Rp <span id="dsTotalSales">0</span></h3>
                         </div>
                     </div>
                 </div>
@@ -75,7 +70,7 @@
                     <div class="card border-0 bg-danger shadow-sm">
                         <div class="card-body text-white">
                             <p class="mb-1 opacity-75 small text-uppercase">Total Piutang Berjalan</p>
-                            <h3 class="fw-bold">Rp {{ number_format($summary->total_piutang, 0, ',', '.') }}</h3>
+                            <h3 class="fw-bold">Rp <span id="dsTotalPiutang">0</span></h3>
                         </div>
                     </div>
                 </div>
@@ -83,7 +78,7 @@
                     <div class="card border-0 bg-white shadow-sm">
                         <div class="card-body">
                             <p class="mb-1 text-muted small text-uppercase">Rata-rata Umur Nota</p>
-                            <h3 class="fw-bold text-dark">{{ $summary->avg_aging ?? 0 }} Hari</h3>
+                            <h3 class="fw-bold text-dark"><span id="dsAvgAging">0</span> Hari</h3>
                         </div>
                     </div>
                 </div>
@@ -107,55 +102,16 @@
                                     <th class="text-center">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                @forelse($invoices as $inv)
-                                <tr>
-                                    <td class="ps-3 fw-bold text-primary">{{ $inv->nomor_invoice }}</td>
-                                    <td>{{ $inv->nama_pelanggan }}</td>
-                                    <td>{{ date('d/m/Y', strtotime($inv->tgl_invoice)) }}</td>
-                                    <td class="text-end fw-bold">Rp {{ number_format($inv->total_akhir, 0, ',', '.') }}</td>
-                                    <td class="text-center">
-                                        @php
-                                            $badgeClass = match($inv->status_pembayaran) {
-                                                'Paid' => 'bg-success',
-                                                'Unpaid' => 'bg-danger',
-                                                'Partially Paid' => 'bg-warning text-dark',
-                                                'Overdue' => 'bg-dark',
-                                                default => 'bg-secondary'
-                                            };
-                                        @endphp
-                                        <span class="badge {{ $badgeClass }}">{{ $inv->status_pembayaran }}</span>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="{{ $inv->umur_nota > 30 && $inv->status_pembayaran != 'Paid' ? 'text-danger fw-bold' : '' }}">
-                                            {{ $inv->umur_nota }} Hari
-                                        </span>
-                                    </td>
-                                    <td class="text-center">
-                                        <button class="btn btn-sm btn-outline-primary px-3" onclick="loadDetail({{ $inv->id }}, '{{ $inv->nomor_invoice }}')">
-                                            Rincian
-                                        </button>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="7" class="text-center py-5">
-                                        <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="80" class="mb-3 opacity-25">
-                                        <p class="text-muted">Tidak ada data penjualan ditemukan.</p>
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
+                            <tbody id="dsInvoicesTbody"></tbody>
                         </table>
                     </div>
                 </div>
                 <div class="card-footer bg-white border-top-0 py-3">
                     <div class="d-flex justify-content-between align-items-center">
-                        <div class="small text-muted">
-                            Halaman {{ $invoices->currentPage() }} dari {{ $invoices->lastPage() }}
-                        </div>
-                        <div>
-                            {{ $invoices->links('pagination::bootstrap-5') }}
+                        <div class="small text-muted" id="dsPageInfo">Halaman 1 dari 1</div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="dsPrevPage">Sebelumnya</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="dsNextPage">Berikutnya</button>
                         </div>
                     </div>
                 </div>
@@ -195,11 +151,145 @@
 
 @push('js')
 <script>
-    // Inisialisasi Dropdown Tom Select
-    document.addEventListener("DOMContentLoaded", function() {
-        new TomSelect("#tom-mitra", { create: false, sortField: { field: "text", order: "asc" } });
-        new TomSelect("#tom-status", { create: false });
-    });
+    const DASHBOARD_SALES_API = "{{ route('dashboard-sales-api.index') }}";
+    const DASHBOARD_SALES_DETAIL_API = "{{ route('dashboard-sales-api.detail', ['id' => '__ID__']) }}";
+
+    function rupiah(n) {
+        return Number(n || 0).toLocaleString('id-ID');
+    }
+
+    function setQueryParam(key, value) {
+        const url = new URL(window.location.href);
+        if (value === null || value === undefined || value === '') url.searchParams.delete(key);
+        else url.searchParams.set(key, value);
+        url.searchParams.delete('page');
+        window.location.href = url.toString();
+    }
+
+    function setPage(page) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('page', String(page));
+        window.location.href = url.toString();
+    }
+
+    function badgeClass(status) {
+        if (status === 'Paid') return 'bg-success';
+        if (status === 'Unpaid') return 'bg-danger';
+        if (status === 'Partially Paid') return 'bg-warning text-dark';
+        if (status === 'Overdue') return 'bg-dark';
+        return 'bg-secondary';
+    }
+
+    let tsMitra = null;
+    let tsStatus = null;
+    let lastPage = 1;
+    let currentPage = 1;
+
+    async function loadSalesData() {
+        const qs = new URLSearchParams(window.location.search);
+        const startDate = qs.get('start_date') || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10);
+        const endDate = qs.get('end_date') || new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().slice(0, 10);
+        const mitraId = qs.get('mitra_id') || '';
+        const status = qs.get('status') || '';
+        currentPage = parseInt(qs.get('page') || '1', 10);
+        if (!currentPage || currentPage < 1) currentPage = 1;
+
+        const form = document.querySelector('form');
+        if (form) {
+            form.querySelector('input[name="start_date"]').value = startDate;
+            form.querySelector('input[name="end_date"]').value = endDate;
+        }
+
+        const apiUrl = new URL(DASHBOARD_SALES_API, window.location.origin);
+        apiUrl.searchParams.set('start_date', startDate);
+        apiUrl.searchParams.set('end_date', endDate);
+        if (mitraId) apiUrl.searchParams.set('mitra_id', mitraId);
+        if (status) apiUrl.searchParams.set('status', status);
+        apiUrl.searchParams.set('per_page', '10');
+        apiUrl.searchParams.set('page', String(currentPage));
+
+        const res = await fetch(apiUrl);
+        const json = await res.json();
+        if (!json.success) throw new Error(json.message || 'Gagal memuat data');
+
+        const d = json.data || {};
+        const summary = d.summary || {};
+        document.getElementById('dsTotalSales').textContent = rupiah(summary.total_sales || 0);
+        document.getElementById('dsTotalPiutang').textContent = rupiah(summary.total_piutang || 0);
+        document.getElementById('dsAvgAging').textContent = summary.avg_aging || 0;
+
+        const listMitra = Array.isArray(d.listMitra) ? d.listMitra : [];
+        const mitraSelect = document.getElementById('tom-mitra');
+        if (mitraSelect && !tsMitra) {
+            listMitra.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = String(m.id);
+                opt.textContent = m.nama;
+                mitraSelect.appendChild(opt);
+            });
+            tsMitra = new TomSelect("#tom-mitra", { create: false, sortField: { field: "text", order: "asc" } });
+            if (mitraId) tsMitra.setValue(mitraId, true);
+        } else if (tsMitra) {
+            if (mitraId) tsMitra.setValue(mitraId, true);
+            else tsMitra.clear(true);
+        }
+
+        if (!tsStatus) {
+            tsStatus = new TomSelect("#tom-status", { create: false });
+            if (status) tsStatus.setValue(status, true);
+        } else {
+            if (status) tsStatus.setValue(status, true);
+            else tsStatus.clear(true);
+        }
+
+        const inv = d.invoices || {};
+        const data = Array.isArray(inv.data) ? inv.data : [];
+        lastPage = inv.last_page || 1;
+        currentPage = inv.current_page || currentPage;
+        document.getElementById('dsPageInfo').textContent = `Halaman ${currentPage} dari ${lastPage}`;
+        document.getElementById('dsPrevPage').disabled = currentPage <= 1;
+        document.getElementById('dsNextPage').disabled = currentPage >= lastPage;
+
+        const tbody = document.getElementById('dsInvoicesTbody');
+        tbody.innerHTML = '';
+        if (!data.length) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center py-5">
+                        <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="80" class="mb-3 opacity-25">
+                        <p class="text-muted">Tidak ada data penjualan ditemukan.</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        data.forEach((row) => {
+            const tgl = row.tgl_invoice ? new Date(row.tgl_invoice).toLocaleDateString('id-ID') : '-';
+            const aging = Number(row.umur_nota || 0);
+            const statusText = row.status_pembayaran || '-';
+            const agingClass = (aging > 30 && statusText !== 'Paid') ? 'text-danger fw-bold' : '';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="ps-3 fw-bold text-primary">${row.nomor_invoice || '-'}</td>
+                <td>${row.nama_pelanggan || '-'}</td>
+                <td>${tgl}</td>
+                <td class="text-end fw-bold">Rp ${rupiah(row.total_akhir || 0)}</td>
+                <td class="text-center"><span class="badge ${badgeClass(statusText)}">${statusText}</span></td>
+                <td class="text-center"><span class="${agingClass}">${aging} Hari</span></td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-primary px-3 ds-detail-btn" data-id="${row.id}" data-no="${row.nomor_invoice || ''}">Rincian</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.querySelectorAll('.ds-detail-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                loadDetail(btn.dataset.id, btn.dataset.no);
+            });
+        });
+    }
 
     function loadDetail(id, noInv) {
         document.getElementById('textNoInv').innerText = noInv;
@@ -209,12 +299,14 @@
         const modal = new bootstrap.Modal(document.getElementById('modalDetail'));
         modal.show();
 
-        fetch(`/dashboard-sales/detail/${id}`)
+        fetch(DASHBOARD_SALES_DETAIL_API.replace('__ID__', id))
             .then(res => {
                 if (!res.ok) throw new Error('Data tidak dapat dimuat');
                 return res.json();
             })
-            .then(data => {
+            .then(json => {
+                if (!json.success) throw new Error(json.message || 'Data tidak dapat dimuat');
+                const data = json.data || [];
                 container.innerHTML = '';
                 if(data.length === 0) {
                     container.innerHTML = '<tr><td colspan="4" class="text-center">Nota ini tidak memiliki rincian item.</td></tr>';
@@ -239,6 +331,21 @@
                 container.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-4">${err.message}</td></tr>`;
             });
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const qs = new URLSearchParams(window.location.search);
+        const form = document.querySelector('form');
+        if (form) {
+            const startDefault = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10);
+            const endDefault = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().slice(0, 10);
+            form.querySelector('input[name="start_date"]').value = qs.get('start_date') || startDefault;
+            form.querySelector('input[name="end_date"]').value = qs.get('end_date') || endDefault;
+            form.querySelector('#tom-status').value = qs.get('status') || '';
+        }
+        document.getElementById('dsPrevPage').addEventListener('click', () => setPage(Math.max(1, currentPage - 1)));
+        document.getElementById('dsNextPage').addEventListener('click', () => setPage(Math.min(lastPage, currentPage + 1)));
+        loadSalesData().catch(e => console.error(e));
+    });
 </script>
 @endpush
 

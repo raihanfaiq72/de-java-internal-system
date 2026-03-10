@@ -20,12 +20,10 @@
                     <div class="page-title-box d-md-flex justify-content-between align-items-center mb-3">
                         <div>
                             <h4 class="page-title fw-bold">Detail Pengiriman</h4>
-                            <p class="text-muted mb-0 small">No. DO: {{ $do->delivery_order_number }}</p>
+                            <p class="text-muted mb-0 small">No. DO: <span id="doNumber">-</span></p>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-{{ $fleet->status == 'assigned' ? 'warning' : ($fleet->status == 'in_transit' ? 'info' : 'success') }} fs-6">
-                                {{ ucfirst(str_replace('_', ' ', $fleet->status)) }}
-                            </span>
+                            <span class="badge fs-6" id="fleetStatusBadge">-</span>
                             <a href="{{ route('driver.delivery.index') }}" class="btn btn-sm btn-outline-secondary">
                                 <i class="iconoir-arrow-left me-1"></i> Kembali
                             </a>
@@ -41,17 +39,17 @@
                             <div class="row align-items-center">
                                 <div class="col-6">
                                     <small class="text-muted d-block">Armada</small>
-                                    <div class="fw-bold text-truncate">{{ $fleet->fleet->fleet_name ?? '-' }}</div>
-                                    <small class="text-secondary">{{ $fleet->fleet->license_plate ?? '-' }}</small>
+                                    <div class="fw-bold text-truncate" id="fleetName">-</div>
+                                    <small class="text-secondary" id="fleetPlate">-</small>
                                 </div>
                                 <div class="col-3 text-center border-start">
                                     <small class="text-muted d-block">Odo Awal</small>
-                                    <div class="fw-bold">{{ number_format($fleet->odo_start ?? 0, 0, ',', '.') }}</div>
+                                    <div class="fw-bold" id="fleetOdoStart">0</div>
                                     <small class="text-secondary">KM</small>
                                 </div>
                                 <div class="col-3 text-center border-start">
                                     <small class="text-muted d-block">Uang Jalan</small>
-                                    <div class="fw-bold text-success">{{ number_format($fleet->cash_amount ?? 0, 0, ',', '.') }}</div>
+                                    <div class="fw-bold text-success" id="fleetCashAmount">0</div>
                                 </div>
                             </div>
                         </div>
@@ -65,11 +63,12 @@
 
                     <div class="card shadow-sm border-0">
                         <div class="card-body">
-                            @if($fleet->status == 'assigned')
+                            <div id="tripAssigned" class="d-none">
                                 <button id="btn-start-trip" class="btn btn-primary w-100 btn-lg">
                                     <i class="iconoir-play me-2"></i> Mulai Perjalanan
                                 </button>
-                            @elseif($fleet->status == 'in_transit')
+                            </div>
+                            <div id="tripInTransit" class="d-none">
                                 <div class="alert alert-info d-flex align-items-center mb-0">
                                     <div class="spinner-grow spinner-grow-sm text-primary me-3" role="status"></div>
                                     <div>
@@ -77,120 +76,29 @@
                                         Lokasi Anda sedang dilacak secara realtime.
                                     </div>
                                 </div>
-                            @elseif($fleet->status == 'completed')
-                                <div class="alert alert-success">
+                            </div>
+                            <div id="tripCompleted" class="d-none">
+                                <div class="alert alert-success mb-0">
                                     <i class="iconoir-check-circle me-2"></i> Perjalanan Selesai
                                 </div>
-                            @endif
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="col-lg-4">
                     <h5 class="mb-3">Daftar Tujuan</h5>
-                    <div class="list-group">
-                        @foreach($do->invoices as $index => $item)
-                            @php
-                                $isNext = false;
-                                if ($fleet->status == 'in_transit' && $item->delivery_status == 'pending') {
-                                    $prevDone = true;
-                                    foreach($do->invoices as $prevItem) {
-                                        if ($prevItem->delivery_sequence < $item->delivery_sequence && $prevItem->delivery_status == 'pending') {
-                                            $prevDone = false;
-                                            break;
-                                        }
-                                    }
-                                    $isNext = $prevDone;
-                                }
-                            @endphp
-                            <div class="list-group-item stop-card p-3 mb-2 shadow-sm border-0 {{ $item->delivery_status == 'delivered' ? 'completed' : ($isNext ? 'active' : '') }}"
-                                 @if($item->delivery_status == 'delivered')
-                                 data-invoice-id="{{ $item->invoice_id }}"
-                                 data-name="{{ $item->invoice->mitra->nama }}"
-                                 data-address="{{ $item->invoice->mitra->alamat }}"
-                                 data-lat="{{ $item->invoice->mitra->latitude }}"
-                                 data-lng="{{ $item->invoice->mitra->longitude }}"
-                                 data-arrived-at="{{ $item->arrived_at ? \Carbon\Carbon::parse($item->arrived_at)->format('Y-m-d H:i') : '' }}"
-                                 @endif
-                            >
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <h6 class="mb-1">{{ $index + 1 }}. {{ $item->invoice->mitra->nama }}</h6>
-                                        <p class="mb-1 small text-muted">{{ $item->invoice->mitra->alamat }}</p>
-                                        <span class="badge bg-{{ $item->delivery_status == 'delivered' ? 'success' : 'secondary' }}">
-                                            {{ ucfirst($item->delivery_status) }}
-                                        </span>
-                                    </div>
-                                    <div class="text-end">
-                                    @if($isNext)
-                                        <button class="btn btn-sm btn-success btn-arrive"
-                                            data-id="{{ $item->invoice_id }}"
-                                            data-lat="{{ $item->invoice->mitra->latitude }}"
-                                            data-lng="{{ $item->invoice->mitra->longitude }}"
-                                            data-name="{{ $item->invoice->mitra->nama }}">
-                                            Sampai
-                                        </button>
-                                    @endif
-                                    @if($item->delivery_status == 'delivered')
-                                        <button class="btn btn-sm btn-outline-primary btn-detail-proof">Detail</button>
-                                    @endif
-                                    </div>
-                                </div>
-                                @if($item->delivery_status == 'delivered')
-                                    <div class="mt-2 small text-success">
-                                        <i class="iconoir-check"></i> Diterima: {{ $item->arrived_at ? \Carbon\Carbon::parse($item->arrived_at)->format('H:i') : '-' }}
-                                    </div>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
+                    <div class="list-group" id="stopsList"></div>
 
-                    @if($fleet->status == 'in_transit')
-                        @php
-                            $allDelivered = $do->invoices->every(fn($i) => $i->delivery_status == 'delivered');
-                        @endphp
-                        @if($allDelivered)
-                            <button id="btn-finish-trip" class="btn btn-success w-100 btn-lg mt-3">
-                                <i class="iconoir-home me-2"></i> Kembali ke Kantor & Selesai
-                            </button>
-                        @endif
-                    @endif
+                    <button id="btn-finish-trip" class="btn btn-success w-100 btn-lg mt-3 d-none">
+                        <i class="iconoir-home me-2"></i> Kembali ke Kantor & Selesai
+                    </button>
                 </div>
             </div>
             <div class="mt-4">
                 <span class="badge bg-light text-dark"><i class="iconoir-time"></i> Riwayat Selesai (10 Terakhir)</span>
-                <div class="list-group mt-3">
-                    @php
-                        $history = $do->invoices->where('delivery_status','delivered')->sortByDesc('arrived_at')->take(10);
-                    @endphp
-                    @if($history->count())
-                        @foreach($history as $h)
-                            <div class="list-group-item stop-card completed p-3 mb-2 shadow-sm border-0"
-                                 data-invoice-id="{{ $h->invoice_id }}"
-                                 data-name="{{ $h->invoice->mitra->nama }}"
-                                 data-address="{{ $h->invoice->mitra->alamat }}"
-                                 data-lat="{{ $h->invoice->mitra->latitude }}"
-                                 data-lng="{{ $h->invoice->mitra->longitude }}"
-                                 data-arrived-at="{{ $h->arrived_at ? \Carbon\Carbon::parse($h->arrived_at)->format('Y-m-d H:i') : '' }}">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <h6 class="mb-1">{{ $h->invoice->mitra->nama }}</h6>
-                                        <p class="mb-1 small text-muted">{{ $h->invoice->mitra->alamat }}</p>
-                                        <span class="badge bg-success">Delivered</span>
-                                        <div class="mt-1 small text-success">
-                                            <i class="iconoir-check"></i> Diterima: {{ $h->arrived_at ? \Carbon\Carbon::parse($h->arrived_at)->format('H:i') : '-' }}
-                                        </div>
-                                    </div>
-                                    <div class="text-end">
-                                        <button class="btn btn-sm btn-outline-primary btn-detail-proof">Detail</button>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    @else
-                        <div class="text-muted small">Belum ada riwayat selesai.</div>
-                    @endif
-                </div>
+                <div class="list-group mt-3" id="historyList"></div>
+                <div class="text-muted small mt-2 d-none" id="historyEmpty">Belum ada riwayat selesai.</div>
             </div>
         </div>
     </div>
@@ -305,7 +213,7 @@
                     <input type="hidden" id="finishLng">
                     <div class="mb-3">
                         <label class="form-label">Odometer Awal</label>
-                        <input type="text" class="form-control" value="{{ $fleet->odo_start }}" readonly disabled>
+                        <input type="text" class="form-control" id="finishOdoStart" value="0" readonly disabled>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Odometer Akhir (KM) <span class="text-danger">*</span></label>
@@ -330,18 +238,155 @@
 
 @section('scripts')
 <script>
-const deliveryId = {{ $do->id }};
-const fleetStatus = '{{ $fleet->status }}';
-@php
-    $stopsData = $do->invoices->map(fn($i) => [
-        'name' => $i->invoice->mitra->nama,
-        'lat' => $i->invoice->mitra->latitude,
-        'lng' => $i->invoice->mitra->longitude,
-        'status' => $i->delivery_status
-    ]);
-@endphp
-const stops = @json($stopsData);
+const deliveryId = {{ $deliveryOrderId }};
+const CSRF_TOKEN = "{{ csrf_token() }}";
+const DRIVER_SHOW_API = "{{ route('driver-delivery-api.show', ['id' => '__ID__']) }}";
+const DRIVER_START_API = "{{ route('driver-delivery-api.start', ['id' => '__ID__']) }}";
+const DRIVER_LOCATION_API = "{{ route('driver-delivery-api.location', ['id' => '__ID__']) }}";
+const DRIVER_ARRIVE_API = "{{ route('driver-delivery-api.arrive', ['id' => '__ID__', 'invoiceId' => '__INV__']) }}";
+const DRIVER_PROOF_API = "{{ route('driver-delivery-api.proof', ['id' => '__ID__', 'invoiceId' => '__INV__']) }}";
+const DRIVER_FINISH_API = "{{ route('driver-delivery-api.finish', ['id' => '__ID__']) }}";
+let doData = null;
+let fleetData = null;
+let fleetStatus = '';
+let stops = [];
 let map, userMarker, watchId, routingControl, routeCalculated = false, routingLibLoaded = false;
+function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function formatTime(v) {
+    if (!v) return '-';
+    const d = new Date(v);
+    if (Number.isNaN(d.getTime())) return '-';
+    return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+}
+function formatDateTime(v) {
+    if (!v) return '-';
+    const d = new Date(v);
+    if (Number.isNaN(d.getTime())) return '-';
+    return d.toLocaleDateString('id-ID') + ' ' + d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+}
+function setFleetBadge(status) {
+    const el = document.getElementById('fleetStatusBadge');
+    el.classList.remove('bg-warning', 'bg-info', 'bg-success', 'bg-secondary');
+    const s = (status || '').toLowerCase();
+    const cls = s === 'assigned' ? 'bg-warning' : (s === 'in_transit' ? 'bg-info' : (s === 'completed' ? 'bg-success' : 'bg-secondary'));
+    el.classList.add(cls);
+    el.textContent = (status || '-').replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
+}
+function buildStops() {
+    const inv = Array.isArray(doData?.invoices) ? doData.invoices : [];
+    const ordered = inv.slice().sort((a, b) => (a.delivery_sequence || 0) - (b.delivery_sequence || 0));
+    stops = ordered.map((i) => {
+        const m = i.invoice?.mitra || {};
+        return {
+            invoiceId: i.invoice_id,
+            name: m.nama || 'Tujuan',
+            address: m.alamat || '-',
+            lat: m.latitude,
+            lng: m.longitude,
+            status: i.delivery_status || 'pending',
+            arrivedAt: i.arrived_at || null,
+            seq: i.delivery_sequence || 0
+        };
+    });
+}
+function getNextInvoiceId() {
+    if (fleetStatus !== 'in_transit') return null;
+    const pending = stops.filter(s => s.status === 'pending').sort((a, b) => a.seq - b.seq);
+    return pending.length ? pending[0].invoiceId : null;
+}
+function renderStops() {
+    const container = document.getElementById('stopsList');
+    container.innerHTML = '';
+    const nextId = getNextInvoiceId();
+    stops.forEach((s, idx) => {
+        const delivered = s.status === 'delivered';
+        const isNext = !delivered && nextId && String(nextId) === String(s.invoiceId);
+        const classes = delivered ? 'completed' : (isNext ? 'active' : '');
+        const badgeCls = delivered ? 'success' : 'secondary';
+        const card = document.createElement('div');
+        card.className = `list-group-item stop-card p-3 mb-2 shadow-sm border-0 ${classes}`;
+        if (delivered) {
+            card.dataset.invoiceId = s.invoiceId;
+            card.dataset.name = s.name;
+            card.dataset.address = s.address;
+            card.dataset.lat = s.lat || '';
+            card.dataset.lng = s.lng || '';
+            card.dataset.arrivedAt = s.arrivedAt ? formatDateTime(s.arrivedAt) : '';
+        }
+        card.innerHTML = `
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="mb-1">${idx + 1}. ${escapeHtml(s.name)}</h6>
+                    <p class="mb-1 small text-muted">${escapeHtml(s.address)}</p>
+                    <span class="badge bg-${badgeCls}">${escapeHtml(s.status.charAt(0).toUpperCase() + s.status.slice(1))}</span>
+                </div>
+                <div class="text-end">
+                    ${isNext ? `<button class="btn btn-sm btn-success btn-arrive" data-id="${s.invoiceId}" data-lat="${s.lat || ''}" data-lng="${s.lng || ''}" data-name="${escapeHtml(s.name)}">Sampai</button>` : ''}
+                    ${delivered ? `<button class="btn btn-sm btn-outline-primary btn-detail-proof">Detail</button>` : ''}
+                </div>
+            </div>
+            ${delivered ? `<div class="mt-2 small text-success"><i class="iconoir-check"></i> Diterima: ${formatTime(s.arrivedAt)}</div>` : ''}
+        `;
+        container.appendChild(card);
+    });
+    const allDelivered = stops.length > 0 && stops.every(s => s.status === 'delivered');
+    document.getElementById('btn-finish-trip').classList.toggle('d-none', !(fleetStatus === 'in_transit' && allDelivered));
+}
+function renderHistory() {
+    const list = document.getElementById('historyList');
+    const empty = document.getElementById('historyEmpty');
+    const delivered = stops.filter(s => s.status === 'delivered').sort((a, b) => new Date(b.arrivedAt || 0) - new Date(a.arrivedAt || 0)).slice(0, 10);
+    list.innerHTML = '';
+    empty.classList.toggle('d-none', delivered.length > 0);
+    delivered.forEach((s) => {
+        const card = document.createElement('div');
+        card.className = 'list-group-item stop-card completed p-3 mb-2 shadow-sm border-0';
+        card.dataset.invoiceId = s.invoiceId;
+        card.dataset.name = s.name;
+        card.dataset.address = s.address;
+        card.dataset.lat = s.lat || '';
+        card.dataset.lng = s.lng || '';
+        card.dataset.arrivedAt = s.arrivedAt ? formatDateTime(s.arrivedAt) : '';
+        card.innerHTML = `
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="mb-1">${escapeHtml(s.name)}</h6>
+                    <p class="mb-1 small text-muted">${escapeHtml(s.address)}</p>
+                    <span class="badge bg-success">Delivered</span>
+                    <div class="mt-1 small text-success"><i class="iconoir-check"></i> Diterima: ${formatTime(s.arrivedAt)}</div>
+                </div>
+                <div class="text-end">
+                    <button class="btn btn-sm btn-outline-primary btn-detail-proof">Detail</button>
+                </div>
+            </div>
+        `;
+        list.appendChild(card);
+    });
+}
+async function loadDeliveryData() {
+    const url = DRIVER_SHOW_API.replace('__ID__', deliveryId);
+    const res = await fetch(url);
+    const json = await res.json();
+    if (!json.success) throw new Error(json.message || 'Gagal memuat data');
+    doData = json.data?.do;
+    fleetData = json.data?.fleet;
+    fleetStatus = fleetData?.status || '';
+    document.getElementById('doNumber').textContent = doData?.delivery_order_number || '-';
+    setFleetBadge(fleetStatus);
+    document.getElementById('fleetName').textContent = fleetData?.fleet?.fleet_name || '-';
+    document.getElementById('fleetPlate').textContent = fleetData?.fleet?.license_plate || '-';
+    document.getElementById('fleetOdoStart').textContent = Number(fleetData?.odo_start || 0).toLocaleString('id-ID');
+    document.getElementById('fleetCashAmount').textContent = Number(fleetData?.cash_amount || 0).toLocaleString('id-ID');
+    document.getElementById('finishOdoStart').value = Number(fleetData?.odo_start || 0).toLocaleString('id-ID');
+    document.getElementById('tripAssigned').classList.toggle('d-none', fleetStatus !== 'assigned');
+    document.getElementById('tripInTransit').classList.toggle('d-none', fleetStatus !== 'in_transit');
+    document.getElementById('tripCompleted').classList.toggle('d-none', fleetStatus !== 'completed');
+    buildStops();
+    renderStops();
+    renderHistory();
+}
 function fitStopsBounds() {
     const pts = stops.filter(s => s.lat && s.lng).map(s => [parseFloat(s.lat), parseFloat(s.lng)]);
     if (pts.length > 0) {
@@ -417,9 +462,9 @@ function sendLocationUpdate(lat, lng) {
     const now = Date.now();
     if (now - lastUpdate < 10000) return;
     lastUpdate = now;
-    fetch("{{ route('driver.delivery.location', $do->id) }}", {
+    fetch(DRIVER_LOCATION_API.replace('__ID__', deliveryId), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-TOKEN': CSRF_TOKEN },
         body: new URLSearchParams({ latitude: lat, longitude: lng }).toString()
     }).catch(() => {});
 }
@@ -429,9 +474,9 @@ document.getElementById('btn-start-trip')?.addEventListener('click', async funct
         navigator.geolocation.getCurrentPosition(async pos => {
             const { latitude, longitude } = pos.coords;
             try {
-                const res = await fetch("{{ route('driver.delivery.start', $do->id) }}", {
+                const res = await fetch(DRIVER_START_API.replace('__ID__', deliveryId), {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-TOKEN': CSRF_TOKEN },
                     body: new URLSearchParams({ latitude, longitude }).toString()
                 });
                 if (res.ok) location.reload(); else { const d = await res.json().catch(() => ({})); alert('Gagal memulai perjalanan: ' + (d.message || res.statusText)); }
@@ -439,19 +484,24 @@ document.getElementById('btn-start-trip')?.addEventListener('click', async funct
         }, () => alert('Gagal mendapatkan lokasi. Pastikan GPS aktif.'));
     } else { alert('Browser tidak mendukung Geolocation.'); }
 });
-if (fleetStatus === 'in_transit' && navigator.geolocation) {
+function startTrackingIfNeeded() {
+    if (watchId) return;
+    if (fleetStatus !== 'in_transit') return;
+    if (!navigator.geolocation) return;
     watchId = navigator.geolocation.watchPosition(p => {
         const { latitude, longitude } = p.coords;
         updateUserMarker(latitude, longitude);
         sendLocationUpdate(latitude, longitude);
     }, null, { enableHighAccuracy: true });
 }
-document.querySelectorAll('.btn-arrive').forEach(el => {
-    el.addEventListener('click', function() {
-        const id = this.dataset.id;
-        const name = this.dataset.name;
-        const lat = parseFloat(this.dataset.lat);
-        const lng = parseFloat(this.dataset.lng);
+document.addEventListener('click', async (e) => {
+    const arriveBtn = e.target.closest('.btn-arrive');
+    if (arriveBtn) {
+        e.preventDefault();
+        const id = arriveBtn.dataset.id;
+        const name = arriveBtn.dataset.name;
+        const lat = parseFloat(arriveBtn.dataset.lat);
+        const lng = parseFloat(arriveBtn.dataset.lng);
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(async p => {
                 const clat = p.coords.latitude;
@@ -470,7 +520,35 @@ document.querySelectorAll('.btn-arrive').forEach(el => {
                 startCamera();
             });
         }
-    });
+        return;
+    }
+    const detailBtn = e.target.closest('.btn-detail-proof');
+    if (detailBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const card = detailBtn.closest('.stop-card');
+        if (!card || !card.dataset.invoiceId) return;
+        openProofDetailModal({
+            invoiceId: card.dataset.invoiceId,
+            name: card.dataset.name,
+            address: card.dataset.address,
+            lat: card.dataset.lat,
+            lng: card.dataset.lng,
+            arrivedAt: card.dataset.arrivedAt
+        });
+        return;
+    }
+    const completedCard = e.target.closest('.stop-card.completed');
+    if (completedCard && completedCard.dataset.invoiceId) {
+        openProofDetailModal({
+            invoiceId: completedCard.dataset.invoiceId,
+            name: completedCard.dataset.name,
+            address: completedCard.dataset.address,
+            lat: completedCard.dataset.lat,
+            lng: completedCard.dataset.lng,
+            arrivedAt: completedCard.dataset.arrivedAt
+        });
+    }
 });
 function getDistanceFromLatLonInKm(a1, o1, a2, o2) {
     const R = 6371, dA = (a2 - a1) * Math.PI / 180, dO = (o2 - o1) * Math.PI / 180;
@@ -585,11 +663,12 @@ async function openProofDetailModal(d) {
     img.src = ''; img.classList.remove('d-none'); imgEmpty.classList.add('d-none');
     let photoUrl = null;
     try {
-        const res = await fetch("{{ url('driver/delivery') }}/" + deliveryId + "/invoice/" + d.invoiceId + "/proof");
+        const res = await fetch(DRIVER_PROOF_API.replace('__ID__', deliveryId).replace('__INV__', d.invoiceId));
         if (res.ok) {
             const data = await res.json();
-            if (data?.photo_url) photoUrl = data.photo_url;
-            if (data?.notes) document.getElementById('proofDetailNotes').textContent = data.notes;
+            const payload = data.data || data;
+            if (payload?.photo_url) photoUrl = payload.photo_url;
+            if (payload?.notes) document.getElementById('proofDetailNotes').textContent = payload.notes;
         }
     } catch {}
     if (!photoUrl) {
@@ -704,7 +783,7 @@ document.getElementById('proofModal').addEventListener('hidden.bs.modal', functi
 });
 document.getElementById('btn-submit-proof')?.addEventListener('click', async function() {
     const fd = new FormData();
-    fd.append('_token', "{{ csrf_token() }}");
+    fd.append('_token', CSRF_TOKEN);
     fd.append('latitude', document.getElementById('proofLat').value);
     fd.append('longitude', document.getElementById('proofLng').value);
     fd.append('notes', document.getElementById('proofNotes').value);
@@ -716,7 +795,7 @@ document.getElementById('btn-submit-proof')?.addEventListener('click', async fun
     const invoiceId = document.getElementById('proofInvoiceId').value;
     const btn = this; btn.disabled = true; btn.textContent = 'Mengirim...';
     try {
-        const res = await fetch("{{ url('driver/delivery') }}/" + deliveryId + "/invoice/" + invoiceId + "/arrive", { method: 'POST', body: fd });
+        const res = await fetch(DRIVER_ARRIVE_API.replace('__ID__', deliveryId).replace('__INV__', invoiceId), { method: 'POST', body: fd });
         if (res.ok) location.reload(); else { const d = await res.json().catch(() => ({})); alert('Gagal mengirim bukti: ' + (d.message || res.statusText)); btn.disabled = false; btn.textContent = 'Kirim Bukti'; }
     } catch (e) { alert('Gagal mengirim bukti: ' + (e.message || 'Error')); btn.disabled = false; btn.textContent = 'Kirim Bukti'; }
 });
@@ -764,8 +843,7 @@ document.getElementById('btn-submit-finish')?.addEventListener('click', async fu
         return;
     }
     
-    // Simple client-side validation
-    const odoStart = {{ $fleet->odo_start ?? 0 }};
+    const odoStart = Number(fleetData?.odo_start || 0);
     if (parseFloat(odoEnd) < parseFloat(odoStart)) {
         if (!confirm('Odometer Akhir (' + odoEnd + ') lebih kecil dari Odometer Awal (' + odoStart + '). Yakin ingin melanjutkan?')) return;
     }
@@ -775,11 +853,11 @@ document.getElementById('btn-submit-finish')?.addEventListener('click', async fu
     btn.textContent = 'Menyimpan...';
 
     try {
-        const res = await fetch("{{ route('driver.delivery.finish', $do->id) }}", {
+        const res = await fetch(DRIVER_FINISH_API.replace('__ID__', deliveryId), {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': "{{ csrf_token() }}" 
+                'X-CSRF-TOKEN': CSRF_TOKEN
             },
             body: JSON.stringify({
                 latitude: lat,
@@ -804,7 +882,10 @@ document.getElementById('btn-submit-finish')?.addEventListener('click', async fu
     }
 });
 document.addEventListener('DOMContentLoaded', function() {
-    initMap();
+    loadDeliveryData()
+        .then(() => initMap())
+        .then(() => startTrackingIfNeeded())
+        .catch(e => console.error(e));
     const el = document.getElementById('map');
     if (el) {
         const obs = new IntersectionObserver(es => { es.forEach(x => { if (x.isIntersecting && map) map.invalidateSize(); }); }, { threshold: 0.2 });
