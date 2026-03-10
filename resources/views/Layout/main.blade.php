@@ -395,40 +395,49 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: #ffffff;
+            background: rgba(255, 255, 255, 0.92);
             z-index: 2000;
-            display: none;
+            display: flex;
             align-items: center;
             justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.18s ease, visibility 0s linear 0.18s;
         }
         .page-loader.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transition: opacity 0.18s ease;
+        }
+        .page-loader-card {
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 18px 22px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 14px 34px rgba(16, 24, 40, 0.10);
         }
-        .loader-container {
-            width: 90%;
-            max-width: 720px;
+        .page-loader-spinner {
+            width: 46px;
+            height: 46px;
+            border-radius: 999px;
+            border: 4px solid #e9ecef;
+            border-top-color: #0d6efd;
+            animation: pageLoaderSpin 0.75s linear infinite;
         }
-        .skeleton {
-            background: linear-gradient(90deg, #f0f2f5 25%, #e6e9ef 37%, #f0f2f5 63%);
-            background-size: 400% 100%;
-            animation: shimmer 1.2s ease-in-out infinite;
-            border-radius: 8px;
-            margin-bottom: 12px;
+        .page-loader-text {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: #6c757d;
         }
-        .skeleton.header {
-            height: 24px;
-            width: 40%;
-        }
-        .skeleton.line {
-            height: 14px;
-            width: 100%;
-        }
-        .skeleton.line.short {
-            width: 60%;
-        }
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+        @keyframes pageLoaderSpin {
+            to { transform: rotate(360deg); }
         }
         .page-content {
             transition: opacity 0.18s ease;
@@ -543,17 +552,68 @@
             </div>
         </div>
     @endunless
-    <div class="page-loader d-print-none" id="pageLoader">
-        <div class="loader-container">
-            <div class="skeleton header"></div>
-            <div class="skeleton line"></div>
-            <div class="skeleton line"></div>
-            <div class="skeleton line short"></div>
-            <div class="skeleton line"></div>
-            <div class="skeleton line"></div>
-            <div class="skeleton line short"></div>
+    <div class="page-loader d-print-none active" id="pageLoader" aria-live="polite" aria-busy="true">
+        <div class="page-loader-card">
+            <div class="page-loader-spinner" role="status" aria-label="Memuat"></div>
+            <div class="page-loader-text">Memuat...</div>
         </div>
     </div>
+    <script>
+        (function () {
+            const el = document.getElementById('pageLoader');
+            if (!el) return;
+            let shownAt = performance.now();
+            let pending = 0;
+            const minMs = 240;
+            const setActive = (on) => {
+                if (on) el.classList.add('active');
+                else el.classList.remove('active');
+            };
+            const show = () => {
+                shownAt = performance.now();
+                setActive(true);
+            };
+            const hide = () => {
+                if (pending > 0) return;
+                const dt = performance.now() - shownAt;
+                const wait = dt < minMs ? (minMs - dt) : 0;
+                window.setTimeout(() => setActive(false), wait);
+            };
+            const track = (p) => {
+                pending += 1;
+                show();
+                return Promise.resolve(p).finally(() => {
+                    pending = Math.max(0, pending - 1);
+                    hide();
+                });
+            };
+            window.PageLoader = { show, hide, track, pending: () => pending };
+            document.addEventListener('DOMContentLoaded', function () { hide(); }, { once: true });
+            window.addEventListener('pageshow', function () { hide(); });
+            document.addEventListener('submit', function (ev) {
+                const f = ev.target;
+                if (!f || !(f instanceof HTMLFormElement)) return;
+                if (f.hasAttribute('data-no-loader')) return;
+                show();
+            }, true);
+            document.addEventListener('click', function (ev) {
+                if (ev.defaultPrevented) return;
+                if (ev.button !== 0) return;
+                if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+                const a = ev.target.closest('a');
+                if (!a) return;
+                if (a.hasAttribute('data-no-loader')) return;
+                if (a.hasAttribute('download')) return;
+                const target = (a.getAttribute('target') || '').toLowerCase();
+                if (target === '_blank') return;
+                const href = a.getAttribute('href') || '';
+                if (!href || href.startsWith('#')) return;
+                const lower = href.toLowerCase();
+                if (lower.startsWith('javascript:') || lower.startsWith('mailto:') || lower.startsWith('tel:')) return;
+                show();
+            }, true);
+        })();
+    </script>
     @unless (Request::is('select-your-outlet'))
         <div class="startbar d-print-none">
             <div class="brand text-center py-3">
