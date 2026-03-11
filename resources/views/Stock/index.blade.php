@@ -272,7 +272,15 @@
                                 <div class="card bg-light border-0 mb-4">
                                     <div class="card-body p-3">
                                         <div class="row g-3 align-items-center">
-                                            <div class="col-md-3">
+                                            <div class="col-md-4">
+                                                <div class="form-floating">
+                                                    <input type="text" id="filter-mutation-search"
+                                                        class="form-control border-0 shadow-none"
+                                                        placeholder="Cari produk..." onkeyup="loadMutationData()">
+                                                    <label for="filter-mutation-search">Cari Produk / SKU</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
                                                 <div class="form-floating">
                                                     <input type="date" id="filter-mutation-start"
                                                         class="form-control border-0 shadow-none"
@@ -280,7 +288,7 @@
                                                     <label for="filter-mutation-start">Dari Tanggal</label>
                                                 </div>
                                             </div>
-                                            <div class="col-md-3">
+                                            <div class="col-md-2">
                                                 <div class="form-floating">
                                                     <input type="date" id="filter-mutation-end"
                                                         class="form-control border-0 shadow-none"
@@ -288,7 +296,7 @@
                                                     <label for="filter-mutation-end">Sampai Tanggal</label>
                                                 </div>
                                             </div>
-                                            <div class="col-md-3">
+                                            <div class="col-md-2">
                                                 <div class="form-floating">
                                                     <select id="filter-mutation-type" class="form-select border-0 shadow-sm"
                                                         onchange="loadMutationData()">
@@ -299,7 +307,7 @@
                                                     <label for="filter-mutation-type">Tipe Mutasi</label>
                                                 </div>
                                             </div>
-                                            <div class="col-md-3">
+                                            <div class="col-md-2">
                                                 <div class="form-floating">
                                                     <select id="filter-mutation-location"
                                                         class="form-select border-0 shadow-sm"
@@ -322,12 +330,14 @@
                                                 <th class="py-3 border-0 text-center">Tipe</th>
                                                 <th class="py-3 border-0 text-center">Qty</th>
                                                 <th class="py-3 border-0">Lokasi</th>
+                                                <th class="py-3 border-0">Aksi</th>
+                                                <th class="py-3 border-0">User</th>
                                                 <th class="py-3 border-0">Catatan</th>
                                             </tr>
                                         </thead>
                                         <tbody id="mutation-table-body" class="bg-white">
                                             <tr>
-                                                <td colspan="6" class="text-center py-5 text-muted">Memuat riwayat...</td>
+                                                <td colspan="8" class="text-center py-5 text-muted">Memuat riwayat...</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -587,12 +597,14 @@
             const end = document.getElementById('filter-mutation-end').value;
             const type = document.getElementById('filter-mutation-type').value;
             const location = document.getElementById('filter-mutation-location') ? document.getElementById('filter-mutation-location').value : '';
+            const search = document.getElementById('filter-mutation-search') ? document.getElementById('filter-mutation-search').value : '';
 
             let url = `{{ route('stock-api.mutations') }}?page=${page}`;
             if (start) url += `&date_from=${start}`;
             if (end) url += `&date_to=${end}`;
             if (type) url += `&type=${type}`;
             if (location) url += `&location_id=${location}`;
+            if (search) url += `&search=${encodeURIComponent(search)}`;
 
             fetch(url)
                 .then(res => res.json())
@@ -607,6 +619,9 @@
                                 ? '<span class="badge bg-success-subtle text-success">MASUK</span>'
                                 : '<span class="badge bg-danger-subtle text-danger">KELUAR</span>';
 
+                            const actor = m.actor?.name || m.actor?.username || '-';
+                            const action = m.action_label || m.reference_type || 'Mutasi Stok';
+
                             const tr = document.createElement('tr');
                             tr.innerHTML = `
                                                                                                                     <td class="ps-4 small">${new Date(m.created_at).toLocaleString('id-ID')}</td>
@@ -619,6 +634,8 @@
                                                                                                                         ${isInc ? '+' : '-'}${m.qty}
                                                                                                                     </td>
                                                                                                                     <td><small class="text-muted">${m.stock_location?.name || '-'}</small></td>
+                                                                                                                    <td><small class="text-muted">${action}</small></td>
+                                                                                                                    <td><small class="text-muted">${actor}</small></td>
                                                                                                                     <td><small>${m.notes || '-'}</small></td>
                                                                                                                 `;
                             tbody.appendChild(tr);
@@ -626,7 +643,7 @@
 
                         renderPagination(res.data, 'mutation-pagination-container', 'mutation-pagination-info', loadMutationData);
                     } else {
-                        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">Belum ada riwayat mutasi.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-muted">Belum ada riwayat mutasi.</td></tr>';
                     }
                 });
         }
