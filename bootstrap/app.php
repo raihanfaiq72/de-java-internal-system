@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\HandleCors;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -13,6 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->prependToGroup('web', \App\Http\Middleware\FixRequestScheme::class);
+        $middleware->prependToGroup('api', \App\Http\Middleware\FixRequestScheme::class);
+
+        $middleware->append(HandleCors::class);
+
         $middleware->alias([
             'module.access' => \App\Http\Middleware\CheckModuleAccess::class,
         ]);
