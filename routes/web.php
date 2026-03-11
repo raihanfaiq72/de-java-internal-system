@@ -6,11 +6,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardPiutangController;
 use App\Http\Controllers\DashboardSalesController;
 use App\Http\Controllers\DeliveryOrderController;
-use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FleetController;
 use App\Http\Controllers\MitraController;
-use App\Http\Controllers\OfficeController;
-use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
@@ -61,34 +58,34 @@ Route::middleware(['auth'])->group(function () {
         Route::get('purchase-receipt/{id}', [PurchaseController::class, 'showReceipt'])->name('purchase.receipt.show');
         Route::get('purchase-receipt/print/{id}', [PurchaseController::class, 'printReceipt'])->name('purchase.receipt.print');
 
-        Route::get('mitra/export', [MitraController::class, 'export'])->name('mitra.export');
+        Route::get('mitra/export', [App\Http\Controllers\Api\MitraExportController::class, 'export'])->name('mitra.export');
         Route::get('import', [App\Http\Controllers\ImportController::class, 'index'])->name('import.index');
-        Route::post('import/stock', [App\Http\Controllers\ImportController::class, 'importStock'])->name('import.stock');
-        Route::post('import/mitra', [App\Http\Controllers\ImportController::class, 'importMitra'])->name('import.mitra');
-        Route::post('import/sales', [App\Http\Controllers\ImportController::class, 'importSales'])->name('import.sales');
-        Route::post('import/purchase', [App\Http\Controllers\ImportController::class, 'importPurchase'])->name('import.purchase');
-        Route::post('import/receipt', [App\Http\Controllers\ImportController::class, 'importReceipt'])->name('import.receipt');
-        Route::post('import/purchase-receipt', [App\Http\Controllers\ImportController::class, 'importPurchaseReceipt'])->name('import.purchase.receipt');
-        Route::get('import/template/{type}', [App\Http\Controllers\ImportController::class, 'downloadTemplate'])->name('import.template');
+        Route::post('import/stock', [App\Http\Controllers\Api\ImportController::class, 'importStock'])->name('import.stock');
+        Route::post('import/mitra', [App\Http\Controllers\Api\ImportController::class, 'importMitra'])->name('import.mitra');
+        Route::post('import/sales', [App\Http\Controllers\Api\ImportController::class, 'importSales'])->name('import.sales');
+        Route::post('import/purchase', [App\Http\Controllers\Api\ImportController::class, 'importPurchase'])->name('import.purchase');
+        Route::post('import/receipt', [App\Http\Controllers\Api\ImportController::class, 'importReceipt'])->name('import.receipt');
+        Route::post('import/purchase-receipt', [App\Http\Controllers\Api\ImportController::class, 'importPurchaseReceipt'])->name('import.purchase.receipt');
+        Route::get('import/template/{type}', [App\Http\Controllers\Api\ImportController::class, 'downloadTemplate'])->name('import.template');
         Route::get('mitra', [MitraController::class, 'index'])->name('mitra');
         Route::get('barang/export', [BarangController::class, 'export'])->name('barang.export');
         Route::get('barang', [BarangController::class, 'index'])->name('barang');
         Route::get('stok', [StockController::class, 'index'])->name('stok');
         Route::get('stok/export', [StockController::class, 'export'])->name('stok.export');
         Route::get('stok/print', [StockController::class, 'print'])->name('stok.print');
-        Route::get('expenses', [ExpenseController::class, 'index'])->name('expenses.index');
+        Route::get('expenses', [App\Http\Controllers\Api\ExpensePageController::class, 'index'])->name('expenses.index');
         Route::get('fleets', [FleetController::class, 'index'])->name('fleets.index');
 
         // Finance
-        Route::get('finance', [App\Http\Controllers\FinanceController::class, 'index'])->name('finance.index');
-        Route::get('finance/export', [App\Http\Controllers\FinanceController::class, 'exportExcel'])->name('finance.export');
-        Route::post('finance/transaction', [App\Http\Controllers\FinanceController::class, 'storeTransaction'])->name('finance.transaction.store');
-        Route::post('finance/account', [App\Http\Controllers\FinanceController::class, 'storeAccount'])->name('finance.account.store');
-        Route::delete('finance/account/{id}', [App\Http\Controllers\FinanceController::class, 'destroyAccount'])->name('finance.account.destroy');
-        Route::get('finance/next-code', [App\Http\Controllers\FinanceController::class, 'getNextCode'])->name('finance.account.next-code');
+        Route::get('finance', [App\Http\Controllers\Api\FinanceController::class, 'index'])->name('finance.index');
+        Route::get('finance/export', [App\Http\Controllers\Api\FinanceController::class, 'exportExcel'])->name('finance.export');
+        Route::post('finance/transaction', [App\Http\Controllers\Api\FinanceController::class, 'storeTransaction'])->name('finance.transaction.store');
+        Route::post('finance/account', [App\Http\Controllers\Api\FinanceController::class, 'storeAccount'])->name('finance.account.store');
+        Route::delete('finance/account/{id}', [App\Http\Controllers\Api\FinanceController::class, 'destroyAccount'])->name('finance.account.destroy');
+        Route::get('finance/next-code', [App\Http\Controllers\Api\FinanceController::class, 'getNextCode'])->name('finance.account.next-code');
 
         Route::get('users', fn () => view('Users.index'))->name('users.index');
-        Route::resource('employees', App\Http\Controllers\EmployeeController::class);
+        Route::resource('employees', App\Http\Controllers\Api\EmployeeController::class)->only(['index', 'store', 'update', 'destroy']);
         // Absensi dihapus dari sistem
 
         // Salary & Attendance
@@ -126,16 +123,16 @@ Route::middleware(['auth'])->group(function () {
         });
 
         Route::prefix('admin')->group(function () {
-            Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
-            Route::put('/permissions/{id}', [PermissionController::class, 'update'])->name('permissions.update');
+            Route::get('/permissions', [App\Http\Controllers\Api\AdminPermissionController::class, 'index'])->name('permissions.index');
+            Route::put('/permissions/{id}', [App\Http\Controllers\Api\AdminPermissionController::class, 'update'])->name('permissions.update');
             Route::resource('roles', RoleController::class);
 
             // Offices
-            Route::get('/offices', [OfficeController::class, 'index'])->name('offices.index');
-            Route::post('/offices', [OfficeController::class, 'store'])->name('offices.store');
-            Route::get('/offices/{id}', [OfficeController::class, 'show'])->name('offices.show');
-            Route::put('/offices/{id}', [OfficeController::class, 'update'])->name('offices.update');
-            Route::delete('/offices/{id}', [OfficeController::class, 'destroy'])->name('offices.destroy');
+            Route::get('/offices', [App\Http\Controllers\Api\AdminOfficeController::class, 'index'])->name('offices.index');
+            Route::post('/offices', [App\Http\Controllers\Api\AdminOfficeController::class, 'store'])->name('offices.store');
+            Route::get('/offices/{id}', [App\Http\Controllers\Api\AdminOfficeController::class, 'show'])->name('offices.show');
+            Route::put('/offices/{id}', [App\Http\Controllers\Api\AdminOfficeController::class, 'update'])->name('offices.update');
+            Route::delete('/offices/{id}', [App\Http\Controllers\Api\AdminOfficeController::class, 'destroy'])->name('offices.destroy');
 
             // User Plots
             Route::get('/user-plots', [UserPlotController::class, 'index'])->name('user_plots.index');
