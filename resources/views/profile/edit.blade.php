@@ -27,13 +27,11 @@
 
                     <div class="text-center mb-4">
                         <div class="position-relative d-inline-block">
-                            @if($user->avatar)
-                                <img src="{{ asset('storage/' . $user->avatar) }}" alt="Avatar" class="rounded-circle img-thumbnail" style="width: 120px; height: 120px; object-fit: cover;">
-                            @else
+                            <div id="avatarContainer">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary text-white" style="width: 120px; height: 120px; font-size: 48px;">
-                                    {{ strtoupper(substr($user->name, 0, 1)) }}
+                                    <span id="avatarInitial">-</span>
                                 </div>
-                            @endif
+                            </div>
                             <label for="avatar" class="position-absolute bottom-0 end-0 bg-white rounded-circle p-2 shadow cursor-pointer" style="cursor: pointer;">
                                 <i class="iconoir-camera text-primary"></i>
                             </label>
@@ -44,7 +42,7 @@
 
                     <div class="mb-3">
                         <label for="name" class="form-label">Nama Lengkap</label>
-                        <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $user->name) }}" required>
+                        <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required>
                         @error('name')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -52,7 +50,7 @@
 
                     <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email', $user->email) }}" required>
+                        <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" required>
                         @error('email')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -90,13 +88,17 @@
 
 @push('js')
 <script>
+    function escapeHtml(s) {
+        return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
     function previewImage(input) {
         if (input.files && input.files[0]) {
             var reader = new FileReader();
             reader.onload = function(e) {
                 // Find the image element or create a new one if it was an initial div
-                var img = input.parentElement.querySelector('img');
-                var initialDiv = input.parentElement.querySelector('div.rounded-circle');
+                var img = document.getElementById('avatarContainer').querySelector('img');
+                var initialDiv = document.getElementById('avatarContainer').querySelector('div.rounded-circle');
                 
                 if (img) {
                     img.src = e.target.result;
@@ -114,6 +116,38 @@
             reader.readAsDataURL(input.files[0]);
         }
     }
+
+    document.addEventListener('DOMContentLoaded', async function () {
+        try {
+            const res = await fetch("{{ route('profile-api.me') }}", { headers: { 'Accept': 'application/json' } });
+            const json = await res.json();
+            if (!json.success) return;
+            const u = json.data || {};
+            const name = u.name || '';
+            const email = u.email || '';
+
+            if (!document.getElementById('name').value) document.getElementById('name').value = name;
+            if (!document.getElementById('email').value) document.getElementById('email').value = email;
+
+            const initial = name ? name.trim().charAt(0).toUpperCase() : '-';
+            document.getElementById('avatarInitial').textContent = initial;
+
+            if (u.avatar_url) {
+                const wrap = document.getElementById('avatarContainer');
+                wrap.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = u.avatar_url;
+                img.alt = 'Avatar';
+                img.className = 'rounded-circle img-thumbnail';
+                img.style.width = '120px';
+                img.style.height = '120px';
+                img.style.objectFit = 'cover';
+                wrap.appendChild(img);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    });
 </script>
 @endpush
 @endsection

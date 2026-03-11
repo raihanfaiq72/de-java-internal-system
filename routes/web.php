@@ -9,11 +9,8 @@ use App\Http\Controllers\DeliveryOrderController;
 use App\Http\Controllers\FleetController;
 use App\Http\Controllers\MitraController;
 use App\Http\Controllers\PurchaseController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\StockController;
-use App\Http\Controllers\UserPlotController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [AuthController::class, 'login'])->name('login');
@@ -29,7 +26,7 @@ Route::middleware(['auth'])->group(function () {
 
     // User Profile
     Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile', [App\Http\Controllers\Api\ProfileController::class, 'update'])->name('profile.update');
 
     // Notifications
     Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
@@ -42,8 +39,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('dashboard-piutang', [DashboardPiutangController::class, 'index'])->name('dashboard.piutang');
         Route::get('dashboard-sales', [DashboardSalesController::class, 'index'])->name('dashboard.sales');
 
-        Route::get('sales', [SalesController::class, 'index'])->name('sales');
-        Route::get('sales/export', [SalesController::class, 'export'])->name('sales.export');
+        Route::get('sales', [App\Http\Controllers\Api\SalesController::class, 'index'])->name('sales');
+        Route::get('sales/export', [App\Http\Controllers\Api\SalesController::class, 'export'])->name('sales.export');
         Route::get('sales/{id}', [SalesController::class, 'show'])->name('sales.show');
         Route::get('sales/print/{id}', [SalesController::class, 'printInvoice'])->name('sales.print');
         Route::get('sales-receipt', [SalesController::class, 'receipt'])->name('sales.receipt');
@@ -51,12 +48,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('sales-receipt/print/{id}', [SalesController::class, 'printReceipt'])->name('sales.receipt.print');
 
         Route::get('purchase', [PurchaseController::class, 'index'])->name('purchase');
-        Route::get('purchase/export', [PurchaseController::class, 'export'])->name('purchase.export');
+        Route::get('purchase/export', [App\Http\Controllers\Api\PurchaseController::class, 'export'])->name('purchase.export');
         Route::get('purchase/{id}', [PurchaseController::class, 'show'])->name('purchase.show');
-        Route::get('purchase/print/{id}', [PurchaseController::class, 'printInvoice'])->name('purchase.print');
-        Route::get('purchase-receipt', [PurchaseController::class, 'receipt'])->name('purchase.receipt');
+        Route::get('purchase/print/{id}', [App\Http\Controllers\Api\PurchaseController::class, 'printInvoice'])->name('purchase.print');
+        Route::get('purchase-receipt', [App\Http\Controllers\Api\PurchaseController::class, 'receipt'])->name('purchase.receipt');
         Route::get('purchase-receipt/{id}', [PurchaseController::class, 'showReceipt'])->name('purchase.receipt.show');
-        Route::get('purchase-receipt/print/{id}', [PurchaseController::class, 'printReceipt'])->name('purchase.receipt.print');
+        Route::get('purchase-receipt/print/{id}', [App\Http\Controllers\Api\PurchaseController::class, 'printReceipt'])->name('purchase.receipt.print');
 
         Route::get('mitra/export', [App\Http\Controllers\Api\MitraExportController::class, 'export'])->name('mitra.export');
         Route::get('import', [App\Http\Controllers\ImportController::class, 'index'])->name('import.index');
@@ -71,8 +68,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('barang/export', [BarangController::class, 'export'])->name('barang.export');
         Route::get('barang', [BarangController::class, 'index'])->name('barang');
         Route::get('stok', [StockController::class, 'index'])->name('stok');
-        Route::get('stok/export', [StockController::class, 'export'])->name('stok.export');
-        Route::get('stok/print', [StockController::class, 'print'])->name('stok.print');
+        Route::get('stok/export', [App\Http\Controllers\Api\StockReportController::class, 'export'])->name('stok.export');
+        Route::get('stok/print', [App\Http\Controllers\Api\StockReportController::class, 'print'])->name('stok.print');
         Route::get('expenses', [App\Http\Controllers\Api\ExpensePageController::class, 'index'])->name('expenses.index');
         Route::get('fleets', [FleetController::class, 'index'])->name('fleets.index');
 
@@ -89,27 +86,27 @@ Route::middleware(['auth'])->group(function () {
         // Absensi dihapus dari sistem
 
         // Salary & Attendance
-        Route::resource('salary-periods', App\Http\Controllers\SalaryPeriodController::class);
-        Route::post('salary-periods/{salary_period}/slips/store-one', [App\Http\Controllers\SalaryPeriodController::class, 'storeOne'])->name('salary-periods.slips.store-one');
-        Route::resource('salary-slips', App\Http\Controllers\SalarySlipController::class)->only(['update']);
-        Route::get('salary-slips/{salary_slip}/print', [App\Http\Controllers\SalarySlipController::class, 'print'])->name('salary-slips.print');
-        Route::post('salary-slips/{salary_slip}/publish', [App\Http\Controllers\SalarySlipController::class, 'publish'])->name('salary-slips.publish');
+        Route::resource('salary-periods', App\Http\Controllers\Api\SalaryPeriodController::class)->only(['index', 'store', 'show', 'destroy']);
+        Route::post('salary-periods/{salary_period}/slips/store-one', [App\Http\Controllers\Api\SalaryPeriodController::class, 'storeOne'])->name('salary-periods.slips.store-one');
+        Route::resource('salary-slips', App\Http\Controllers\Api\SalarySlipController::class)->only(['update']);
+        Route::get('salary-slips/{salary_slip}/print', [App\Http\Controllers\Api\SalarySlipController::class, 'print'])->name('salary-slips.print');
+        Route::post('salary-slips/{salary_slip}/publish', [App\Http\Controllers\Api\SalarySlipController::class, 'publish'])->name('salary-slips.publish');
 
         // Reports
         Route::get('report/invoice', [App\Http\Controllers\Report\InvoiceReportController::class, 'index'])->name('report.invoice');
         Route::get('report/invoice/export', [App\Http\Controllers\Report\InvoiceReportController::class, 'export'])->name('report.invoice.export');
-        Route::get('report/sales', [ReportController::class, 'salesReport'])->name('report.sales');
+        Route::get('report/sales', [App\Http\Controllers\Api\ReportController::class, 'salesReport'])->name('report.sales');
         Route::get('report/purchase', [App\Http\Controllers\Report\PurchaseReportController::class, 'index'])->name('report.purchase');
         Route::get('report/purchase/export', [App\Http\Controllers\Report\PurchaseReportController::class, 'export'])->name('report.purchase.export');
-        Route::get('report/stock', [ReportController::class, 'stockReport'])->name('report.stock');
-        Route::get('report/stock/export', [ReportController::class, 'stockReportExport'])->name('report.stock.export');
-        Route::get('report/ar-aging', [ReportController::class, 'arAging'])->name('report.ar-aging');
-        Route::get('report/general-ledger', [ReportController::class, 'generalLedger'])->name('report.general-ledger');
-        Route::get('report/cash-book', [ReportController::class, 'cashBook'])->name('report.cash-book');
-        Route::get('report/balance-sheet', [ReportController::class, 'balanceSheet'])->name('report.balance-sheet');
-        Route::get('report/balance-sheet/export/csv', [ReportController::class, 'balanceSheetExportCSV'])->name('report.balance-sheet.export.csv');
-        Route::get('report/profit-loss', [ReportController::class, 'profitAndLoss'])->name('report.profit-loss');
-        Route::get('report/coa-management', [ReportController::class, 'coaManagement'])->name('report.coa-management');
+        Route::get('report/stock', [App\Http\Controllers\Api\ReportController::class, 'stockReport'])->name('report.stock');
+        Route::get('report/stock/export', [App\Http\Controllers\Api\ReportController::class, 'stockReportExport'])->name('report.stock.export');
+        Route::get('report/ar-aging', [App\Http\Controllers\Api\ReportController::class, 'arAging'])->name('report.ar-aging');
+        Route::get('report/general-ledger', [App\Http\Controllers\Api\ReportController::class, 'generalLedger'])->name('report.general-ledger');
+        Route::get('report/cash-book', [App\Http\Controllers\Api\ReportController::class, 'cashBook'])->name('report.cash-book');
+        Route::get('report/balance-sheet', [App\Http\Controllers\Api\ReportController::class, 'balanceSheet'])->name('report.balance-sheet');
+        Route::get('report/balance-sheet/export/csv', [App\Http\Controllers\Api\ReportController::class, 'balanceSheetExportCSV'])->name('report.balance-sheet.export.csv');
+        Route::get('report/profit-loss', [App\Http\Controllers\Api\ReportController::class, 'profitAndLoss'])->name('report.profit-loss');
+        Route::get('report/coa-management', [App\Http\Controllers\Api\ReportController::class, 'coaManagement'])->name('report.coa-management');
 
         Route::prefix('delivery-order')->name('delivery-order.')->group(function () {
             Route::get('/', [DeliveryOrderController::class, 'index'])->name('index');
@@ -125,7 +122,7 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('admin')->group(function () {
             Route::get('/permissions', [App\Http\Controllers\Api\AdminPermissionController::class, 'index'])->name('permissions.index');
             Route::put('/permissions/{id}', [App\Http\Controllers\Api\AdminPermissionController::class, 'update'])->name('permissions.update');
-            Route::resource('roles', RoleController::class);
+            Route::resource('roles', App\Http\Controllers\Api\RoleController::class)->except(['edit']);
 
             // Offices
             Route::get('/offices', [App\Http\Controllers\Api\AdminOfficeController::class, 'index'])->name('offices.index');
@@ -135,11 +132,11 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/offices/{id}', [App\Http\Controllers\Api\AdminOfficeController::class, 'destroy'])->name('offices.destroy');
 
             // User Plots
-            Route::get('/user-plots', [UserPlotController::class, 'index'])->name('user_plots.index');
-            Route::post('/user-plots', [UserPlotController::class, 'store'])->name('user_plots.store');
-            Route::get('/user-plots/{id}', [UserPlotController::class, 'show'])->name('user_plots.show');
-            Route::put('/user-plots/{id}', [UserPlotController::class, 'update'])->name('user_plots.update');
-            Route::delete('/user-plots/{id}', [UserPlotController::class, 'destroy'])->name('user_plots.destroy');
+            Route::get('/user-plots', [App\Http\Controllers\Api\UserPlotController::class, 'index'])->name('user_plots.index');
+            Route::post('/user-plots', [App\Http\Controllers\Api\UserPlotController::class, 'store'])->name('user_plots.store');
+            Route::get('/user-plots/{id}', [App\Http\Controllers\Api\UserPlotController::class, 'show'])->name('user_plots.show');
+            Route::put('/user-plots/{id}', [App\Http\Controllers\Api\UserPlotController::class, 'update'])->name('user_plots.update');
+            Route::delete('/user-plots/{id}', [App\Http\Controllers\Api\UserPlotController::class, 'destroy'])->name('user_plots.destroy');
 
             // Test Notification Route
             Route::get('/test-notification', function () {

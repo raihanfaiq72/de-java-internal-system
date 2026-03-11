@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\PartnerController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductCategoryController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\StockController;
 use App\Http\Controllers\Api\StockLocationController;
 use App\Http\Controllers\Api\SupplierBrandController;
@@ -29,6 +30,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth'])->group(function () {
+    Route::prefix('profile-api')
+        ->name('profile-api.')
+        ->group(function () {
+            Route::get('/me', [ProfileController::class, 'me'])->name('me');
+        });
+
     Route::prefix('office-api')
         ->name('office-api.')
         ->group(function () {
