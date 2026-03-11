@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\StockMutation;
 use App\Services\StockService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class StockController extends Controller
@@ -108,20 +109,20 @@ class StockController extends Controller
                 ->where('office_id', $officeId)
                 ->selectRaw('SUM((SELECT SUM(CASE WHEN type = "IN" THEN qty ELSE -qty END) FROM stock_mutations WHERE product_id = products.id AND stock_location_id = ?) * harga_beli) as total_value', [$locationId])
                 ->first()->total_value ?? 0;
-            
+
             // Location-specific counts are expensive without materialized views or better schema
             // We'll skip low/out stock counts for location-specific view for now or estimate
-            $lowStockCount = 0; 
+            $lowStockCount = 0;
             $outOfStockCount = 0;
             $totalItems = Product::where('track_stock', true)->where('office_id', $officeId)
-                ->whereHas('stock_mutations', function($q) use ($locationId) {
+                ->whereHas('stock_mutations', function ($q) use ($locationId) {
                     $q->where('stock_location_id', $locationId);
                 })->count();
 
         } else {
             $totalQty = $productQuery->sum('qty');
             $inventoryValue = $productQuery->selectRaw('SUM(qty * harga_beli) as total_value')->first()->total_value ?? 0;
-            
+
             $totalItems = $productQuery->count();
             $lowStockCount = (clone $productQuery)->where('qty', '>', 0)->where('qty', '<', 5)->count();
             $outOfStockCount = (clone $productQuery)->where('qty', '<=', 0)->count();
@@ -216,11 +217,22 @@ class StockController extends Controller
 
     public function mutations(Request $request)
     {
-        $query = StockMutation::with('product')
+        $query = StockMutation::with([
+            'product:id,nama_produk,sku_kode',
+            'stock_location:id,name',
+        ])
             ->where('office_id', session('active_office_id'));
 
         if ($request->product_id) {
             $query->where('product_id', $request->product_id);
+        }
+
+        if ($request->search) {
+            $search = $request->search;
+            $query->whereHas('product', function ($q) use ($search) {
+                $q->where('nama_produk', 'like', "%{$search}%")
+                    ->orWhere('sku_kode', 'like', "%{$search}%");
+            });
         }
 
         if ($request->location_id) {
@@ -240,6 +252,44 @@ class StockController extends Controller
         }
 
         $data = $query->latest()->paginate(10);
+
+        $mutationIds = $data->getCollection()->pluck('id')->all();
+        $actors = [];
+        if (! empty($mutationIds)) {
+            $logs = DB::table('activity_logs')
+                ->leftJoin('users', 'activity_logs.user_id', '=', 'users.id')
+                ->whereNull('activity_logs.deleted_at')
+                ->where('activity_logs.office_id', session('active_office_id'))
+                ->where('activity_logs.tabel_terkait', 'stock_mutations')
+                ->where('activity_logs.tindakan', 'Create')
+                ->whereIn('activity_logs.data_id', $mutationIds)
+                ->select('activity_logs.data_id', 'users.name as user_name', 'users.username as username')
+                ->get();
+
+            foreach ($logs as $l) {
+                $actors[(int) $l->data_id] = [
+                    'name' => $l->user_name,
+                    'username' => $l->username,
+                ];
+            }
+        }
+
+        $data->getCollection()->transform(function ($m) use ($actors) {
+            $ref = $m->reference_type;
+            $actionLabel = match ($ref) {
+                'Opening Stock' => 'Persediaan Awal',
+                'Adjustment' => 'Penyesuaian',
+                'Purchase' => 'Pembelian',
+                'Sales' => 'Penjualan',
+                default => $ref ?: 'Mutasi Stok',
+            };
+
+            $actor = $actors[(int) $m->id] ?? null;
+            $m->action_label = $actionLabel;
+            $m->actor = $actor;
+
+            return $m;
+        });
 
         return apiResponse(true, 'Data mutasi stok', $data);
     }
@@ -390,7 +440,7 @@ class StockController extends Controller
         return apiResponse(true, 'Data FIFO', [
             'product' => $product,
             'batches' => $batches,
-            'total_stock' => $totalStock
+            'total_stock' => $totalStock,
         ]);
     }
 }
