@@ -68,7 +68,7 @@
         }
 
         .signature-box {
-            width: 200px;
+            width: 180px;
             text-align: center;
         }
 
@@ -146,9 +146,14 @@
             <p>{{ $salarySlip->employee->name }}</p>
         </div>
         <div class="signature-box">
-            <p>Disetujui Oleh,</p>
+            <p>Mengetahui,</p>
             <div class="signature-line"></div>
-            <p>Finance / HRD</p>
+            <p>a.n. Wildan</p>
+        </div>
+        <div class="signature-box">
+            <p>Accounting,</p>
+            <div class="signature-line"></div>
+            <p>Accounting</p>
         </div>
     </div>
 
