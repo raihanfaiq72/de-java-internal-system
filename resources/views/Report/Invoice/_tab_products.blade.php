@@ -1,11 +1,22 @@
 <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+    @php
+        $metric = request('product_metric', 'both');
+    @endphp
     <div
         class="card-header bg-white border-bottom py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
             <h6 class="mb-0 fw-bold text-dark">Daftar Produk Terjual</h6>
             <small class="text-muted">
-                Total Qty: <span class="fw-bold text-success">{{ number_format($totalSoldQty, 0, ',', '.') }}</span>
-                (Berdasarkan pembayaran periode ini)
+                @if($metric === 'qty')
+                    Total Qty: <span class="fw-bold text-success">{{ number_format($totalSoldQty, 0, ',', '.') }}</span>
+                @elseif($metric === 'value')
+                    Total Value: <span class="fw-bold text-primary">Rp {{ number_format($totalSoldValue ?? 0, 0, ',', '.') }}</span>
+                @else
+                    Total Qty: <span class="fw-bold text-success">{{ number_format($totalSoldQty, 0, ',', '.') }}</span>
+                    <span class="mx-2">•</span>
+                    Total Value: <span class="fw-bold text-primary">Rp {{ number_format($totalSoldValue ?? 0, 0, ',', '.') }}</span>
+                @endif
+                <span class="ms-1">(Berdasarkan pembayaran periode ini)</span>
             </small>
         </div>
         <div class="d-flex align-items-center gap-2">
@@ -37,7 +48,14 @@
                     <th class="py-3 text-muted small fw-bold text-uppercase">Kode (SKU)</th>
                     <th class="py-3 text-muted small fw-bold text-uppercase">Kategori</th>
                     <th class="py-3 text-muted small fw-bold text-uppercase">Satuan</th>
-                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end">Kuantitas Terjual</th>
+                    @if($metric === 'qty')
+                        <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end">Kuantitas</th>
+                    @elseif($metric === 'value')
+                        <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end">Value (Rp)</th>
+                    @else
+                        <th class="py-3 text-muted small fw-bold text-uppercase text-end">Kuantitas</th>
+                        <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end">Value (Rp)</th>
+                    @endif
                 </tr>
             </thead>
             <tbody>
@@ -47,12 +65,18 @@
                         <td class="text-muted font-monospace small">{{ $product->sku_kode }}</td>
                         <td>{{ $product->nama_kategori ?? '-' }}</td>
                         <td>{{ $product->satuan }}</td>
-                        <td class="px-4 text-end fw-bold text-success">{{ number_format($product->total_qty, 0, ',', '.') }}
-                        </td>
+                        @if($metric === 'qty')
+                            <td class="px-4 text-end fw-bold text-success">{{ number_format($product->total_qty, 0, ',', '.') }}</td>
+                        @elseif($metric === 'value')
+                            <td class="px-4 text-end fw-bold text-primary">Rp {{ number_format($product->total_value ?? 0, 0, ',', '.') }}</td>
+                        @else
+                            <td class="text-end fw-bold text-success">{{ number_format($product->total_qty, 0, ',', '.') }}</td>
+                            <td class="px-4 text-end fw-bold text-primary">Rp {{ number_format($product->total_value ?? 0, 0, ',', '.') }}</td>
+                        @endif
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center py-5">
+                        <td colspan="{{ $metric === 'both' ? 6 : 5 }}" class="text-center py-5">
                             <div class="mb-3"><i class="iconoir-box-iso fs-1 text-muted opacity-50"></i></div>
                             <h6 class="fw-bold text-dark">Tidak ada produk terjual</h6>
                             <p class="text-muted small mb-0">Belum ada invoice lunas/terbayar pada periode ini.</p>
@@ -62,8 +86,17 @@
             </tbody>
             <tfoot class="bg-light fw-bold">
                 <tr>
-                    <td colspan="4" class="px-4 text-end text-uppercase text-muted small">Total Kuantitas</td>
-                    <td class="px-4 text-end text-success">{{ number_format($totalSoldQty, 0, ',', '.') }}</td>
+                    @if($metric === 'qty')
+                        <td colspan="4" class="px-4 text-end text-uppercase text-muted small">Total Kuantitas</td>
+                        <td class="px-4 text-end text-success">{{ number_format($totalSoldQty, 0, ',', '.') }}</td>
+                    @elseif($metric === 'value')
+                        <td colspan="4" class="px-4 text-end text-uppercase text-muted small">Total Value</td>
+                        <td class="px-4 text-end text-primary">Rp {{ number_format($totalSoldValue ?? 0, 0, ',', '.') }}</td>
+                    @else
+                        <td colspan="4" class="px-4 text-end text-uppercase text-muted small">Total Kuantitas</td>
+                        <td class="text-end text-success">{{ number_format($totalSoldQty, 0, ',', '.') }}</td>
+                        <td class="px-4 text-end text-primary">Rp {{ number_format($totalSoldValue ?? 0, 0, ',', '.') }}</td>
+                    @endif
                 </tr>
             </tfoot>
         </table>

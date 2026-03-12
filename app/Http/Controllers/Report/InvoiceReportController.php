@@ -147,9 +147,17 @@ class InvoiceReportController extends Controller
 
         $invoiceIds = $invoiceIdsQuery->pluck('invoices.id')->unique();
 
+        $taxSumSub = DB::table('invoice_item_taxes')
+            ->whereNull('deleted_at')
+            ->select('invoice_item_id', DB::raw('SUM(nilai_pajak_diterapkan) as total_tax'))
+            ->groupBy('invoice_item_id');
+
         $soldProducts = DB::table('invoice_items')
             ->join('products', 'invoice_items.produk_id', '=', 'products.id')
             ->leftJoin('product_categories', 'products.product_category_id', '=', 'product_categories.id')
+            ->leftJoinSub($taxSumSub, 'tax_sum', function ($join) {
+                $join->on('invoice_items.id', '=', 'tax_sum.invoice_item_id');
+            })
             ->whereIn('invoice_items.invoice_id', $invoiceIds)
             ->whereNull('invoice_items.deleted_at')
             ->select(
@@ -157,12 +165,14 @@ class InvoiceReportController extends Controller
                 'products.sku_kode',
                 'products.satuan',
                 'product_categories.nama_kategori',
-                DB::raw('SUM(invoice_items.qty) as total_qty')
+                DB::raw('SUM(invoice_items.qty) as total_qty'),
+                DB::raw('SUM((invoice_items.total_harga_item - (invoice_items.diskon_nilai * invoice_items.qty)) + COALESCE(tax_sum.total_tax, 0)) as total_value')
             )
             ->groupBy('products.id', 'products.nama_produk', 'products.sku_kode', 'products.satuan', 'product_categories.nama_kategori')
             ->get();
 
         $totalSoldQty = $soldProducts->sum('total_qty');
+        $totalSoldValue = $soldProducts->sum('total_value');
 
         // --- Tab 4: Laporan Invoice Per Produk ---
         $prodIdFilter = $request->input('product_id', []);
@@ -271,6 +281,7 @@ class InvoiceReportController extends Controller
             'totalUniqueInvoices',
             'soldProducts',
             'totalSoldQty',
+            'totalSoldValue',
             'invoiceItems',
             'summaryTotalTransaction',
             'summaryTotalInvoices'
@@ -403,9 +414,16 @@ class InvoiceReportController extends Controller
         }
 
         $invoiceIds = $invoiceIdsQuery->pluck('invoices.id')->unique();
+        $taxSumSub = DB::table('invoice_item_taxes')
+            ->whereNull('deleted_at')
+            ->select('invoice_item_id', DB::raw('SUM(nilai_pajak_diterapkan) as total_tax'))
+            ->groupBy('invoice_item_id');
         $soldProducts = DB::table('invoice_items')
             ->join('products', 'invoice_items.produk_id', '=', 'products.id')
             ->leftJoin('product_categories', 'products.product_category_id', '=', 'product_categories.id')
+            ->leftJoinSub($taxSumSub, 'tax_sum', function ($join) {
+                $join->on('invoice_items.id', '=', 'tax_sum.invoice_item_id');
+            })
             ->whereIn('invoice_items.invoice_id', $invoiceIds)
             ->whereNull('invoice_items.deleted_at')
             ->select(
@@ -413,13 +431,15 @@ class InvoiceReportController extends Controller
                 'products.sku_kode',
                 'products.satuan',
                 'product_categories.nama_kategori',
-                DB::raw('SUM(invoice_items.qty) as total_qty')
+                DB::raw('SUM(invoice_items.qty) as total_qty'),
+                DB::raw('SUM((invoice_items.total_harga_item - (invoice_items.diskon_nilai * invoice_items.qty)) + COALESCE(tax_sum.total_tax, 0)) as total_value')
             )
             ->groupBy('products.id', 'products.nama_produk', 'products.sku_kode', 'products.satuan', 'product_categories.nama_kategori')
             ->get();
         $totalSoldQty = $soldProducts->sum('total_qty');
+        $totalSoldValue = $soldProducts->sum('total_value');
 
-        $response['html_products'] = view('Report.Invoice._tab_products', compact('soldProducts', 'totalSoldQty'))->render();
+        $response['html_products'] = view('Report.Invoice._tab_products', compact('soldProducts', 'totalSoldQty', 'totalSoldValue'))->render();
 
         // --- Tab 4: Invoice Items ---
         $prodIdFilter = $request->input('product_id', []);

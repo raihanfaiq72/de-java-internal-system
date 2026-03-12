@@ -5,7 +5,7 @@
 @endpush
 
 @section('main')
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.2/dist/apexcharts.min.js"></script>
     <div class="page-wrapper">
         <div class="page-content">
             <div class="container-fluid">
@@ -94,6 +94,15 @@
                                             Belum Lunas (Unpaid)</option>
                                         <option value="Partially Paid" {{ request('payment_status') == 'Partially Paid' ? 'selected' : '' }}>Sebagian (Partial)</option>
                                         <option value="Overdue" {{ request('payment_status') == 'Overdue' ? 'selected' : '' }}>Jatuh Tempo (Overdue)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label fw-bold small text-muted">Tampilkan</label>
+                                    <select class="form-select" name="product_metric">
+                                        @php $metric = request('product_metric', 'both'); @endphp
+                                        <option value="qty" {{ $metric === 'qty' ? 'selected' : '' }}>Quantity</option>
+                                        <option value="value" {{ $metric === 'value' ? 'selected' : '' }}>Value (Harga Bayar)</option>
+                                        <option value="both" {{ $metric === 'both' ? 'selected' : '' }}>Quantity + Value</option>
                                     </select>
                                 </div>
                             </div>
@@ -606,7 +615,7 @@
                             .then(data => {
                                 // Update Charts
                                 if (data.charts) {
-                                    if (incomeExpenseChart) {
+                                    if (incomeExpenseChart && incomeExpenseChart.el) {
                                         incomeExpenseChart.updateOptions({
                                             series: [{
                                                 data: data.charts.income
@@ -621,7 +630,7 @@
                                         // incomeExpenseChart.updateOptions({ title: { text: ... } }); 
                                     }
 
-                                    if (pieChart) {
+                                    if (pieChart && pieChart.el) {
                                         pieChart.updateSeries(data.charts.pieSeries);
                                     }
                                 }
@@ -744,8 +753,11 @@
                                 }
                             }
                         };
-                        incomeExpenseChart = new ApexCharts(document.querySelector("#incomeExpenseChart"), incomeExpenseOptions);
-                        incomeExpenseChart.render();
+                        var incomeEl = document.querySelector("#incomeExpenseChart");
+                        if (incomeEl && window.ApexCharts) {
+                            incomeExpenseChart = new ApexCharts(incomeEl, incomeExpenseOptions);
+                            incomeExpenseChart.render();
+                        }
 
                         // 2. Receivables Composition Pie Chart
                         var pieOptions = {
@@ -774,16 +786,16 @@
                                 }
                             }
                         };
-                        pieChart = new ApexCharts(document.querySelector("#receivablesPieChart"), pieOptions);
-                        pieChart.render();
+                        var pieEl = document.querySelector("#receivablesPieChart");
+                        if (pieEl && window.ApexCharts) {
+                            pieChart = new ApexCharts(pieEl, pieOptions);
+                            pieChart.render();
+                        }
                         
                         // Initialize Column Visibility
                         initColumnToggle('.colToggleMenu[data-target="#table-payments"]', '#table-payments', 'payments');
                         initColumnToggle('.colToggleMenu[data-target="#table-products"]', '#table-products', 'products');
                         initColumnToggle('.colToggleMenu[data-target="#table-invoice-products"]', '#table-invoice-products', 'invoice-products');
-                            
-                        pieChart = new ApexCharts(document.querySelector("#receivablesPieChart"), pieOptions);
-                        pieChart.render();
 
                         // Override Form Submit
                         const filterForm = document.getElementById('filterForm');
