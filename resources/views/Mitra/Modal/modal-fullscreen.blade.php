@@ -67,8 +67,8 @@
                                     </div>
                                     <div class="row g-3">
                                         <div class="col-md-4">
-                                            <label class="f-label">Bentuk Usaha</label>
-                                            <select id="modal_badan_usaha" class="form-select f-input">
+                                            <label class="f-label">Bentuk Usaha *</label>
+                                            <select id="modal_badan_usaha" class="form-select f-input" required>
                                                 <option value="PT">PT</option>
                                                 <option value="CV">CV</option>
                                                 <option value="UD">UD</option>
@@ -79,7 +79,7 @@
                                         <div class="col-md-8">
                                             <label class="f-label">Nama Perusahaan / Mitra *</label>
                                             <input type="text" id="modal_nama" class="form-control f-input fw-bold"
-                                                placeholder="Nama Lengkap">
+                                                placeholder="Nama Lengkap" required>
                                         </div>
                                     </div>
 
@@ -90,13 +90,13 @@
                                     </div>
 
                                     <div class="mt-3">
-                                        <label class="f-label">No. KTP / NPWP</label>
+                                        <label class="f-label">No. KTP / NPWP *</label>
                                         <input type="text" id="modal_ktp_npwp" class="form-control f-input"
-                                            placeholder="Nomor Identitas (NIK / NPWP)">
+                                            placeholder="Nomor Identitas (NIK / NPWP)" required>
                                     </div>
 
                                     <div class="mt-3">
-                                        <label class="f-label">Alamat Lengkap</label>
+                                        <label class="f-label">Alamat Lengkap *</label>
                                         <div class="alert alert-soft-primary border-0 p-3 mb-2 rounded-3">
                                             <div class="d-flex gap-2">
                                                 <i class="fa fa-info-circle mt-1 text-primary"></i>
@@ -122,7 +122,7 @@
                                             </div>
                                         </div>
                                         <textarea id="modal_alamat" class="form-control f-input" rows="3"
-                                            placeholder="Masukkan alamat lengkap..."></textarea>
+                                            placeholder="Masukkan alamat lengkap..." required></textarea>
 
                                         <!-- Map Section -->
                                         <div class="mt-3">
@@ -175,9 +175,9 @@
                                 <div class="card-body p-4">
                                     <div class="row g-3">
                                         <div class="col-md-7">
-                                            <label class="f-label">Nama PIC</label>
+                                            <label class="f-label">Nama PIC *</label>
                                             <input type="text" id="modal_kontak_nama" class="form-control f-input"
-                                                placeholder="Nama Narahubung">
+                                                placeholder="Nama Narahubung" required>
                                         </div>
                                         <div class="col-md-5">
                                             <label class="f-label">Jabatan</label>
@@ -185,9 +185,9 @@
                                                 placeholder="Misal: Manager">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="f-label">No. HP PIC</label>
+                                            <label class="f-label">No. HP PIC *</label>
                                             <input type="text" id="modal_kontak_no_hp" class="form-control f-input"
-                                                placeholder="08xxxxxxxxxx">
+                                                placeholder="08xxxxxxxxxx" required>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="f-label">Email PIC</label>
@@ -198,9 +198,9 @@
                                 </div>
                             </div>
 
-                            <h6 class="fw-bold text-dark mb-3 text-uppercase small ls-1"><i
+                            <h6 class="fw-bold text-dark mb-3 text-uppercase small ls-1 d-none"><i
                                     class="fa fa-wallet me-2 text-primary"></i>Pengaturan Akun (Finance)</h6>
-                            <div class="card border-0 shadow-sm rounded-3">
+                            <div class="card border-0 shadow-sm rounded-3 d-none">
                                 <div class="card-body p-4">
                                     <div class="alert alert-soft-info py-2 px-3 small border-0 mb-3">
                                         <i class="fa fa-info-circle me-1"></i> Akun Hutang/Piutang diset otomatis ke
@@ -261,10 +261,23 @@
 <script>
     let mitraMap = null;
     let mitraMarker = null;
+    let leafletIconFixed = false;
+
+    function fixLeafletDefaultIcon() {
+        if (leafletIconFixed) return;
+        leafletIconFixed = true;
+        if (!window.L || !L.Icon || !L.Icon.Default) return;
+        L.Icon.Default.mergeOptions({
+            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        });
+    }
 
     function initMitraMap(lat = -6.200000, lng = 106.816666) {
         // Ensure container exists
         if (!document.getElementById('mitraMap')) return;
+        fixLeafletDefaultIcon();
 
         if (!mitraMap) {
             mitraMap = L.map('mitraMap').setView([lat, lng], 13);
@@ -431,7 +444,19 @@
             longitude: document.getElementById('modal_longitude').value
         };
 
-        if (!payload.nama) { alert('Nama Mitra wajib diisi!'); return; }
+        const missing = [];
+        if (!payload.tipe_mitra) missing.push('Tipe Mitra');
+        if (!payload.badan_usaha) missing.push('Bentuk Usaha');
+        if (!payload.nama) missing.push('Nama Perusahaan / Mitra');
+        if (!payload.ktp_npwp) missing.push('No. KTP / NPWP');
+        if (!payload.alamat) missing.push('Alamat Lengkap');
+        if (!payload.kontak_nama) missing.push('Nama PIC');
+        if (!payload.kontak_no_hp) missing.push('No. HP PIC');
+
+        if (missing.length) {
+            alert('Mohon lengkapi field wajib:\n- ' + missing.join('\n- '));
+            return;
+        }
 
         try {
             const res = await fetch(url, {
@@ -451,7 +476,12 @@
                 // Trigger event for external listeners (like Sales page)
                 document.dispatchEvent(new CustomEvent('mitra-saved', { detail: result.data }));
             } else {
-                alert('Gagal: ' + (JSON.stringify(result.errors || result.message)));
+                if (result.errors && typeof result.errors === 'object') {
+                    const messages = Object.values(result.errors).flat().join('\n');
+                    alert('Validasi gagal:\n' + messages);
+                } else {
+                    alert('Gagal: ' + (result.message || 'Terjadi kesalahan.'));
+                }
             }
         } catch (e) {
             console.error(e); alert('Terjadi kesalahan sistem.');

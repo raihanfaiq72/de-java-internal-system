@@ -43,7 +43,7 @@
             </div>
 
             <div class="text-center mb-4">
-                <h5 class="fw-bold text-dark">Dejava Internal System</h5>
+                <h5 class="fw-bold text-dark">Djava Internal System</h5>
                 <p class="text-secondary">Per Tanggal: {{ date('d F Y', strtotime($date)) }}</p>
             </div>
 

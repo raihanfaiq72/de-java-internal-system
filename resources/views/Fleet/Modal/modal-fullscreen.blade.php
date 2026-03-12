@@ -45,8 +45,12 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="f-label">Harga per Liter (IDR) *</label>
-                                    <input type="number" id="modal_fleet_liter_price" class="form-control f-input"
-                                        placeholder="Co: 10000">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">Rp</span>
+                                        <input type="text" id="modal_fleet_liter_price_display" class="form-control f-input border-start-0 ps-0"
+                                            placeholder="Co: 10.000" oninput="formatRupiahInput(this)">
+                                        <input type="hidden" id="modal_fleet_liter_price" value="0">
+                                    </div>
                                 </div>
                                 <div class="col-md-12">
                                     <label class="f-label">Nomor Plat *</label>
@@ -63,13 +67,22 @@
 </div>
 
 <script>
-    // Include Users/Modal/modal-fullscreen specific logic here or in index
+    function formatRupiahInput(input) {
+        const raw = String(input.value || '').replace(/[^0-9]/g, '');
+        const formatted = raw ? new Intl.NumberFormat('id-ID').format(parseInt(raw, 10)) : '';
+        input.value = formatted;
+        const hidden = document.getElementById('modal_fleet_liter_price');
+        if (hidden) hidden.value = raw || 0;
+    }
+
     async function openFleetModal(id = null) {
         const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('fleetModal'));
         document.getElementById('fleetForm').reset();
+        document.getElementById('modal_fleet_liter_price_display').value = '';
+        document.getElementById('modal_fleet_liter_price').value = 0;
 
         if (id) {
-            document.getElementById('fleetModalTitle').innerText = 'Edit Data User';
+            document.getElementById('fleetModalTitle').innerText = 'Edit Data Armada';
             document.getElementById('fleet_form_mode').value = 'edit';
             document.getElementById('edit_fleet_id').value = id;
 
@@ -81,7 +94,8 @@
                     document.getElementById('modal_fleet_fleet_name').value = data.fleet_name;
                     document.getElementById('modal_fleet_fuel_type').value = data.fuel_type;
                     document.getElementById('modal_fleet_km_per_liter').value = data.km_per_liter;
-                    document.getElementById('modal_fleet_liter_price').value = data.liter_price;
+                    document.getElementById('modal_fleet_liter_price').value = data.liter_price || 0;
+                    document.getElementById('modal_fleet_liter_price_display').value = new Intl.NumberFormat('id-ID').format(parseInt(data.liter_price || 0, 10));
                     document.getElementById('modal_fleet_license_plate').value = data.license_plate;
                 }
             } catch (e) {

@@ -157,13 +157,10 @@
 
             try {
                 const searchVal = document.getElementById('filter-search').value;
-                let finalUrl = url;
+                const finalUrl = new URL(url, window.location.origin);
+                if (searchVal) finalUrl.searchParams.set('search', searchVal);
 
-                if (searchVal) {
-                    finalUrl = `url?search=${searchVal}`;
-                }
-
-                const response = await fetch(finalUrl);
+                const response = await fetch(finalUrl.toString());
                 const result = await response.json();
 
                 if (result.success) {

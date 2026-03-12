@@ -624,7 +624,7 @@
                     </span>
 
                     <span class="logo-lg d-block">
-                        <h4 class="mb-0 fw-bold text-white">Dejava</h4>
+                        <h4 class="mb-0 fw-bold text-white">Djava</h4>
                         <small class="text-muted">
                             @php
                                 $officeId = session('active_office_id');

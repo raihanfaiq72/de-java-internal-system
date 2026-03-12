@@ -1,5 +1,9 @@
 @extends('Layout.main')
 
+@push('css')
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+@endpush
+
 @section('main')
     <div class="page-wrapper">
         <div class="page-content">
@@ -74,7 +78,18 @@
                                                         class="btn btn-sm btn-outline-secondary">
                                                         <i class="fa fa-print"></i>
                                                     </button>
+                                                    @if ($salaryPeriod->status == 'open' && $slip->status !== 'paid')
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteSlip('{{ $slip->id }}', '{{ $slip->employee->name }}')">
+                                                            <i class="fa fa-trash"></i>
+                                                        </button>
+                                                    @endif
                                                 </div>
+                                                @if ($salaryPeriod->status == 'open' && $slip->status !== 'paid')
+                                                    <form id="delete-slip-{{ $slip->id }}" action="{{ route('salary-slips.destroy', $slip->id) }}" method="POST" class="d-none">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                    </form>
+                                                @endif
                                             </td>
                                         </tr>
                                     @empty
@@ -123,23 +138,43 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="small fw-bold text-muted">Gaji/Hari</label>
-                                <input type="number" min="0" step="0.01" class="form-control slip-one-input" data-field="daily_basic_salary" name="daily_basic_salary" id="create_daily_basic_salary" placeholder="Gaji/Hari">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">Rp</span>
+                                    <input type="text" class="form-control border-start-0 ps-0 rupiah-input" id="create_daily_basic_salary_display" value="0" placeholder="0" onkeyup="syncInput(this)">
+                                    <input type="hidden" min="0" step="0.01" class="real-value slip-one-input" data-field="daily_basic_salary" name="daily_basic_salary" id="create_daily_basic_salary" value="0">
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="small fw-bold text-muted">Tunjangan Makan</label>
-                                <input type="number" min="0" step="0.01" class="form-control slip-one-input" data-field="meal_allowance" name="meal_allowance" value="0">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">Rp</span>
+                                    <input type="text" class="form-control border-start-0 ps-0 rupiah-input" value="0" placeholder="0" onkeyup="syncInput(this)">
+                                    <input type="hidden" min="0" step="0.01" class="real-value slip-one-input" data-field="meal_allowance" name="meal_allowance" value="0">
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="small fw-bold text-muted">Premi</label>
-                                <input type="number" min="0" step="0.01" class="form-control slip-one-input" data-field="premi" name="premi" value="0">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">Rp</span>
+                                    <input type="text" class="form-control border-start-0 ps-0 rupiah-input" id="create_premi_display" value="0" placeholder="0" onkeyup="syncInput(this)">
+                                    <input type="hidden" min="0" step="0.01" class="real-value slip-one-input" data-field="premi" name="premi" id="create_premi" value="0">
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="small fw-bold text-muted">Pot. Telat</label>
-                                <input type="number" min="0" step="0.01" class="form-control slip-one-input" data-field="late_deduction" name="late_deduction" value="0">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">Rp</span>
+                                    <input type="text" class="form-control border-start-0 ps-0 rupiah-input" value="0" placeholder="0" onkeyup="syncInput(this)">
+                                    <input type="hidden" min="0" step="0.01" class="real-value slip-one-input" data-field="late_deduction" name="late_deduction" value="0">
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="small fw-bold text-muted">Pot. Lainnya</label>
-                                <input type="number" min="0" step="0.01" class="form-control slip-one-input" data-field="other_deduction" name="other_deduction" value="0">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">Rp</span>
+                                    <input type="text" class="form-control border-start-0 ps-0 rupiah-input" value="0" placeholder="0" onkeyup="syncInput(this)">
+                                    <input type="hidden" min="0" step="0.01" class="real-value slip-one-input" data-field="other_deduction" name="other_deduction" value="0">
+                                </div>
                             </div>
                             <div class="col-12">
                                 <div class="form-check">
@@ -245,10 +280,45 @@
 @endsection
 
 @push('js')
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <script>
-        // Format currency
         function fmtIDR(v) {
             return 'Rp ' + new Intl.NumberFormat('id-ID').format(Math.round(v));
+        }
+
+        function formatRupiah(angka) {
+            let number_string = angka.replace(/[^,\d]/g, '').toString();
+            let split = number_string.split(',');
+            let sisa = split[0].length % 3;
+            let rupiah = split[0].substr(0, sisa);
+            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                let separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+
+            return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+        }
+
+        function cleanNumber(angka) {
+            if (!angka) return '';
+            let cleaned = String(angka).replace(/[^0-9,]/g, '');
+            return cleaned.replace(',', '.');
+        }
+
+        function syncInput(displayInput) {
+            let formatted = formatRupiah(displayInput.value);
+            displayInput.value = formatted;
+
+            let hiddenInput = displayInput.parentElement.querySelector('.real-value');
+            if (hiddenInput) {
+                hiddenInput.value = cleanNumber(displayInput.value) || 0;
+            }
+
+            if (typeof recalcCreate === 'function') {
+                recalcCreate();
+            }
         }
 
         function openPrintPreview(id) {
@@ -281,23 +351,77 @@
                 iframe.contentWindow.print();
             }
         }
-        // Realtime calc in Create Slips modal
-        document.addEventListener('DOMContentLoaded', function () {
-            const createInputs = document.querySelectorAll('#modalCreateSlipOne .slip-one-input');
-            function recalcCreate() {
-                const workDays = parseFloat(document.getElementById('create_work_days').value || 0);
-                const daily = parseFloat(document.getElementById('create_daily_basic_salary').value || 0);
-                const premi = parseFloat(document.querySelector('[data-field=\"premi\"]').value || 0);
-                const meal = parseFloat(document.querySelector('[data-field=\"meal_allowance\"]').value || 0);
-                const late = parseFloat(document.querySelector('[data-field=\"late_deduction\"]').value || 0);
-                const other = parseFloat(document.querySelector('[data-field=\"other_deduction\"]').value || 0);
-                const basicTotal = workDays * daily;
-                const takeHome = basicTotal + premi + meal - late - other;
-                document.getElementById('create_take_home').textContent = fmtIDR(takeHome);
+
+        function recalcCreate() {
+            const workDays = parseFloat(document.getElementById('create_work_days')?.value || 0);
+            const daily = parseFloat(document.getElementById('create_daily_basic_salary')?.value || 0);
+            const premi = parseFloat(document.querySelector('[data-field="premi"]')?.value || 0);
+            const meal = parseFloat(document.querySelector('[data-field="meal_allowance"]')?.value || 0);
+            const late = parseFloat(document.querySelector('[data-field="late_deduction"]')?.value || 0);
+            const other = parseFloat(document.querySelector('[data-field="other_deduction"]')?.value || 0);
+            const basicTotal = workDays * daily;
+            const takeHome = basicTotal + premi + meal - late - other;
+            document.getElementById('create_take_home').textContent = fmtIDR(takeHome);
+        }
+
+        function applyEmployeeDefaults() {
+            const select = document.getElementById('create_employee_id');
+            if (!select) return;
+            const opt = select.options[select.selectedIndex];
+            if (!opt) return;
+
+            const daily = parseFloat(opt.dataset.daily || 0);
+            const premi = parseFloat(opt.dataset.premi || 0);
+
+            const dailyHidden = document.getElementById('create_daily_basic_salary');
+            const dailyDisplay = document.getElementById('create_daily_basic_salary_display');
+            if (dailyHidden && dailyDisplay) {
+                dailyHidden.value = daily;
+                dailyDisplay.value = formatRupiah(String(Math.round(daily)));
             }
-            createInputs.forEach(el => el.addEventListener('input', recalcCreate));
+
+            const premiHidden = document.getElementById('create_premi');
+            const premiDisplay = document.getElementById('create_premi_display');
+            if (premiHidden && premiDisplay) {
+                premiHidden.value = premi;
+                premiDisplay.value = formatRupiah(String(Math.round(premi)));
+            }
+
             recalcCreate();
-            // no extra autofill needed
+        }
+
+        async function deleteSlip(id, name) {
+            if (typeof macConfirm === 'function') {
+                const confirmed = await macConfirm(
+                    'Hapus Slip Gaji?',
+                    `Apakah Anda yakin ingin menghapus slip gaji untuk "${name}"?`, {
+                        confirmText: 'Hapus',
+                        confirmType: 'danger',
+                        cancelText: 'Batal'
+                    }
+                );
+                if (confirmed) document.getElementById(`delete-slip-${id}`)?.submit();
+            } else {
+                if (confirm(`Hapus slip gaji untuk ${name}?`)) {
+                    document.getElementById(`delete-slip-${id}`)?.submit();
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const employeeSelect = document.getElementById('create_employee_id');
+            if (employeeSelect) {
+                new TomSelect(employeeSelect, { create: false, maxOptions: 5000, sortField: { field: 'text', direction: 'asc' } });
+                employeeSelect.addEventListener('change', applyEmployeeDefaults);
+            }
+
+            document.getElementById('create_work_days')?.addEventListener('input', recalcCreate);
+            document.querySelectorAll('#modalCreateSlipOne .rupiah-input').forEach((el) => {
+                el.addEventListener('input', recalcCreate);
+            });
+
+            applyEmployeeDefaults();
+            recalcCreate();
         });
 
         // Edit Slip modal

@@ -76,4 +76,15 @@ class SalarySlipController extends Controller
 
         return redirect()->back()->with('success', 'Slip gaji dipublish.');
     }
+
+    public function destroy(SalarySlip $salarySlip)
+    {
+        if ($salarySlip->status === 'paid') {
+            return redirect()->back()->with('error', 'Slip gaji yang sudah dibayar tidak dapat dihapus.');
+        }
+
+        $salarySlip->delete();
+
+        return redirect()->back()->with('success', 'Slip gaji dihapus.');
+    }
 }

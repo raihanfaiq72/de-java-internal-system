@@ -200,13 +200,14 @@
                                                 <th class="py-3 ps-4 border-0" style="width: 35%;">Produk</th>
                                                 <th class="py-3 border-0 text-center" style="width: 15%;">Status</th>
                                                 <th class="py-3 border-0 text-center" style="width: 15%;">Stok Fisik</th>
-                                                <th class="py-3 border-0 text-end" style="width: 20%;">Nilai Aset (IDR)</th>
+                                                <th class="py-3 border-0 text-end" style="width: 15%;">Nilai Aset (IDR)</th>
+                                                <th class="py-3 border-0 text-end" style="width: 15%;">Nilai Aset Jual (IDR)</th>
                                                 <th class="py-3 border-0 text-end pe-4" style="width: 15%;">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody id="stock-table-body" class="bg-white">
                                             <tr>
-                                                <td colspan="5" class="text-center py-5 text-muted">
+                                                <td colspan="6" class="text-center py-5 text-muted">
                                                     <div class="spinner-border text-primary mb-2" role="status"></div>
                                                     <p class="mb-0 small">Sedang memuat data stok...</p>
                                                 </td>
@@ -505,6 +506,7 @@
                                                                                                                     <td class="text-center">${statusBadge}</td>
                                                                                                                     <td class="text-center fw-bold fs-6">${new Intl.NumberFormat('id-ID').format(qty)} <small class="text-muted fw-normal">${item.satuan}</small></td>
                                                                                                                     <td class="text-end text-muted font-monospace">${formatCurrency(qty * item.harga_beli)}</td>
+                                                                                                                    <td class="text-end text-muted font-monospace">${formatCurrency(qty * (item.harga_jual || 0))}</td>
                                                                                                                     <td class="text-end pe-4">
                                                                                                                         <div class="btn-group">
                                                                                                                             <button class="btn btn-sm btn-light border" onclick="showFifoDetail(${item.id})" title="Detail FIFO"><i class="iconoir-list"></i></button>
@@ -516,17 +518,17 @@
                         });
 
                         if (tbody.children.length === 0) {
-                            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted">Tidak ada data yang cocok dengan filter status.</td></tr>';
+                            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">Tidak ada data yang cocok dengan filter status.</td></tr>';
                         }
 
                         renderPagination(res.data, 'stock-pagination-container', 'stock-pagination-info', loadStockData);
                     } else {
-                        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted">Belum ada data stok.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">Belum ada data stok.</td></tr>';
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    document.getElementById('stock-table-body').innerHTML = '<tr><td colspan="5" class="text-center py-5 text-danger">Gagal memuat data.</td></tr>';
+                    document.getElementById('stock-table-body').innerHTML = '<tr><td colspan="6" class="text-center py-5 text-danger">Gagal memuat data.</td></tr>';
                 });
         }
 

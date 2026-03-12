@@ -305,24 +305,51 @@
             tr.querySelector('.btn-cancel-inline').onclick = () => tr.remove();
 
             tr.querySelector('.btn-save-inline').onclick = async () => {
+                const supplierId = tsProductSupplier.getValue();
+                const brandId = tsProductBrand.getValue();
+                const categoryId = tsProductKategori.getValue();
+                const coaId = tsCOA.getValue();
+                const kemasanRaw = tr.querySelector('.in-kemasan').value;
+                const kemasanVal = kemasanRaw === '' ? null : parseInt(kemasanRaw, 10);
+
                 const payload = {
                     sku_kode: skuInput.value,
                     nama_produk: tr.querySelector('.in-nama').value,
-                    supplier_id: tsProductSupplier.getValue(),
-                    brand_id: tsProductBrand.getValue(),
-                    product_category_id: tsProductKategori.getValue(),
-                    kemasan: tr.querySelector('.in-kemasan').value,
+                    supplier_id: supplierId,
+                    brand_id: brandId,
+                    product_category_id: categoryId,
+                    kemasan: Number.isFinite(kemasanVal) ? kemasanVal : null,
                     satuan: tr.querySelector('.in-satuan').value,
                     harga_beli: inBeli.value.replace(/\./g, ''),
                     harga_jual: inJual.value.replace(/\./g, ''),
                     track_stock: 1,
                     akun_penjualan_id: 1,
                     akun_pembelian_id: 1,
-                    coa_id: tsCOA.getValue()
+                    coa_id: coaId
                 };
 
                 if (!payload.nama_produk || !payload.sku_kode) {
                     alert('Nama dan SKU wajib diisi');
+                    return;
+                }
+                if (!payload.supplier_id) {
+                    alert('Supplier wajib dipilih');
+                    return;
+                }
+                if (!payload.brand_id) {
+                    alert('Brand wajib dipilih. Jika brand belum ada untuk supplier ini, silakan buat brand terlebih dahulu.');
+                    return;
+                }
+                if (!payload.product_category_id) {
+                    alert('Kategori wajib dipilih');
+                    return;
+                }
+                if (!payload.coa_id) {
+                    alert('COA wajib dipilih');
+                    return;
+                }
+                if (payload.kemasan !== null && !Number.isInteger(payload.kemasan)) {
+                    alert('Kemasan harus berupa angka');
                     return;
                 }
 
@@ -343,7 +370,12 @@
                         alert('Produk berhasil ditambahkan');
                         loadProductData();
                     } else {
-                        alert('Gagal: ' + result.message);
+                        if (result.errors && typeof result.errors === 'object') {
+                            const messages = Object.values(result.errors).flat().join('\n');
+                            alert('Validasi gagal:\n' + messages);
+                        } else {
+                            alert('Gagal: ' + (result.message || 'Terjadi kesalahan.'));
+                        }
                     }
                 } catch (e) {
                     console.error(e);
@@ -477,19 +509,50 @@
             editRow.querySelector('.btn-cancel-inline').onclick = () => loadProductData();
 
             editRow.querySelector('.btn-save-inline').onclick = async () => {
+                const supplierId = tsSupplier.getValue();
+                const brandId = tsBrand.getValue();
+                const categoryId = tsKategori.getValue();
+                const coaId = tsCOA.getValue();
+                const kemasanRaw = editRow.querySelector('.in-kemasan').value;
+                const kemasanVal = kemasanRaw === '' ? null : parseInt(kemasanRaw, 10);
+
                 const payload = {
                     sku_kode: item.sku_kode,
                     nama_produk: editRow.querySelector('.in-nama').value,
-                    supplier_id: tsSupplier.getValue(),
-                    brand_id: tsBrand.getValue(),
-                    product_category_id: tsKategori.getValue(),
-                    kemasan: editRow.querySelector('.in-kemasan').value,
+                    supplier_id: supplierId,
+                    brand_id: brandId,
+                    product_category_id: categoryId,
+                    kemasan: Number.isFinite(kemasanVal) ? kemasanVal : null,
                     satuan: editRow.querySelector('.in-satuan').value,
                     harga_beli: inBeliEdit.value.replace(/\./g, ''),
                     harga_jual: inJualEdit.value.replace(/\./g, ''),
-                    coa_id: tsCOA.getValue(),
+                    coa_id: coaId,
                     track_stock: 1
                 };
+                if (!payload.nama_produk) {
+                    alert('Nama produk wajib diisi');
+                    return;
+                }
+                if (!payload.supplier_id) {
+                    alert('Supplier wajib dipilih');
+                    return;
+                }
+                if (!payload.brand_id) {
+                    alert('Brand wajib dipilih. Jika brand belum ada untuk supplier ini, silakan buat brand terlebih dahulu.');
+                    return;
+                }
+                if (!payload.product_category_id) {
+                    alert('Kategori wajib dipilih');
+                    return;
+                }
+                if (!payload.coa_id) {
+                    alert('COA wajib dipilih');
+                    return;
+                }
+                if (payload.kemasan !== null && !Number.isInteger(payload.kemasan)) {
+                    alert('Kemasan harus berupa angka');
+                    return;
+                }
 
                 try {
                     const saveRes = await fetch(`${PRODUCT_URL}/${id}`, {
@@ -508,7 +571,12 @@
                         alert('Produk berhasil diperbarui');
                         loadProductData();
                     } else {
-                        alert('Gagal memperbarui: ' + saveResult.message);
+                        if (saveResult.errors && typeof saveResult.errors === 'object') {
+                            const messages = Object.values(saveResult.errors).flat().join('\n');
+                            alert('Validasi gagal:\n' + messages);
+                        } else {
+                            alert('Gagal memperbarui: ' + (saveResult.message || 'Terjadi kesalahan.'));
+                        }
                     }
                 } catch (e) {
                     console.error(e);

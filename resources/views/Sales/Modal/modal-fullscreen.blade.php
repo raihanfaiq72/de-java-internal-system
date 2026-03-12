@@ -101,7 +101,7 @@
                                                         <select id="modal_sales_id" class="form-select f-input">
                                                             <option value="">Pilih Sales...</option>
                                                             @foreach($users ?? [] as $u)
-                                                                <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                                                <option value="{{ $u->id }}" @if($u->id == auth()->id()) selected @endif>{{ $u->name }}</option>
                                                             @endforeach
                                                         </select>
                                                     @else

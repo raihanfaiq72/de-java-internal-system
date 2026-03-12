@@ -88,7 +88,7 @@ Route::middleware(['auth'])->group(function () {
         // Salary & Attendance
         Route::resource('salary-periods', App\Http\Controllers\Api\SalaryPeriodController::class)->only(['index', 'store', 'show', 'destroy']);
         Route::post('salary-periods/{salary_period}/slips/store-one', [App\Http\Controllers\Api\SalaryPeriodController::class, 'storeOne'])->name('salary-periods.slips.store-one');
-        Route::resource('salary-slips', App\Http\Controllers\Api\SalarySlipController::class)->only(['update']);
+        Route::resource('salary-slips', App\Http\Controllers\Api\SalarySlipController::class)->only(['update', 'destroy']);
         Route::get('salary-slips/{salary_slip}/print', [App\Http\Controllers\Api\SalarySlipController::class, 'print'])->name('salary-slips.print');
         Route::post('salary-slips/{salary_slip}/publish', [App\Http\Controllers\Api\SalarySlipController::class, 'publish'])->name('salary-slips.publish');
 

@@ -55,10 +55,27 @@ class ProductController extends Controller
         $validator = Validator::make($request->all(), [
             'sku_kode' => 'required|unique:products,sku_kode',
             'nama_produk' => 'required',
-            'supplier_id' => 'nullable|exists:mitras,id',
-            'brand_id' => 'nullable|exists:brands,id',
+            'supplier_id' => 'required|exists:mitras,id',
+            'brand_id' => 'required|exists:brands,id',
+            'product_category_id' => 'required|exists:product_categories,id',
+            'coa_id' => 'required|exists:chart_of_accounts,id',
             'kemasan' => 'nullable|integer|min:1',
             'satuan' => 'nullable|string|max:20',
+            'harga_beli' => 'nullable|numeric|min:0',
+            'harga_jual' => 'nullable|numeric|min:0',
+        ], [
+            'sku_kode.required' => 'SKU wajib diisi.',
+            'sku_kode.unique' => 'SKU sudah digunakan. Silakan gunakan SKU lain.',
+            'nama_produk.required' => 'Nama produk wajib diisi.',
+            'supplier_id.required' => 'Supplier wajib dipilih.',
+            'supplier_id.exists' => 'Supplier tidak valid.',
+            'brand_id.required' => 'Brand wajib dipilih.',
+            'brand_id.exists' => 'Brand tidak valid.',
+            'product_category_id.required' => 'Kategori wajib dipilih.',
+            'product_category_id.exists' => 'Kategori tidak valid.',
+            'coa_id.required' => 'COA wajib dipilih.',
+            'coa_id.exists' => 'COA tidak valid.',
+            'kemasan.integer' => 'Kemasan harus berupa angka.',
         ]);
 
         if ($validator->fails()) {
@@ -72,7 +89,11 @@ class ProductController extends Controller
         $input = $request->all();
         $input['office_id'] = session('active_office_id');
 
-        $data = Product::create($input);
+        try {
+            $data = Product::create($input);
+        } catch (\Throwable $e) {
+            return apiResponse(false, 'Gagal menyimpan produk. Periksa data Brand, Supplier, Kategori, dan COA.', null, null, 422);
+        }
 
         return apiResponse(true, 'Produk berhasil ditambahkan', $data, null, 201);
     }
@@ -88,10 +109,23 @@ class ProductController extends Controller
             'nama_produk' => 'required',
             'harga_beli' => 'nullable|numeric|min:0',
             'harga_jual' => 'nullable|numeric|min:0',
-            'supplier_id' => 'nullable|exists:mitras,id',
-            'brand_id' => 'nullable|exists:brands,id',
+            'supplier_id' => 'required|exists:mitras,id',
+            'brand_id' => 'required|exists:brands,id',
+            'product_category_id' => 'required|exists:product_categories,id',
+            'coa_id' => 'required|exists:chart_of_accounts,id',
             'kemasan' => 'nullable|integer|min:1',
             'satuan' => 'nullable|string|max:20',
+        ], [
+            'nama_produk.required' => 'Nama produk wajib diisi.',
+            'supplier_id.required' => 'Supplier wajib dipilih.',
+            'supplier_id.exists' => 'Supplier tidak valid.',
+            'brand_id.required' => 'Brand wajib dipilih.',
+            'brand_id.exists' => 'Brand tidak valid.',
+            'product_category_id.required' => 'Kategori wajib dipilih.',
+            'product_category_id.exists' => 'Kategori tidak valid.',
+            'coa_id.required' => 'COA wajib dipilih.',
+            'coa_id.exists' => 'COA tidak valid.',
+            'kemasan.integer' => 'Kemasan harus berupa angka.',
         ]);
 
         if ($validator->fails()) {
@@ -99,7 +133,11 @@ class ProductController extends Controller
         }
 
         $before = $data->toArray();
-        $data->update($request->all());
+        try {
+            $data->update($request->all());
+        } catch (\Throwable $e) {
+            return apiResponse(false, 'Gagal menyimpan perubahan produk. Periksa data Brand, Supplier, Kategori, dan COA.', null, null, 422);
+        }
 
         return apiResponse(true, 'Produk berhasil diperbarui', $data);
     }
