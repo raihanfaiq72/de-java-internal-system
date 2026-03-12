@@ -165,7 +165,13 @@ class InvoiceReportController extends Controller
         $totalSoldQty = $soldProducts->sum('total_qty');
 
         // --- Tab 4: Laporan Invoice Per Produk ---
-        $prodIdFilter = $request->product_id;
+        $prodIdFilter = $request->input('product_id', []);
+        if (! is_array($prodIdFilter)) {
+            $prodIdFilter = [$prodIdFilter];
+        }
+        $prodIdFilter = array_values(array_filter($prodIdFilter, function ($v) {
+            return $v !== null && $v !== '';
+        }));
         $invTypeFilter = $request->invoice_type;
         $payStatusFilter = $request->payment_status;
 
@@ -190,8 +196,8 @@ class InvoiceReportController extends Controller
                 'invoice_items.invoice_id'
             );
 
-        if ($prodIdFilter) {
-            $itemsQuery->where('invoice_items.produk_id', $prodIdFilter);
+        if (! empty($prodIdFilter)) {
+            $itemsQuery->whereIn('invoice_items.produk_id', $prodIdFilter);
         }
         if ($invTypeFilter) {
             $itemsQuery->where('invoices.tipe_invoice', $invTypeFilter);
@@ -416,7 +422,13 @@ class InvoiceReportController extends Controller
         $response['html_products'] = view('Report.Invoice._tab_products', compact('soldProducts', 'totalSoldQty'))->render();
 
         // --- Tab 4: Invoice Items ---
-        $prodIdFilter = $request->product_id;
+        $prodIdFilter = $request->input('product_id', []);
+        if (! is_array($prodIdFilter)) {
+            $prodIdFilter = [$prodIdFilter];
+        }
+        $prodIdFilter = array_values(array_filter($prodIdFilter, function ($v) {
+            return $v !== null && $v !== '';
+        }));
         $invTypeFilter = $request->invoice_type;
         $payStatusFilter = $request->payment_status;
 
@@ -441,8 +453,8 @@ class InvoiceReportController extends Controller
                 'invoice_items.invoice_id'
             );
 
-        if ($prodIdFilter) {
-            $itemsQuery->where('invoice_items.produk_id', $prodIdFilter);
+        if (! empty($prodIdFilter)) {
+            $itemsQuery->whereIn('invoice_items.produk_id', $prodIdFilter);
         }
         if ($invTypeFilter) {
             $itemsQuery->where('invoices.tipe_invoice', $invTypeFilter);
@@ -633,7 +645,13 @@ class InvoiceReportController extends Controller
                 return view('Report.Invoice.export_sold_products', compact('startDate', 'endDate', 'soldProducts', 'totalSoldQty', 'hiddenColumns'));
 
             case 'invoice_items':
-                $prodIdFilter = $request->product_id;
+                $prodIdFilter = $request->input('product_id', []);
+                if (! is_array($prodIdFilter)) {
+                    $prodIdFilter = [$prodIdFilter];
+                }
+                $prodIdFilter = array_values(array_filter($prodIdFilter, function ($v) {
+                    return $v !== null && $v !== '';
+                }));
                 $invTypeFilter = $request->invoice_type;
                 $payStatusFilter = $request->payment_status;
 
@@ -658,8 +676,8 @@ class InvoiceReportController extends Controller
                         'invoice_items.invoice_id'
                     );
 
-                if ($prodIdFilter) {
-                    $itemsQuery->where('invoice_items.produk_id', $prodIdFilter);
+                if (! empty($prodIdFilter)) {
+                    $itemsQuery->whereIn('invoice_items.produk_id', $prodIdFilter);
                 }
                 if ($invTypeFilter) {
                     $itemsQuery->where('invoices.tipe_invoice', $invTypeFilter);

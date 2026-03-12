@@ -1,5 +1,9 @@
 @extends('Layout.main')
 
+@push('css')
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+@endpush
+
 @section('main')
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <div class="page-wrapper">
@@ -61,10 +65,12 @@
                             <div class="row align-items-end g-3 mt-2">
                                 <div class="col-md-3">
                                     <label class="form-label fw-bold small text-muted">Produk</label>
-                                    <select class="form-select" name="product_id">
-                                        <option value="">Semua Produk</option>
+                                    @php
+                                        $selectedProducts = (array) request('product_id', []);
+                                    @endphp
+                                    <select class="form-select" name="product_id[]" multiple>
                                         @foreach($products as $p)
-                                            <option value="{{ $p->id }}" {{ request('product_id') == $p->id ? 'selected' : '' }}>
+                                            <option value="{{ $p->id }}" {{ in_array($p->id, $selectedProducts) ? 'selected' : '' }}>
                                                 {{ $p->nama_produk }}</option>
                                         @endforeach
                                     </select>
@@ -791,3 +797,20 @@
                 </script>
             @endpush
 @endsection
+
+@push('js')
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const productSelect = document.querySelector('select[name="product_id[]"]');
+            if (productSelect) {
+                new TomSelect(productSelect, {
+                    plugins: ['remove_button'],
+                    create: false,
+                    persist: false,
+                    placeholder: 'Pilih Produk...',
+                });
+            }
+        });
+    </script>
+@endpush

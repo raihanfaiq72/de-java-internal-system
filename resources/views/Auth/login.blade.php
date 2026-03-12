@@ -85,7 +85,7 @@
             <div class="col-12 d-flex justify-content-center align-items-center vh-100">
                 <div class="login-card">
                     <div class="text-center mb-4">
-                        <img src="{{url('assets/images/logo-sm.png')}}" height="60" alt="logo">
+                        <img src="{{url('assets/images/djv.jpeg')}}" height="60" alt="logo">
                         <h4 class="mt-3 mb-1">Djava System</h4>
                         <p class="text-muted small">Silakan masuk ke akun Anda</p>
                     </div>
