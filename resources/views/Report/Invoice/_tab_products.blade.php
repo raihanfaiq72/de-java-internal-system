@@ -1,4 +1,4 @@
-<div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+<div class="card border-0 shadow-sm rounded-3">
     @php
         $metric = request('product_metric', 'both');
     @endphp
@@ -10,11 +10,13 @@
                 @if($metric === 'qty')
                     Total Qty: <span class="fw-bold text-success">{{ number_format($totalSoldQty, 0, ',', '.') }}</span>
                 @elseif($metric === 'value')
-                    Total Value: <span class="fw-bold text-primary">Rp {{ number_format($totalSoldValue ?? 0, 0, ',', '.') }}</span>
+                    Total Value: <span class="fw-bold text-primary">Rp
+                        {{ number_format($totalSoldValue ?? 0, 0, ',', '.') }}</span>
                 @else
                     Total Qty: <span class="fw-bold text-success">{{ number_format($totalSoldQty, 0, ',', '.') }}</span>
                     <span class="mx-2">•</span>
-                    Total Value: <span class="fw-bold text-primary">Rp {{ number_format($totalSoldValue ?? 0, 0, ',', '.') }}</span>
+                    Total Value: <span class="fw-bold text-primary">Rp
+                        {{ number_format($totalSoldValue ?? 0, 0, ',', '.') }}</span>
                 @endif
                 <span class="ms-1">(Berdasarkan pembayaran periode ini)</span>
             </small>
@@ -26,7 +28,7 @@
                     <i class="iconoir-view-columns-3 me-1"></i> Kolom
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow p-2 colToggleMenu" data-target="#table-products"
-                    style="min-width: 200px; max-height: 300px; overflow-y: auto;">
+                    style="min-width: 200px; max-height: 450px; overflow-y: auto;">
                     <!-- Column toggles via JS -->
                 </ul>
             </div>
@@ -66,12 +68,15 @@
                         <td>{{ $product->nama_kategori ?? '-' }}</td>
                         <td>{{ $product->satuan }}</td>
                         @if($metric === 'qty')
-                            <td class="px-4 text-end fw-bold text-success">{{ number_format($product->total_qty, 0, ',', '.') }}</td>
+                            <td class="px-4 text-end fw-bold text-success">{{ number_format($product->total_qty, 0, ',', '.') }}
+                            </td>
                         @elseif($metric === 'value')
-                            <td class="px-4 text-end fw-bold text-primary">Rp {{ number_format($product->total_value ?? 0, 0, ',', '.') }}</td>
+                            <td class="px-4 text-end fw-bold text-primary">Rp
+                                {{ number_format($product->total_value ?? 0, 0, ',', '.') }}</td>
                         @else
                             <td class="text-end fw-bold text-success">{{ number_format($product->total_qty, 0, ',', '.') }}</td>
-                            <td class="px-4 text-end fw-bold text-primary">Rp {{ number_format($product->total_value ?? 0, 0, ',', '.') }}</td>
+                            <td class="px-4 text-end fw-bold text-primary">Rp
+                                {{ number_format($product->total_value ?? 0, 0, ',', '.') }}</td>
                         @endif
                     </tr>
                 @empty
@@ -91,11 +96,13 @@
                         <td class="px-4 text-end text-success">{{ number_format($totalSoldQty, 0, ',', '.') }}</td>
                     @elseif($metric === 'value')
                         <td colspan="4" class="px-4 text-end text-uppercase text-muted small">Total Value</td>
-                        <td class="px-4 text-end text-primary">Rp {{ number_format($totalSoldValue ?? 0, 0, ',', '.') }}</td>
+                        <td class="px-4 text-end text-primary">Rp {{ number_format($totalSoldValue ?? 0, 0, ',', '.') }}
+                        </td>
                     @else
                         <td colspan="4" class="px-4 text-end text-uppercase text-muted small">Total Kuantitas</td>
                         <td class="text-end text-success">{{ number_format($totalSoldQty, 0, ',', '.') }}</td>
-                        <td class="px-4 text-end text-primary">Rp {{ number_format($totalSoldValue ?? 0, 0, ',', '.') }}</td>
+                        <td class="px-4 text-end text-primary">Rp {{ number_format($totalSoldValue ?? 0, 0, ',', '.') }}
+                        </td>
                     @endif
                 </tr>
             </tfoot>

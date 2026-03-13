@@ -161,11 +161,11 @@ return [
                 'route' => 'report.invoice',
                 'icon' => 'iconoir-graph-up',
             ],
-            [
-                'title' => 'Laporan Invoice Pembelian',
-                'route' => 'report.purchase',
-                'icon' => 'iconoir-reports',
-            ],
+            // [
+            //     'title' => 'Laporan Invoice Pembelian',
+            //     'route' => 'report.purchase',
+            //     'icon' => 'iconoir-reports',
+            // ],
             [
                 'title' => 'Laporan Stock',
                 'route' => 'report.stock',

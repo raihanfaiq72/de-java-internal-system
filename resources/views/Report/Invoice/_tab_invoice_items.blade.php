@@ -1,4 +1,4 @@
-<div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+<div class="card border-0 shadow-sm rounded-3">
     <div class="card-header bg-white border-bottom py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
             <h6 class="mb-0 fw-bold text-dark">Laporan Invoice Per Produk</h6>
@@ -14,7 +14,7 @@
                 <button class="btn btn-light border btn-sm shadow-sm fw-bold dropdown-toggle text-dark" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
                     <i class="iconoir-view-columns-3 me-1"></i> Kolom
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow p-2 colToggleMenu" data-target="#table-invoice-products" style="min-width: 200px; max-height: 250px; overflow-y: auto;">
+                <ul class="dropdown-menu dropdown-menu-end shadow p-2 colToggleMenu" data-target="#table-invoice-products" style="min-width: 200px; max-height: 450px; overflow-y: auto;">
                     <!-- Column toggles via JS -->
                 </ul>
             </div>
