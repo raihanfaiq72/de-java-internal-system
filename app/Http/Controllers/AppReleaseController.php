@@ -176,7 +176,7 @@ class AppReleaseController extends Controller
         // Increment download count
         $appRelease->incrementDownloadCount();
 
-        return Storage::download($appRelease->file_path, $appRelease->file_name);
+        return Storage::disk('public')->download($appRelease->file_path, $appRelease->file_name);
     }
 
     /**

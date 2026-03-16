@@ -64,9 +64,9 @@
                             @forelse($releases as $release)
                                 <div class="col-md-6 mb-3">
                                     <div class="card h-100">
-                                        <div class="card-body">
+                                        <div class="card-body"> 
                                             <div class="text-center mb-3">
-                                                <i class="fa fa-android fa-3x text-success"></i>
+                                                <i class="fa-brands fa-android fa-3x text-success"></i>
                                             </div>
                                             
                                             <h5 class="text-center mb-2">{{ $release->version }}</h5>
@@ -114,7 +114,9 @@
                                             @endif
                                             
                                             <div class="text-center">
-                                                <a href="{{ route('public.download', $release) }}" class="btn btn-{{ $release->is_latest ? 'success' : 'primary' }} w-100">
+                                                <a href="{{ route('public.download', $release) }}" 
+                                                   class="btn btn-{{ $release->is_latest ? 'success' : 'primary' }} w-100 download-btn"
+                                                   data-loading-text="Downloading...">
                                                     <i class="fa fa-download me-1"></i>
                                                     {{ $release->is_latest ? 'Download Terbaru' : 'Download' }}
                                                 </a>
@@ -140,4 +142,45 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle download buttons
+            const downloadBtns = document.querySelectorAll('.download-btn');
+            
+            downloadBtns.forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    const originalText = this.innerHTML;
+                    const loadingText = this.getAttribute('data-loading-text');
+                    
+                    // Show loading state
+                    this.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i>' + loadingText;
+                    this.classList.add('disabled');
+                    this.style.pointerEvents = 'none';
+                    
+                    // Create temporary link for download
+                    const downloadUrl = this.href;
+                    const tempLink = document.createElement('a');
+                    tempLink.href = downloadUrl;
+                    tempLink.style.display = 'none';
+                    document.body.appendChild(tempLink);
+                    
+                    // Trigger download
+                    tempLink.click();
+                    
+                    // Remove temporary link
+                    document.body.removeChild(tempLink);
+                    
+                    // Reset button after delay
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                        this.classList.remove('disabled');
+                        this.style.pointerEvents = 'auto';
+                    }, 2000);
+                    
+                    e.preventDefault();
+                });
+            });
+        });
+    </script>
 @endsection

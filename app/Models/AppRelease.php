@@ -145,25 +145,6 @@ class AppRelease extends Model
     }
 
     /**
-     * Check if file exists in storage
-     */
-    public function fileExists()
-    {
-        return Storage::exists($this->file_path);
-    }
-
-    /**
-     * Delete file from storage
-     */
-    public function deleteFile()
-    {
-        if ($this->fileExists()) {
-            return Storage::delete($this->file_path);
-        }
-        return false;
-    }
-
-    /**
      * Store uploaded file and calculate hash
      */
     public static function storeFile($file, $platform = 'android')
@@ -180,6 +161,25 @@ class AppRelease extends Model
             'file_hash' => $fileHash,
             'file_size' => $fileSize,
         ];
+    }
+
+    /**
+     * Check if file exists in storage
+     */
+    public function fileExists()
+    {
+        return Storage::disk('public')->exists($this->file_path);
+    }
+
+    /**
+     * Delete file from storage
+     */
+    public function deleteFile()
+    {
+        if ($this->fileExists()) {
+            return Storage::disk('public')->delete($this->file_path);
+        }
+        return false;
     }
 
     /**
