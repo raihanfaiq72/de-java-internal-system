@@ -1,162 +1,170 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Slip Gaji - {{ $salarySlip->employee->name }}</title>
+    <title>Slip Gaji</title>
     <style>
         body {
-            font-family: sans-serif;
-            padding: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            color: #000;
+            margin: 0;
+            padding: 10px;
         }
-
-        .header {
+        .wrapper {
+            border: 1px solid #000;
+            padding: 25px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .table-info td {
+            border: 1px solid #000;
+            padding: 4px 10px;
+        }
+        .table-title {
+            width: 120px;
+            float: right;
+        }
+        .table-title td {
+            border: 1px solid #000;
+            padding: 10px;
             text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
-        }
-
-        .company-name {
-            font-size: 24px;
             font-weight: bold;
+            line-height: 1.4;
         }
-
-        .slip-title {
-            font-size: 18px;
-            margin-top: 10px;
+        .section-title {
+            font-weight: bold;
+            margin-top: 30px;
+            margin-bottom: 5px;
             text-transform: uppercase;
         }
-
-        .details-table {
-            width: 100%;
-            margin-bottom: 20px;
+        .table-earnings td {
+            padding: 3px 0;
+            vertical-align: top;
         }
-
-        .details-table td {
-            padding: 5px;
+        .col-desc { width: 30%; }
+        .col-calc { width: 40%; }
+        .col-eq { width: 5%; text-align: center; }
+        .col-amount { width: 25%; }
+        .box-total {
+            border: 2px solid #000;
+            margin-top: 5px;
         }
-
-        .salary-table {
-            width: 100%;
-            border-collapse: collapse;
+        .box-total td {
+            padding: 4px 5px;
+            font-weight: bold;
+        }
+        .row-total {
+            border-bottom: 1px solid #000;
+        }
+        .row-ket {
+            text-align: center;
+            font-style: italic;
+        }
+        .table-signature {
             margin-top: 20px;
         }
-
-        .salary-table th,
-        .salary-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
+        .table-signature td {
+            vertical-align: top;
         }
-
-        .salary-table th {
-            background-color: #f2f2f2;
-            text-align: left;
-        }
-
-        .total-row {
-            font-weight: bold;
-            background-color: #eee;
-        }
-
-        .footer {
-            margin-top: 50px;
-            text-align: center;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .signature-box {
-            width: 180px;
-            text-align: center;
-        }
-
-        .signature-line {
-            border-bottom: 1px solid #000;
-            margin-top: 60px;
+        .spacer {
+            height: 60px;
         }
     </style>
 </head>
-
 <body>
 
-    <div class="header">
-        <div class="company-name">DE JAVA INTERNAL SYSTEM</div>
-        <div class="slip-title">SLIP GAJI KARYAWAN</div>
-        <div>Periode: {{ $salarySlip->salaryPeriod->name }}</div>
-    </div>
+    <div class="wrapper">
+        <table>
+            <tr>
+                <td style="width: 50%; vertical-align: top;">
+                    <table class="table-info" style="width: 80%;">
+                        <tr>
+                            <td style="width: 30%;">NAMA</td>
+                            <td>{{ $salarySlip->employee->name }}</td>
+                        </tr>
+                        <tr>
+                            <td>NIK</td>
+                            <td>{{ $salarySlip->employee->nik }}</td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 50%; vertical-align: top;">
+                    <table class="table-title">
+                        <tr>
+                            <td>SLIP<br>GAJI<br>KARYAWAN</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
 
-    <table class="details-table">
-        <tr>
-            <td width="150"><strong>Nama Karyawan</strong></td>
-            <td>: {{ $salarySlip->employee->name }}</td>
-            <td width="150"><strong>NIK</strong></td>
-            <td>: {{ $salarySlip->employee->nik }}</td>
-        </tr>
-        <tr>
-            <td><strong>Jabatan</strong></td>
-            <td>: {{ $salarySlip->employee->position }}</td>
-            <td><strong>Status</strong></td>
-            <td>: {{ ucfirst($salarySlip->employee->status) }}</td>
-        </tr>
-    </table>
+        <div class="section-title">
+            PENGHASILAN (PERIODE {{ strtoupper($salarySlip->salaryPeriod->name) }})
+        </div>
 
-    <table class="salary-table">
-        <thead>
+        <table class="table-earnings">
             <tr>
-                <th>Deskripsi</th>
-                <th style="text-align: right;">Jumlah (Rp)</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Gaji Pokok ({{ $salarySlip->details['work_days'] ?? 0 }} hari kerja)</td>
-                <td style="text-align: right;">{{ number_format($salarySlip->basic_salary, 0, ',', '.') }}</td>
+                <td class="col-desc">PREMI</td>
+                <td class="col-calc"></td>
+                <td class="col-eq">=</td>
+                <td class="col-amount">Rp. {{ number_format($salarySlip->premi, 0, ',', '.') }}</td>
             </tr>
             <tr>
-                <td>Premi / Bonus</td>
-                <td style="text-align: right;">{{ number_format($salarySlip->premi, 0, ',', '.') }}</td>
+                <td class="col-desc">GAJI HARIAN</td>
+                <td class="col-calc">RP. {{ number_format($salarySlip->details['daily_rate'] ?? 50000, 0, ',', '.') }} x {{ $salarySlip->details['work_days'] ?? 0 }}(HARI)</td>
+                <td class="col-eq">=</td>
+                <td class="col-amount">Rp. {{ number_format($salarySlip->basic_salary, 0, ',', '.') }}</td>
             </tr>
             <tr>
-                <td>Uang Makan</td>
-                <td style="text-align: right;">{{ number_format($salarySlip->meal_allowance, 0, ',', '.') }}</td>
+                <td class="col-desc">UANG MAKAN</td>
+                <td class="col-calc">RP. {{ number_format(($salarySlip->meal_allowance / ($salarySlip->details['work_days'] ?? 1)), 0, ',', '.') }} x {{ $salarySlip->details['work_days'] ?? 0 }}(HARI)</td>
+                <td class="col-eq">=</td>
+                <td class="col-amount">Rp. {{ number_format($salarySlip->meal_allowance, 0, ',', '.') }}</td>
             </tr>
             <tr>
-                <td class="text-danger">Potongan Keterlambatan</td>
-                <td style="text-align: right; color: red;">-
-                    {{ number_format($salarySlip->late_deduction, 0, ',', '.') }}</td>
+                <td class="col-desc">KAS BON</td>
+                <td class="col-calc"></td>
+                <td class="col-eq">=</td>
+                <td class="col-amount">Rp. {{ number_format($salarySlip->other_deduction, 0, ',', '.') }}</td>
             </tr>
-            <tr>
-                <td class="text-danger">Potongan Lainnya</td>
-                <td style="text-align: right; color: red;">-
-                    {{ number_format($salarySlip->other_deduction, 0, ',', '.') }}</td>
-            </tr>
-            <tr class="total-row">
-                <td>TOTAL DITERIMA</td>
-                <td style="text-align: right;">{{ number_format($salarySlip->total_salary, 0, ',', '.') }}</td>
-            </tr>
-        </tbody>
-    </table>
+        </table>
 
-    <div class="footer">
-        <div class="signature-box">
-            <p>Penerima,</p>
-            <div class="signature-line"></div>
-            <p>{{ $salarySlip->employee->name }}</p>
-        </div>
-        <div class="signature-box">
-            <p>Mengetahui,</p>
-            <div class="signature-line"></div>
-            <p>a.n. Wildan</p>
-        </div>
-        <div class="signature-box">
-            <p>Accounting,</p>
-            <div class="signature-line"></div>
-            <p>Accounting</p>
-        </div>
+        <table class="box-total">
+            <tr class="row-total">
+                <td style="width: 70%;">TOTAL</td>
+                <td style="width: 5%; text-align: center;">=</td>
+                <td style="width: 25%;">Rp. {{ number_format($salarySlip->total_salary, 0, ',', '.') }}</td>
+            </tr>
+            <tr>
+                <td colspan="3" class="row-ket">
+                    KET {{ $salarySlip->details['notes'] ?? ('IZIN ' . (($salarySlip->details['work_days'] ?? 0) - ($salarySlip->details['present'] ?? 0)) . ' HARI, TERLAMBAT ABSEN ' . ($salarySlip->details['late'] ?? 0) . 'X') }}
+                </td>
+            </tr>
+        </table>
+
+        <table class="table-signature">
+            <tr>
+                <td style="width: 35%;">Penerima</td>
+                <td style="width: 30%; text-align: left;">Mengetahui,</td>
+                <td style="width: 35%;">
+                    Senin, 2 Maret 2026<br>
+                    Adm. Finance
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" class="spacer"></td>
+            </tr>
+            <tr>
+                <td>{{ $salarySlip->employee->name }}</td>
+                <td style="text-align: left;">Wildan R</td>
+                <td>Noveka</td>
+            </tr>
+        </table>
     </div>
 
 </body>
-
 </html>
