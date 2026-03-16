@@ -235,7 +235,12 @@
     function updateBadgeFromServer() {
         // Fetch unread count from server
         fetch('{{ route("notifications.unread-count") }}')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 const badge = document.getElementById('notification-badge');
                 if (badge) {
@@ -248,14 +253,20 @@
                 }
             })
             .catch(error => {
-                console.error('Failed to fetch notification count:', error);
+                console.log('Could not fetch notification count (user may not be authenticated):', error.message);
+                // Don't show error to user, just silently fail
             });
     }
 
     function loadNotifications() {
         // Load recent notifications for dropdown
         fetch('{{ route("notifications.recent") }}')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 const list = document.getElementById('notification-list');
                 const emptyMsg = document.getElementById('no-notifications');
@@ -282,7 +293,13 @@
                 }
             })
             .catch(error => {
-                console.error('Failed to load notifications:', error);
+                console.log('Could not load notifications (user may not be authenticated):', error.message);
+                // Show empty message if user is not authenticated
+                const emptyMsg = document.getElementById('no-notifications');
+                if (emptyMsg) {
+                    emptyMsg.style.display = 'block';
+                    emptyMsg.innerHTML = '<small>Notifikasi tidak tersedia</small>';
+                }
             });
     }
 

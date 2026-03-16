@@ -5,26 +5,13 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\User;
 use App\Models\BulkReport;
+use Illuminate\Support\Str;
 
 class TestBulkReportNotifications extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'test:bulk-notifications';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Create test bulk report notifications';
 
-    /**
-     * Execute the console command.
-     */
     public function handle()
     {
         $user = User::first();
@@ -42,6 +29,7 @@ class TestBulkReportNotifications extends Command
 
         // Create bulk report created notification
         $user->notifications()->create([
+            'id' => Str::uuid(),
             'type' => 'success',
             'data' => [
                 'type' => 'bulk_report_created',
@@ -55,6 +43,7 @@ class TestBulkReportNotifications extends Command
 
         // Create bulk report generated notification
         $user->notifications()->create([
+            'id' => Str::uuid(),
             'type' => 'info',
             'data' => [
                 'type' => 'bulk_report_generated',
@@ -68,6 +57,7 @@ class TestBulkReportNotifications extends Command
 
         // Create bulk report printed notification
         $user->notifications()->create([
+            'id' => Str::uuid(),
             'type' => 'warning',
             'data' => [
                 'type' => 'bulk_report_printed',

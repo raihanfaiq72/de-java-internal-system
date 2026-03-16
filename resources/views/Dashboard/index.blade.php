@@ -1,5 +1,7 @@
 @extends('Layout.main')
 
+@include('Layout._dejava_promo')
+
 @section('main')
     <div class="page-wrapper">
         <div class="page-content">
