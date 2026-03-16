@@ -226,7 +226,7 @@
 
 @push('js')
 <script>
-    function openPreview(id) {
+function openPreview(id) {
     const url = `/bulk-reports/${id}/preview`;
     const modalContainer = document.getElementById('modalBulkPreview');
 
@@ -297,7 +297,6 @@ function deleteReport(id, periodName) {
         document.body.appendChild(form);
         form.submit();
     }
-}    }
-    }
+}
 </script>
 @endpush
