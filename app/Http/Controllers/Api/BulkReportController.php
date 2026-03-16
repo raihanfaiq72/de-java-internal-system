@@ -241,7 +241,7 @@ class BulkReportController extends Controller
             ];
 
             $agingData[] = [
-                'customer' => $invoice->mitra->name,
+                'customer' => $invoice->mitra->nama,
                 'invoice_no' => $invoice->nomor_invoice,
                 'due_date' => $dueDate->format('d/m/Y'),
                 'days_overdue' => $daysOverdue,

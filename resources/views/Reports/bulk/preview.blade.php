@@ -86,10 +86,10 @@
                                                 <tr>
                                                     <td>{{ $invoice->tgl_invoice->format('d/m/Y') }}</td>
                                                     <td>{{ $invoice->nomor_invoice }}</td>
-                                                    <td>{{ $invoice->mitra->name }}</td>
+                                                    <td>{{ $invoice->mitra->nama }}</td>
                                                     <td class="fw-bold">Rp {{ number_format($invoice->total_akhir, 0, ',', '.') }}</td>
                                                     <td>
-                                                        <span class="badge bg-{{ $invoice->status_pembayaran == 'Lunas' ? 'success' : 'warning' }} rounded-pill px-3">
+                                                        <span class="badge bg-{{ $invoice->status_pembayaran == 'Paid' ? 'success' : 'warning' }} rounded-pill px-3">
                                                             {{ $invoice->status_pembayaran }}
                                                         </span>
                                                     </td>

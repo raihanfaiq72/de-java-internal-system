@@ -130,9 +130,9 @@
             <tr>
                 <td>{{ $invoice->tgl_invoice->format('d/m/Y') }}</td>
                 <td>{{ $invoice->nomor_invoice }}</td>
-                <td>{{ $invoice->mitra->name }}</td>
+                <td>{{ $invoice->mitra->nama }}</td>
                 <td class="text-right bold">Rp {{ number_format($invoice->total_akhir, 0, ',', '.') }}</td>
-                <td class="text-center">{{ $invoice->status_pembayaran }}</td>
+                <td class="text-center">{{ $invoice->status_pembayaran == 'Paid' ? 'Lunas' : $invoice->status_pembayaran }}</td>
             </tr>
         @empty
             <tr>
