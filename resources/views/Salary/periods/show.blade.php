@@ -31,11 +31,18 @@
                 <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
                     <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
                         <h6 class="mb-0 fw-bold text-dark">Daftar Slip Gaji Karyawan</h6>
-                        @if ($salaryPeriod->status == 'open')
-                            <button class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCreateSlipOne">
-                                <i class="fa fa-plus-circle me-1"></i> Buat Gaji Karyawan
-                            </button>
-                        @endif
+                        <div class="d-flex gap-2">
+                            @if($salaryPeriod->salarySlips->count() > 0)
+                                <button type="button" class="btn btn-success fw-bold px-4 shadow-sm" onclick="openBulkPrint()">
+                                    <i class="fa fa-print me-1"></i> Cetak Massal
+                                </button>
+                            @endif
+                            @if ($salaryPeriod->status == 'open')
+                                <button class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCreateSlipOne">
+                                    <i class="fa fa-plus-circle me-1"></i> Buat Gaji Karyawan
+                                </button>
+                            @endif
+                        </div>
                     </div>
                     <div class="card-body p-4 bg-white">
                         <div class="table-responsive">
@@ -252,6 +259,32 @@
         </div>
     </div>
 
+    <!-- Bulk Print Modal -->
+    <div class="modal fade" id="modalBulkPrint" tabindex="-1" aria-labelledby="modalBulkPrintLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0 rounded-4">
+                <div class="modal-header border-bottom-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold" id="modalBulkPrintLabel">
+                        <i class="fa fa-print text-success me-2"></i> Cetak Massal Slip Gaji
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 ">
+                    <div class="ratio ratio-16x9 border rounded bg-light" style="min-height: 70vh;">
+                        <iframe id="bulk-print-iframe" src="" allowfullscreen></iframe>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light fw-bold px-4" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-success fw-bold px-4 shadow-sm" onclick="triggerBulkPrint()">
+                        <i class="fa fa-print me-1"></i> Cetak Sekarang
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Print Preview Modal -->
     <div class="modal fade" id="modalPrintPreview" tabindex="-1" aria-labelledby="modalPrintPreviewLabel"
         aria-hidden="true">
@@ -318,6 +351,37 @@
 
             if (typeof recalcCreate === 'function') {
                 recalcCreate();
+            }
+        }
+
+        function openBulkPrint() {
+            const url = `{{ url('salary-periods/:id/bulk-print') }}/`.replace(':id', {{ $salaryPeriod->id }});
+            const modalContainer = document.getElementById('modalBulkPrint');
+
+            if (!modalContainer) {
+                console.error('Modal container tidak ditemukan di halaman ini.');
+                return;
+            }
+
+            const iframe = modalContainer.querySelector('iframe');
+
+            if (!iframe) {
+                console.error('Elemen iframe tidak ditemukan di dalam modal.');
+                alert('Gagal memuat preview cetak massal.');
+                return;
+            }
+
+            iframe.src = url;
+
+            const bModal = bootstrap.Modal.getOrCreateInstance(modalContainer);
+            bModal.show();
+        }
+
+        function triggerBulkPrint() {
+            const iframe = document.getElementById('bulk-print-iframe');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
             }
         }
 

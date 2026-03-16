@@ -90,6 +90,13 @@ class SalaryPeriodController extends Controller
         return redirect()->back()->with('success', 'Slip gaji karyawan disimpan.');
     }
 
+    public function bulkPrint(SalaryPeriod $salaryPeriod)
+    {
+        $salaryPeriod->load(['salarySlips.employee']);
+        
+        return view('Salary.slips.bulk-print', compact('salaryPeriod'));
+    }
+
     public function destroy(SalaryPeriod $salaryPeriod)
     {
         if ($salaryPeriod->salarySlips()->where('status', 'paid')->exists()) {
