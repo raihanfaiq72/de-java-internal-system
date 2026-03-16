@@ -1,6 +1,7 @@
 @extends('Layout.main')
 
 @include('Layout._dejava_promo')
+@include('Layout._tour_guide')
 
 @section('main')
     <div class="page-wrapper">
