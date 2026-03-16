@@ -7,10 +7,12 @@ use App\Models\BulkReport;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\DeliveryOrder;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Notification;
 
 class BulkReportController extends Controller
 {
@@ -58,6 +60,15 @@ class BulkReportController extends Controller
             'generated_by' => auth()->id(),
         ]);
 
+        // Send notification to all users
+        $this->sendBulkReportNotification('bulk_report_created', [
+            'title' => 'Laporan Massal Baru',
+            'message' => "Periode $periodName telah ditambahkan ke daftar laporan massal.",
+            'bulk_report_id' => $bulkReport->id,
+            'period_name' => $periodName,
+            'created_by' => auth()->user()->name
+        ]);
+
         return redirect()->route('bulk-reports.index')->with('success', "Periode $periodName telah ditambahkan ke daftar laporan massal.");
     }
 
@@ -85,17 +96,25 @@ class BulkReportController extends Controller
 
     public function generatePDF(BulkReport $bulkReport)
     {
-        // Update status to generated
         $bulkReport->update([
             'status' => 'generated',
             'generated_at' => now(),
         ]);
 
-        // Get all data for the period
+        // Get all data for period
         $salesData = $this->getSalesData($bulkReport->start_date, $bulkReport->end_date);
         $paymentsData = $this->getPaymentsData($bulkReport->start_date, $bulkReport->end_date);
         $arAgingData = $this->getARAgingData($bulkReport->end_date);
         $profitLossData = $this->getProfitLossData($bulkReport->start_date, $bulkReport->end_date);
+
+        // Send notification
+        $this->sendBulkReportNotification('bulk_report_generated', [
+            'title' => 'PDF Laporan Massal Tersedia',
+            'message' => "PDF laporan massal untuk periode {$bulkReport->period_name} telah siap diunduh.",
+            'bulk_report_id' => $bulkReport->id,
+            'period_name' => $bulkReport->period_name,
+            'generated_by' => auth()->user()->name
+        ]);
 
         return view('Reports.bulk.pdf', compact('bulkReport', 'salesData', 'paymentsData', 'arAgingData', 'profitLossData'));
     }
@@ -104,6 +123,15 @@ class BulkReportController extends Controller
     {
         $bulkReport->update([
             'status' => 'printed',
+        ]);
+
+        // Send notification
+        $this->sendBulkReportNotification('bulk_report_printed', [
+            'title' => 'Laporan Massal Dicetak',
+            'message' => "Laporan massal untuk periode {$bulkReport->period_name} telah ditandai sebagai telah dicetak.",
+            'bulk_report_id' => $bulkReport->id,
+            'period_name' => $bulkReport->period_name,
+            'marked_by' => auth()->user()->name
         ]);
 
         return redirect()->route('bulk-reports.index')->with('success', 'Laporan telah ditandai sebagai telah dicetak.');
@@ -116,9 +144,45 @@ class BulkReportController extends Controller
             Storage::delete($bulkReport->file_path);
         }
 
+        $periodName = $bulkReport->period_name;
         $bulkReport->delete();
 
+        // Send notification
+        $this->sendBulkReportNotification('bulk_report_deleted', [
+            'title' => 'Laporan Massal Dihapus',
+            'message' => "Laporan massal untuk periode {$periodName} telah dihapus dari sistem.",
+            'period_name' => $periodName,
+            'deleted_by' => auth()->user()->name
+        ]);
+
         return redirect()->route('bulk-reports.index')->with('success', 'Laporan massal telah dihapus.');
+    }
+
+    private function sendBulkReportNotification($type, $data)
+    {
+        // Get all users who have access to bulk reports
+        $users = User::whereHas('roles', function($query) {
+            $query->whereHas('permissions', function($q) {
+                $q->where('name', 'bulk-reports.index');
+            });
+        })->get();
+
+        foreach ($users as $user) {
+            $user->notifications()->create([
+                'type' => $type === 'bulk_report_created' ? 'success' : 
+                         ($type === 'bulk_report_generated' ? 'info' : 'warning'),
+                'data' => [
+                    'type' => $type,
+                    'title' => $data['title'],
+                    'message' => $data['message'],
+                    'bulk_report_id' => $data['bulk_report_id'] ?? null,
+                    'period_name' => $data['period_name'] ?? null,
+                    'created_by' => $data['created_by'] ?? null,
+                    'marked_by' => $data['marked_by'] ?? null,
+                    'deleted_by' => $data['deleted_by'] ?? null,
+                ]
+            ]);
+        }
     }
 
     private function getSalesData($startDate, $endDate)

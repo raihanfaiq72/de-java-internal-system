@@ -78,8 +78,18 @@
                 handleNotification(notification);
             });
 
-        // Load existing notifications (optional, can be done via API)
-        // loadNotifications();
+        // Load existing notifications and update badge
+        loadNotifications();
+        updateBadgeFromServer();
+
+        // Load notifications when dropdown is opened
+        const notificationBell = document.getElementById('notification-bell');
+        if (notificationBell) {
+            notificationBell.addEventListener('click', function() {
+                // Load fresh notifications when dropdown opens
+                loadNotifications();
+            });
+        }
     });
 
     function handleNotification(notification) {
@@ -112,6 +122,15 @@
         if (notification.type === 'warning') { iconClass = 'iconoir-warning-circle'; bgClass = 'bg-warning-subtle text-warning'; }
         if (notification.type === 'error') { iconClass = 'iconoir-x-circle'; bgClass = 'bg-danger-subtle text-danger'; }
 
+        // Special icons for bulk reports
+        if(notification.type && notification.type.includes('bulk_report')) {
+            iconClass = 'iconoir-file-text';
+            if(notification.type === 'bulk_report_created') { bgClass = 'bg-success-subtle text-success'; }
+            else if(notification.type === 'bulk_report_generated') { bgClass = 'bg-info-subtle text-info'; }
+            else if(notification.type === 'bulk_report_printed') { bgClass = 'bg-warning-subtle text-warning'; }
+            else if(notification.type === 'bulk_report_deleted') { bgClass = 'bg-danger-subtle text-danger'; }
+        }
+
         toast.innerHTML = `
             <a href="/notifications/${notification.id}" class="text-decoration-none d-flex align-items-start w-100 text-reset">
                 <div class="flex-shrink-0 ${bgClass} thumb-md rounded-circle d-flex align-items-center justify-content-center">
@@ -138,21 +157,14 @@
             if (bell) {
                 const rect = bell.getBoundingClientRect();
                 
-                // Calculate destination relative to viewport
-                // We want to animate TO the bell's position
-                // Since fixed positioning is used, we can just set top/left (or right)
-                
-                // Actually, CSS transition to specific coordinates is tricky if we don't calculate exact pixels.
-                // A simpler "fly" effect is to scale down and fade out while moving generally towards top right.
-                
                 toast.style.top = (rect.top + 10) + 'px';
-                toast.style.right = (window.innerWidth - rect.right + 10) + 'px'; // Distance from right edge
+                toast.style.right = (window.innerWidth - rect.right + 10) + 'px';
                 toast.style.transform = 'scale(0.1)';
                 toast.style.opacity = '0';
                 
                 setTimeout(() => {
                     toast.remove();
-                }, 800); // Match transition duration
+                }, 800);
             } else {
                 toast.classList.remove('show');
                 setTimeout(() => toast.remove(), 500);
@@ -175,6 +187,15 @@
         if (notification.type === 'warning') { iconClass = 'iconoir-warning-circle'; bgClass = 'bg-warning-subtle text-warning'; }
         if (notification.type === 'error') { iconClass = 'iconoir-x-circle'; bgClass = 'bg-danger-subtle text-danger'; }
 
+        // Special icons for bulk reports
+        if(notification.type && notification.type.includes('bulk_report')) {
+            iconClass = 'iconoir-file-text';
+            if(notification.type === 'bulk_report_created') { bgClass = 'bg-success-subtle text-success'; }
+            else if(notification.type === 'bulk_report_generated') { bgClass = 'bg-info-subtle text-info'; }
+            else if(notification.type === 'bulk_report_printed') { bgClass = 'bg-warning-subtle text-warning'; }
+            else if(notification.type === 'bulk_report_deleted') { bgClass = 'bg-danger-subtle text-danger'; }
+        }
+
         const itemHtml = `
             <a href="/notifications/${notification.id}" class="dropdown-item py-3 border-bottom">
                 <small class="float-end text-muted ps-2">Baru saja</small>
@@ -185,6 +206,14 @@
                     <div class="flex-grow-1 ms-2 text-truncate">
                         <h6 class="my-0 fw-normal text-dark fs-13">${notification.title}</h6>
                         <small class="text-muted mb-0">${notification.message}</small>
+                        
+                        ${notification.data && notification.data.bulk_report_id ? 
+                            `<div class="mt-1">
+                                <a href="/bulk-reports/${notification.data.bulk_report_id}/detail" class="text-primary text-decoration-none small">
+                                    <i class="fa fa-external-link-alt me-1"></i>Lihat Laporan
+                                </a>
+                            </div>` : ''
+                        }
                     </div>
                 </div>
             </a>
@@ -202,4 +231,61 @@
             badge.innerText = count + 1;
         }
     }
+
+    function updateBadgeFromServer() {
+        // Fetch unread count from server
+        fetch('{{ route("notifications.unread-count") }}')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.getElementById('notification-badge');
+                if (badge) {
+                    if (data.count > 0) {
+                        badge.style.display = 'inline-block';
+                        badge.innerText = data.count > 99 ? '99+' : data.count;
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Failed to fetch notification count:', error);
+            });
+    }
+
+    function loadNotifications() {
+        // Load recent notifications for dropdown
+        fetch('{{ route("notifications.recent") }}')
+            .then(response => response.json())
+            .then(data => {
+                const list = document.getElementById('notification-list');
+                const emptyMsg = document.getElementById('no-notifications');
+                
+                // Clear existing notifications first
+                if (list) {
+                    list.innerHTML = '';
+                }
+                
+                if (data.notifications && data.notifications.length > 0) {
+                    if (emptyMsg) {
+                        emptyMsg.style.display = 'none';
+                    }
+                    
+                    // Add notifications to dropdown
+                    data.notifications.forEach(notification => {
+                        addNotificationToDropdown(notification);
+                    });
+                } else {
+                    // Show empty message
+                    if (emptyMsg) {
+                        emptyMsg.style.display = 'block';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Failed to load notifications:', error);
+            });
+    }
+
+    // Update badge count every 30 seconds
+    setInterval(updateBadgeFromServer, 30000);
 </script>

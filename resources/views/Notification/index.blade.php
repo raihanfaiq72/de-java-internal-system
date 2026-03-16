@@ -30,6 +30,14 @@
         border-radius: 50%;
         font-size: 18px;
     }
+    .bulk-report-link {
+        color: #007AFF;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .bulk-report-link:hover {
+        text-decoration: underline;
+    }
 </style>
 @endpush
 
@@ -56,6 +64,13 @@
             <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
                 <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
                     <h6 class="mb-0 fw-bold text-dark">Riwayat Notifikasi</h6>
+                    <small class="text-muted">
+                        @if(request('show_all'))
+                            <a href="{{ route('notifications.index') }}" class="text-decoration-none">Tampilkan 4 Baris</a>
+                        @else
+                            <a href="{{ route('notifications.index', ['show_all' => true]) }}" class="text-decoration-none">Tampilkan Semua</a>
+                        @endif
+                    </small>
                 </div>
                 <div class="card-body p-0">
                     <div class="list-group list-group-flush">
@@ -77,6 +92,15 @@
                                             $iconClass = 'fa fa-times-circle';
                                             $bgClass = 'bg-soft-danger text-danger';
                                         }
+                                        
+                                        // Special icons for bulk reports
+                                        if(str_contains($type, 'bulk_report')) {
+                                            $iconClass = 'fa fa-file-pdf';
+                                            if($type == 'bulk_report_created') $bgClass = 'bg-soft-success text-success';
+                                            elseif($type == 'bulk_report_generated') $bgClass = 'bg-soft-info text-info';
+                                            elseif($type == 'bulk_report_printed') $bgClass = 'bg-soft-warning text-warning';
+                                            elseif($type == 'bulk_report_deleted') $bgClass = 'bg-soft-danger text-danger';
+                                        }
                                     @endphp
                                     <div class="notification-icon {{ $bgClass }} border border-opacity-25">
                                         <i class="{{ $iconClass }}"></i>
@@ -87,7 +111,28 @@
                                         <h6 class="mb-0 text-dark fw-bold" style="font-size: 14px;">{{ $notification->data['title'] ?? 'Notifikasi' }}</h6>
                                         <small class="text-muted f-mono" style="font-size: 11px;">{{ $notification->created_at->diffForHumans() }}</small>
                                     </div>
-                                    <p class="text-muted small mb-0" style="line-height: 1.5;">{{ Str::limit($notification->data['message'] ?? '', 120) }}</p>
+                                    <p class="text-muted small mb-0" style="line-height: 1.5;">
+                                        {{ Str::limit($notification->data['message'] ?? '', 120) }}
+                                        
+                                        @if(isset($notification->data['bulk_report_id']))
+                                            <br>
+                                            <a href="{{ route('bulk-reports.detail', $notification->data['bulk_report_id']) }}" class="bulk-report-link">
+                                                <i class="fa fa-external-link-alt me-1"></i>Lihat Detail Laporan
+                                            </a>
+                                        @endif
+                                    </p>
+                                    
+                                    @if(isset($notification->data['period_name']))
+                                        <div class="mt-2">
+                                            <span class="badge bg-light text-dark f-label">PERIODE: {{ $notification->data['period_name'] }}</span>
+                                        </div>
+                                    @endif
+                                    
+                                    @if(isset($notification->data['created_by']))
+                                        <div class="mt-1">
+                                            <small class="text-muted">Oleh: {{ $notification->data['created_by'] ?? $notification->data['marked_by'] ?? $notification->data['deleted_by'] ?? 'System' }}</small>
+                                        </div>
+                                    @endif
                                 </div>
                                 @if(!$notification->read_at)
                                     <div class="ms-3 align-self-center">
@@ -106,9 +151,19 @@
                         @endforelse
                     </div>
 
-                    <div class="p-3 border-top bg-light">
-                        {{ $notifications->links() }}
-                    </div>
+                    @if(!request('show_all') && $notifications->hasPages())
+                        <div class="p-3 border-top bg-light">
+                            <div class="text-center">
+                                <a href="{{ route('notifications.index', ['show_all' => true]) }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fa fa-list me-1"></i> Tampilkan Semua Notifikasi ({{ $notifications->total() }})
+                                </a>
+                            </div>
+                        </div>
+                    @else
+                        <div class="p-3 border-top bg-light">
+                            {{ $notifications->links() }}
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
