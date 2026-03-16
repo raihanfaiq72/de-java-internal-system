@@ -93,6 +93,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('salary-slips/{salary_slip}/print', [App\Http\Controllers\Api\SalarySlipController::class, 'print'])->name('salary-slips.print');
         Route::post('salary-slips/{salary_slip}/publish', [App\Http\Controllers\Api\SalarySlipController::class, 'publish'])->name('salary-slips.publish');
 
+        // Bulk Reports
+        Route::get('bulk-reports', [App\Http\Controllers\Api\BulkReportController::class, 'index'])->name('bulk-reports.index');
+        Route::post('bulk-reports/period', [App\Http\Controllers\Api\BulkReportController::class, 'storePeriod'])->name('bulk-reports.store-period');
+        Route::get('bulk-reports/{bulkReport}/preview', [App\Http\Controllers\Api\BulkReportController::class, 'preview'])->name('bulk-reports.preview');
+        Route::get('bulk-reports/{bulkReport}/detail', [App\Http\Controllers\Api\BulkReportController::class, 'detail'])->name('bulk-reports.detail');
+        Route::get('bulk-reports/{bulkReport}/generate-pdf', [App\Http\Controllers\Api\BulkReportController::class, 'generatePDF'])->name('bulk-reports.generate-pdf');
+        Route::post('bulk-reports/{bulkReport}/mark-printed', [App\Http\Controllers\Api\BulkReportController::class, 'markAsPrinted'])->name('bulk-reports.mark-printed');
+        Route::delete('bulk-reports/{bulkReport}', [App\Http\Controllers\Api\BulkReportController::class, 'destroy'])->name('bulk-reports.destroy');
+
         // Reports
         Route::get('report/invoice', [App\Http\Controllers\Report\InvoiceReportController::class, 'index'])->name('report.invoice');
         Route::get('report/invoice/export', [App\Http\Controllers\Report\InvoiceReportController::class, 'export'])->name('report.invoice.export');

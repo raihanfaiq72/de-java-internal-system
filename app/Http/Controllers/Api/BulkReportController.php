@@ -1,0 +1,226 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\BulkReport;
+use App\Models\Invoice;
+use App\Models\Payment;
+use App\Models\DeliveryOrder;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+
+class BulkReportController extends Controller
+{
+    public function index()
+    {
+        $bulkReports = BulkReport::with('generator')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+            
+        return view('Reports.bulk.index', compact('bulkReports'));
+    }
+
+    public function storePeriod(Request $request)
+    {
+        $request->validate([
+            'month' => 'required|integer|min:1|max:12',
+            'year' => 'required|integer|min:2020|max:' . (date('Y') + 1),
+        ]);
+
+        $month = $request->month;
+        $year = $request->year;
+        $periodName = Carbon::createFromDate($year, $month, 1)->format('F Y');
+        $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+        $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
+
+        // Cek apakah periode sudah ada
+        $existingReport = BulkReport::where('month', $month)
+            ->where('year', $year)
+            ->first();
+
+        if ($existingReport) {
+            return redirect()->back()->with('error', "Periode $periodName sudah ada dalam daftar laporan.");
+        }
+
+        // Buat bulk report baru
+        $bulkReport = BulkReport::create([
+            'period_name' => $periodName,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'month' => $month,
+            'year' => $year,
+            'status' => 'draft',
+            'generated_by' => auth()->id(),
+        ]);
+
+        return redirect()->route('bulk-reports.index')->with('success', "Periode $periodName telah ditambahkan ke daftar laporan massal.");
+    }
+
+    public function detail(BulkReport $bulkReport)
+    {
+        // Get all data for the period
+        $salesData = $this->getSalesData($bulkReport->start_date, $bulkReport->end_date);
+        $paymentsData = $this->getPaymentsData($bulkReport->start_date, $bulkReport->end_date);
+        $arAgingData = $this->getARAgingData($bulkReport->end_date);
+        $profitLossData = $this->getProfitLossData($bulkReport->start_date, $bulkReport->end_date);
+
+        return view('Reports.bulk.preview', compact('bulkReport', 'salesData', 'paymentsData', 'arAgingData', 'profitLossData'));
+    }
+
+    public function preview(BulkReport $bulkReport)
+    {
+        // Get all data for the period
+        $salesData = $this->getSalesData($bulkReport->start_date, $bulkReport->end_date);
+        $paymentsData = $this->getPaymentsData($bulkReport->start_date, $bulkReport->end_date);
+        $arAgingData = $this->getARAgingData($bulkReport->end_date);
+        $profitLossData = $this->getProfitLossData($bulkReport->start_date, $bulkReport->end_date);
+
+        return view('Reports.bulk.pdf', compact('bulkReport', 'salesData', 'paymentsData', 'arAgingData', 'profitLossData'));
+    }
+
+    public function generatePDF(BulkReport $bulkReport)
+    {
+        // Update status to generated
+        $bulkReport->update([
+            'status' => 'generated',
+            'generated_at' => now(),
+        ]);
+
+        // Get all data for the period
+        $salesData = $this->getSalesData($bulkReport->start_date, $bulkReport->end_date);
+        $paymentsData = $this->getPaymentsData($bulkReport->start_date, $bulkReport->end_date);
+        $arAgingData = $this->getARAgingData($bulkReport->end_date);
+        $profitLossData = $this->getProfitLossData($bulkReport->start_date, $bulkReport->end_date);
+
+        return view('Reports.bulk.pdf', compact('bulkReport', 'salesData', 'paymentsData', 'arAgingData', 'profitLossData'));
+    }
+
+    public function markAsPrinted(BulkReport $bulkReport)
+    {
+        $bulkReport->update([
+            'status' => 'printed',
+        ]);
+
+        return redirect()->route('bulk-reports.index')->with('success', 'Laporan telah ditandai sebagai telah dicetak.');
+    }
+
+    public function destroy(BulkReport $bulkReport)
+    {
+        // Hapus file jika ada
+        if ($bulkReport->file_path && Storage::exists($bulkReport->file_path)) {
+            Storage::delete($bulkReport->file_path);
+        }
+
+        $bulkReport->delete();
+
+        return redirect()->route('bulk-reports.index')->with('success', 'Laporan massal telah dihapus.');
+    }
+
+    private function getSalesData($startDate, $endDate)
+    {
+        return Invoice::with(['mitra', 'items'])
+            ->whereBetween('tgl_invoice', [$startDate, $endDate])
+            ->orderBy('tgl_invoice', 'desc')
+            ->get()
+            ->map(function ($invoice) {
+                // Ensure dates are Carbon objects
+                $invoice->tgl_invoice = is_string($invoice->tgl_invoice) 
+                    ? \Carbon\Carbon::parse($invoice->tgl_invoice) 
+                    : $invoice->tgl_invoice;
+                return $invoice;
+            });
+    }
+
+    private function getPaymentsData($startDate, $endDate)
+    {
+        return Payment::with(['invoice.mitra'])
+            ->whereBetween('tgl_pembayaran', [$startDate, $endDate])
+            ->orderBy('tgl_pembayaran', 'desc')
+            ->get()
+            ->map(function ($payment) {
+                // Ensure dates are Carbon objects
+                $payment->tgl_pembayaran = is_string($payment->tgl_pembayaran) 
+                    ? \Carbon\Carbon::parse($payment->tgl_pembayaran) 
+                    : $payment->tgl_pembayaran;
+                return $payment;
+            });
+    }
+
+    private function getARAgingData($asOfDate)
+    {
+        $invoices = Invoice::with(['mitra'])
+            ->where('status_pembayaran', '!=', 'Lunas')
+            ->where('tgl_jatuh_tempo', '<=', $asOfDate)
+            ->get();
+
+        $agingData = [];
+        foreach ($invoices as $invoice) {
+            // Convert due date to Carbon if it's a string
+            $dueDate = is_string($invoice->tgl_jatuh_tempo) 
+                ? \Carbon\Carbon::parse($invoice->tgl_jatuh_tempo) 
+                : $invoice->tgl_jatuh_tempo;
+            
+            $daysOverdue = $asOfDate->diffInDays($dueDate);
+            
+            $agingBuckets = [
+                'current' => $daysOverdue <= 0 ? $invoice->total_akhir : 0,
+                '1_15' => ($daysOverdue >= 1 && $daysOverdue <= 15) ? $invoice->total_akhir : 0,
+                '16_30' => ($daysOverdue >= 16 && $daysOverdue <= 30) ? $invoice->total_akhir : 0,
+                '31_45' => ($daysOverdue >= 31 && $daysOverdue <= 45) ? $invoice->total_akhir : 0,
+                '46_60' => ($daysOverdue >= 46 && $daysOverdue <= 60) ? $invoice->total_akhir : 0,
+                '61_plus' => $daysOverdue >= 61 ? $invoice->total_akhir : 0,
+            ];
+
+            $agingData[] = [
+                'customer' => $invoice->mitra->name,
+                'invoice_no' => $invoice->nomor_invoice,
+                'due_date' => $dueDate->format('d/m/Y'),
+                'days_overdue' => $daysOverdue,
+                'total_amount' => $invoice->total_akhir,
+                'paid_amount' => $invoice->payment->sum('jumlah_bayar') ?? 0,
+                'remaining_amount' => $invoice->total_akhir - ($invoice->payment->sum('jumlah_bayar') ?? 0),
+                'aging_buckets' => $agingBuckets
+            ];
+        }
+
+        return collect($agingData);
+    }
+
+    private function getProfitLossData($startDate, $endDate)
+    {
+        // Revenue from invoices
+        $salesRevenue = Invoice::whereBetween('tgl_invoice', [$startDate, $endDate])
+            ->sum('total_akhir');
+
+        // Cost of goods sold
+        $costOfGoodsSold = DB::table('invoice_items')
+            ->join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
+            ->whereBetween('invoices.tgl_invoice', [$startDate, $endDate])
+            ->sum(DB::raw('invoice_items.qty * invoice_items.harga_satuan'));
+
+        // Other revenues
+        $otherRevenues = 0; // Can be expanded later
+
+        // Operating expenses (can be expanded with actual expense tracking)
+        $operatingExpenses = 0; // Placeholder
+
+        // Gross profit
+        $grossProfit = $salesRevenue - $costOfGoodsSold;
+
+        // Net profit
+        $netProfit = $grossProfit + $otherRevenues - $operatingExpenses;
+
+        return [
+            'sales_revenue' => $salesRevenue,
+            'cost_of_goods_sold' => $costOfGoodsSold,
+            'other_revenues' => $otherRevenues,
+            'operating_expenses' => $operatingExpenses,
+            'gross_profit' => $grossProfit,
+            'net_profit' => $netProfit,
+            'period' => $startDate->format('d M Y') . ' - ' . $endDate->format('d M Y')
+        ];
+    }
+}

@@ -206,6 +206,11 @@ return [
                 'route' => 'report.cash-book',
                 'icon' => 'iconoir-wallet',
             ],
+            [
+                'title' => 'Laporan Massal',
+                'route' => 'bulk-reports.index',
+                'icon' => 'iconoir-reports',
+            ],
         ],
 
     ],
