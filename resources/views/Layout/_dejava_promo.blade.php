@@ -73,7 +73,7 @@
         </p>
         <div class="simple-promo-buttons">
             <a href="#" class="simple-promo-btn simple-promo-btn-primary">
-                <i class="fa fa-android"></i>
+                <i class="fa-brands fa-android"></i>
                 Download Android
             </a>
             <button class="simple-promo-btn simple-promo-btn-secondary" onclick="closeSimplePromo()">
