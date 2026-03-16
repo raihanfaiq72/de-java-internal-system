@@ -27,27 +27,29 @@ class BulkReportController extends Controller
     {
         $request->validate([
             'month' => 'required|integer|min:1|max:12',
-            'year' => 'required|integer|min:2020|max:' . (date('Y') + 1),
+            'year' => 'required|integer|min:2020|max:2030',
         ]);
 
         $month = $request->month;
         $year = $request->year;
-        $periodName = Carbon::createFromDate($year, $month, 1)->format('F Y');
-        $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
-        $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
+        $periodName = $this->getMonthName($month) . ' ' . $year;
+        
+        $startDate = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth();
+        $endDate = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth();
 
-        // Cek apakah periode sudah ada
-        $existingReport = BulkReport::where('month', $month)
+        // Check if period already exists
+        $existing = BulkReport::where('month', $month)
             ->where('year', $year)
             ->first();
 
-        if ($existingReport) {
-            return redirect()->back()->with('error', "Periode $periodName sudah ada dalam daftar laporan.");
+        if ($existing) {
+            return redirect()->route('bulk-reports.index')
+                ->with('error', "Periode $periodName sudah ada dalam daftar laporan massal.");
         }
 
-        // Buat bulk report baru
         $bulkReport = BulkReport::create([
             'period_name' => $periodName,
+            'slug' => \Illuminate\Support\Str::slug($periodName),
             'start_date' => $startDate,
             'end_date' => $endDate,
             'month' => $month,

@@ -32,7 +32,7 @@
                                 <a href="{{ route('bulk-reports.index') }}" class="btn btn-light fw-bold px-4">
                                     <i class="fa fa-arrow-left me-1"></i> Kembali
                                 </a>
-                                <button type="button" onclick="openPreview({{ $bulkReport->id }})" class="btn btn-success fw-bold px-4 shadow-sm">
+                                <button type="button" onclick="openPreview('{{ $bulkReport->slug }}')" class="btn btn-success fw-bold px-4 shadow-sm">
                                     <i class="fa fa-file-pdf me-1"></i> Generate PDF
                                 </button>
                             </div>

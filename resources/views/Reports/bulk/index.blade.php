@@ -82,38 +82,38 @@
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
-                                                    <button type="button" onclick="openPreview({{ $bulkReport->id }})" 
+                                                    <button type="button" onclick="openPreview('{{ $bulkReport->slug }}')" 
                                                         class="btn btn-sm btn-outline-primary">
                                                         <i class="fa fa-eye"></i> Preview
                                                     </button>
                                                     
-                                                    <a href="{{ route('bulk-reports.detail', $bulkReport->id) }}" 
+                                                    <a href="{{ route('bulk-reports.detail', $bulkReport->slug) }}" 
                                                        class="btn btn-sm btn-outline-info">
                                                         <i class="fa fa-list"></i> Detail
                                                     </a>
                                                     
                                                     @if($bulkReport->status == 'draft')
-                                                        <button type="button" onclick="generatePDF({{ $bulkReport->id }})" 
+                                                        <button type="button" onclick="generatePDF('{{ $bulkReport->slug }}')" 
                                                             class="btn btn-sm btn-outline-success">
                                                             <i class="fa fa-file-pdf"></i> Cetak
                                                         </button>
                                                     @endif
 
                                                     @if($bulkReport->status == 'generated')
-                                                        <button type="button" onclick="markAsPrinted({{ $bulkReport->id }})" 
+                                                        <button type="button" onclick="markAsPrinted('{{ $bulkReport->slug }}')" 
                                                             class="btn btn-sm btn-outline-info">
                                                             <i class="fa fa-check"></i> Tandai Dicetak
                                                         </button>
                                                     @endif
 
                                                     @if($bulkReport->status == 'generated')
-                                                        <a href="{{ route('bulk-reports.generate-pdf', $bulkReport->id) }}" 
+                                                        <a href="{{ route('bulk-reports.generate-pdf', $bulkReport->slug) }}" 
                                                            target="_blank" class="btn btn-sm btn-outline-secondary">
                                                             <i class="fa fa-download"></i> PDF
                                                         </a>
                                                     @endif
 
-                                                    <button type="button" onclick="deleteReport({{ $bulkReport->id }}, '{{ $bulkReport->period_name }}')" 
+                                                    <button type="button" onclick="deleteReport('{{ $bulkReport->slug }}', '{{ $bulkReport->period_name }}')" 
                                                         class="btn btn-sm btn-outline-danger">
                                                         <i class="fa fa-trash"></i>
                                                     </button>
@@ -227,76 +227,77 @@
 @push('js')
 <script>
     function openPreview(id) {
-        const url = `/bulk-reports/${id}/preview`;
-        const modalContainer = document.getElementById('modalBulkPreview');
+    const url = `/bulk-reports/${id}/preview`;
+    const modalContainer = document.getElementById('modalBulkPreview');
 
-        if (!modalContainer) {
-            console.error('Modal container tidak ditemukan di halaman ini.');
-            return;
-        }
-
-        const iframe = modalContainer.querySelector('iframe');
-
-        if (!iframe) {
-            console.error('Elemen iframe tidak ditemukan di dalam modal.');
-            alert('Gagal memuat preview laporan.');
-            return;
-        }
-
-        iframe.src = url;
-
-        const bModal = bootstrap.Modal.getOrCreateInstance(modalContainer);
-        bModal.show();
+    if (!modalContainer) {
+        console.error('Modal container tidak ditemukan di halaman ini.');
+        return;
     }
 
-    function triggerBulkPrint() {
-        const iframe = document.getElementById('bulk-preview-iframe');
-        if (iframe && iframe.contentWindow) {
-            iframe.contentWindow.focus();
-            iframe.contentWindow.print();
-        }
+    const iframe = modalContainer.querySelector('iframe');
+
+    if (!iframe) {
+        console.error('Elemen iframe tidak ditemukan di dalam modal.');
+        alert('Gagal memuat preview laporan.');
+        return;
     }
 
-    function generatePDF(id) {
-        if (confirm('Apakah Anda yakin ingin generate PDF untuk laporan ini?')) {
-            window.open(`/bulk-reports/${id}/generate-pdf`, '_blank');
-            setTimeout(() => {
+    iframe.src = url;
+
+    const bModal = bootstrap.Modal.getOrCreateInstance(modalContainer);
+    bModal.show();
+}
+
+function triggerBulkPrint() {
+    const iframe = document.getElementById('bulk-preview-iframe');
+    if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+    }
+}
+
+function generatePDF(id) {
+    if (confirm('Apakah Anda yakin ingin generate PDF untuk laporan ini?')) {
+        window.open(`/bulk-reports/${id}/generate-pdf`, '_blank');
+        setTimeout(() => {
+            location.reload();
+        }, 1000);
+    }
+}
+
+function markAsPrinted(id) {
+    if (confirm('Tandai laporan ini sebagai telah dicetak?')) {
+        fetch(`/bulk-reports/${id}/mark-printed`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
                 location.reload();
-            }, 1000);
-        }
+            }
+        });
     }
+}
 
-    function markAsPrinted(id) {
-        if (confirm('Tandai laporan ini sebagai telah dicetak?')) {
-            fetch(`/bulk-reports/${id}/mark-printed`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({})
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                }
-            });
-        }
+function deleteReport(id, periodName) {
+    if (confirm(`Apakah Anda yakin ingin menghapus laporan "${periodName}"?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/bulk-reports/${id}`;
+        form.innerHTML = `
+            <input type="hidden" name="_method" value="DELETE">
+            <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
     }
-
-    function deleteReport(id, periodName) {
-        if (confirm(`Apakah Anda yakin ingin menghapus laporan "${periodName}"?`)) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/bulk-reports/${id}`;
-            form.innerHTML = `
-                <input type="hidden" name="_method" value="DELETE">
-                <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
-            `;
-            document.body.appendChild(form);
-            form.submit();
-        }
+}    }
     }
 </script>
 @endpush
