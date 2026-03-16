@@ -1,11 +1,6 @@
 <!-- DeJava App Tour Guide -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shepherd.js@11.0.1/dist/css/shepherd.css"/>
 
-<!-- Tour Button -->
-<button id="tour-start-btn" class="btn btn-primary position-fixed" style="bottom: 20px; right: 20px; z-index: 1000; border-radius: 50px; width: 50px; height: 50px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 20px; display: none;">
-    <i class="fa fa-question"></i>
-</button>
-
 <style>
     .shepherd-button {
         background: #007AFF !important;
@@ -79,6 +74,31 @@
         50% { opacity: 0.5; }
         100% { opacity: 1; }
     }
+    
+    .tour-btn-dashboard {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 14px;
+        color: #6c757d;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .tour-btn-dashboard:hover {
+        background: #e9ecef;
+        border-color: #adb5bd;
+        color: #495057;
+        transform: translateY(-1px);
+    }
+    
+    .tour-btn-dashboard i {
+        font-size: 16px;
+    }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/shepherd.js@11.0.1/dist/js/shepherd.min.js"></script>
@@ -92,9 +112,9 @@
         
         // Hide button if tour completed
         if (tourCompleted) {
-            tourStartBtn.style.display = 'none';
+            if (tourStartBtn) tourStartBtn.style.display = 'none';
         } else {
-            tourStartBtn.style.display = 'block';
+            if (tourStartBtn) tourStartBtn.style.display = 'inline-flex';
         }
         
         // Initialize tour
@@ -120,7 +140,7 @@
         // Function to show tour button
         function showTourButton() {
             if (tourStartBtn) {
-                tourStartBtn.style.display = 'block';
+                tourStartBtn.style.display = 'inline-flex';
             }
         }
 
@@ -206,7 +226,7 @@
             {
                 id: 'purchase-menu',
                 text: 'Kelola semua transaksi pembelian: invoice pembelian dan kuitansi pembelian.',
-                title: '�️ Pembelian',
+                title: '🛒️ Pembelian',
                 attachTo: {
                     element: 'a[href="#sidebarPurchase"]',
                     on: 'right'
@@ -359,10 +379,19 @@
         ]);
 
         // Start tour when button clicked
-        tourStartBtn.addEventListener('click', function() {
+        if (tourStartBtn) {
+            tourStartBtn.addEventListener('click', function() {
+                hidePromoModal(); // Hide promo when tour starts
+                tour.start();
+            });
+        }
+
+        // Simple global function for onclick
+        window.startDeJavaTour = function() {
+            console.log('Starting DeJava Tour...');
             hidePromoModal(); // Hide promo when tour starts
             tour.start();
-        });
+        };
 
         // Auto-start tour for new users (optional)
         if (!tourCompleted && !localStorage.getItem('dejava-tour-dismissed')) {

@@ -3,6 +3,33 @@
 @include('Layout._dejava_promo')
 @include('Layout._tour_guide')
 
+<style>
+    .tour-btn-dashboard {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 14px;
+        color: #6c757d;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .tour-btn-dashboard:hover {
+        background: #e9ecef;
+        border-color: #adb5bd;
+        color: #495057;
+        transform: translateY(-1px);
+    }
+    
+    .tour-btn-dashboard i {
+        font-size: 16px;
+    }
+</style>
+
 @section('main')
     <div class="page-wrapper">
         <div class="page-content">
@@ -22,6 +49,10 @@
                                 <span class="badge bg-soft-success text-success p-2">
                                     <i class="fa fa-building me-1"></i> <span id="dashboardOfficeCode">-</span>
                                 </span>
+                                <button onclick="startDeJavaTour()" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-size: 14px; color: #6c757d; display: inline-flex; align-items: center; gap: 6px;">
+                                    <i class="fa fa-question-circle"></i>
+                                    <span class="d-none d-md-inline">Tour</span>
+                                </button>
                             </div>
                         </div>
                     </div>
