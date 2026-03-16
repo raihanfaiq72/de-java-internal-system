@@ -72,7 +72,7 @@
             Download sekarang dan akses laporan kapan saja, di mana saja!
         </p>
         <div class="simple-promo-buttons">
-            <a href="#" class="simple-promo-btn simple-promo-btn-primary">
+            <a href="/app-release3" class="simple-promo-btn simple-promo-btn-primary">
                 <i class="fa-brands fa-android"></i>
                 Download Android
             </a>

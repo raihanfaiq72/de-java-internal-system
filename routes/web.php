@@ -18,6 +18,10 @@ Route::get('/', [AuthController::class, 'login'])->name('login');
 Route::post('/login-proses', [AuthController::class, 'loginProses'])->name('login.proses');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// Public App Release Page (no auth required)
+Route::get('/app-release3', [App\Http\Controllers\AppReleaseController::class, 'publicIndex']);
+Route::get('/app-release/download/{appRelease}', [App\Http\Controllers\AppReleaseController::class, 'publicDownload'])->name('public.download');
+
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/select-your-outlet', [AuthController::class, 'syo'])->name('syo');
@@ -35,6 +39,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/notifications/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
         Route::get('/notifications/unread-count', [App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
         Route::get('/notifications/recent', [App\Http\Controllers\NotificationController::class, 'recent'])->name('notifications.recent');
+
+        // App Releases CRUD
+        Route::resource('app-releases', App\Http\Controllers\AppReleaseController::class);
+        Route::get('app-releases/{appRelease}/download', [App\Http\Controllers\AppReleaseController::class, 'download'])->name('app-releases.download');
+        Route::post('app-releases/{appRelease}/toggle-latest', [App\Http\Controllers\AppReleaseController::class, 'toggleLatest'])->name('app-releases.toggle-latest');
 
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('dashboard-piutang', [DashboardPiutangController::class, 'index'])->name('dashboard.piutang');

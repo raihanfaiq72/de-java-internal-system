@@ -232,6 +232,12 @@ return [
     ],
     [
         'type' => 'item',
+        'title' => 'App Releases',
+        'route' => 'app-releases.index',
+        'icon' => 'iconoir-mobile',
+    ],
+    [
+        'type' => 'item',
         'title' => 'Ganti Kantor',
         'route' => 'syo',
         'icon' => 'iconoir-coins-swap',
