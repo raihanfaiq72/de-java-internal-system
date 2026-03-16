@@ -274,9 +274,23 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-4 ">
+                <div class="modal-body p-4">
                     <div class="ratio ratio-16x9 border rounded bg-light" style="min-height: 70vh;">
-                        <iframe id="bulk-preview-iframe" src="" allowfullscreen></iframe>
+                        <!-- Loading State -->
+                        <div id="preview-loading" class="d-flex flex-column justify-content-center align-items-center h-100">
+                            <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <h6 class="text-muted mb-2">Sedang Memuat Preview</h6>
+                            <p class="text-muted small mb-0">Mohon tunggu sebentar...</p>
+                        </div>
+                        
+                        <!-- Iframe (Hidden initially) -->
+                        <iframe id="bulk-preview-iframe" 
+                                src="" 
+                                allowfullscreen
+                                style="display: none;"
+                                onload="hideLoading()"></iframe>
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pb-4 px-4">
@@ -355,6 +369,7 @@ function openPreview(id) {
     }
 
     const iframe = modalContainer.querySelector('iframe');
+    const loading = document.getElementById('preview-loading');
 
     if (!iframe) {
         console.error('Elemen iframe tidak ditemukan di dalam modal.');
@@ -362,10 +377,30 @@ function openPreview(id) {
         return;
     }
 
+    // Show loading state
+    if (loading) {
+        loading.style.display = 'flex';
+    }
+    iframe.style.display = 'none';
+    
+    // Set iframe source
     iframe.src = url;
 
+    // Show modal
     const bModal = bootstrap.Modal.getOrCreateInstance(modalContainer);
     bModal.show();
+}
+
+function hideLoading() {
+    const iframe = document.getElementById('bulk-preview-iframe');
+    const loading = document.getElementById('preview-loading');
+    
+    if (loading) {
+        loading.style.display = 'none';
+    }
+    if (iframe) {
+        iframe.style.display = 'block';
+    }
 }
 
 function triggerBulkPrint() {
@@ -375,5 +410,24 @@ function triggerBulkPrint() {
         iframe.contentWindow.print();
     }
 }
+
+// Reset loading state when modal is closed
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('modalBulkPreview');
+    if (modal) {
+        modal.addEventListener('hidden.bs.modal', function () {
+            const iframe = document.getElementById('bulk-preview-iframe');
+            const loading = document.getElementById('preview-loading');
+            
+            if (iframe) {
+                iframe.src = '';
+                iframe.style.display = 'none';
+            }
+            if (loading) {
+                loading.style.display = 'flex';
+            }
+        });
+    }
+});
 </script>
 @endpush
