@@ -32,9 +32,9 @@
                                 <a href="{{ route('bulk-reports.index') }}" class="btn btn-light fw-bold px-4">
                                     <i class="fa fa-arrow-left me-1"></i> Kembali
                                 </a>
-                                <a href="{{ route('bulk-reports.generate-pdf', $bulkReport->id) }}" target="_blank" class="btn btn-success fw-bold px-4 shadow-sm">
+                                <button type="button" onclick="openPreview({{ $bulkReport->id }})" class="btn btn-success fw-bold px-4 shadow-sm">
                                     <i class="fa fa-file-pdf me-1"></i> Generate PDF
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -262,6 +262,32 @@
             </div>
         </div>
     </div>
+
+    <!-- Preview Modal -->
+    <div class="modal fade" id="modalBulkPreview" tabindex="-1" aria-labelledby="modalBulkPreviewLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0 rounded-4">
+                <div class="modal-header border-bottom-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold" id="modalBulkPreviewLabel">
+                        <i class="iconoir-print text-primary me-2"></i> Preview Laporan Massal
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 ">
+                    <div class="ratio ratio-16x9 border rounded bg-light" style="min-height: 70vh;">
+                        <iframe id="bulk-preview-iframe" src="" allowfullscreen></iframe>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light fw-bold px-4" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-success fw-bold px-4 shadow-sm" onclick="triggerBulkPrint()">
+                        <i class="fa fa-print me-1"></i> Cetak Sekarang
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('css')
@@ -272,7 +298,7 @@
 <script src="{{ url('') }}/assets/libs/simple-datatables/umd/simple-datatables.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    // Sales Invoice Table
+    // Initialize DataTables
     const salesTableEl = document.querySelector("#salesTable");
     if (salesTableEl) {
         new simpleDatatables.DataTable(salesTableEl, {
@@ -288,7 +314,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Payments Table
     const paymentsTableEl = document.querySelector("#paymentsTable");
     if (paymentsTableEl) {
         new simpleDatatables.DataTable(paymentsTableEl, {
@@ -304,7 +329,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // A/R Aging Table
     const arAgingTableEl = document.querySelector("#arAgingTable");
     if (arAgingTableEl) {
         new simpleDatatables.DataTable(arAgingTableEl, {
@@ -320,5 +344,36 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 });
+
+function openPreview(id) {
+    const url = `/bulk-reports/${id}/preview`;
+    const modalContainer = document.getElementById('modalBulkPreview');
+
+    if (!modalContainer) {
+        console.error('Modal container tidak ditemukan di halaman ini.');
+        return;
+    }
+
+    const iframe = modalContainer.querySelector('iframe');
+
+    if (!iframe) {
+        console.error('Elemen iframe tidak ditemukan di dalam modal.');
+        alert('Gagal memuat preview laporan.');
+        return;
+    }
+
+    iframe.src = url;
+
+    const bModal = bootstrap.Modal.getOrCreateInstance(modalContainer);
+    bModal.show();
+}
+
+function triggerBulkPrint() {
+    const iframe = document.getElementById('bulk-preview-iframe');
+    if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+    }
+}
 </script>
 @endpush
