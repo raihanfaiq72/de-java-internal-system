@@ -243,10 +243,30 @@ function openPreview(id) {
         return;
     }
 
+    // Show loading overlay
+    if (window.PageLoader) window.PageLoader.show();
+
+    // Prepare modal instance
+    const bModal = bootstrap.Modal.getOrCreateInstance(modalContainer);
+
+    // One-time load event for the iframe
+    iframe.onload = function() {
+        if (window.PageLoader) window.PageLoader.hide();
+        bModal.show();
+        // Remove handler to avoid multiple triggers if src changes later
+        iframe.onload = null;
+    };
+
+    // Set src to start loading
     iframe.src = url;
 
-    const bModal = bootstrap.Modal.getOrCreateInstance(modalContainer);
-    bModal.show();
+    // Optional: timeout if it takes too long
+    setTimeout(() => {
+        if (window.PageLoader && window.PageLoader.pending() > 0) {
+            window.PageLoader.hide();
+            // Optionally show modal anyway or alert error
+        }
+    }, 10000);
 }
 
 function triggerBulkPrint() {

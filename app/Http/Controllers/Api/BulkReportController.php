@@ -6,13 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\BulkReport;
 use App\Models\Invoice;
 use App\Models\Payment;
-use App\Models\DeliveryOrder;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class BulkReportController extends Controller
 {
@@ -21,7 +21,7 @@ class BulkReportController extends Controller
         $bulkReports = BulkReport::with('generator')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
-            
+
         return view('Reports.bulk.index', compact('bulkReports'));
     }
 
@@ -34,10 +34,10 @@ class BulkReportController extends Controller
 
         $month = $request->month;
         $year = $request->year;
-        $periodName = $this->getMonthName($month) . ' ' . $year;
-        
-        $startDate = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth();
-        $endDate = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth();
+        $periodName = Carbon::createFromDate($year, $month, 1)->format('F').' '.$year;
+
+        $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+        $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
 
         // Check if period already exists
         $existing = BulkReport::where('month', $month)
@@ -51,7 +51,7 @@ class BulkReportController extends Controller
 
         $bulkReport = BulkReport::create([
             'period_name' => $periodName,
-            'slug' => \Illuminate\Support\Str::slug($periodName),
+            'slug' => Str::slug($periodName),
             'start_date' => $startDate,
             'end_date' => $endDate,
             'month' => $month,
@@ -66,7 +66,7 @@ class BulkReportController extends Controller
             'message' => "Periode $periodName telah ditambahkan ke daftar laporan massal.",
             'bulk_report_id' => $bulkReport->id,
             'period_name' => $periodName,
-            'created_by' => auth()->user()->name
+            'created_by' => auth()->user()->name,
         ]);
 
         return redirect()->route('bulk-reports.index')->with('success', "Periode $periodName telah ditambahkan ke daftar laporan massal.");
@@ -113,7 +113,7 @@ class BulkReportController extends Controller
             'message' => "PDF laporan massal untuk periode {$bulkReport->period_name} telah siap diunduh.",
             'bulk_report_id' => $bulkReport->id,
             'period_name' => $bulkReport->period_name,
-            'generated_by' => auth()->user()->name
+            'generated_by' => auth()->user()->name,
         ]);
 
         return view('Reports.bulk.pdf', compact('bulkReport', 'salesData', 'paymentsData', 'arAgingData', 'profitLossData'));
@@ -131,7 +131,7 @@ class BulkReportController extends Controller
             'message' => "Laporan massal untuk periode {$bulkReport->period_name} telah ditandai sebagai telah dicetak.",
             'bulk_report_id' => $bulkReport->id,
             'period_name' => $bulkReport->period_name,
-            'marked_by' => auth()->user()->name
+            'marked_by' => auth()->user()->name,
         ]);
 
         return redirect()->route('bulk-reports.index')->with('success', 'Laporan telah ditandai sebagai telah dicetak.');
@@ -152,7 +152,7 @@ class BulkReportController extends Controller
             'title' => 'Laporan Massal Dihapus',
             'message' => "Laporan massal untuk periode {$periodName} telah dihapus dari sistem.",
             'period_name' => $periodName,
-            'deleted_by' => auth()->user()->name
+            'deleted_by' => auth()->user()->name,
         ]);
 
         return redirect()->route('bulk-reports.index')->with('success', 'Laporan massal telah dihapus.');
@@ -161,15 +161,15 @@ class BulkReportController extends Controller
     private function sendBulkReportNotification($type, $data)
     {
         // Get all users who have access to bulk reports
-        $users = User::whereHas('roles', function($query) {
-            $query->whereHas('permissions', function($q) {
+        $users = User::whereHas('roles', function ($query) {
+            $query->whereHas('permissions', function ($q) {
                 $q->where('name', 'bulk-reports.index');
             });
         })->get();
 
         foreach ($users as $user) {
             $user->notifications()->create([
-                'type' => $type === 'bulk_report_created' ? 'success' : 
+                'type' => $type === 'bulk_report_created' ? 'success' :
                          ($type === 'bulk_report_generated' ? 'info' : 'warning'),
                 'data' => [
                     'type' => $type,
@@ -180,7 +180,7 @@ class BulkReportController extends Controller
                     'created_by' => $data['created_by'] ?? null,
                     'marked_by' => $data['marked_by'] ?? null,
                     'deleted_by' => $data['deleted_by'] ?? null,
-                ]
+                ],
             ]);
         }
     }
@@ -193,9 +193,10 @@ class BulkReportController extends Controller
             ->get()
             ->map(function ($invoice) {
                 // Ensure dates are Carbon objects
-                $invoice->tgl_invoice = is_string($invoice->tgl_invoice) 
-                    ? \Carbon\Carbon::parse($invoice->tgl_invoice) 
+                $invoice->tgl_invoice = is_string($invoice->tgl_invoice)
+                    ? Carbon::parse($invoice->tgl_invoice)
                     : $invoice->tgl_invoice;
+
                 return $invoice;
             });
     }
@@ -208,9 +209,10 @@ class BulkReportController extends Controller
             ->get()
             ->map(function ($payment) {
                 // Ensure dates are Carbon objects
-                $payment->tgl_pembayaran = is_string($payment->tgl_pembayaran) 
-                    ? \Carbon\Carbon::parse($payment->tgl_pembayaran) 
+                $payment->tgl_pembayaran = is_string($payment->tgl_pembayaran)
+                    ? Carbon::parse($payment->tgl_pembayaran)
                     : $payment->tgl_pembayaran;
+
                 return $payment;
             });
     }
@@ -225,12 +227,12 @@ class BulkReportController extends Controller
         $agingData = [];
         foreach ($invoices as $invoice) {
             // Convert due date to Carbon if it's a string
-            $dueDate = is_string($invoice->tgl_jatuh_tempo) 
-                ? \Carbon\Carbon::parse($invoice->tgl_jatuh_tempo) 
+            $dueDate = is_string($invoice->tgl_jatuh_tempo)
+                ? Carbon::parse($invoice->tgl_jatuh_tempo)
                 : $invoice->tgl_jatuh_tempo;
-            
+
             $daysOverdue = $asOfDate->diffInDays($dueDate);
-            
+
             $agingBuckets = [
                 'current' => $daysOverdue <= 0 ? $invoice->total_akhir : 0,
                 '1_15' => ($daysOverdue >= 1 && $daysOverdue <= 15) ? $invoice->total_akhir : 0,
@@ -248,7 +250,7 @@ class BulkReportController extends Controller
                 'total_amount' => $invoice->total_akhir,
                 'paid_amount' => $invoice->payment->sum('jumlah_bayar') ?? 0,
                 'remaining_amount' => $invoice->total_akhir - ($invoice->payment->sum('jumlah_bayar') ?? 0),
-                'aging_buckets' => $agingBuckets
+                'aging_buckets' => $agingBuckets,
             ];
         }
 
@@ -286,7 +288,7 @@ class BulkReportController extends Controller
             'operating_expenses' => $operatingExpenses,
             'gross_profit' => $grossProfit,
             'net_profit' => $netProfit,
-            'period' => $startDate->format('d M Y') . ' - ' . $endDate->format('d M Y')
+            'period' => $startDate->format('d M Y').' - '.$endDate->format('d M Y'),
         ];
     }
 }
