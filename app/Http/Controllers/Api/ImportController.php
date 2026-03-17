@@ -29,11 +29,22 @@ class ImportController extends Controller
 
     public function importReceipt(Request $request)
     {
-        ini_set('memory_limit', '1024M');
+        // Increase PHP limits for large batch uploads
+        ini_set('memory_limit', '2048M');
         set_time_limit(0);
+        ini_set('max_execution_time', 0);
+        ini_set('max_input_time', 0);
+        
+        // Increase upload limits
+        ini_set('upload_max_filesize', '100M');
+        ini_set('post_max_size', '2048M');
+        ini_set('max_file_uploads', 1000);
 
         $request->validate([
-            'file.*' => 'required|file|mimes:pdf',
+            'file.*' => 'required|file|mimes:pdf|max:102400', // Max 100MB per file
+        ], [
+            'file.*.max' => 'File PDF maksimal 100MB per file',
+            'file.*.mimes' => 'Hanya file PDF yang diperbolehkan',
         ]);
 
         $files = $request->file('file');
@@ -48,24 +59,56 @@ class ImportController extends Controller
             $files = [$files];
         }
 
-        $count = 0;
-        foreach ($files as $file) {
-            $path = $file->store('temp_receipts');
-            $originalName = $file->getClientOriginalName();
-            \App\Jobs\ImportReceiptJob::dispatch($path, $originalName, $officeId, $userId);
-            $count++;
+        // Limit to 1000 files
+        if (count($files) > 1000) {
+            return redirect()->back()->with('error', 'Maksimal 1.000 file per batch upload.');
         }
 
-        return redirect()->back()->with('success', $count.' File PDF sedang diproses di background.');
+        $count = 0;
+        $batchSize = 50; // Process in batches to avoid memory issues
+        $fileBatches = array_chunk($files, $batchSize);
+        
+        foreach ($fileBatches as $batch) {
+            foreach ($batch as $file) {
+                try {
+                    $path = $file->store('temp_receipts');
+                    $originalName = $file->getClientOriginalName();
+                    \App\Jobs\ImportReceiptJob::dispatch($path, $originalName, $officeId, $userId)
+                        ->onQueue('receipt-import'); // Use dedicated queue
+                    $count++;
+                } catch (\Exception $e) {
+                    \Log::error('Failed to process file: ' . $file->getClientOriginalName() . ' - ' . $e->getMessage());
+                    // Continue processing other files
+                }
+            }
+            
+            // Small delay between batches to prevent overwhelming the system
+            if (count($fileBatches) > 1) {
+                usleep(100000); // 0.1 second delay
+            }
+        }
+
+        return redirect()->back()->with('success', $count.' File PDF sedang diproses di background. Proses akan memakan waktu beberapa menit untuk file yang banyak.');
     }
 
     public function importPurchaseReceipt(Request $request)
     {
-        ini_set('memory_limit', '1024M');
+        // Increase PHP limits for large batch uploads
+        ini_set('memory_limit', '2048M');
         set_time_limit(0);
+        ini_set('max_execution_time', 0);
+        ini_set('max_input_time', 0);
+        
+        // Increase upload limits
+        ini_set('upload_max_filesize', '100M');
+        ini_set('post_max_size', '2048M');
+        ini_set('max_file_uploads', 1000);
 
         $request->validate([
-            'file.*' => 'required|file|mimes:pdf',
+            'file.*' => 'required|file|mimes:pdf|max:102400', // Max 100MB per file
+        ], [
+            'file.*.max' => 'File PDF maksimal 100MB per file',
+            'file.*.mimes' => 'Hanya file PDF yang diperbolehkan',
         ]);
 
         $files = $request->file('file');
@@ -80,15 +123,36 @@ class ImportController extends Controller
             $files = [$files];
         }
 
-        $count = 0;
-        foreach ($files as $file) {
-            $path = $file->store('temp_receipts');
-            $originalName = $file->getClientOriginalName();
-            \App\Jobs\ImportPurchaseReceiptJob::dispatch($path, $originalName, $officeId, $userId);
-            $count++;
+        // Limit to 1000 files
+        if (count($files) > 1000) {
+            return redirect()->back()->with('error', 'Maksimal 1.000 file per batch upload.');
         }
 
-        return redirect()->back()->with('success', $count.' File PDF Purchase Receipt sedang diproses di background.');
+        $count = 0;
+        $batchSize = 50; // Process in batches to avoid memory issues
+        $fileBatches = array_chunk($files, $batchSize);
+        
+        foreach ($fileBatches as $batch) {
+            foreach ($batch as $file) {
+                try {
+                    $path = $file->store('temp_receipts');
+                    $originalName = $file->getClientOriginalName();
+                    \App\Jobs\ImportPurchaseReceiptJob::dispatch($path, $originalName, $officeId, $userId)
+                        ->onQueue('purchase-receipt-import'); // Use dedicated queue
+                    $count++;
+                } catch (\Exception $e) {
+                    \Log::error('Failed to process file: ' . $file->getClientOriginalName() . ' - ' . $e->getMessage());
+                    // Continue processing other files
+                }
+            }
+            
+            // Small delay between batches to prevent overwhelming the system
+            if (count($fileBatches) > 1) {
+                usleep(100000); // 0.1 second delay
+            }
+        }
+
+        return redirect()->back()->with('success', $count.' File PDF Purchase Receipt sedang diproses di background. Proses akan memakan waktu beberapa menit untuk file yang banyak.');
     }
 
     public function importEmployee(Request $request)
