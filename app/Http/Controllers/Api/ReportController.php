@@ -845,18 +845,6 @@ class ReportController extends Controller
         // Calculate grand totals
         $grandTotalRemaining = $grandTotalInvoice - $grandTotalPayment;
 
-        // Handle export
-        if ($request->has('export') && $request->export == 'excel') {
-            $filename = 'Laporan_Tagihan_Supplier_'.date('YmdHis').'.xls';
-            
-            return response()->streamDownload(function () use ($suppliersData, $grandTotalInvoice, $grandTotalPayment, $grandTotalRemaining) {
-                echo view('Report.supplier-invoices-excel', compact('suppliersData', 'grandTotalInvoice', 'grandTotalPayment', 'grandTotalRemaining'));
-            }, $filename, [
-                'Content-Type' => 'application/vnd.ms-excel',
-                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
-            ]);
-        }
-
         return view($this->views.'supplier-invoices', compact('suppliersData', 'grandTotalInvoice', 'grandTotalPayment', 'grandTotalRemaining'));
     }
 

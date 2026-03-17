@@ -157,14 +157,6 @@
                 <div class="card-header bg-white border-bottom py-3 px-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <h6 class="mb-0 fw-bold text-dark">Daftar Tagihan Supplier</h6>
-                        <div>
-                            @if($suppliersData->count() > 0)
-                                <a href="{{ route('report.supplier-invoices', request()->query() + ['export' => 'excel']) }}" 
-                                   class="btn btn-success border fw-bold px-3 shadow-sm btn-sm me-2">
-                                    <i class="fas fa-file-excel me-1"></i> Export Excel
-                                </a>
-                            @endif
-                        </div>
                     </div>
                 </div>
 
