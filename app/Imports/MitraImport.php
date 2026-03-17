@@ -142,7 +142,7 @@ class MitraImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
                         'tipe_mitra' => $tipe,
                         'no_hp' => $row['telp'] ?? $row['no_hp'] ?? $row['hp'] ?? $row['phone'] ?? null,
                         'email' => $row['email'] ?? null,
-                        'alamat' => $row['alamat'] ?? $row['address'] ?? null,
+                        'alamat' => $row['alamat'] ?? $row['address'] ?? 'Surakarta, Indonesia',
                         'ktp_npwp' => $row['ktp'] ?? $row['npwp'] ?? $row['ktp_npwp'] ?? null,
                         'kontak_nama' => $row['pic'] ?? $row['kontak'] ?? $row['contact_person'] ?? null,
                         'status' => 'Active',

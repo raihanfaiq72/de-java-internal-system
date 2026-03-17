@@ -293,15 +293,15 @@ class ImportController extends Controller
                 public function array(): array
                 {
                     return [
-                        ['Client', 'M-0001', 'PT. Maju Jaya', '08123456789'],
-                        ['Supplier', 'S-0001', 'CV. Abadi Sentosa', '08987654321'],
-                        ['Client', '', 'Toko Berkah', '08111222333'],
+                        ['Client', 'M-0001', 'PT. Maju Jaya', '08123456789', 'Jl. Sudirman No. 123, Jakarta'],
+                        ['Supplier', 'S-0001', 'CV. Abadi Sentosa', '08987654321', 'Jl. Gatot Subroto No. 456, Surabaya'],
+                        ['Client', '', 'Toko Berkah', '08111222333', ''], // Kosong akan menggunakan default "Surakarta, Indonesia"
                     ];
                 }
 
                 public function headings(): array
                 {
-                    return ['Type', 'No Mitra', 'Nama', 'Telp'];
+                    return ['Type', 'No Mitra', 'Nama', 'Telp', 'Alamat'];
                 }
 
                 public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet)
