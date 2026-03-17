@@ -522,7 +522,7 @@
         if (!window.TomSelect) {
             const sel = document.getElementById('modal_mitra_id');
             sel.innerHTML = '<option value="">Cari Supplier...</option>';
-            masterMitra.forEach(m => sel.insertAdjacentHTML('beforeend', `<option value="${m.id}">${m.nama}</option>`));
+            modalMasterMitra.forEach(m => sel.insertAdjacentHTML('beforeend', `<option value="${m.id}">${m.nama}</option>`));
             if (selectedId) sel.value = selectedId;
             return;
         }
@@ -537,7 +537,7 @@
         const sel = document.getElementById('modal_mitra_id');
         sel.innerHTML = '';
 
-        const options = (masterMitra || []).map(m => ({
+        const options = (modalMasterMitra || []).map(m => ({
             id: m.id,
             nama: m.nama,
             info: [m.no_hp, m.alamat].filter(Boolean).join(' • ') || ''
@@ -748,22 +748,41 @@
         }
     };
 
+    // Finance App object (required by other functions)
+    window.financeApp = window.financeApp || {
+        formatIDR: window.financeHelpers.formatIDR,
+        API_URL: '/api/invoice-api',
+        formatDate: (date) => {
+            if (!date) return '-';
+            const d = new Date(date);
+            return d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+    };
+
     let productCollection = [],
-        mitraCollection = [];
+        mitraCollection = [],
+        modalMasterMitra = [];
 
     // Initialize Master Data
     async function initializeInvoiceData() {
         try {
             const [mRes, pRes] = await Promise.all([
-                fetch('/api/mitra-api').then(r => r.json()),
+                fetch('/api/mitra-api?per_page=1000').then(r => r.json()),
                 fetch('/api/product-api').then(r => r.json())
             ]);
+            
+            // Handle both paginated and non-paginated responses
             mitraCollection = mRes.data.data || mRes.data;
             productCollection = pRes.data.data || pRes.data;
 
+            // Filter for suppliers only and assign to modalMasterMitra
+            modalMasterMitra = mitraCollection.filter(m => 
+                m.tipe_mitra === 'Supplier' || m.tipe_mitra === 'Both'
+            );
+
             const select = document.getElementById('modal_mitra_id');
             select.innerHTML = '<option value="">Cari dan pilih supplier...</option>';
-            mitraCollection.forEach(m => select.insertAdjacentHTML('beforeend',
+            modalMasterMitra.forEach(m => select.insertAdjacentHTML('beforeend',
                 `<option value="${m.id}">${m.nama}</option>`));
         } catch (e) {
             console.error("Master data fail", e);
@@ -782,7 +801,7 @@
         document.getElementById('summary_grand_total').innerText = 'Rp 0';
 
         if (masterProduk.length === 0) await fetchMasterProduk();
-        if (masterMitra.length === 0) await initializeInvoiceData();
+        if (modalMasterMitra.length === 0) await initializeInvoiceData();
 
         initTomSelectMitraModal();
 
@@ -905,7 +924,7 @@
             return;
         }
 
-        const m = masterMitra.find(x => x.id == id);
+        const m = modalMasterMitra.find(x => x.id == id);
         if (m) {
             document.getElementById('disp_mitra_nama').innerText = m.nama;
             document.getElementById('disp_mitra_tipe').innerText = m.tipe_mitra;

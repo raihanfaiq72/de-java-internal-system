@@ -771,4 +771,159 @@ class ReportController extends Controller
 
         return view($this->views.'profit-loss', compact('report', 'summary', 'startDate', 'endDate'));
     }
+
+    public function supplierInvoices(Request $request)
+    {
+        $officeId = session('active_office_id');
+        
+        // Build query for purchase invoices that are not fully paid
+        $query = Invoice::with(['mitra', 'payment'])
+            ->where('office_id', $officeId)
+            ->where('tipe_invoice', 'Purchase')
+            ->where('status_pembayaran', '!=', 'lunas')
+            ->whereNull('deleted_at')
+            ->whereHas('mitra', function ($q) {
+                $q->whereIn('tipe_mitra', ['Supplier', 'Both']);
+            });
+
+        // Apply filters
+        if ($request->mitra_id) {
+            $query->where('mitra_id', $request->mitra_id);
+        }
+
+        if ($request->start_date && $request->end_date) {
+            $query->whereBetween('tgl_invoice', [$request->start_date, $request->end_date]);
+        }
+
+        $invoices = $query->orderBy('tgl_invoice', 'desc')->get();
+
+        // Group by supplier and calculate totals
+        $suppliersData = collect();
+        $grandTotalInvoice = 0;
+        $grandTotalPayment = 0;
+
+        foreach ($invoices as $invoice) {
+            $totalPaid = $invoice->payment->sum('jumlah_bayar');
+            $remaining = $invoice->total_akhir - $totalPaid;
+            
+            // Only include invoices with remaining balance
+            if ($remaining > 0) {
+                $supplierId = $invoice->mitra_id;
+                
+                if (!$suppliersData->has($supplierId)) {
+                    $suppliersData->put($supplierId, [
+                        'id' => $invoice->mitra->id,
+                        'nama' => $invoice->mitra->nama,
+                        'kota' => $invoice->mitra->kota ?? '-',
+                        'total_invoice' => 0,
+                        'total_paid' => 0,
+                        'total_remaining' => 0,
+                        'invoice_count' => 0,
+                        'latest_invoice_date' => $invoice->tgl_invoice,
+                    ]);
+                }
+                
+                $supplierData = $suppliersData->get($supplierId);
+                $supplierData['total_invoice'] += $invoice->total_akhir;
+                $supplierData['total_paid'] += $totalPaid;
+                $supplierData['total_remaining'] += $remaining;
+                $supplierData['invoice_count'] += 1;
+                
+                // Update latest invoice date if this one is newer
+                if ($invoice->tgl_invoice > $supplierData['latest_invoice_date']) {
+                    $supplierData['latest_invoice_date'] = $invoice->tgl_invoice;
+                }
+                
+                $grandTotalInvoice += $invoice->total_akhir;
+                $grandTotalPayment += $totalPaid;
+            }
+        }
+
+        // Sort by supplier name
+        $suppliersData = $suppliersData->sortBy('nama');
+
+        // Calculate grand totals
+        $grandTotalRemaining = $grandTotalInvoice - $grandTotalPayment;
+
+        // Handle export
+        if ($request->has('export') && $request->export == 'excel') {
+            $filename = 'Laporan_Tagihan_Supplier_'.date('YmdHis').'.xls';
+            
+            return response()->streamDownload(function () use ($suppliersData, $grandTotalInvoice, $grandTotalPayment, $grandTotalRemaining) {
+                echo view('Report.supplier-invoices-excel', compact('suppliersData', 'grandTotalInvoice', 'grandTotalPayment', 'grandTotalRemaining'));
+            }, $filename, [
+                'Content-Type' => 'application/vnd.ms-excel',
+                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            ]);
+        }
+
+        return view($this->views.'supplier-invoices', compact('suppliersData', 'grandTotalInvoice', 'grandTotalPayment', 'grandTotalRemaining'));
+    }
+
+    public function supplierInvoicesDetail($id, Request $request)
+    {
+        $officeId = session('active_office_id');
+        
+        // Get supplier info
+        $supplier = Partner::where('office_id', $officeId)
+            ->where('id', $id)
+            ->whereIn('tipe_mitra', ['Supplier', 'Both'])
+            ->firstOrFail();
+        
+        // Build query for purchase invoices for this specific supplier
+        $query = Invoice::with(['mitra', 'payment'])
+            ->where('office_id', $officeId)
+            ->where('tipe_invoice', 'Purchase')
+            ->where('status_pembayaran', '!=', 'lunas')
+            ->where('mitra_id', $id)
+            ->whereNull('deleted_at');
+
+        // Apply date filters
+        if ($request->start_date && $request->end_date) {
+            $query->whereBetween('tgl_invoice', [$request->start_date, $request->end_date]);
+        }
+
+        $invoices = $query->orderBy('tgl_invoice', 'desc')->get();
+
+        // Process invoice data
+        $invoiceData = collect();
+        $totalInvoice = 0;
+        $totalPayment = 0;
+
+        foreach ($invoices as $invoice) {
+            $totalPaid = $invoice->payment->sum('jumlah_bayar');
+            $remaining = $invoice->total_akhir - $totalPaid;
+            
+            // Only include invoices with remaining balance
+            if ($remaining > 0) {
+                $invoiceData->push([
+                    'id' => $invoice->id,
+                    'nomor_invoice' => $invoice->nomor_invoice,
+                    'tgl_invoice' => $invoice->tgl_invoice,
+                    'tgl_jatuh_tempo' => $invoice->tgl_jatuh_tempo,
+                    'total_akhir' => $invoice->total_akhir,
+                    'total_paid' => $totalPaid,
+                    'remaining' => $remaining,
+                    'status_pembayaran' => $invoice->status_pembayaran,
+                    'keterangan' => $invoice->keterangan,
+                    'days_overdue' => $invoice->tgl_jatuh_tempo ? 
+                        \Carbon\Carbon::parse($invoice->tgl_jatuh_tempo)->diffInDays(now(), false) : 0,
+                ]);
+                
+                $totalInvoice += $invoice->total_akhir;
+                $totalPayment += $totalPaid;
+            }
+        }
+
+        // Calculate totals
+        $totalRemaining = $totalInvoice - $totalPayment;
+
+        return view($this->views.'supplier-invoices-detail', compact(
+            'supplier', 
+            'invoiceData', 
+            'totalInvoice', 
+            'totalPayment', 
+            'totalRemaining'
+        ));
+    }
 }

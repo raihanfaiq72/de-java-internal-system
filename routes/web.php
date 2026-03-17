@@ -122,6 +122,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('report/stock', [App\Http\Controllers\Api\ReportController::class, 'stockReport'])->name('report.stock');
         Route::get('report/stock/export', [App\Http\Controllers\Api\ReportController::class, 'stockReportExport'])->name('report.stock.export');
         Route::get('report/ar-aging', [App\Http\Controllers\Api\ReportController::class, 'arAging'])->name('report.ar-aging');
+        Route::get('report/supplier-invoices', [App\Http\Controllers\Api\ReportController::class, 'supplierInvoices'])->name('report.supplier-invoices');
+        Route::get('report/supplier-invoices/{id}/detail', [App\Http\Controllers\Api\ReportController::class, 'supplierInvoicesDetail'])->name('report.supplier-invoices.detail');
         Route::get('report/general-ledger', [App\Http\Controllers\Api\ReportController::class, 'generalLedger'])->name('report.general-ledger');
         Route::get('report/cash-book', [App\Http\Controllers\Api\ReportController::class, 'cashBook'])->name('report.cash-book');
         Route::get('report/balance-sheet', [App\Http\Controllers\Api\ReportController::class, 'balanceSheet'])->name('report.balance-sheet');

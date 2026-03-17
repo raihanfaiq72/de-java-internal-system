@@ -52,6 +52,10 @@ class PurchaseController extends Controller
     {
         $mitras = Partner::whereIn('tipe_mitra', ['Supplier', 'Both'])
             ->where('office_id', session('active_office_id'))
+            ->where(function($query) {
+                $query->where('tipe_mitra', 'Supplier')
+                      ->orWhere('tipe_mitra', 'Both');
+            })
             ->get();
 
         $accounts = DB::table('chart_of_accounts')

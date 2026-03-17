@@ -34,7 +34,15 @@ class PartnerController extends Controller
                 $query->where('tipe_mitra', $request->tipe_mitra);
             }
 
-            $data = $query->latest()->paginate(10);
+            // Handle per_page parameter for getting all data
+            $perPage = $request->get('per_page', 10);
+            if ($perPage >= 1000) {
+                // Return all data without pagination for large per_page values
+                $data = $query->latest()->get();
+                return apiResponse(true, 'Data mitra berhasil diambil', $data);
+            }
+
+            $data = $query->latest()->paginate($perPage);
 
             return apiResponse(true, 'Data mitra berhasil diambil', $data);
         } catch (Throwable $e) {

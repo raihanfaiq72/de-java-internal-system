@@ -207,6 +207,11 @@ return [
                 'icon' => 'iconoir-wallet',
             ],
             [
+                'title' => 'Tagihan Supplier',
+                'route' => 'report.supplier-invoices',
+                'icon' => 'iconoir-reports',
+            ],
+            [
                 'title' => 'Laporan Massal',
                 'route' => 'bulk-reports.index',
                 'icon' => 'iconoir-reports',
