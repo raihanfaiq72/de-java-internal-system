@@ -906,6 +906,24 @@ class ReportController extends Controller
         // Calculate totals
         $totalRemaining = $totalInvoice - $totalPayment;
 
+        // Handle export
+        if ($request->has('export') && $request->export == 'excel') {
+            $filename = 'Detail_Tagihan_Supplier_'.str_replace(' ', '_', $supplier->nama).'_'.date('YmdHis').'.xlsx';
+            
+            return response()->streamDownload(function () use ($supplier, $invoiceData, $totalInvoice, $totalPayment, $totalRemaining) {
+                echo view('Report.supplier-invoices-detail-excel', compact(
+                    'supplier', 
+                    'invoiceData', 
+                    'totalInvoice', 
+                    'totalPayment', 
+                    'totalRemaining'
+                ));
+            }, $filename, [
+                'Content-Type' => 'application/vnd.ms-excel',
+                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            ]);
+        }
+
         return view($this->views.'supplier-invoices-detail', compact(
             'supplier', 
             'invoiceData', 

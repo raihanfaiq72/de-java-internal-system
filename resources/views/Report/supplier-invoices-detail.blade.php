@@ -219,7 +219,7 @@
                         <h6 class="mb-0 fw-bold text-dark">Detail Invoice {{ $supplier->nama }}</h6>
                         <div>
                             @if($invoiceData->count() > 0)
-                                <a href="{{ route('report.supplier-invoices', request()->query() + ['export' => 'excel', 'mitra_id' => $supplier->id]) }}" 
+                                <a href="{{ route('report.supplier-invoices.detail', $supplier->id) }}?{{ http_build_query(request()->query() + ['export' => 'excel']) }}" 
                                    class="btn btn-success border fw-bold px-3 shadow-sm btn-sm me-2">
                                     <i class="fas fa-file-excel me-1"></i> Export Excel
                                 </a>
