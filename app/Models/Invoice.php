@@ -44,6 +44,11 @@ class Invoice extends Model
         return $this->belongsTo(Partner::class);
     }
 
+    public function sales()
+    {
+        return $this->belongsTo(User::class, 'sales_id');
+    }
+
     public function items()
     {
         return $this->hasMany(InvoiceItem::class);

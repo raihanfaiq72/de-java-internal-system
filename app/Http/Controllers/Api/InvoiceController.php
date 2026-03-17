@@ -296,6 +296,7 @@ class InvoiceController extends Controller
             'invoice.nomor_invoice' => 'required|unique:invoices,nomor_invoice',
             'invoice.tgl_invoice' => 'required|date',
             'invoice.mitra_id' => 'required|exists:mitras,id',
+            'invoice.sales_id' => 'nullable|integer|min:0',
 
             'items' => 'required|array|min:1',
             'items.*.qty' => 'required|numeric|min:0.01',
@@ -318,6 +319,15 @@ class InvoiceController extends Controller
             ->first();
         if (! $mitra) {
             return apiResponse(false, 'Mitra tidak valid untuk outlet ini', null, null, 422);
+        }
+
+        // Validate sales_id jika bukan 0
+        $salesId = $request->input('invoice.sales_id');
+        if ($salesId && $salesId != 0) {
+            $salesUser = \App\Models\User::find($salesId);
+            if (! $salesUser) {
+                return apiResponse(false, 'Sales person tidak valid', null, null, 422);
+            }
         }
 
         // AR Aging Check (Only for Sales)

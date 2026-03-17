@@ -99,6 +99,7 @@
                                                     <label class="f-label">Salesperson</label>
                                                     @if(isset($canSelectSales) && $canSelectSales)
                                                         <select id="modal_sales_id" class="form-select f-input">
+                                                            <option value="0">Tanpa Sales Person</option>
                                                             <option value="">Pilih Sales...</option>
                                                             @foreach($users ?? [] as $u)
                                                                 <option value="{{ $u->id }}" @if($u->id == auth()->id()) selected @endif>{{ $u->name }}</option>
@@ -983,6 +984,7 @@
                 tgl_invoice: document.getElementById('modal_tgl_invoice').value,
                 tgl_jatuh_tempo: document.getElementById('modal_tgl_jatuh_tempo').value,
                 mitra_id: mitraIdVal,
+                sales_id: document.getElementById('modal_sales_id').value || 0,
                 ref_no: document.getElementById('modal_ref_no').value,
                 keterangan: document.getElementById('modal_keterangan').value,
                 syarat_ketentuan: document.getElementById('modal_syarat').value,
