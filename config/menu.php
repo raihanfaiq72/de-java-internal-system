@@ -202,7 +202,7 @@ return [
                 'icon' => 'iconoir-book',
             ],
             [
-                'title' => 'Kas Besar',
+                'title' => 'Keuangan',
                 'route' => 'report.cash-book',
                 'icon' => 'iconoir-wallet',
             ],

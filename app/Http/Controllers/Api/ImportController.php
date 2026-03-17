@@ -91,6 +91,11 @@ class ImportController extends Controller
         return redirect()->back()->with('success', $count.' File PDF Purchase Receipt sedang diproses di background.');
     }
 
+    public function importEmployee(Request $request)
+    {
+        return $this->handleImport($request, \App\Imports\EmployeeImport::class, [session('active_office_id'), auth()->id()]);
+    }
+
     public function downloadTemplate($type)
     {
         if ($type === 'stock') {
@@ -104,6 +109,9 @@ class ImportController extends Controller
         }
         if ($type === 'purchase') {
             return $this->downloadPurchaseTemplate();
+        }
+        if ($type === 'employee') {
+            return $this->downloadEmployeeTemplate();
         }
 
         return redirect()->back()->with('error', 'Template tidak ditemukan.');
@@ -265,6 +273,45 @@ class ImportController extends Controller
                 public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet)
                 {
                     return [1 => ['font' => ['bold' => true]]];
+                }
+            }, $fileName);
+        }
+
+        return redirect()->back()->with('error', 'Library Excel tidak terinstall.');
+    }
+
+    private function downloadEmployeeTemplate()
+    {
+        $fileName = 'Template_Import_Karyawan.xlsx';
+
+        if (class_exists('Maatwebsite\Excel\Facades\Excel')) {
+            return \Maatwebsite\Excel\Facades\Excel::download(new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\ShouldAutoSize, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithStyles
+            {
+                public function array(): array
+                {
+                    return [
+                        [
+                            'EMP-00001', 'Ahmad Rizki', 'Software Engineer', 150000, 50000, '2023-01-15', 'Active', 'ahmad.rizki@example.com'
+                        ],
+                        [
+                            'EMP-00002', 'Siti Nurhaliza', 'Accountant', 120000, 30000, '2023-02-01', 'Active', 'siti.nurhaliza@example.com'
+                        ],
+                        [
+                            '', 'Budi Santoso', 'Sales Manager', 180000, 75000, '2023-03-10', 'Active', ''
+                        ],
+                    ];
+                }
+
+                public function headings(): array
+                {
+                    return ['nik', 'name', 'position', 'daily_salary', 'premi', 'join_date', 'status', 'email'];
+                }
+
+                public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet)
+                {
+                    return [
+                        1 => ['font' => ['bold' => true]],
+                    ];
                 }
             }, $fileName);
         }

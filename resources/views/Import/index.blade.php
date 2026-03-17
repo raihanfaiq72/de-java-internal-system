@@ -31,22 +31,27 @@
                             </li>
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-sales" role="tab">
-                                    <i class="iconoir-page me-2"></i>Import Sales Invoice
+                                    <i class="iconoir-page me-2"></i>Import Invoice Penjualan
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-receipt" role="tab">
-                                    <i class="iconoir-scan-qr-code me-2"></i>Import Sales Receipt (PDF)
+                                    <i class="iconoir-scan-qr-code me-2"></i>Import Kuitansi Penjualan (PDF)
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-purchase" role="tab">
-                                    <i class="iconoir-cart me-2"></i>Import Purchase Invoice
+                                    <i class="iconoir-cart me-2"></i>Import Invoice Pembelian
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-purchase-receipt" role="tab">
-                                    <i class="iconoir-doc-text me-2"></i>Import Purchase Receipt (PDF)
+                                    <i class="iconoir-doc-text me-2"></i>Import Kuitansi Pembelian (PDF)
+                                </a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-employee" role="tab">
+                                    <i class="iconoir-user me-2"></i>Import Data Karyawan
                                 </a>
                             </li>
                         </ul>
@@ -318,6 +323,50 @@
                                                 <li>Sistem akan membaca text dari PDF.</li>
                                                 <li>Mencocokkan Invoice No dengan database.</li>
                                                 <li>Membuat data Pembayaran otomatis jika cocok.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Tab Employee -->
+                            <div class="tab-pane fade" id="tab-employee" role="tabpanel">
+                                <div class="row justify-content-center">
+                                    <div class="col-lg-6">
+                                        <div class="text-center mb-4">
+                                            <div class="mb-3">
+                                                <i class="iconoir-user fs-1 text-primary"></i>
+                                            </div>
+                                            <h5 class="fw-bold">Upload File Excel Data Karyawan</h5>
+                                            <p class="text-muted">
+                                                Format yang didukung: .xlsx, .xls, .csv<br>
+                                                Pastikan file memiliki header kolom yang sesuai.
+                                            </p>
+                                            <a href="{{ route('import.template', ['type' => 'employee']) }}" class="btn btn-outline-primary btn-sm fw-bold">
+                                                <i class="iconoir-download me-1"></i> Download Template Import Karyawan
+                                            </a>
+                                        </div>
+
+                                        <form action="{{ route('import.employee') }}" method="POST" enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
+                                            @csrf
+                                            <div class="mb-3">
+                                                <label for="file_employee" class="form-label fw-bold">Pilih File</label>
+                                                <input class="form-control" type="file" id="file_employee" name="file" required>
+                                            </div>
+                                            <div class="d-grid">
+                                                <button type="submit" class="btn btn-primary fw-bold text-white">
+                                                    <i class="iconoir-upload me-1"></i> Mulai Import Karyawan
+                                                </button>
+                                            </div>
+                                        </form>
+
+                                        <div class="mt-4 alert alert-info small">
+                                            <strong>Catatan:</strong>
+                                            <ul class="mb-0 ps-3">
+                                                <li>Data karyawan akan diupdate berdasarkan NIK atau Email.</li>
+                                                <li>Jika karyawan belum ada, akan dibuat otomatis.</li>
+                                                <li>Departemen dan Jabatan akan dicocokkan dengan data yang ada.</li>
+                                                <li>Status default akan diset ke "Aktif".</li>
                                             </ul>
                                         </div>
                                     </div>
