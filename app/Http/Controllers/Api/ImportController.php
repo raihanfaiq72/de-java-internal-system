@@ -151,11 +151,11 @@ class ImportController extends Controller
                     return [
                         [
                             date('Y-m-d'), date('Y-m-d', strtotime('+30 days')), 'INV-2023-001', 'Sent', 'PT. Pelanggan Setia', 'IDR',
-                            1100000, 1100000, 'Jasa Konsultasi', 'Konsultasi IT Bulan Januari', 1, 0, 0, 'PPN 11%', 1000000, 'PO-001',
+                            1100000, 1100000, 'Jasa Konsultasi', 'Konsultasi IT Bulan Januari', 1, 0, 0, 'PPN 11%', 1000000, 'PO-001', 'Ahmad Rizki',
                         ],
                         [
                             date('Y-m-d'), date('Y-m-d', strtotime('+30 days')), 'INV-2023-002', 'Draft', 'CV. Mitra Baru', 'IDR',
-                            550000, 550000, 'Produk A', 'Deskripsi Produk A', 5, 0, 0, 'PPN 11%', 500000, 'PO-002',
+                            550000, 550000, 'Produk A', 'Deskripsi Produk A', 5, 0, 0, 'PPN 11%', 500000, 'PO-002', 'Siti Nurhaliza',
                         ],
                     ];
                 }
@@ -164,7 +164,7 @@ class ImportController extends Controller
                 {
                     return [
                         'invoice_date', 'due_date', 'number', 'status', 'partner_name', 'currency',
-                        'amount_due', 'grand_total', 'product_name', 'product_description', 'quantity', 'discount', 'discount_amt_per_qty', 'tax', 'amount', 'document_reference',
+                        'amount_due', 'grand_total', 'product_name', 'product_description', 'quantity', 'discount', 'discount_amt_per_qty', 'tax', 'amount', 'document_reference', 'sales_person',
                     ];
                 }
 

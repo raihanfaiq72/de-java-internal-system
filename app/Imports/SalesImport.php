@@ -198,7 +198,11 @@ class SalesImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
                 $invoiceDate = $this->parseDate($firstRow['invoice_date'] ?? date('Y-m-d'));
                 $dueDate = $this->parseDate($firstRow['due_date'] ?? null);
 
-                // 3. Create Invoice
+                // 3. Get Sales Person ID
+                $salesPersonName = $firstRow['sales_person'] ?? null;
+                $salesId = $this->findOrCreateSalesPerson($salesPersonName);
+
+                // 4. Create Invoice
                 $invoice = Invoice::updateOrCreate(
                     [
                         'office_id' => $officeId,
@@ -211,7 +215,7 @@ class SalesImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
                         'mitra_id' => $partnerId,
                         'status_dok' => $this->mapStatusDok($firstRow['status'] ?? 'Draft'),
                         'status_pembayaran' => 'Unpaid', // Default, logic to determine paid is complex without payment data
-                        'sales_id' => $userId, // Current user
+                        'sales_id' => $salesId, // Sales person from import
                         'ref_no' => $firstRow['document_reference'] ?? null,
                         'currency' => $firstRow['currency'] ?? 'IDR',
                         'subtotal' => 0, // Will calculate
@@ -409,5 +413,37 @@ class SalesImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
         } while ($exists);
 
         return $code;
+    }
+
+    private function findOrCreateSalesPerson($salesName)
+    {
+        if (!$salesName) {
+            return 0; // Return 0 for "Tanpa Sales Person"
+        }
+
+        // Clean the sales name
+        $cleanName = trim($salesName);
+        
+        // Try to find existing user by name (using LIKE for partial match)
+        $user = User::where('name', 'like', "%$cleanName%")
+            ->orWhere('username', 'like', "%$cleanName%")
+            ->first();
+
+        if ($user) {
+            return $user->id;
+        }
+
+        // Create new user if not found
+        $username = strtolower(str_replace(' ', '', $cleanName)) . date('dmY');
+        $password = date('dmY'); // Format DDMMYYYY
+        
+        $newUser = User::create([
+            'name' => $cleanName,
+            'username' => $username,
+            'email' => $username . '@example.com',
+            'password' => bcrypt($password),
+        ]);
+
+        return $newUser->id;
     }
 }
