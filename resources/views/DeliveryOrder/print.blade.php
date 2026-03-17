@@ -203,15 +203,11 @@
         <div class="signature-section">
             <div>
                 <p>Dibuat Oleh,</p>
-                <div class="signature-box">(Admin Gudang)</div>
-            </div>
-            <div>
-                <p>Dikirim Oleh,</p>
-                <div class="signature-box">(Pengemudi)</div>
+                <div class="signature-box">{{Auth::user()->name}}</div>
             </div>
             <div>
                 <p>Diterima Oleh,</p>
-                <div class="signature-box">(Penerima)</div>
+                <div class="signature-box"><span id="printSignatureDriverName">-</span></div>
             </div>
         </div>
     </div>
@@ -264,6 +260,7 @@
                     const fn = fleet.fleet ? `${fleet.fleet.fleet_name || '-'} (${fleet.fleet.license_plate || fleet.fleet.plate_number || '-'})` : '-';
                     document.getElementById('printFleetName').textContent = fn;
                     document.getElementById('printDriverName').textContent = fleet.driver?.name || '-';
+                    document.getElementById('printSignatureDriverName').textContent = fleet.driver?.name || '-';
                     document.getElementById('printDistance').textContent = `${rupiah2(fleet.estimated_distance_km || 0)} KM`;
                     document.getElementById('printFuelCost').textContent = rupiah(fleet.estimated_fuel_cost || 0);
 
