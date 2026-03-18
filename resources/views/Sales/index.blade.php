@@ -222,6 +222,10 @@
                                     href="#invoice-in-trash">Invoice Terhapus</a></li>
                         </ul>
                         <div class="text-end">
+                            <button onclick="openMassPrintModal()"
+                                class="btn btn-danger border fw-bold px-3 me-2 shadow-sm text-white">
+                                <i class="fa fa-print me-1"></i> Cetak Massal
+                            </button>
                             <button onclick="exportSales()"
                                 class="btn btn-white border fw-bold px-3 me-2 shadow-sm text-dark">
                                 <i class="fa fa-file-excel me-1 text-success"></i> Export .xls
@@ -397,6 +401,98 @@
         </div>
     </div>
 
+    <!-- Modal Preview Mass Print -->
+    <div class="modal fade" id="modalMassPrintPreview" tabindex="-1" aria-labelledby="modalMassPrintPreviewLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0 rounded-4">
+                <div class="modal-header border-bottom-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold" id="modalMassPrintPreviewLabel">
+                        <i class="fa fa-file-pdf text-danger me-2"></i> Preview Cetak Massal
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="ratio ratio-16x9 border rounded bg-light" style="min-height: 70vh;">
+                        <iframe id="mass-print-iframe" src="" allowfullscreen></iframe>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light fw-bold px-4" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-danger fw-bold px-4 shadow-sm" onclick="triggerMassPrint()">
+                        <i class="fa fa-print me-1"></i> Cetak Sekarang
+                    </button>
+                    <button type="button" class="btn btn-success fw-bold px-4 shadow-sm" onclick="downloadMassPrint()">
+                        <i class="fa fa-download me-1"></i> Download PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cetak Massal -->
+    <div class="modal fade" id="modalMassPrint" tabindex="-1" aria-labelledby="modalMassPrintLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0 rounded-4">
+                <div class="modal-header border-bottom-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold" id="modalMassPrintLabel">
+                        <i class="fa fa-print text-danger me-2"></i> Cetak Massal Berdasarkan Sales Person
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="massPrintForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Sales Person</label>
+                                <select id="massPrintSalesId" class="form-select" required>
+                                    <option value="">Pilih Sales Person...</option>
+                                    <option value="0">Tanpa Sales Person</option>
+                                    @foreach($users ?? [] as $user)
+                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Periode</label>
+                                <select id="massPrintPeriod" class="form-select" required>
+                                    <option value="">Pilih Periode...</option>
+                                    <option value="this_month">Bulan Ini</option>
+                                    <option value="last_month">Bulan Lalu</option>
+                                    <option value="this_quarter">Quarter Ini</option>
+                                    <option value="this_year">Tahun Ini</option>
+                                    <option value="custom">Custom Range</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6" id="customDateFrom" style="display:none;">
+                                <label class="form-label fw-bold">Dari Tanggal</label>
+                                <input type="date" id="massPrintDateFrom" class="form-control">
+                            </div>
+                            <div class="col-md-6" id="customDateTo" style="display:none;">
+                                <label class="form-label fw-bold">Sampai Tanggal</label>
+                                <input type="date" id="massPrintDateTo" class="form-control">
+                            </div>
+                        </div>
+                        <div class="alert alert-info mt-3">
+                            <i class="fa fa-info-circle me-2"></i>
+                            <strong>Informasi:</strong> PDF yang dihasilkan akan berisi 3 halaman:
+                            <ol class="mb-0 mt-2">
+                                <li>Halaman 1: Tabel Omset Uang Masuk (seperti gambar 1)</li>
+                                <li>Halaman 2: Detail Pembayaran per Invoice (seperti gambar 2)</li>
+                                <li>Halaman 3: Rekapitulasi & Grafik (seperti gambar 3)</li>
+                            </ol>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light fw-bold px-4" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-danger fw-bold px-4 shadow-sm" onclick="generateMassPrint()">
+                        <i class="fa fa-print me-1"></i> Generate PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @include('Sales.Modal.modal-bulk-edit')
 @endsection
 
@@ -429,6 +525,120 @@
             params.append('tab_status', tabStatus);
 
             window.location.href = '/sales/export?' + params.toString();
+        }
+
+        // Mass Print Functions
+        function openMassPrintModal() {
+            const modal = new bootstrap.Modal(document.getElementById('modalMassPrint'));
+            modal.show();
+        }
+
+        // Handle period change
+        document.addEventListener('DOMContentLoaded', function() {
+            const periodSelect = document.getElementById('massPrintPeriod');
+            const customDateFrom = document.getElementById('customDateFrom');
+            const customDateTo = document.getElementById('customDateTo');
+
+            if (periodSelect) {
+                periodSelect.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        customDateFrom.style.display = 'block';
+                        customDateTo.style.display = 'block';
+                    } else {
+                        customDateFrom.style.display = 'none';
+                        customDateTo.style.display = 'none';
+                    }
+                });
+            }
+        });
+
+        function generateMassPrint() {
+            const salesId = document.getElementById('massPrintSalesId').value;
+            const period = document.getElementById('massPrintPeriod').value;
+            const dateFrom = document.getElementById('massPrintDateFrom').value;
+            const dateTo = document.getElementById('massPrintDateTo').value;
+
+            if (!salesId || !period) {
+                alert('Silakan pilih Sales Person dan Periode terlebih dahulu.');
+                return;
+            }
+
+            if (period === 'custom' && (!dateFrom || !dateTo)) {
+                alert('Silakan pilih tanggal awal dan akhir untuk periode custom.');
+                return;
+            }
+
+            // Show loading
+            const btn = document.querySelector('[onclick="generateMassPrint()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Generating Preview...';
+            btn.disabled = true;
+
+            // Build parameters
+            const params = new URLSearchParams({
+                sales_id: salesId,
+                period: period
+            });
+
+            if (period === 'custom') {
+                params.append('date_from', dateFrom);
+                params.append('date_to', dateTo);
+            }
+
+            // Store PDF URL for later use
+            window.currentMassPrintUrl = `/sales/mass-print?${params.toString()}`;
+
+            // Open preview in modal
+            openMassPrintPreview();
+
+            // Reset button after delay
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                bootstrap.Modal.getInstance(document.getElementById('modalMassPrint')).hide();
+            }, 1500);
+        }
+
+        function openMassPrintPreview() {
+            const modalContainer = document.getElementById('modalMassPrintPreview');
+            
+            if (!modalContainer) {
+                console.error('Modal preview mass print tidak ditemukan.');
+                return;
+            }
+
+            const iframe = modalContainer.querySelector('#mass-print-iframe');
+            
+            if (!iframe) {
+                console.error('Elemen iframe tidak ditemukan di dalam modal preview.');
+                alert('Gagal memuat preview cetak massal.');
+                return;
+            }
+
+            iframe.src = window.currentMassPrintUrl;
+
+            const bModal = bootstrap.Modal.getOrCreateInstance(modalContainer);
+            bModal.show();
+        }
+
+        function triggerMassPrint() {
+            const iframe = document.getElementById('mass-print-iframe');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            }
+        }
+
+        function downloadMassPrint() {
+            if (window.currentMassPrintUrl) {
+                const link = document.createElement('a');
+                link.href = window.currentMassPrintUrl;
+                link.download = `Laporan_Penjualan_${new Date().toISOString().split('T')[0]}.pdf`;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
         }
 
         if (!window.financeApp) {

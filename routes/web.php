@@ -51,6 +51,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('sales', [App\Http\Controllers\Api\SalesController::class, 'index'])->name('sales');
         Route::get('sales/export', [App\Http\Controllers\Api\SalesController::class, 'export'])->name('sales.export');
+        Route::get('sales/mass-print', [App\Http\Controllers\Api\SalesController::class, 'massPrint'])->name('sales.mass-print');
         Route::get('sales/{id}', [SalesController::class, 'show'])->name('sales.show');
         Route::get('sales/print/{id}', [SalesController::class, 'printInvoice'])->name('sales.print');
         Route::get('sales-receipt', [SalesController::class, 'receipt'])->name('sales.receipt');
