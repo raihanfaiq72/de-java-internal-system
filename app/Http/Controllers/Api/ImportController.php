@@ -59,22 +59,28 @@ class ImportController extends Controller
             $files = [$files];
         }
 
-        // Limit to 1000 files
-        if (count($files) > 1000) {
-            return redirect()->back()->with('error', 'Maksimal 1.000 file per batch upload.');
+        // Limit to 5000 files
+        if (count($files) > 5000) {
+            return redirect()->back()->with('error', 'Maksimal 5.000 file per batch upload.');
         }
 
         $count = 0;
-        $batchSize = 50; // Process in batches to avoid memory issues
+        $batchSize = 100; // Process in batches to avoid memory issues (increased for large uploads)
         $fileBatches = array_chunk($files, $batchSize);
         
-        foreach ($fileBatches as $batch) {
+        \Log::info('Starting receipt import: Total files = ' . count($files) . ', Batches = ' . count($fileBatches));
+        
+        foreach ($fileBatches as $batchIndex => $batch) {
+            \Log::info('Processing batch ' . ($batchIndex + 1) . ' of ' . count($fileBatches) . ' with ' . count($batch) . ' files');
+            
             foreach ($batch as $file) {
                 try {
                     $path = $file->store('temp_receipts');
                     $originalName = $file->getClientOriginalName();
                     \App\Jobs\ImportReceiptJob::dispatch($path, $originalName, $officeId, $userId);
                     $count++;
+                    
+                    \Log::info('Dispatched job for file: ' . $originalName . ' (Total: ' . $count . ')');
                 } catch (\Exception $e) {
                     \Log::error('Failed to process file: ' . $file->getClientOriginalName() . ' - ' . $e->getMessage());
                     // Continue processing other files
@@ -86,6 +92,8 @@ class ImportController extends Controller
                 usleep(100000); // 0.1 second delay
             }
         }
+
+        \Log::info('Receipt import completed: ' . $count . ' files dispatched to queue');
 
         return redirect()->back()->with('success', $count.' File PDF sedang diproses di background. Proses akan memakan waktu beberapa menit untuk file yang banyak.');
     }

@@ -28,7 +28,7 @@
                             <i class="fa fa-print me-1"></i> Cetak
                         </a>
                         <button class="btn btn-primary fw-bold px-4 shadow-sm"
-                            onclick="alert('Fitur Edit akan segera hadir')">
+                            onclick="openEditModal()">
                             <i class="fa fa-pencil me-1"></i> Edit
                         </button>
                     </div>
@@ -222,6 +222,79 @@
         </div>
     </div>
 
+    <!-- Edit Receipt Modal -->
+    <div class="modal fade" id="modalEditReceipt" tabindex="-1" aria-labelledby="modalEditReceiptLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0 rounded-4">
+                <div class="modal-header border-bottom-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold" id="modalEditReceiptLabel">
+                        <i class="fa fa-pencil text-primary me-2"></i> Edit Kuitansi
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editReceiptForm" onsubmit="updateReceipt(event)">
+                    <div class="modal-body p-4">
+                        <input type="hidden" id="edit-payment-id" name="payment_id">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Nomor Pembayaran</label>
+                                    <input type="text" class="form-control" id="edit-nomor_pembayaran" name="nomor_pembayaran" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Tanggal Pembayaran</label>
+                                    <input type="date" class="form-control" id="edit-tgl_pembayaran" name="tgl_pembayaran" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Metode Pembayaran</label>
+                                    <select class="form-select" id="edit-metode_pembayaran" name="metode_pembayaran" required>
+                                        <option value="">Pilih Metode</option>
+                                        <option value="Tunai">Tunai</option>
+                                        <option value="Transfer">Transfer Bank</option>
+                                        <option value="Giro">Giro</option>
+                                        <option value="Kartu Kredit">Kartu Kredit</option>
+                                        <option value="Lainnya">Lainnya</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Jumlah Bayar</label>
+                                    <input type="number" class="form-control" id="edit-jumlah_bayar" name="jumlah_bayar" required step="0.01">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Catatan</label>
+                            <textarea class="form-control" id="edit-catatan" name="catatan" rows="3"></textarea>
+                        </div>
+
+                        <div class="alert alert-info small">
+                            <i class="fa fa-info-circle me-1"></i>
+                            <strong>Informasi:</strong> Perubahan akan langsung disimpan dan mempengaruhi laporan keuangan.
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pb-4 px-4">
+                        <button type="button" class="btn btn-light fw-bold px-4" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary fw-bold px-4 shadow-sm">
+                            <i class="fa fa-save me-1"></i> Simpan Perubahan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="modalPrintPreview" tabindex="-1" aria-labelledby="modalPrintPreviewLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
@@ -273,6 +346,9 @@
         }
 
         function renderPayment(data) {
+            // Store current payment data for editing
+            currentPaymentData = data;
+
             // Header
             document.getElementById('header-subtitle').textContent = `No. ${data.nomor_pembayaran}`;
 

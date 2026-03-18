@@ -49,6 +49,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('dashboard-piutang', [DashboardPiutangController::class, 'index'])->name('dashboard.piutang');
         Route::get('dashboard-sales', [DashboardSalesController::class, 'index'])->name('dashboard.sales');
 
+        Route::get('pdf-to-excel', [App\Http\Controllers\Api\PdfToExcelController::class, 'index'])->name('pdf.to.excel');
+        Route::get('pdf-to-excel/client', [App\Http\Controllers\Api\PdfToExcelController::class, 'clientSide'])->name('pdf.to.excel.client');
+        Route::post('pdf-to-excel/convert', [App\Http\Controllers\Api\PdfToExcelController::class, 'convert'])->name('pdf.to.excel.convert');
+
         Route::get('sales', [App\Http\Controllers\Api\SalesController::class, 'index'])->name('sales');
         Route::get('sales/export', [App\Http\Controllers\Api\SalesController::class, 'export'])->name('sales.export');
         Route::get('sales/mass-print', [App\Http\Controllers\Api\SalesController::class, 'massPrint'])->name('sales.mass-print');

@@ -18,6 +18,12 @@
 
                 <div class="card border-0 shadow-sm rounded-3">
                     <div class="card-header bg-white border-bottom p-0">
+                        <div class="d-flex justify-content-between align-items-center px-4 pt-3">
+                            <h4 class="page-title mb-0">Import Data</h4>
+                            <a href="{{ route('pdf.to.excel') }}" class="btn btn-warning btn-sm">
+                                <i class="fas fa-file-pdf me-1"></i> PDF to Excel
+                            </a>
+                        </div>
                         <ul class="nav nav-tabs px-4 pt-3" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link active fw-bold" data-bs-toggle="tab" href="#tab-stock" role="tab">
@@ -91,6 +97,15 @@
 
                                         <form action="{{ route('import.stock') }}" method="POST" enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
                                             @csrf
+                                            <div class="card-header bg-white border-bottom">
+                                                <h5 class="mb-0">
+                                                    <i class="fas fa-upload me-2"></i>
+                                                    Import Data
+                                                    <a href="{{ route('pdf.to.excel') }}" class="btn btn-sm btn-warning float-end">
+                                                        <i class="fas fa-file-pdf me-1"></i> PDF to Excel
+                                                    </a>
+                                                </h5>
+                                            </div>
                                             <div class="mb-3">
                                                 <label for="file" class="form-label fw-bold">Pilih File</label>
                                                 <input class="form-control" type="file" id="file" name="file" required>
@@ -220,8 +235,10 @@
                                             @csrf
                                             <div class="mb-3">
                                                 <label for="file_receipt" class="form-label fw-bold">Pilih File PDF</label>
-                                                <input class="form-control" type="file" id="file_receipt" name="file[]" multiple required accept=".pdf">
-                                                <div class="form-text">Bisa pilih banyak file sekaligus (Max 1.000 file per upload).</div>
+                                                <input class="form-control" type="file" id="file_receipt" name="file[]" multiple required accept=".pdf" onchange="updateFileCount()">
+                                                <div class="form-text">
+                                                    <span id="file-count-info">Bisa pilih banyak file sekaligus (Max 5.000 file per upload).</span>
+                                                </div>
                                             </div>
                                             <div class="d-grid">
                                                 <button type="submit" class="btn btn-danger fw-bold text-white">
@@ -379,3 +396,39 @@
         </div>
     </div>
 @endsection
+
+@push('js')
+<script>
+function updateFileCount() {
+    const fileInput = document.getElementById('file_receipt');
+    const fileCountInfo = document.getElementById('file-count-info');
+    const fileCount = fileInput.files.length;
+    
+    if (fileCount > 0) {
+        fileCountInfo.textContent = `${fileCount} file dipilih (Max 5.000 file per upload).`;
+        
+        if (fileCount > 5000) {
+            fileCountInfo.textContent = `⚠️ ${fileCount} file dipilih - Melebihi batas maksimal 5.000 file!`;
+            fileCountInfo.style.color = 'red';
+        } else if (fileCount > 2000) {
+            fileCountInfo.style.color = 'orange';
+        } else {
+            fileCountInfo.style.color = 'green';
+        }
+    } else {
+        fileCountInfo.textContent = 'Bisa pilih banyak file sekaligus (Max 5.000 file per upload).';
+        fileCountInfo.style.color = '';
+    }
+    
+    console.log('Files selected:', fileCount);
+    console.log('Files:', fileInput.files);
+}
+
+// Debug form submission
+document.querySelector('form[action*="import.receipt"]').addEventListener('submit', function(e) {
+    const fileInput = document.getElementById('file_receipt');
+    console.log('Submitting form with files:', fileInput.files.length);
+    console.log('File names:', Array.from(fileInput.files).map(f => f.name));
+});
+</script>
+@endpush

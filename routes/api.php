@@ -177,6 +177,7 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::get('/', [PaymentController::class, 'index'])->name('index');
             Route::post('/', [PaymentController::class, 'store'])->name('store');
             Route::get('/{id}', [PaymentController::class, 'show'])->name('show');
+            Route::put('/{id}', [PaymentController::class, 'update'])->name('update');
             Route::delete('/{id}', [PaymentController::class, 'destroy'])->name('destroy');
             Route::get('/search/{value}', [PaymentController::class, 'search'])->name('search');
         });

@@ -138,6 +138,103 @@ class PaymentController extends Controller
         });
     }
 
+    public function update(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'nomor_pembayaran' => 'required|string|max:255',
+            'tgl_pembayaran' => 'required|date',
+            'metode_pembayaran' => 'required|string|max:255',
+            'jumlah_bayar' => 'required|numeric|min:0.01',
+            'catatan' => 'nullable|string|max:1000',
+        ]);
+
+        if ($validator->fails()) {
+            return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
+        }
+
+        return DB::transaction(function () use ($request, $id) {
+            $payment = Payment::where('office_id', session('active_office_id'))
+                ->lockForUpdate()
+                ->find($id);
+
+            if (! $payment) {
+                return apiResponse(false, 'Pembayaran tidak ditemukan', null, null, 404);
+            }
+
+            $invoice = Invoice::lockForUpdate()->find($payment->invoice_id);
+            if (! $invoice) {
+                return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
+            }
+
+            // Calculate old and new amounts
+            $oldJumlahBayar = $payment->jumlah_bayar;
+            $newJumlahBayar = $request->jumlah_bayar;
+            $difference = $newJumlahBayar - $oldJumlahBayar;
+
+            // Check if new amount exceeds remaining balance
+            $totalSudahDibayar = $invoice->payment()
+                ->where('id', '!=', $id) // Exclude current payment
+                ->sum('jumlah_bayar');
+            
+            $totalSetelahUpdate = $totalSudahDibayar + $newJumlahBayar;
+            $totalInvoice = $invoice->total_akhir;
+
+            if ($totalSetelahUpdate > $totalInvoice) {
+                return apiResponse(false, 'Total pembayaran melebihi jumlah invoice', [
+                    'total_invoice' => $totalInvoice,
+                    'total_dibayar' => $totalSetelahUpdate,
+                    'max_bayar' => $totalInvoice - $totalSudahDibayar,
+                ], null, 422);
+            }
+
+            // Update payment
+            $payment->update([
+                'nomor_pembayaran' => $request->nomor_pembayaran,
+                'tgl_pembayaran' => $request->tgl_pembayaran,
+                'metode_pembayaran' => $request->metode_pembayaran,
+                'jumlah_bayar' => $newJumlahBayar,
+                'catatan' => $request->catatan,
+            ]);
+
+            // Update invoice status
+            if ($totalSetelahUpdate <= 0) {
+                $statusPembayaran = 'Unpaid';
+            } elseif ($totalSetelahUpdate < $totalInvoice) {
+                $statusPembayaran = 'Partially Paid';
+            } else {
+                $statusPembayaran = 'Paid';
+            }
+
+            if (
+                $invoice->status_pembayaran === 'Overdue' &&
+                $totalSetelahUpdate < $totalInvoice
+            ) {
+                $statusPembayaran = 'Overdue';
+            }
+
+            $invoice->update([
+                'status_pembayaran' => $statusPembayaran,
+            ]);
+
+            // Update journal entries if amount changed
+            if ($oldJumlahBayar != $newJumlahBayar) {
+                // Delete old journal entries and create new ones
+                $this->journalService->updatePaymentJournal($payment, $difference);
+            }
+
+            return apiResponse(true, 'Kuitansi berhasil diperbarui', [
+                'payment' => $payment->fresh(['invoice.mitra', 'akun_keuangan']),
+                'invoice' => [
+                    'id' => $invoice->id,
+                    'total_akhir' => $invoice->total_akhir,
+                    'total_dibayar' => $totalSetelahUpdate,
+                    'sisa_tagihan' => $invoice->total_akhir - $totalSetelahUpdate,
+                    'status_pembayaran' => $statusPembayaran,
+                ],
+            ]);
+        });
+    }
+
     public function destroy($id)
     {
         return DB::transaction(function () use ($id) {

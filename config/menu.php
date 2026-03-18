@@ -230,6 +230,16 @@ return [
         'route' => 'import.index',
         'icon' => 'iconoir-import',
     ],
+    [
+        'type' => 'item',
+        'title' => 'PDF to Excel',
+        'route' => 'pdf.to.excel',
+        'icon' => 'iconoir-file-pdf',
+        'badge' => [
+            'text' => 'New',
+            'class' => 'text-bg-warning ms-auto',
+        ],
+    ],
 
     [
         'type' => 'label',
