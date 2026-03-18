@@ -221,7 +221,7 @@
                                             <div class="mb-3">
                                                 <label for="file_receipt" class="form-label fw-bold">Pilih File PDF</label>
                                                 <input class="form-control" type="file" id="file_receipt" name="file[]" multiple required accept=".pdf">
-                                                <div class="form-text">Bisa pilih banyak file sekaligus (Max 20 file per upload).</div>
+                                                <div class="form-text">Bisa pilih banyak file sekaligus (Max 1.000 file per upload).</div>
                                             </div>
                                             <div class="d-grid">
                                                 <button type="submit" class="btn btn-danger fw-bold text-white">
@@ -307,7 +307,7 @@
                                             <div class="mb-3">
                                                 <label for="file_purchase_receipt" class="form-label fw-bold">Pilih File PDF</label>
                                                 <input class="form-control" type="file" id="file_purchase_receipt" name="file[]" multiple required accept=".pdf">
-                                                <div class="form-text">Bisa pilih banyak file sekaligus (Max 20 file per upload).</div>
+                                                <div class="form-text">Bisa pilih banyak file sekaligus (Max 1.000 file per upload).</div>
                                             </div>
                                             <div class="d-grid">
                                                 <button type="submit" class="btn btn-secondary fw-bold text-white">

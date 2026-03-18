@@ -73,8 +73,7 @@ class ImportController extends Controller
                 try {
                     $path = $file->store('temp_receipts');
                     $originalName = $file->getClientOriginalName();
-                    \App\Jobs\ImportReceiptJob::dispatch($path, $originalName, $officeId, $userId)
-                        ->onQueue('receipt-import'); // Use dedicated queue
+                    \App\Jobs\ImportReceiptJob::dispatch($path, $originalName, $officeId, $userId);
                     $count++;
                 } catch (\Exception $e) {
                     \Log::error('Failed to process file: ' . $file->getClientOriginalName() . ' - ' . $e->getMessage());
@@ -137,8 +136,7 @@ class ImportController extends Controller
                 try {
                     $path = $file->store('temp_receipts');
                     $originalName = $file->getClientOriginalName();
-                    \App\Jobs\ImportPurchaseReceiptJob::dispatch($path, $originalName, $officeId, $userId)
-                        ->onQueue('purchase-receipt-import'); // Use dedicated queue
+                    \App\Jobs\ImportPurchaseReceiptJob::dispatch($path, $originalName, $officeId, $userId);
                     $count++;
                 } catch (\Exception $e) {
                     \Log::error('Failed to process file: ' . $file->getClientOriginalName() . ' - ' . $e->getMessage());

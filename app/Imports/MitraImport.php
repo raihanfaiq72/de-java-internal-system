@@ -131,6 +131,10 @@ class MitraImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
                     $tipe = 'Client';
                 }
 
+                // Get address and coordinates
+                $address = $row['alamat'] ?? $row['address'] ?? 'Surakarta, Indonesia';
+                $coordinates = $this->getCoordinatesFromAddress($address);
+
                 Partner::updateOrCreate(
                     [
                         'office_id' => $officeId, 
@@ -142,7 +146,9 @@ class MitraImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
                         'tipe_mitra' => $tipe,
                         'no_hp' => $row['telp'] ?? $row['no_hp'] ?? $row['hp'] ?? $row['phone'] ?? null,
                         'email' => $row['email'] ?? null,
-                        'alamat' => $row['alamat'] ?? $row['address'] ?? 'Surakarta, Indonesia',
+                        'alamat' => $address,
+                        'latitude' => $coordinates['latitude'],
+                        'longitude' => $coordinates['longitude'],
                         'ktp_npwp' => $row['ktp'] ?? $row['npwp'] ?? $row['ktp_npwp'] ?? null,
                         'kontak_nama' => $row['pic'] ?? $row['kontak'] ?? $row['contact_person'] ?? null,
                         'status' => 'Active',
@@ -183,5 +189,76 @@ class MitraImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
         } while ($exists);
 
         return $code;
+    }
+
+    private function getCoordinatesFromAddress($address)
+    {
+        if (!$address) {
+            // Default coordinates for Surakarta, Indonesia
+            return [
+                'latitude' => -7.5692,
+                'longitude' => 110.8194
+            ];
+        }
+
+        // Create cache key for the address
+        $cacheKey = 'geocode_' . md5(strtolower($address));
+        
+        // Try to get from cache first
+        $cached = \Cache::get($cacheKey);
+        if ($cached) {
+            return $cached;
+        }
+
+        try {
+            // Add delay to respect rate limits (1 second delay between requests)
+            usleep(1000000); // 1 second delay
+            
+            // Using Nominatim (OpenStreetMap) free geocoding API
+            $client = new \GuzzleHttp\Client([
+                'timeout' => 10,
+                'connect_timeout' => 5
+            ]);
+
+            $response = $client->get('https://nominatim.openstreetmap.org/search', [
+                'query' => [
+                    'q' => $address . ', Indonesia',
+                    'format' => 'json',
+                    'limit' => 1,
+                    'countrycodes' => 'id',
+                    'addressdetails' => 1
+                ],
+                'headers' => [
+                    'User-Agent' => 'DeJavaInternalSystem/1.0'
+                ]
+            ]);
+
+            $data = json_decode($response->getBody(), true);
+            
+            if (!empty($data) && isset($data[0]['lat']) && isset($data[0]['lon'])) {
+                $coordinates = [
+                    'latitude' => (float) $data[0]['lat'],
+                    'longitude' => (float) $data[0]['lon']
+                ];
+                
+                // Cache the result for 24 hours
+                \Cache::put($cacheKey, $coordinates, 86400);
+                
+                return $coordinates;
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Failed to geocode address: ' . $address . ' - ' . $e->getMessage());
+        }
+
+        // Fallback to Surakarta coordinates if geocoding fails
+        $fallbackCoordinates = [
+            'latitude' => -7.5692,
+            'longitude' => 110.8194
+        ];
+        
+        // Cache the fallback result for 1 hour
+        \Cache::put($cacheKey, $fallbackCoordinates, 3600);
+        
+        return $fallbackCoordinates;
     }
 }
