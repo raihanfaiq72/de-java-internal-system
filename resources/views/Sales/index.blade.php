@@ -284,8 +284,8 @@
                                     </select>
                                 </div>
                                 <div style="min-width: 0; flex: 1.5;>
-                                                        <label class=" f-label mb-1 fw-bold text-muted"
-                                    style="font-size: 11px;">
+                                                        <label class="
+                                    f-label mb-1 fw-bold text-muted" style="font-size: 11px;">
                                     Mitra</label>
                                     <select id="filter-mitra-id" class="tom-select-init">
                                         <option value="">Semua Pemasok...</option>
@@ -402,14 +402,16 @@
     </div>
 
     <!-- Modal Preview Mass Print -->
-    <div class="modal fade" id="modalMassPrintPreview" tabindex="-1" aria-labelledby="modalMassPrintPreviewLabel" aria-hidden="true">
+    <div class="modal fade" id="modalMassPrintPreview" tabindex="-1" aria-labelledby="modalMassPrintPreviewLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content shadow-lg border-0 rounded-4">
                 <div class="modal-header border-bottom-0 pt-4 px-4">
                     <h5 class="modal-title fw-bold" id="modalMassPrintPreviewLabel">
                         <i class="fa fa-file-pdf text-danger me-2"></i> Preview Cetak Massal
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="ratio ratio-16x9 border rounded bg-light" style="min-height: 70vh;">
@@ -430,14 +432,16 @@
     </div>
 
     <!-- Modal Cetak Massal -->
-    <div class="modal fade" id="modalMassPrint" tabindex="-1" aria-labelledby="modalMassPrintLabel" aria-hidden="true">
+    <div class="modal fade" id="modalMassPrint" tabindex="-1" aria-labelledby="modalMassPrintLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content shadow-lg border-0 rounded-4">
                 <div class="modal-header border-bottom-0 pt-4 px-4">
                     <h5 class="modal-title fw-bold" id="modalMassPrintLabel">
                         <i class="fa fa-print text-danger me-2"></i> Cetak Massal Berdasarkan Sales Person
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <form id="massPrintForm">
@@ -447,7 +451,7 @@
                                 <select id="massPrintSalesId" class="form-select" required>
                                     <option value="">Pilih Sales Person...</option>
                                     <option value="0">Tanpa Sales Person</option>
-                                    @foreach($users ?? [] as $user)
+                                    @foreach ($users ?? [] as $user)
                                         <option value="{{ $user->id }}">{{ $user->name }}</option>
                                     @endforeach
                                 </select>
@@ -552,7 +556,7 @@
             }
         });
 
-        function generateMassPrint() {
+        async function generateMassPrint() {
             const salesId = document.getElementById('massPrintSalesId').value;
             const period = document.getElementById('massPrintPeriod').value;
             const dateFrom = document.getElementById('massPrintDateFrom').value;
@@ -585,40 +589,49 @@
                 params.append('date_to', dateTo);
             }
 
-            // Store PDF URL for later use
-            window.currentMassPrintUrl = `/sales/mass-print?${params.toString()}`;
+            const url = `/sales/mass-print?${params.toString()}`;
 
-            // Open preview in modal
-            openMassPrintPreview();
+            try {
+                // 1. Verify success first before showing preview
+                const response = await fetch(url +
+                '&check=1'); // check parameter to differentiate between full render and quick check if needed, but here we just check if response is ok
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.error || 'Terjadi kesalahan sistem');
+                }
 
-            // Reset button after delay
-            setTimeout(() => {
+                // 2. Store URL
+                window.currentMassPrintUrl = url;
+
+                // 3. Prepare iframe
+                const iframe = document.getElementById('mass-print-iframe');
+                if (iframe) {
+                    iframe.onload = function() {
+                        // 4. Hide setup modal & Show preview modal only after load
+                        bootstrap.Modal.getInstance(document.getElementById('modalMassPrint')).hide();
+
+                        const previewModal = document.getElementById('modalMassPrintPreview');
+                        const bModal = bootstrap.Modal.getOrCreateInstance(previewModal);
+                        bModal.show();
+
+                        // Reset button
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+
+                        // Clear listener to avoid multiple triggers
+                        iframe.onload = null;
+                    };
+                    iframe.src = url;
+                }
+            } catch (error) {
+                alert('Gagal generate preview: ' + error.message);
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-                bootstrap.Modal.getInstance(document.getElementById('modalMassPrint')).hide();
-            }, 1500);
+            }
         }
 
         function openMassPrintPreview() {
-            const modalContainer = document.getElementById('modalMassPrintPreview');
-            
-            if (!modalContainer) {
-                console.error('Modal preview mass print tidak ditemukan.');
-                return;
-            }
-
-            const iframe = modalContainer.querySelector('#mass-print-iframe');
-            
-            if (!iframe) {
-                console.error('Elemen iframe tidak ditemukan di dalam modal preview.');
-                alert('Gagal memuat preview cetak massal.');
-                return;
-            }
-
-            iframe.src = window.currentMassPrintUrl;
-
-            const bModal = bootstrap.Modal.getOrCreateInstance(modalContainer);
-            bModal.show();
+            // Logic moved into generateMassPrint for synchronized loading
         }
 
         function triggerMassPrint() {
@@ -678,7 +691,7 @@
         };
 
         document.querySelectorAll('.nav-tabs-finance .nav-link').forEach(tab => {
-            tab.addEventListener('shown.bs.tab', function (event) {
+            tab.addEventListener('shown.bs.tab', function(event) {
                 const targetId = event.target.getAttribute('href');
 
                 if (targetId === '#invoice-archive') {
@@ -757,7 +770,8 @@
                 const [invoiceRes, paymentRes] = await Promise.all([
                     fetch(`${finalUrl}${finalUrl.includes('?') ? '&' : '?'}${params.toString()}`),
                     fetch(
-                        `/api/payment-api?tipe_receipt=Sales&limit=1000`) // Fetch enough payments to cover visible invoices
+                        `/api/payment-api?tipe_receipt=Sales&limit=1000`
+                        ) // Fetch enough payments to cover visible invoices
                 ]);
 
                 const result = await invoiceRes.json();
@@ -808,7 +822,8 @@
             item.items?.forEach(it => {
                 const tr = document.createElement('tr');
                 tr.classList.add('border-bottom', 'border-light');
-                tr.innerHTML = `
+                tr.innerHTML =
+                    `
                                                                                                                                                                                                                                     <td class="ps-3 py-3">
                                                                                                                                                                                                                                         <div class="fw-bold text-dark">${it.nama_produk_manual || it.product?.nama_produk || '-'}</div>
                                                                                                                                                                                                                                         <div class="small text-muted">${it.product?.kode_produk || '-'}</div>
@@ -1037,14 +1052,14 @@
                             'Accept': 'application/json'
                         }
                     }).then(res => res.json())
-                        .then(data => {
-                            if (data.success) successCount++;
-                            else failCount++;
-                        })
-                        .catch(err => {
-                            console.error(`Failed to delete ${id}:`, err);
-                            failCount++;
-                        })
+                    .then(data => {
+                        if (data.success) successCount++;
+                        else failCount++;
+                    })
+                    .catch(err => {
+                        console.error(`Failed to delete ${id}:`, err);
+                        failCount++;
+                    })
                 );
 
                 await Promise.all(promises);
@@ -1115,7 +1130,7 @@
 
             const searchInput = document.getElementById('filter-search');
             if (searchInput) {
-                searchInput.addEventListener('keypress', function (e) {
+                searchInput.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') {
                         e.preventDefault();
                         loadInvoiceData();

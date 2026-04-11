@@ -480,10 +480,6 @@
                                 <input type="date" id="massPrintDateTo" class="form-control">
                             </div>
                         </div>
-                        <div class="alert alert-info mt-3">
-                            <i class="fa fa-info-circle me-2"></i>
-                            <strong>Informasi:</strong> PDF yang dihasilkan akan berisi rekapitulasi data pembelian berdasarkan kriteria yang dipilih.
-                        </div>
                     </form>
                 </div>
                 <div class="modal-footer border-top-0 pb-4 px-4">
@@ -1134,7 +1130,7 @@
             }
         });
 
-        function generateMassPrint() {
+        async function generateMassPrint() {
             const staffId = document.getElementById('massPrintSalesId').value;
             const period = document.getElementById('massPrintPeriod').value;
             const dateFrom = document.getElementById('massPrintDateFrom').value;
@@ -1158,7 +1154,7 @@
 
             // Build parameters
             const params = new URLSearchParams({
-                staff_id: staffId, // Adjust parameter name to match Purchase logic if needed
+                sales_id: staffId, // using sales_id field for purchaser
                 period: period
             });
 
@@ -1167,26 +1163,48 @@
                 params.append('date_to', dateTo);
             }
 
-            // Store PDF URL (adjusted to purchase)
-            window.currentMassPrintUrl = `/purchase/mass-print?${params.toString()}`;
+            const url = `/purchase/mass-print?${params.toString()}`;
 
-            // Open preview in modal
-            openMassPrintPreview();
+            try {
+                // 1. Verify success first before showing preview
+                const response = await fetch(url + '&check=1');
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.error || 'Terjadi kesalahan sistem');
+                }
 
-            // Reset button after delay
-            setTimeout(() => {
+                // 2. Store PDF URL
+                window.currentMassPrintUrl = url;
+
+                // 3. Prepare iframe
+                const iframe = document.getElementById('mass-print-iframe');
+                if (iframe) {
+                    iframe.onload = function() {
+                        // 4. Hide setup & Show preview only after load
+                        bootstrap.Modal.getInstance(document.getElementById('modalMassPrint')).hide();
+                        
+                        const previewModal = document.getElementById('modalMassPrintPreview');
+                        const bModal = bootstrap.Modal.getOrCreateInstance(previewModal);
+                        bModal.show();
+
+                        // Reset button
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                        
+                        // Clear listener
+                        iframe.onload = null;
+                    };
+                    iframe.src = url;
+                }
+            } catch (error) {
+                alert('Gagal generate preview: ' + error.message);
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-                bootstrap.Modal.getInstance(document.getElementById('modalMassPrint')).hide();
-            }, 1000);
+            }
         }
 
         function openMassPrintPreview() {
-            const modalContainer = document.getElementById('modalMassPrintPreview');
-            const iframe = modalContainer.querySelector('#mass-print-iframe');
-            if (iframe) iframe.src = window.currentMassPrintUrl;
-            const bModal = bootstrap.Modal.getOrCreateInstance(modalContainer);
-            bModal.show();
+            // Logic moved into generateMassPrint
         }
 
         function triggerMassPrint() {

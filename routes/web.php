@@ -64,6 +64,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('purchase', [PurchaseController::class, 'index'])->name('purchase');
         Route::get('purchase/export', [App\Http\Controllers\Api\PurchaseController::class, 'export'])->name('purchase.export');
+        Route::get('purchase/mass-print', [App\Http\Controllers\Api\PurchaseController::class, 'massPrint'])->name('purchase.mass-print');
         Route::get('purchase/{id}', [PurchaseController::class, 'show'])->name('purchase.show');
         Route::get('purchase/print/{id}', [App\Http\Controllers\Api\PurchaseController::class, 'printInvoice'])->name('purchase.print');
         Route::get('purchase-receipt', [App\Http\Controllers\Api\PurchaseController::class, 'receipt'])->name('purchase.receipt');

@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>LAPORAN PENJUALAN {{ strtoupper($salesPerson->name ?? 'Tanpa Sales Person') }}</title>
+    <title>LAPORAN PEMBELIAN {{ strtoupper($salesPerson->name ?? 'Tanpa Staff') }}</title>
     <style>
         * {
             margin: 0;
@@ -14,6 +14,8 @@
             font-family: Arial, sans-serif;
             font-size: 12px;
             line-height: 1.4;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
         }
         
         .page-break {
@@ -56,7 +58,7 @@
         }
         
         .table th {
-            background-color: #f0f0f0;
+            background-color: #f0f0f0 !important;
             font-weight: bold;
             text-align: center;
         }
@@ -71,7 +73,7 @@
         
         .total-row {
             font-weight: bold;
-            background-color: #f9f9f9;
+            background-color: #f9f9f9 !important;
         }
         
         .chart-container {
@@ -115,10 +117,10 @@
 </head>
 <body>
 
-<!-- STEP 1: OMSET UANG MASUK -->
+<!-- STEP 1: PENGELUARAN UANG -->
 <div class="header">
-    <h2>OMSET UANG MASUK PERIODE {{ strtoupper(date('F Y', strtotime($dateFrom))) }}</h2>
-    <h3>Sales Person: {{ $salesPerson->name ?? 'Tanpa Sales Person' }}</h3>
+    <h2>LAPORAN PENGELUARAN PERIODE {{ strtoupper(date('F Y', strtotime($dateFrom))) }}</h2>
+    <h3>Staff / Purchaser: {{ $salesPerson->name ?? 'Tanpa Staff' }}</h3>
     <p>Periode: {{ date('d M Y', strtotime($dateFrom)) }} - {{ date('d M Y', strtotime($dateTo)) }}</p>
 </div>
 
@@ -126,7 +128,7 @@
     <thead>
         <tr>
             <th width="15%">TGL PEMBAYARAN</th>
-            <th width="40%">CUSTOMER</th>
+            <th width="40%">PEMASOK</th>
             <th width="20%">TOTAL</th>
             <th width="25%">NO. NOTA</th>
         </tr>
@@ -157,8 +159,8 @@
 
 <!-- STEP 2: DETAIL PEMBAYARAN PER INVOICE -->
 <div class="header">
-    <h2>DETAIL PEMBAYARAN PER INVOICE</h2>
-    <h3>Sales Person: {{ $salesPerson->name ?? 'Tanpa Sales Person' }}</h3>
+    <h2>DETAIL PEMBAYARAN PER INVOICE (PEMBELIAN)</h2>
+    <h3>Staff / Purchaser: {{ $salesPerson->name ?? 'Tanpa Staff' }}</h3>
     <p>Periode: {{ date('d M Y', strtotime($dateFrom)) }} - {{ date('d M Y', strtotime($dateTo)) }}</p>
 </div>
 
@@ -167,7 +169,7 @@
         <tr>
             <th width="10%">TGL INVOICE</th>
             <th width="15%">NO. INVOICE</th>
-            <th width="30%">CUSTOMER</th>
+            <th width="30%">PEMASOK</th>
             <th width="15%">TOTAL INVOICE</th>
             <th width="15%">PEMBAYARAN</th>
             <th width="15%">SISA</th>
@@ -192,13 +194,10 @@
             @if($invoiceGroup->where('payment_amount', '>', 0)->count() > 0)
                 @foreach($invoiceGroup->where('payment_amount', '>', 0) as $payment)
                     @if($payment->payment_amount > 0)
-                    <tr style="background-color: #f9f9f9;">
+                    <tr style="background-color: #f9f9f9 !important;">
                         <td colspan="3" style="padding-left: 30px;">
                             {{ date('d-M-y', strtotime($payment->payment_date)) }} 
                             @if($payment->payment_note) - {{ $payment->payment_note }} @endif
-                            @if(str_contains(strtolower($payment->payment_note ?? ''), 'titip')) 
-                                <span style="color: #ff6600; font-weight: bold;">(Titip)</span>
-                            @endif
                         </td>
                         <td class="text-right"></td>
                         <td class="text-right">{{ number_format($payment->payment_amount, 0, ',', '.') }}</td>
@@ -227,8 +226,8 @@
 
 <!-- STEP 3: REKAPITULASI & GRAFIK -->
 <div class="header">
-    <h2>REKAPITULASI PENJUALAN</h2>
-    <h3>Sales Person: {{ $salesPerson->name ?? 'Tanpa Sales Person' }}</h3>
+    <h2>REKAPITULASI PEMBELIAN</h2>
+    <h3>Staff / Purchaser: {{ $salesPerson->name ?? 'Tanpa Staff' }}</h3>
     <p>Periode: {{ date('d M Y', strtotime($dateFrom)) }} - {{ date('d M Y', strtotime($dateTo)) }}</p>
 </div>
 
@@ -255,7 +254,7 @@
         </td>
         <td width="25%" style="background-color: #fce4ec !important; border: 2px solid #E91E63 !important; padding: 0;">
             <div style="text-align: center; padding: 15px;">
-                <h4 style="color: #C2185B; margin-bottom: 5px; font-size: 11px;">COLLECTION RATE</h4>
+                <h4 style="color: #C2185B; margin-bottom: 5px; font-size: 11px;">PAYMENT RATE</h4>
                 <h3 style="color: #C2185B; font-size: 14px;">{{ $totalInvoices > 0 ? number_format(($totalPayments / $totalInvoices) * 100, 1) : 0 }}%</h3>
             </div>
         </td>
@@ -264,7 +263,7 @@
 
 <!-- Monthly Chart -->
 <div class="chart-container">
-    <h3 style="margin-bottom: 20px;">GRAFIK PENJUALAN BULANAN</h3>
+    <h3 style="margin-bottom: 20px;">GRAFIK PEMBELIAN BULANAN</h3>
     <table class="table" style="table-layout: fixed;">
         <thead>
             <tr>
@@ -276,7 +275,7 @@
         </thead>
         <tbody>
             <tr>
-                <td style="font-weight: bold;">Penjualan</td>
+                <td style="font-weight: bold;">Pembelian</td>
                 @foreach($monthlyData as $amount)
                     <td class="text-right" style="font-size: 9px; padding: 4px;">{{ $amount > 0 ? number_format($amount/1000000, 1) . 'M' : '0' }}</td>
                 @endforeach
@@ -289,7 +288,7 @@
                             $maxAmount = max($monthlyData) ?: 1;
                             $height = ($amount / $maxAmount) * 100;
                         @endphp
-                        <div style="width: 100%; height: {{ $height }}px; background-color: #4CAF50 !important; border-top-left-radius: 2px; border-top-right-radius: 2px;"></div>
+                        <div style="width: 100%; height: {{ $height }}px; background-color: #2196F3 !important; border-top-left-radius: 2px; border-top-right-radius: 2px;"></div>
                     </td>
                 @endforeach
             </tr>
@@ -297,38 +296,6 @@
     </table>
     <p style="text-align: left; font-size: 9px; margin-top: 5px; color: #666;">* Nilai grafik dalam jutaan (M)</p>
 </div>
-
-<!-- Payment Status Summary -->
-<table class="table">
-    <thead>
-        <tr>
-            <th width="30%">JENIS PEMBAYARAN</th>
-            <th width="25%">JUMLAH</th>
-            <th width="25%">NILAI</th>
-            <th width="20%">PERSENTASE</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Lunas</td>
-            <td class="text-center">{{ $invoices->groupBy('id')->filter(function($inv) { return $inv->sum('payment_amount') >= $inv->first()->total_akhir; })->count() }}</td>
-            <td class="text-right">{{ number_format($invoices->groupBy('id')->filter(function($inv) { return $inv->sum('payment_amount') >= $inv->first()->total_akhir; })->sum(function($inv) { return $inv->first()->total_akhir; }), 0, ',', '.') }}</td>
-            <td class="text-center">{{ $totalInvoices > 0 ? number_format(($invoices->groupBy('id')->filter(function($inv) { return $inv->sum('payment_amount') >= $inv->first()->total_akhir; })->sum(function($inv) { return $inv->first()->total_akhir; }) / $totalInvoices) * 100, 1) : 0 }}%</td>
-        </tr>
-        <tr>
-            <td>Sebagian (Termasuk Titip)</td>
-            <td class="text-center">{{ $invoices->groupBy('id')->filter(function($inv) { $paid = $inv->sum('payment_amount'); return $paid > 0 && $paid < $inv->first()->total_akhir; })->count() }}</td>
-            <td class="text-right">{{ number_format($invoices->groupBy('id')->filter(function($inv) { $paid = $inv->sum('payment_amount'); return $paid > 0 && $paid < $inv->first()->total_akhir; })->sum('payment_amount'), 0, ',', '.') }}</td>
-            <td class="text-center">{{ $totalInvoices > 0 ? number_format(($invoices->groupBy('id')->filter(function($inv) { $paid = $inv->sum('payment_amount'); return $paid > 0 && $paid < $inv->first()->total_akhir; })->sum('payment_amount') / $totalInvoices) * 100, 1) : 0 }}%</td>
-        </tr>
-        <tr>
-            <td>Belum Dibayar</td>
-            <td class="text-center">{{ $invoices->groupBy('id')->filter(function($inv) { return $inv->sum('payment_amount') == 0; })->count() }}</td>
-            <td class="text-right">{{ number_format($invoices->groupBy('id')->filter(function($inv) { return $inv->sum('payment_amount') == 0; })->sum(function($inv) { return $inv->first()->total_akhir; }), 0, ',', '.') }}</td>
-            <td class="text-center">{{ $totalInvoices > 0 ? number_format(($invoices->groupBy('id')->filter(function($inv) { return $inv->sum('payment_amount') == 0; })->sum(function($inv) { return $inv->first()->total_akhir; }) / $totalInvoices) * 100, 1) : 0 }}%</td>
-        </tr>
-    </tbody>
-</table>
 
 <!-- Footer -->
 <div class="footer" style="position: relative; margin-top: 50px;">
