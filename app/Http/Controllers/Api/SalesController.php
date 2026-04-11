@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SalesController extends Controller
 {
@@ -107,11 +107,11 @@ class SalesController extends Controller
         $dateTo = $request->date_to;
 
         // Validate input
-        if (!$salesId || !$period) {
+        if (! $period) {
             return response()->json(['error' => 'Sales ID and Period are required'], 400);
         }
 
-        if ($period === 'custom' && (!$dateFrom || !$dateTo)) {
+        if ($period === 'custom' && (! $dateFrom || ! $dateTo)) {
             return response()->json(['error' => 'Date from and Date to are required for custom period'], 400);
         }
 
@@ -180,7 +180,7 @@ class SalesController extends Controller
                     'date' => $group->first()->payment_date,
                     'total' => $group->sum('payment_amount'),
                     'customers' => $group->pluck('mitra_nama')->unique(),
-                    'receipts' => $group->pluck('no_receipt')->filter()
+                    'receipts' => $group->pluck('no_receipt')->filter(),
                 ];
             })
             ->sortBy('date');
