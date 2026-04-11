@@ -210,7 +210,7 @@ class JournalService
 
         // Find Accounts
         $accAP = $this->findAccount($officeId, '2101'); // Hutang Usaha
-        $accInventory = $this->findAccount($officeId, '1401') ?? $this->findAccount($officeId, '5101'); // Fallback to HPP if no Inventory
+        $accInventory = $this->findAccount($officeId, '1501') ?? $this->findAccount($officeId, '5101'); // Fallback to HPP if no Inventory
         $accExpense = $this->findAccount($officeId, '5101'); // HPP / Pembelian
 
         if (! $accAP) {
@@ -285,7 +285,7 @@ class JournalService
         $accAR = $this->findAccount($officeId, '1301'); // Piutang Usaha
         $accRevenue = $this->findAccount($officeId, '4101'); // Penjualan
         $accHPP = $this->findAccount($officeId, '5101'); // HPP
-        $accInventory = $this->findAccount($officeId, '1401'); // Persediaan
+        $accInventory = $this->findAccount($officeId, '1501'); // Persediaan
 
         if (! $accAR || ! $accRevenue) {
             return;

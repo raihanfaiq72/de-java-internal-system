@@ -434,10 +434,13 @@ class InvoiceController extends Controller
             }
 
             // Automatic Journal Entry
+            // BUT: Defer journal for Sales Invoices that need approval
             if ($invoice->tipe_invoice === 'Purchase') {
                 $this->journalService->recordPurchaseInvoice($invoice->fresh(['items.product']));
             } elseif ($invoice->tipe_invoice === 'Sales') {
-                $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
+                if (! $needsApproval) {
+                    $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
+                }
             }
 
             $msg = 'Invoice berhasil dibuat';
@@ -519,6 +522,15 @@ class InvoiceController extends Controller
 
             // Sync invoice status
             $invoice->update(['status_dok' => 'Approved']);
+
+            // Record Journal Entry upon Approval (if not already recorded)
+            if ($invoice->tipe_invoice === 'Sales') {
+                // To be safe, check if journal already exists (optional but good for idempotency)
+                $hasJournal = \App\Models\Journal::where('nomor_referensi', "Sales Invoice #{$invoice->nomor_invoice}")->exists();
+                if (! $hasJournal) {
+                    $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
+                }
+            }
 
             return apiResponse(true, 'Invoice berhasil disetujui');
         });
