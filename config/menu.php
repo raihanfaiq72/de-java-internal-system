@@ -234,7 +234,7 @@ return [
         'type' => 'item',
         'title' => 'PDF to Excel',
         'route' => 'pdf.to.excel',
-        'icon' => 'iconoir-file-pdf',
+        'icon' => 'iconoir-google-docs',
         'badge' => [
             'text' => 'New',
             'class' => 'text-bg-warning ms-auto',
@@ -249,7 +249,7 @@ return [
         'type' => 'item',
         'title' => 'App Releases',
         'route' => 'app-releases.index',
-        'icon' => 'iconoir-mobile',
+        'icon' => 'iconoir-cloud-sync',
     ],
     [
         'type' => 'item',
