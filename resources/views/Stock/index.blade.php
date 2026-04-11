@@ -26,69 +26,72 @@
                 </div>
 
                 <!-- Stats Cards -->
-                <div class="row g-3 mb-4">
+                <div class="row g-2 mb-1 stats-row">
+                    <!-- Total Produk -->
                     <div class="col-md-3">
-                        <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden">
-                            <div class="card-body p-4">
+                        <div class="card border-0 shadow-sm h-auto position-relative">
+                            <div class="card-body p-3">
                                 <div class="d-flex align-items-center mb-3">
-                                    <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded-circle">
+                                    <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded-circle stat-icon-circle">
                                         <i class="iconoir-box-iso fs-3 text-primary"></i>
                                     </div>
-                                    <div class="flex-grow-1 ms-3">
+                                    <div class="flex-grow-1 ms-2 stat-text-container">
                                         <h6 class="text-muted text-uppercase fw-bold small mb-1">Total Produk</h6>
                                         <h3 class="mb-0 fw-bold" id="stat-total-items">0</h3>
                                     </div>
                                 </div>
-                                <div class="d-flex justify-content-between small text-muted">
-                                    <span>Total Item Fisik: <span id="stat-total-qty"
-                                            class="fw-bold text-dark">0</span></span>
+                                <div class="small text-muted">
+                                    Items: <span id="stat-total-qty" class="fw-bold text-dark">0</span>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    <!-- Perlu Restock -->
                     <div class="col-md-3">
-                        <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden">
-                            <div class="card-body p-4">
+                        <div class="card border-0 shadow-sm h-auto position-relative">
+                            <div class="card-body p-3">
                                 <div class="d-flex align-items-center mb-3">
-                                    <div class="flex-shrink-0 bg-danger bg-opacity-10 p-3 rounded-circle">
+                                    <div class="flex-shrink-0 bg-danger bg-opacity-10 p-3 rounded-circle stat-icon-circle">
                                         <i class="iconoir-warning-triangle fs-3 text-danger"></i>
                                     </div>
-                                    <div class="flex-grow-1 ms-3">
+                                    <div class="flex-grow-1 ms-2 stat-text-container">
                                         <h6 class="text-muted text-uppercase fw-bold small mb-1">Perlu Restock</h6>
                                         <h3 class="mb-0 fw-bold text-danger" id="stat-restock-count">0</h3>
                                     </div>
                                 </div>
-                                <div class="d-flex justify-content-between small text-muted">
+                                <div class="small text-muted d-flex justify-content-between">
                                     <span>Habis: <span id="stat-out-stock" class="fw-bold text-danger">0</span></span>
-                                    <span>Menipis: <span id="stat-low-stock" class="fw-bold text-warning">0</span></span>
+                                    <span>Low: <span id="stat-low-stock" class="fw-bold text-warning">0</span></span>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    <!-- Valuasi -->
                     <div class="col-md-3">
-                        <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden">
-                            <div class="card-body p-4">
+                        <div class="card border-0 shadow-sm h-auto position-relative">
+                            <div class="card-body p-3">
                                 <div class="d-flex align-items-center mb-3">
-                                    <div class="flex-shrink-0 bg-success bg-opacity-10 p-3 rounded-circle">
+                                    <div class="flex-shrink-0 bg-success bg-opacity-10 p-3 rounded-circle stat-icon-circle">
                                         <i class="iconoir-wallet fs-3 text-success"></i>
                                     </div>
-                                    <div class="flex-grow-1 ms-3">
+                                    <div class="flex-grow-1 ms-2 stat-text-container">
                                         <h6 class="text-muted text-uppercase fw-bold small mb-1">Valuasi Stok</h6>
                                         <h3 class="mb-0 fw-bold text-success" id="stat-inventory-value">Rp 0</h3>
                                     </div>
                                 </div>
-                                <small class="text-muted d-block">Estimasi nilai aset saat ini</small>
+                                <small class="text-muted d-block">Nilai aset saat ini</small>
                             </div>
                         </div>
                     </div>
+                    <!-- Akan Masuk -->
                     <div class="col-md-3">
-                        <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden">
-                            <div class="card-body p-4">
+                        <div class="card border-0 shadow-sm h-auto position-relative">
+                            <div class="card-body p-3">
                                 <div class="d-flex align-items-center mb-3">
-                                    <div class="flex-shrink-0 bg-info bg-opacity-10 p-3 rounded-circle">
+                                    <div class="flex-shrink-0 bg-info bg-opacity-10 p-3 rounded-circle stat-icon-circle">
                                         <i class="iconoir-delivery-truck fs-3 text-info"></i>
                                     </div>
-                                    <div class="flex-grow-1 ms-3">
+                                    <div class="flex-grow-1 ms-2 stat-text-container">
                                         <h6 class="text-muted text-uppercase fw-bold small mb-1">Akan Masuk</h6>
                                         <h3 class="mb-0 fw-bold" id="stat-pending-receive">Rp 0</h3>
                                     </div>
@@ -103,6 +106,58 @@
                 <style>
                     .nav-tabs-finance .nav-link.active {
                         color: var(--bs-primary) !important;
+                    }
+
+                    /* Responsive Stat Icons */
+                    .stat-icon-circle {
+                        transition: all 0.3s ease;
+                    }
+
+                    @media (min-width: 992px) {
+                        .stats-row .card {
+                            min-height: auto !important;
+                        }
+
+                        .stats-row .card-body {
+                            padding: 0.6rem 0.8rem !important;
+                        }
+
+                        .stat-icon-circle {
+                            padding: 0.3rem !important;
+                        }
+
+                        .stat-icon-circle i {
+                            font-size: 0.9rem !important;
+                        }
+
+                        /* Dynamic Font Scaling Container */
+                        .stat-text-container {
+                            container-type: inline-size;
+                            width: 100%;
+                        }
+
+                        .stats-row h3 {
+                            /* Aggressive scaling: 9cqw fits long numbers better */
+                            font-size: clamp(0.5rem, 9cqw, 0.95rem) !important;
+                            white-space: nowrap;
+                            overflow: visible;
+                            text-overflow: clip;
+                            /* No ellipsis */
+                            line-height: 1;
+                        }
+
+                        .stats-row h6 {
+                            font-size: 0.55rem !important;
+                            margin-bottom: 2px !important;
+                        }
+
+                        .stats-row .small {
+                            font-size: 0.6rem !important;
+                        }
+
+                        .stats-row .mb-3 {
+                            margin-bottom: 0.3rem !important;
+                        }
                     }
                 </style>
                 <div class="card shadow-sm border-0">
@@ -166,7 +221,8 @@
                                             </div>
                                             <div class="col-md-2">
                                                 <div class="form-floating">
-                                                    <select id="filter-stock-status" class="form-select border-0 shadow-sm"
+                                                    <select id="filter-stock-status"
+                                                        class="form-select border-0 shadow-sm"
                                                         onchange="handleFilterChange()">
                                                         <option value="">Semua Status</option>
                                                         <option value="safe">Aman</option>
@@ -200,8 +256,10 @@
                                                 <th class="py-3 ps-4 border-0" style="width: 35%;">Produk</th>
                                                 <th class="py-3 border-0 text-center" style="width: 15%;">Status</th>
                                                 <th class="py-3 border-0 text-center" style="width: 15%;">Stok Fisik</th>
-                                                <th class="py-3 border-0 text-end" style="width: 15%;">Nilai Aset (IDR)</th>
-                                                <th class="py-3 border-0 text-end" style="width: 15%;">Nilai Aset Jual (IDR)</th>
+                                                <th class="py-3 border-0 text-end" style="width: 15%;">Nilai Aset (IDR)
+                                                </th>
+                                                <th class="py-3 border-0 text-end" style="width: 15%;">Nilai Aset Jual
+                                                    (IDR)</th>
                                                 <th class="py-3 border-0 text-end pe-4" style="width: 15%;">Aksi</th>
                                             </tr>
                                         </thead>
@@ -249,7 +307,8 @@
                                         </thead>
                                         <tbody id="location-table-body" class="bg-white">
                                             <tr>
-                                                <td colspan="3" class="text-center py-5 text-muted">Memuat data lokasi...
+                                                <td colspan="3" class="text-center py-5 text-muted">Memuat data
+                                                    lokasi...
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -299,7 +358,8 @@
                                             </div>
                                             <div class="col-md-2">
                                                 <div class="form-floating">
-                                                    <select id="filter-mutation-type" class="form-select border-0 shadow-sm"
+                                                    <select id="filter-mutation-type"
+                                                        class="form-select border-0 shadow-sm"
                                                         onchange="loadMutationData()">
                                                         <option value="">Semua Tipe</option>
                                                         <option value="IN">Masuk (IN)</option>
@@ -338,7 +398,8 @@
                                         </thead>
                                         <tbody id="mutation-table-body" class="bg-white">
                                             <tr>
-                                                <td colspan="8" class="text-center py-5 text-muted">Memuat riwayat...</td>
+                                                <td colspan="8" class="text-center py-5 text-muted">Memuat riwayat...
+                                                </td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -385,7 +446,7 @@
         let debounceTimer;
 
         // Init
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             loadStockDashboard();
             loadStockData();
             loadLocations(); // For filter dropdown
@@ -409,12 +470,16 @@
                         const ov = res.data.overview;
 
                         // Update Stats Cards
-                        document.getElementById('stat-total-items').innerText = new Intl.NumberFormat('id-ID').format(ov.total_items || 0);
-                        document.getElementById('stat-total-qty').innerText = new Intl.NumberFormat('id-ID').format(ov.total_qty || 0);
+                        document.getElementById('stat-total-items').innerText = new Intl.NumberFormat('id-ID').format(ov
+                            .total_items || 0);
+                        document.getElementById('stat-total-qty').innerText = new Intl.NumberFormat('id-ID').format(ov
+                            .total_qty || 0);
 
-                        document.getElementById('stat-inventory-value').innerText = formatCurrency(ov.inventory_value || 0);
+                        document.getElementById('stat-inventory-value').innerText = formatCurrency(ov.inventory_value ||
+                            0);
 
-                        document.getElementById('stat-pending-receive').innerText = formatCurrency(ov.pending_receive || 0);
+                        document.getElementById('stat-pending-receive').innerText = formatCurrency(ov.pending_receive ||
+                            0);
 
                         // Restock Logic
                         const low = ov.low_stock_count || 0;
@@ -431,7 +496,8 @@
         function handleFilterChange() {
             // Debounce for search input
             const tbody = document.getElementById('stock-table-body');
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted"><div class="spinner-border text-primary mb-2"></div><p>Memuat data...</p></td></tr>';
+            tbody.innerHTML =
+                '<tr><td colspan="6" class="text-center py-5 text-muted"><div class="spinner-border text-primary mb-2"></div><p>Memuat data...</p></td></tr>';
 
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
@@ -446,7 +512,8 @@
             const search = document.getElementById('filter-stock-search').value;
             const location = document.getElementById('filter-stock-location').value;
             const category = document.getElementById('filter-stock-kategori').value;
-            const status = document.getElementById('filter-stock-status') ? document.getElementById('filter-stock-status').value : '';
+            const status = document.getElementById('filter-stock-status') ? document.getElementById('filter-stock-status')
+                .value : '';
 
             let url = `{{ route('stock-api.index') }}?page=${page}`;
             if (search) url += `&search=${encodeURIComponent(search)}`;
@@ -475,11 +542,14 @@
 
                             let statusBadge = '';
                             if (qty <= 0) {
-                                statusBadge = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">Habis</span>';
+                                statusBadge =
+                                    '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">Habis</span>';
                             } else if (qty < 5) {
-                                statusBadge = '<span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3">Menipis</span>';
+                                statusBadge =
+                                    '<span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3">Menipis</span>';
                             } else {
-                                statusBadge = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">Aman</span>';
+                                statusBadge =
+                                    '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">Aman</span>';
                             }
 
                             // Optional: Client-side filter for status (simple implementation)
@@ -518,17 +588,21 @@
                         });
 
                         if (tbody.children.length === 0) {
-                            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">Tidak ada data yang cocok dengan filter status.</td></tr>';
+                            tbody.innerHTML =
+                                '<tr><td colspan="6" class="text-center py-5 text-muted">Tidak ada data yang cocok dengan filter status.</td></tr>';
                         }
 
-                        renderPagination(res.data, 'stock-pagination-container', 'stock-pagination-info', loadStockData);
+                        renderPagination(res.data, 'stock-pagination-container', 'stock-pagination-info',
+                            loadStockData);
                     } else {
-                        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">Belum ada data stok.</td></tr>';
+                        tbody.innerHTML =
+                            '<tr><td colspan="6" class="text-center py-5 text-muted">Belum ada data stok.</td></tr>';
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    document.getElementById('stock-table-body').innerHTML = '<tr><td colspan="6" class="text-center py-5 text-danger">Gagal memuat data.</td></tr>';
+                    document.getElementById('stock-table-body').innerHTML =
+                        '<tr><td colspan="6" class="text-center py-5 text-danger">Gagal memuat data.</td></tr>';
                 });
         }
 
@@ -598,8 +672,10 @@
             const start = document.getElementById('filter-mutation-start').value;
             const end = document.getElementById('filter-mutation-end').value;
             const type = document.getElementById('filter-mutation-type').value;
-            const location = document.getElementById('filter-mutation-location') ? document.getElementById('filter-mutation-location').value : '';
-            const search = document.getElementById('filter-mutation-search') ? document.getElementById('filter-mutation-search').value : '';
+            const location = document.getElementById('filter-mutation-location') ? document.getElementById(
+                'filter-mutation-location').value : '';
+            const search = document.getElementById('filter-mutation-search') ? document.getElementById(
+                'filter-mutation-search').value : '';
 
             let url = `{{ route('stock-api.mutations') }}?page=${page}`;
             if (start) url += `&date_from=${start}`;
@@ -617,9 +693,9 @@
                     if (res.success && res.data.data.length > 0) {
                         res.data.data.forEach(m => {
                             const isInc = m.type === 'IN';
-                            const badge = isInc
-                                ? '<span class="badge bg-success-subtle text-success">MASUK</span>'
-                                : '<span class="badge bg-danger-subtle text-danger">KELUAR</span>';
+                            const badge = isInc ?
+                                '<span class="badge bg-success-subtle text-success">MASUK</span>' :
+                                '<span class="badge bg-danger-subtle text-danger">KELUAR</span>';
 
                             const actor = m.actor?.name || m.actor?.username || '-';
                             const action = m.action_label || m.reference_type || 'Mutasi Stok';
@@ -643,9 +719,11 @@
                             tbody.appendChild(tr);
                         });
 
-                        renderPagination(res.data, 'mutation-pagination-container', 'mutation-pagination-info', loadMutationData);
+                        renderPagination(res.data, 'mutation-pagination-container', 'mutation-pagination-info',
+                            loadMutationData);
                     } else {
-                        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-muted">Belum ada riwayat mutasi.</td></tr>';
+                        tbody.innerHTML =
+                            '<tr><td colspan="8" class="text-center py-5 text-muted">Belum ada riwayat mutasi.</td></tr>';
                     }
                 });
         }
@@ -693,17 +771,17 @@
             if (!id) return;
 
             fetch(`{{ url('api/stock-api') }}/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    qty: newQty,
-                    notes: note,
-                    stock_location_id: locationId || null
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        qty: newQty,
+                        notes: note,
+                        stock_location_id: locationId || null
+                    })
                 })
-            })
                 .then(res => res.json())
                 .then(res => {
                     if (res.success) {
@@ -748,13 +826,16 @@
             const method = id ? 'PUT' : 'POST';
 
             fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ name, type })
-            })
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        name,
+                        type
+                    })
+                })
                 .then(res => res.json())
                 .then(res => {
                     if (res.success) {
@@ -770,11 +851,11 @@
             if (!confirm('Hapus lokasi ini? Stok yang ada di lokasi ini mungkin akan kehilangan referensi.')) return;
 
             fetch(`{{ url('api/stock-location-api') }}/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
-            })
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
                 .then(res => res.json())
                 .then(res => {
                     if (res.success) loadLocations();
@@ -803,7 +884,11 @@
         }
 
         function formatCurrency(value) {
-            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value);
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(value);
         }
 
         function renderPagination(data, containerId, infoId, loadFunction) {
@@ -814,7 +899,8 @@
 
             let html = '';
             if (data.prev_page_url) {
-                html += `<li class="page-item"><button class="page-link" onclick="${loadFunction.name}(${data.current_page - 1})">Prev</button></li>`;
+                html +=
+                    `<li class="page-item"><button class="page-link" onclick="${loadFunction.name}(${data.current_page - 1})">Prev</button></li>`;
             } else {
                 html += `<li class="page-item disabled"><button class="page-link">Prev</button></li>`;
             }
@@ -822,7 +908,8 @@
             html += `<li class="page-item active"><button class="page-link">${data.current_page}</button></li>`;
 
             if (data.next_page_url) {
-                html += `<li class="page-item"><button class="page-link" onclick="${loadFunction.name}(${data.current_page + 1})">Next</button></li>`;
+                html +=
+                    `<li class="page-item"><button class="page-link" onclick="${loadFunction.name}(${data.current_page + 1})">Next</button></li>`;
             } else {
                 html += `<li class="page-item disabled"><button class="page-link">Next</button></li>`;
             }
@@ -839,7 +926,8 @@
                 fifoModalInstance = new bootstrap.Modal(modalEl);
             }
 
-            document.getElementById('fifo-content').innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>';
+            document.getElementById('fifo-content').innerHTML =
+                '<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>';
             fifoModalInstance.show();
 
             const locationId = document.getElementById('filter-stock-location').value;
@@ -881,7 +969,8 @@
                                                                                                                     `;
                             });
                         } else {
-                            html += `<tr><td colspan="4" class="text-center text-muted py-3">Tidak ada batch aktif.</td></tr>`;
+                            html +=
+                                `<tr><td colspan="4" class="text-center text-muted py-3">Tidak ada batch aktif.</td></tr>`;
                         }
 
                         html += `</tbody></table></div>`;
