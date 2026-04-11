@@ -18,6 +18,7 @@ class InvoiceItem extends Model
         'nama_produk_manual',
         'deskripsi_produk',
         'qty',
+        'tempo',
         'harga_satuan',
         'diskon_nilai',
         'total_harga_item',

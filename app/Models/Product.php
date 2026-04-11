@@ -23,6 +23,7 @@ class Product extends Model
         'satuan',
         'harga_beli',
         'harga_jual',
+        'harga_tempo',
         'track_stock',
         'qty',
         'foto_produk',

@@ -63,6 +63,7 @@ class ProductController extends Controller
             'satuan' => 'nullable|string|max:20',
             'harga_beli' => 'nullable|numeric|min:0',
             'harga_jual' => 'nullable|numeric|min:0',
+            'harga_tempo' => 'nullable|numeric|min:0',
         ], [
             'sku_kode.required' => 'SKU wajib diisi.',
             'sku_kode.unique' => 'SKU sudah digunakan. Silakan gunakan SKU lain.',
@@ -109,6 +110,7 @@ class ProductController extends Controller
             'nama_produk' => 'required',
             'harga_beli' => 'nullable|numeric|min:0',
             'harga_jual' => 'nullable|numeric|min:0',
+            'harga_tempo' => 'nullable|numeric|min:0',
             'supplier_id' => 'required|exists:mitras,id',
             'brand_id' => 'required|exists:brands,id',
             'product_category_id' => 'required|exists:product_categories,id',
