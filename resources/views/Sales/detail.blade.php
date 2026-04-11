@@ -6,7 +6,7 @@
             <div class="container-fluid">
 
                 <!-- Header -->
-                <div class="row align-items-center mb-4">
+                <div class="row align-items-center mt-3 mb-4">
                     <div class="col-md-6">
                         <div class="d-flex align-items-center">
                             <a href="{{ route('sales') }}" class="btn btn-light border me-3 shadow-sm rounded-circle"
@@ -61,8 +61,8 @@
                                     <div class="col-md-6 text-md-end">
                                         <label class="text-uppercase text-muted fw-bold small mb-2">Detail
                                             Pengiriman:</label>
-                                        <p class="mb-1"><span class="text-muted">Salesman/Ref:</span> <span class="fw-bold"
-                                                id="inv-ref">-</span></p>
+                                        <p class="mb-1"><span class="text-muted">Salesman/Ref:</span> <span
+                                                class="fw-bold" id="inv-ref">-</span></p>
                                         <p class="mb-1"><span class="text-muted">Jatuh Tempo:</span> <span
                                                 class="fw-bold text-danger" id="inv-due">-</span></p>
                                     </div>
@@ -188,8 +188,9 @@
                                                 </small>
                                             </div>
                                         </div>
-                                        <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="collapse"
-                                            data-bs-target="#payment-history"><i class="fa fa-chevron-down"></i></button>
+                                        <button class="btn btn-sm btn-light border" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#payment-history"><i
+                                                class="fa fa-chevron-down"></i></button>
                                     </div>
 
                                     <div class="collapse bg-light" id="payment-history">
@@ -210,8 +211,9 @@
                                                     Otomatis</small>
                                             </div>
                                         </div>
-                                        <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="collapse"
-                                            data-bs-target="#journal-entries"><i class="fa fa-chevron-down"></i></button>
+                                        <button class="btn btn-sm btn-light border" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#journal-entries"><i
+                                                class="fa fa-chevron-down"></i></button>
                                     </div>
 
                                     <div class="collapse bg-light" id="journal-entries">
@@ -313,7 +315,8 @@
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 px-4 pb-4">
-                    <button type="button" class="btn btn-primary w-100 fw-bold shadow-sm" onclick="saveKopSettings()">Simpan
+                    <button type="button" class="btn btn-primary w-100 fw-bold shadow-sm"
+                        onclick="saveKopSettings()">Simpan
                         Pengaturan</button>
                 </div>
             </div>
@@ -377,7 +380,7 @@
             const newToggle = toggleKop.cloneNode(true);
             toggleKop.parentNode.replaceChild(newToggle, toggleKop);
 
-            newToggle.addEventListener('change', function () {
+            newToggle.addEventListener('change', function() {
                 updateKopStatus(this.checked);
             });
 
@@ -593,7 +596,9 @@
                 alert('Invoice berhasil disimpan!');
                 // Optional: Clean URL
                 const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-                window.history.replaceState({ path: newUrl }, '', newUrl);
+                window.history.replaceState({
+                    path: newUrl
+                }, '', newUrl);
             }
         });
     </script>

@@ -6,7 +6,7 @@
             <div class="container-fluid">
 
                 <!-- Header -->
-                <div class="row align-items-center mb-4">
+                <div class="row align-items-center mt-3 mb-4">
                     <div class="col-md-6">
                         <div class="d-flex align-items-center">
                             <a href="{{ route('purchase') }}" class="btn btn-light border me-3 shadow-sm rounded-circle"
@@ -175,8 +175,9 @@
                                                 </small>
                                             </div>
                                         </div>
-                                        <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="collapse"
-                                            data-bs-target="#payment-history"><i class="fa fa-chevron-down"></i></button>
+                                        <button class="btn btn-sm btn-light border" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#payment-history"><i
+                                                class="fa fa-chevron-down"></i></button>
                                     </div>
 
                                     <div class="collapse bg-light" id="payment-history">
@@ -197,8 +198,9 @@
                                                     Otomatis</small>
                                             </div>
                                         </div>
-                                        <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="collapse"
-                                            data-bs-target="#journal-entries"><i class="fa fa-chevron-down"></i></button>
+                                        <button class="btn btn-sm btn-light border" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#journal-entries"><i
+                                                class="fa fa-chevron-down"></i></button>
                                     </div>
 
                                     <div class="collapse bg-light" id="journal-entries">
@@ -450,7 +452,9 @@
                 alert('Invoice berhasil disimpan!');
                 // Optional: Clean URL
                 const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-                window.history.replaceState({ path: newUrl }, '', newUrl);
+                window.history.replaceState({
+                    path: newUrl
+                }, '', newUrl);
             }
         });
     </script>
