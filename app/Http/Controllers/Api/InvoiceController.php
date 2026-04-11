@@ -550,6 +550,32 @@ class InvoiceController extends Controller
                 'processed_by' => auth()->id(),
             ]);
 
+            // Return stock since the invoice is rejected
+            foreach ($invoice->items as $item) {
+                if ($item->product && $item->product->track_stock) {
+                    if ($invoice->tipe_invoice === 'Sales') {
+                        $this->stockService->recordIn(
+                            $item->produk_id,
+                            $item->qty,
+                            $item->product->harga_beli,
+                            $invoice->stock_location_id,
+                            'Sales Return (Rejected)',
+                            $invoice->id,
+                            "Stock Return (Invoice Rejected): #{$invoice->nomor_invoice}"
+                        );
+                    } elseif ($invoice->tipe_invoice === 'Purchase') {
+                        $this->stockService->recordOut(
+                            $item->produk_id,
+                            $item->qty,
+                            $invoice->stock_location_id,
+                            'Purchase Cancel (Rejected)',
+                            $invoice->id,
+                            "Stock Deduct (Purchase Invoice Rejected): #{$invoice->nomor_invoice}"
+                        );
+                    }
+                }
+            }
+
             // Sync invoice status
             $invoice->update(['status_dok' => 'Rejected']);
 
@@ -579,10 +605,40 @@ class InvoiceController extends Controller
                 return apiResponse(false, 'Data persetujuan tidak ditemukan.', null, null, 404);
             }
 
+            $previousStatus = $approval->status;
+
             $approval->update([
                 'status' => 'pending',
                 'processed_by' => null,
             ]);
+
+            // If withdrawing a rejection, we must re-deduct stock to return to "Draft" state (reservation)
+            if ($previousStatus === 'rejected') {
+                foreach ($invoice->items as $item) {
+                    if ($item->product && $item->product->track_stock) {
+                        if ($invoice->tipe_invoice === 'Sales') {
+                            $this->stockService->recordOut(
+                                $item->produk_id,
+                                $item->qty,
+                                $invoice->stock_location_id,
+                                'Sales',
+                                $invoice->id,
+                                "Re-reserve Stock (Rejection Withdrawn): #{$invoice->nomor_invoice}"
+                            );
+                        } elseif ($invoice->tipe_invoice === 'Purchase') {
+                            $this->stockService->recordIn(
+                                $item->produk_id,
+                                $item->qty,
+                                $item->harga_satuan,
+                                $invoice->stock_location_id,
+                                'Purchase',
+                                $invoice->id,
+                                "Re-add Stock (Purchase Rejection Withdrawn): #{$invoice->nomor_invoice}"
+                            );
+                        }
+                    }
+                }
+            }
 
             $invoice->update(['status_dok' => 'Draft']);
 
