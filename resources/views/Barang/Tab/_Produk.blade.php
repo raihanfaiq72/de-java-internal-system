@@ -169,6 +169,46 @@
             el.value = new Intl.NumberFormat('id-ID').format(val);
         }
 
+        async function syncBrandLink(brandId, supplierId, tsInstance) {
+            const brand = masterBrands.find(b => String(b.id) === String(brandId));
+            if (!brand || !supplierId) return;
+
+            const isLinked = brand.suppliers && brand.suppliers.some(s => String(s.id) === String(
+                supplierId));
+            if (isLinked) return;
+
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute(
+                    'content') || '';
+                const res = await fetch(BRAND_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    },
+                    body: JSON.stringify({
+                        nama_brand: brand.nama_brand,
+                        supplier_ids: [supplierId],
+                    })
+                });
+                const result = await res.json();
+                if (result.success || result.status === 'success') {
+                    const idx = masterBrands.findIndex(b => b.id === brand.id);
+                    if (idx !== -1) masterBrands[idx] = result.data;
+
+                    if (tsInstance) {
+                        tsInstance.updateOption(brand.id, {
+                            value: brand.id,
+                            text: result.data.nama_brand
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error("Link sync failed:", e);
+            }
+        }
+
         async function tambahProduk() {
             await Promise.all([
                 fetchMasterSuppliers(),
@@ -190,79 +230,124 @@
             const inBeli = tr.querySelector('.in-beli');
             const inJual = tr.querySelector('.in-jual');
 
-            inBeli.addEventListener('input', function () {
+            inBeli.addEventListener('input', function() {
                 formatRupiahInput(this);
             });
-            inJual.addEventListener('input', function () {
+            inJual.addEventListener('input', function() {
                 formatRupiahInput(this);
             });
 
-            const tsProductBrand = new TomSelect(tr.querySelector('.in-brand'), {
-                options: masterBrands.map(b => ({
-                    value: b.id,
-                    text: b.nama_brand
-                })),
+            let tsProductBrand, tsProductSupplier, tsProductKategori, tsCOA;
+
+            tsProductBrand = new TomSelect(tr.querySelector('.in-brand'), {
+
+                options: masterBrands.map(b => {
+                    const supplierId = tsProductSupplier ? tsProductSupplier.getValue() : null;
+                    const isLinked = b.suppliers && b.suppliers.some(s => String(s.id) === String(
+                        supplierId));
+                    return {
+                        value: b.id,
+                        text: isLinked ? b.nama_brand : `${b.nama_brand} (Belum disuplai)`
+                    };
+                }),
                 placeholder: 'Brand...',
-                dropdownParent: 'body'
+                dropdownParent: 'body',
+                onChange: function(brandId) {
+                    if (!brandId) return;
+                    const supplierId = tsProductSupplier.getValue();
+                    syncBrandLink(brandId, supplierId, tsProductBrand);
+                },
+                create: async function(input, callback) {
+                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute(
+                        'content') || '';
+                    const supplierId = tsProductSupplier.getValue();
+
+                    try {
+                        const res = await fetch(BRAND_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token
+                            },
+                            body: JSON.stringify({
+                                nama_brand: input,
+                                supplier_ids: [supplierId],
+                            })
+                        });
+                        const data = await res.json();
+                        if (data.status === 'success' || data.success) {
+                            const idx = masterBrands.findIndex(b => b.id === data.data.id);
+                            if (idx !== -1) masterBrands[idx] = data.data;
+                            else masterBrands.push(data.data);
+
+                            callback({
+                                value: data.data.id,
+                                text: data.data.nama_brand
+                            });
+                        } else {
+                            alert(data.message || 'Gagal memproses brand');
+                            callback(false);
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        alert('Gagal memproses brand');
+                        callback(false);
+                    }
+                }
             });
 
-            const tsProductSupplier = new TomSelect(tr.querySelector('.in-supplier'), {
+
+            tsProductSupplier = new TomSelect(tr.querySelector('.in-supplier'), {
                 options: masterSuppliers.map(s => ({
                     value: s.id,
                     text: s.nama
                 })),
                 placeholder: 'Supplier...',
                 dropdownParent: 'body',
-                onChange: function (supplierId) {
+                onChange: function(supplierId) {
                     if (!tsProductBrand) return;
 
                     tsProductBrand.clear();
                     tsProductBrand.clearOptions();
 
-                    if (!supplierId) {
-                        const allOptions = masterBrands.map(b => ({
+                    const options = masterBrands.map(b => {
+                        const isLinked = b.suppliers && b.suppliers.some(s => String(s.id) ===
+                            String(supplierId));
+                        return {
                             value: b.id,
-                            text: b.nama_brand
-                        }));
-                        tsProductBrand.addOptions(allOptions);
-                    } else {
-                        const filteredBrands = masterBrands.filter(brand => {
-                            return brand.suppliers && brand.suppliers.some(s => String(s.id) ===
-                                String(supplierId))
-                        })
-                        const newOptions = filteredBrands.map(b => ({
-                            value: b.id,
-                            text: b.nama_brand
-                        }));
-                        tsProductBrand.addOptions(newOptions);
-                    }
+                            text: isLinked ? b.nama_brand : `${b.nama_brand} (Belum disuplai)`
+                        };
+                    });
 
+                    tsProductBrand.addOptions(options);
                     tsProductBrand.refreshOptions(false);
                 }
             });
 
-            const tsProductKategori = new TomSelect(tr.querySelector('.in-kategori'), {
+
+            tsProductKategori = new TomSelect(tr.querySelector('.in-kategori'), {
                 options: masterCategories.map(c => ({
                     value: c.id,
                     text: c.nama_kategori
                 })),
                 placeholder: 'Kategori...',
                 dropdownParent: 'body',
-                create: function (input, callback) {
+                create: function(input, callback) {
                     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute(
                         'content') || '';
 
                     fetch(CATEGORY_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': token
-                        },
-                        body: JSON.stringify({
-                            nama_kategori: input
-                        })
-                    }).then(response => response.json())
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token
+                            },
+                            body: JSON.stringify({
+                                nama_kategori: input
+                            })
+                        }).then(response => response.json())
                         .then(result => {
                             if (result.success) {
                                 masterCategories.push(result.data);
@@ -286,7 +371,7 @@
                 }
             });
 
-            const tsCOA = new TomSelect(tr.querySelector('.in-coa'), {
+            tsCOA = new TomSelect(tr.querySelector('.in-coa'), {
                 options: masterCOA.map(c => ({
                     value: c.id,
                     text: c.nama_akun
@@ -337,7 +422,9 @@
                     return;
                 }
                 if (!payload.brand_id) {
-                    alert('Brand wajib dipilih. Jika brand belum ada untuk supplier ini, silakan buat brand terlebih dahulu.');
+                    alert(
+                        'Brand wajib dipilih. Jika brand belum ada untuk supplier ini, silakan buat brand terlebih dahulu.'
+                    );
                     return;
                 }
                 if (!payload.product_category_id) {
@@ -397,56 +484,114 @@
             const clone = template.content.cloneNode(true);
             const editRow = clone.querySelector('tr');
 
-            const tsBrand = new TomSelect(editRow.querySelector('.in-brand'), {
-                options: masterBrands.map(b => ({
-                    value: b.id,
-                    text: b.nama_brand
-                })),
+            let tsBrand, tsSupplier, tsKategori, tsCOA;
+
+            tsBrand = new TomSelect(editRow.querySelector('.in-brand'), {
+                options: masterBrands.map(b => {
+                    const supplierId = typeof tsSupplier !== 'undefined' ? tsSupplier.getValue() :
+                        null;
+                    const isLinked = b.suppliers && b.suppliers.some(s => String(s.id) === String(
+                        supplierId));
+                    return {
+                        value: b.id,
+                        text: isLinked ? b.nama_brand : `${b.nama_brand} (Belum disuplai)`
+                    };
+                }),
                 placeholder: 'Brand...',
-                dropdownParent: 'body'
+                dropdownParent: 'body',
+                onChange: function(brandId) {
+                    if (!brandId) return;
+                    const supplierId = tsSupplier.getValue();
+                    syncBrandLink(brandId, supplierId, tsBrand);
+                },
+                create: async function(input, callback) {
+                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute(
+                        'content') || '';
+                    const supplierId = tsSupplier.getValue();
+
+                    try {
+                        const res = await fetch(BRAND_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token
+                            },
+                            body: JSON.stringify({
+                                nama_brand: input,
+                                supplier_ids: [supplierId],
+                            })
+                        });
+                        const data = await res.json();
+                        if (data.status === 'success' || data.success) {
+                            const idx = masterBrands.findIndex(b => b.id === data.data.id);
+                            if (idx !== -1) masterBrands[idx] = data.data;
+                            else masterBrands.push(data.data);
+
+                            callback({
+                                value: data.data.id,
+                                text: data.data.nama_brand
+                            });
+                        } else {
+                            alert(data.message || 'Gagal memproses brand');
+                            callback(false);
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        alert('Gagal memproses brand');
+                        callback(false);
+                    }
+                }
             });
 
-            const tsSupplier = new TomSelect(editRow.querySelector('.in-supplier'), {
+
+            tsSupplier = new TomSelect(editRow.querySelector('.in-supplier'), {
                 options: masterSuppliers.map(s => ({
                     value: s.id,
                     text: s.nama
                 })),
                 placeholder: 'Supplier...',
                 dropdownParent: 'body',
-                onChange: function (supplierId) {
+                onChange: function(supplierId) {
+                    if (!tsBrand) return;
+
                     tsBrand.clear();
                     tsBrand.clearOptions();
-                    const filtered = masterBrands.filter(brand =>
-                        !supplierId || (brand.suppliers && brand.suppliers.some(s => String(s.id) ===
-                            String(supplierId)))
-                    );
-                    tsBrand.addOptions(filtered.map(b => ({
-                        value: b.id,
-                        text: b.nama_brand
-                    })));
+
+                    const options = masterBrands.map(b => {
+                        const isLinked = b.suppliers && b.suppliers.some(s => String(s.id) ===
+                            String(supplierId));
+                        return {
+                            value: b.id,
+                            text: isLinked ? b.nama_brand : `${b.nama_brand} (Belum disuplai)`
+                        };
+                    });
+
+                    tsBrand.addOptions(options);
+                    tsBrand.refreshOptions(false);
                 }
             });
 
-            const tsKategori = new TomSelect(editRow.querySelector('.in-kategori'), {
+            tsKategori = new TomSelect(editRow.querySelector('.in-kategori'), {
                 options: masterCategories.map(c => ({
                     value: c.id,
                     text: c.nama_kategori
                 })),
-                create: function (input, callback) {
+                create: function(input, callback) {
                     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute(
                         'content') || '';
 
                     fetch(CATEGORY_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': token
-                        },
-                        body: JSON.stringify({
-                            nama_kategori: input
-                        })
-                    }).then(response => response.json())
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token
+                            },
+                            body: JSON.stringify({
+                                nama_kategori: input
+                            })
+                        }).then(response => response.json())
                         .then(result => {
                             if (result.success) {
                                 masterCategories.push(result.data);
@@ -471,7 +616,7 @@
                 dropdownParent: 'body'
             });
 
-            const tsCOA = new TomSelect(editRow.querySelector('.in-coa'), {
+            tsCOA = new TomSelect(editRow.querySelector('.in-coa'), {
                 options: masterCOA.map(c => ({
                     value: c.id,
                     text: c.nama_akun
@@ -494,10 +639,10 @@
             const inBeliEdit = editRow.querySelector('.in-beli');
             const inJualEdit = editRow.querySelector('.in-jual');
 
-            inBeliEdit.addEventListener('input', function () {
+            inBeliEdit.addEventListener('input', function() {
                 formatRupiahInput(this);
             });
-            inJualEdit.addEventListener('input', function () {
+            inJualEdit.addEventListener('input', function() {
                 formatRupiahInput(this);
             });
 
@@ -538,7 +683,9 @@
                     return;
                 }
                 if (!payload.brand_id) {
-                    alert('Brand wajib dipilih. Jika brand belum ada untuk supplier ini, silakan buat brand terlebih dahulu.');
+                    alert(
+                        'Brand wajib dipilih. Jika brand belum ada untuk supplier ini, silakan buat brand terlebih dahulu.'
+                    );
                     return;
                 }
                 if (!payload.product_category_id) {
