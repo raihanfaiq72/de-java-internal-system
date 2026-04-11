@@ -144,20 +144,21 @@
                                     <table class="table align-middle mb-0 table-hover" id="mainItemTable">
                                         <thead class="bg-light text-secondary small fw-bold text-uppercase">
                                             <tr>
-                                                <th class="ps-4 py-3" width="30%">Produk / Deskripsi</th>
-                                                <th class="text-center" width="8%">Qty</th>
-                                                <th class="text-center" width="12%">Tempo</th>
-                                                <th class="text-center" width="8%">Satuan</th>
-                                                <th class="text-end" width="15%">Harga</th>
+                                                <th class="ps-4 py-3" width="24%">Produk / Deskripsi</th>
+                                                <th class="text-center" width="10%">Qty</th>
+                                                <th class="text-center" width="6%">Tempo</th>
+                                                <th class="text-center" width="9%">X Tempo</th>
+                                                <th class="text-center" width="7%">Satuan</th>
+                                                <th class="text-end" width="13%">Harga</th>
                                                 <th class="text-end" width="10%">Disc (Rp)</th>
-                                                <th class="text-end pe-4" width="13%">Total</th>
+                                                <th class="text-end pe-4" width="17%">Total</th>
                                                 <th width="4%"></th>
                                             </tr>
                                         </thead>
                                         <tbody id="itemBodyList" class="border-top-0"></tbody>
                                         <tfoot class="bg-light">
                                             <tr>
-                                                <td colspan="7"
+                                                <td colspan="9"
                                                     class="text-center py-2 text-muted small fst-italic">
                                                     Klik tombol tambah untuk memasukkan item
                                                 </td>
@@ -296,17 +297,16 @@
                 min="1" oninput="calculateInvoiceTotal()">
         </td>
         <td class="py-3 text-center">
-            <div class="d-flex flex-column align-items-center gap-2">
-                <div class="form-check form-switch p-0 m-0">
-                    <input class="form-check-input prod-is-tempo shadow-none ms-0" type="checkbox"
-                        onchange="toggleRowTempo(this)">
-                </div>
-                <div class="tempo-container d-none">
-                    <div class="input-group input-group-sm tempo-input-group">
-                        <input type="number" class="form-control text-center prod-tempo-val" value="0"
-                            min="0" disabled oninput="calculateInvoiceTotal()">
-                    </div>
-                </div>
+            <div class="form-check form-switch p-0 m-0 d-inline-block">
+                <input class="form-check-input prod-is-tempo shadow-none ms-0" type="checkbox"
+                    onchange="toggleRowTempo(this)">
+            </div>
+        </td>
+        <td class="py-3 text-center">
+            <span class="text-muted tempo-placeholder">-</span>
+            <div class="tempo-container d-none">
+                <input type="number" class="form-control form-control-sm text-center prod-tempo-val" value="0"
+                    min="0" oninput="calculateInvoiceTotal()">
             </div>
         </td>
         <td class="py-3 text-center">
@@ -787,8 +787,10 @@
         const row = el.closest('tr');
         const tempoInput = row.querySelector('.prod-tempo-val');
         const tempoContainer = row.querySelector('.tempo-container');
+        const tempoPlaceholder = row.querySelector('.tempo-placeholder');
         const priceInput = row.querySelector('.prod-price');
-        const prodId = row.querySelector('.prod-id').value;
+        const idInput = row.querySelector('.prod-id');
+        const prodId = idInput ? idInput.value : null;
 
         const isTempo = el.checked;
         tempoInput.disabled = !isTempo;
@@ -796,9 +798,12 @@
         if (isTempo) {
             row.classList.add('row-tempo-active');
             tempoContainer.classList.remove('d-none');
+            tempoPlaceholder.classList.add('d-none');
+            setTimeout(() => tempoInput.focus(), 0);
         } else {
             row.classList.remove('row-tempo-active');
             tempoContainer.classList.add('d-none');
+            tempoPlaceholder.classList.remove('d-none');
             tempoInput.value = 0;
         }
 
@@ -915,10 +920,12 @@
                     const toggle = tr.querySelector('.prod-is-tempo');
                     const tempoVal = tr.querySelector('.prod-tempo-val');
                     const tempoContainer = tr.querySelector('.tempo-container');
+                    const tempoPlaceholder = tr.querySelector('.tempo-placeholder');
                     toggle.checked = true;
                     tempoVal.disabled = false;
                     tempoVal.value = data.tempo;
                     tempoContainer.classList.remove('d-none');
+                    tempoPlaceholder.classList.add('d-none');
                     tr.classList.add('row-tempo-active');
                 }
 
