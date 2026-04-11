@@ -9,10 +9,12 @@ use App\Models\InvoiceItem;
 use App\Models\InvoiceItemTax;
 use App\Models\Partner;
 use App\Models\Permission;
+use App\Models\StockLocation;
+use App\Models\User;
 use App\Models\UserOfficeRole;
-use Carbon\Carbon;
 use App\Services\JournalService;
 use App\Services\StockService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -84,7 +86,19 @@ class InvoiceController extends Controller
 
     public function show($id)
     {
-        $data = Invoice::with(['mitra', 'items.taxes.tax', 'payment', 'items.product', 'items.product.supplier', 'items.product.brand', 'items.product.category'])
+        $data = Invoice::with([
+            'mitra',
+            'items.taxes.tax',
+            'payment' => function ($q) {
+                $q->latest();
+            },
+            'items.product',
+            'items.product.supplier',
+            'items.product.brand',
+            'items.product.category',
+            'approvals.requestedBy',
+            'approvals.processedBy',
+        ])
             ->where('office_id', session('active_office_id'))
             ->find($id);
 
@@ -170,7 +184,7 @@ class InvoiceController extends Controller
 
             // Determine Due Date (Use tgl_invoice if tgl_jatuh_tempo is null)
             $dueDate = $inv->tgl_jatuh_tempo ? Carbon::parse($inv->tgl_jatuh_tempo) : Carbon::parse($inv->tgl_invoice);
-            
+
             if ($dueDate->isPast()) {
                 $days = $dueDate->diffInDays(Carbon::now());
                 if ($days > $maxDays) {
@@ -279,7 +293,7 @@ class InvoiceController extends Controller
         if ($request->tipe_invoice) {
             $query->where('tipe_invoice', $request->tipe_invoice);
         }
-        
+
         // Filter: Exclude invoices already in delivery orders (unless status is failed/rejected)
         if ($request->exclude_delivered) {
             $query->whereDoesntHave('deliveryOrderInvoices', function ($q) {
@@ -328,7 +342,7 @@ class InvoiceController extends Controller
         // Validate sales_id jika bukan 0
         $salesId = $request->input('invoice.sales_id');
         if ($salesId && $salesId != 0) {
-            $salesUser = \App\Models\User::find($salesId);
+            $salesUser = User::find($salesId);
             if (! $salesUser) {
                 return apiResponse(false, 'Sales person tidak valid', null, null, 422);
             }
@@ -351,7 +365,7 @@ class InvoiceController extends Controller
 
         // Validate Stock Location if provided
         if (! empty($request->invoice['stock_location_id'])) {
-            $location = \App\Models\StockLocation::where('id', $request->invoice['stock_location_id'])
+            $location = StockLocation::where('id', $request->invoice['stock_location_id'])
                 ->where('office_id', session('active_office_id'))
                 ->first();
 
@@ -435,18 +449,46 @@ class InvoiceController extends Controller
         });
     }
 
-    public function accAdmin()
+    public function accAdmin(Request $request)
     {
         $officeId = session('active_office_id');
 
-        $invoice = Invoice::with(['mitra', 'items', 'approvals.requestedBy', 'approvals.processedBy'])
+        $query = Invoice::with(['mitra', 'items', 'approvals.requestedBy', 'approvals.processedBy'])
+            ->withSum('payment', 'jumlah_bayar')
             ->where('tipe_invoice', 'Sales')
             ->where('office_id', $officeId)
-            ->has('approvals')
-            ->latest()
-            ->get();
+            ->has('approvals');
 
-        return apiResponse(true, 'Data invoice approval berhasil diambil', $invoice, null, 200);
+        if ($request->tipe_invoice) {
+            $query->where('tipe_invoice', $request->tipe_invoice);
+        }
+
+        if ($request->mitra_id) {
+            $query->where('mitra_id', $request->mitra_id);
+        }
+
+        if ($request->date_from) {
+            $query->whereDate('tgl_invoice', '>=', $request->date_from);
+        }
+
+        if ($request->date_to) {
+            $query->whereDate('tgl_invoice', '<=', $request->date_to);
+        }
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nomor_invoice', 'LIKE', "%{$request->search}%")
+                    ->orWhere('ref_no', 'LIKE', "%{$request->search}%")
+                    ->orWhereHas('mitra', function ($qMitra) use ($request) {
+                        $qMitra->where('nama', 'LIKE', "%{$request->search}%");
+                    });
+            });
+        }
+
+        $perPage = $request->input('per_page', 10);
+        $data = $query->latest()->paginate($perPage);
+
+        return apiResponse(true, 'Data invoice approval berhasil diambil', $data, null, 200);
     }
 
     public function approve($id)
@@ -456,6 +498,10 @@ class InvoiceController extends Controller
 
             if (! $invoice) {
                 return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
+            }
+
+            if ($invoice->payment()->exists()) {
+                return apiResponse(false, 'Invoice tidak dapat disetujui karena sudah ada kuitansi/pembayaran.', null, null, 422);
             }
 
             $approval = InvoiceApprovalDetail::where('invoice_id', $id)
@@ -471,8 +517,8 @@ class InvoiceController extends Controller
                 'processed_by' => auth()->id(),
             ]);
 
-            // Optional: Update invoice status if needed
-            // $invoice->update(['status_dok' => 'Post']);
+            // Sync invoice status
+            $invoice->update(['status_dok' => 'Approved']);
 
             return apiResponse(true, 'Invoice berhasil disetujui');
         });
@@ -485,6 +531,10 @@ class InvoiceController extends Controller
 
             if (! $invoice) {
                 return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
+            }
+
+            if ($invoice->payment()->exists()) {
+                return apiResponse(false, 'Invoice tidak dapat ditolak karena sudah ada kuitansi/pembayaran.', null, null, 422);
             }
 
             $approval = InvoiceApprovalDetail::where('invoice_id', $id)
@@ -500,8 +550,43 @@ class InvoiceController extends Controller
                 'processed_by' => auth()->id(),
             ]);
 
+            // Sync invoice status
+            $invoice->update(['status_dok' => 'Rejected']);
+
             return apiResponse(true, 'Invoice ditolak');
         });
     }
-    
+
+    public function withdraw($id)
+    {
+        return DB::transaction(function () use ($id) {
+            $invoice = Invoice::where('office_id', session('active_office_id'))->find($id);
+
+            if (! $invoice) {
+                return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
+            }
+
+            if ($invoice->payment()->exists()) {
+                return apiResponse(false, 'Persetujuan tidak dapat ditarik karena sudah ada kuitansi/pembayaran.', null, null, 422);
+            }
+
+            $approval = InvoiceApprovalDetail::where('invoice_id', $id)
+                ->whereIn('status', ['approved', 'rejected'])
+                ->latest()
+                ->first();
+
+            if (! $approval) {
+                return apiResponse(false, 'Data persetujuan tidak ditemukan.', null, null, 404);
+            }
+
+            $approval->update([
+                'status' => 'pending',
+                'processed_by' => null,
+            ]);
+
+            $invoice->update(['status_dok' => 'Draft']);
+
+            return apiResponse(true, 'Persetujuan berhasil ditarik');
+        });
+    }
 }

@@ -207,4 +207,18 @@ class SalesController extends Controller
             'monthlyData'
         ));
     }
+
+    public function approval()
+    {
+        return view($this->views . 'approval');
+    }
+
+    public function approvalDetail($id)
+    {
+        $invoice = Invoice::where('office_id', session('active_office_id'))->find($id);
+        if (!$invoice) {
+            abort(404);
+        }
+        return view($this->views . 'approval-detail', compact('invoice', 'id'));
+    }
 }
