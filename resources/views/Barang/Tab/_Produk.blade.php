@@ -247,7 +247,7 @@
                         supplierId));
                     return {
                         value: b.id,
-                        text: isLinked ? b.nama_brand : `${b.nama_brand} (Belum disuplai)`
+                        text: b.nama_brand
                     };
                 }),
                 placeholder: 'Brand...',
@@ -316,7 +316,7 @@
                             String(supplierId));
                         return {
                             value: b.id,
-                            text: isLinked ? b.nama_brand : `${b.nama_brand} (Belum disuplai)`
+                            text: b.nama_brand
                         };
                     });
 
@@ -494,7 +494,7 @@
                         supplierId));
                     return {
                         value: b.id,
-                        text: isLinked ? b.nama_brand : `${b.nama_brand} (Belum disuplai)`
+                        text: b.nama_brand
                     };
                 }),
                 placeholder: 'Brand...',
@@ -563,7 +563,7 @@
                             String(supplierId));
                         return {
                             value: b.id,
-                            text: isLinked ? b.nama_brand : `${b.nama_brand} (Belum disuplai)`
+                            text: b.nama_brand
                         };
                     });
 
