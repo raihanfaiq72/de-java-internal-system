@@ -8,10 +8,12 @@ use App\Models\InvoiceItem;
 use App\Models\InvoiceItemTax;
 use App\Models\Partner;
 use App\Models\Permission;
+use App\Models\StockLocation;
+use App\Models\User;
 use App\Models\UserOfficeRole;
-use Carbon\Carbon;
 use App\Services\JournalService;
 use App\Services\StockService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -134,7 +136,7 @@ class InvoiceController extends Controller
                     $input['status_dok'] = 'Draft';
                     $input['perlu_acc_admin'] = true;
                     $input['keterangan'] = ($request->keterangan ? $request->keterangan."\n" : '')."Auto-Archived: Umur nota > 60 hari ($maxOverdue hari). Perlu ACC Owner.";
-                    
+
                     $warningMessage = "Harus ACC Owner, dikarenakan umur nota ($maxOverdue hari). Invoice masuk ke Arsip.";
                 }
             }
@@ -170,7 +172,7 @@ class InvoiceController extends Controller
 
             // Determine Due Date (Use tgl_invoice if tgl_jatuh_tempo is null)
             $dueDate = $inv->tgl_jatuh_tempo ? Carbon::parse($inv->tgl_jatuh_tempo) : Carbon::parse($inv->tgl_invoice);
-            
+
             if ($dueDate->isPast()) {
                 $days = $dueDate->diffInDays(Carbon::now());
                 if ($days > $maxDays) {
@@ -279,7 +281,7 @@ class InvoiceController extends Controller
         if ($request->tipe_invoice) {
             $query->where('tipe_invoice', $request->tipe_invoice);
         }
-        
+
         // Filter: Exclude invoices already in delivery orders (unless status is failed/rejected)
         if ($request->exclude_delivered) {
             $query->whereDoesntHave('deliveryOrderInvoices', function ($q) {
@@ -328,7 +330,7 @@ class InvoiceController extends Controller
         // Validate sales_id jika bukan 0
         $salesId = $request->input('invoice.sales_id');
         if ($salesId && $salesId != 0) {
-            $salesUser = \App\Models\User::find($salesId);
+            $salesUser = User::find($salesId);
             if (! $salesUser) {
                 return apiResponse(false, 'Sales person tidak valid', null, null, 422);
             }
@@ -353,7 +355,7 @@ class InvoiceController extends Controller
 
         // Validate Stock Location if provided
         if (! empty($request->invoice['stock_location_id'])) {
-            $location = \App\Models\StockLocation::where('id', $request->invoice['stock_location_id'])
+            $location = StockLocation::where('id', $request->invoice['stock_location_id'])
                 ->where('office_id', session('active_office_id'))
                 ->first();
 
@@ -428,15 +430,38 @@ class InvoiceController extends Controller
         });
     }
 
-    public function accAdmin() {
+    public function accAdmin(Request $request)
+    {
         $query = Invoice::with(['mitra', 'items'])
             ->where('tipe_invoice', 'Sales')
             ->where('perlu_acc_admin', true)
             ->where('office_id', session('active_office_id'));
 
-        $invoice = $query->latest()->get();
+        if ($request->mitra_id) {
+            $query->where('mitra_id', $request->mitra_id);
+        }
 
-        return apiResponse(true, 'Invoice berhasil diambil', $invoice, null, 200);
+        if ($request->date_from) {
+            $query->whereDate('tgl_invoice', '>=', $request->date_from);
+        }
+
+        if ($request->date_to) {
+            $query->whereDate('tgl_invoice', '<=', $request->date_to);
+        }
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nomor_invoice', 'LIKE', "%{$request->search}%")
+                    ->orWhere('ref_no', 'LIKE', "%{$request->search}%")
+                    ->orWhereHas('mitra', function ($qMitra) use ($request) {
+                        $qMitra->where('nama', 'LIKE', "%{$request->search}%");
+                    });
+            });
+        }
+
+        $perPage = $request->input('per_page', 10);
+        $data = $query->latest()->paginate($perPage);
+
+        return apiResponse(true, 'Daftar invoice menunggu persetujuan', $data);
     }
-    
 }
