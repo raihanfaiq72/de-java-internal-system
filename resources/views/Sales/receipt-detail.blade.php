@@ -6,11 +6,10 @@
             <div class="container-fluid">
 
                 <!-- Header -->
-                <div class="row align-items-center mb-4">
+                <div class="row align-items-center mt-3 mb-4">
                     <div class="col-md-6">
                         <div class="d-flex align-items-center">
-                            <a href="{{ route('sales.receipt') }}"
-                                class="btn btn-light border me-3 shadow-sm rounded-circle"
+                            <a href="{{ route('sales.receipt') }}" class="btn btn-light border me-3 shadow-sm rounded-circle"
                                 style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
                                 <i class="fa fa-arrow-left"></i>
                             </a>
@@ -27,8 +26,7 @@
                             class="btn btn-white border fw-bold px-3 shadow-sm text-dark me-2 d-none">
                             <i class="fa fa-print me-1"></i> Cetak
                         </a>
-                        <button class="btn btn-primary fw-bold px-4 shadow-sm"
-                            onclick="openEditModal()">
+                        <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openEditModal()">
                             <i class="fa fa-pencil me-1"></i> Edit
                         </button>
                     </div>
@@ -151,7 +149,8 @@
                                                     id="sidebar-inv-ref">-</small>
                                             </div>
                                         </div>
-                                        <a id="sidebar-btn-inv" href="#" class="btn btn-sm btn-light border text-primary"><i
+                                        <a id="sidebar-btn-inv" href="#"
+                                            class="btn btn-sm btn-light border text-primary"><i
                                                 class="fa fa-external-link-alt"></i></a>
                                     </div>
 
@@ -167,8 +166,9 @@
                                                     Otomatis</small>
                                             </div>
                                         </div>
-                                        <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="collapse"
-                                            data-bs-target="#journal-entries"><i class="fa fa-chevron-down"></i></button>
+                                        <button class="btn btn-sm btn-light border" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#journal-entries"><i
+                                                class="fa fa-chevron-down"></i></button>
                                     </div>
 
                                     <div class="collapse bg-light" id="journal-entries">
@@ -236,18 +236,20 @@
                 <form id="editReceiptForm" onsubmit="updateReceipt(event)">
                     <div class="modal-body p-4">
                         <input type="hidden" id="edit-payment-id" name="payment_id">
-                        
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Nomor Pembayaran</label>
-                                    <input type="text" class="form-control" id="edit-nomor_pembayaran" name="nomor_pembayaran" required>
+                                    <input type="text" class="form-control" id="edit-nomor_pembayaran"
+                                        name="nomor_pembayaran" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Tanggal Pembayaran</label>
-                                    <input type="date" class="form-control" id="edit-tgl_pembayaran" name="tgl_pembayaran" required>
+                                    <input type="date" class="form-control" id="edit-tgl_pembayaran"
+                                        name="tgl_pembayaran" required>
                                 </div>
                             </div>
                         </div>
@@ -256,7 +258,8 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Metode Pembayaran</label>
-                                    <select class="form-select" id="edit-metode_pembayaran" name="metode_pembayaran" required>
+                                    <select class="form-select" id="edit-metode_pembayaran" name="metode_pembayaran"
+                                        required>
                                         <option value="">Pilih Metode</option>
                                         <option value="Tunai">Tunai</option>
                                         <option value="Transfer">Transfer Bank</option>
@@ -269,7 +272,8 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Jumlah Bayar</label>
-                                    <input type="number" class="form-control" id="edit-jumlah_bayar" name="jumlah_bayar" required step="0.01">
+                                    <input type="number" class="form-control" id="edit-jumlah_bayar"
+                                        name="jumlah_bayar" required step="0.01">
                                 </div>
                             </div>
                         </div>
@@ -319,7 +323,6 @@
             </div>
         </div>
     </div>
-
 @endsection
 
 @push('js')

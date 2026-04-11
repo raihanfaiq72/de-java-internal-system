@@ -6,7 +6,7 @@
             <div class="container-fluid">
 
                 <!-- Header -->
-                <div class="row align-items-center mb-4">
+                <div class="row align-items-center mb-3 mb-4">
                     <div class="col-md-6">
                         <div class="d-flex align-items-center">
                             <a href="{{ route('purchase.receipt') }}"
@@ -62,8 +62,8 @@
                                         <label class="text-uppercase text-muted fw-bold small mb-2">Metode
                                             Pembayaran:</label>
                                         <h6 class="fw-bold text-dark mb-1" id="pay-method">-</h6>
-                                        <p class="mb-1"><span class="text-muted">Diambil Dari:</span> <span class="fw-bold"
-                                                id="pay-account">-</span></p>
+                                        <p class="mb-1"><span class="text-muted">Diambil Dari:</span> <span
+                                                class="fw-bold" id="pay-account">-</span></p>
                                         <p class="mb-1"><span class="text-muted">Ref No:</span> <span class="fw-bold"
                                                 id="pay-ref">-</span></p>
                                     </div>
@@ -153,7 +153,8 @@
                                                     id="sidebar-inv-ref">-</small>
                                             </div>
                                         </div>
-                                        <a id="sidebar-btn-inv" href="#" class="btn btn-sm btn-light border text-primary"><i
+                                        <a id="sidebar-btn-inv" href="#"
+                                            class="btn btn-sm btn-light border text-primary"><i
                                                 class="fa fa-external-link-alt"></i></a>
                                     </div>
 
@@ -169,8 +170,9 @@
                                                     Otomatis</small>
                                             </div>
                                         </div>
-                                        <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="collapse"
-                                            data-bs-target="#journal-entries"><i class="fa fa-chevron-down"></i></button>
+                                        <button class="btn btn-sm btn-light border" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#journal-entries"><i
+                                                class="fa fa-chevron-down"></i></button>
                                     </div>
 
                                     <div class="collapse bg-light" id="journal-entries">
@@ -248,7 +250,6 @@
             </div>
         </div>
     </div>
-
 @endsection
 
 @push('js')
