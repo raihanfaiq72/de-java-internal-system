@@ -427,4 +427,20 @@ class InvoiceController extends Controller
             return apiResponse(true, $msg, $invoice->load('items'), null, 201);
         });
     }
+
+    public function accAdmin(Request $request) {
+        $query = Invoice::with(['mitra', 'items'])
+            ->where('status_dok', 'Draft')
+            ->where('perlu_acc_admin', true)
+            ->where('office_id', session('active_office_id'));
+
+        if ($request->tipe_invoice) {
+            $query->where('tipe_invoice', $request->tipe_invoice);
+        }
+
+        $invoice = $query->latest()->get();
+
+        return apiResponse(true, 'Invoice berhasil diambil', $invoice, null, 200);
+    }
+    
 }
