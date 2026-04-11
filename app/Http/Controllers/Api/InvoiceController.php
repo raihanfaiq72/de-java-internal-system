@@ -37,7 +37,10 @@ class InvoiceController extends Controller
         if ($request->tab_status === 'trash') {
             $query->onlyTrashed();
         } elseif ($request->tab_status === 'archive') {
-            $query->where('status_dok', 'Archived');
+            $query->where(function ($q) {
+                $q->where('status_dok', 'Draft')
+                    ->orWhere('tgl_invoice', '<=', now()->subDays(60));
+            });
         }
 
         if ($request->tipe_invoice) {
