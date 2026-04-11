@@ -145,6 +145,7 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::get('/acc-admin', [InvoiceController::class, 'accAdmin'])->name('acc-admin');
             Route::post('/{id}/approve', [InvoiceController::class, 'approve'])->name('approve');
             Route::post('/{id}/reject', [InvoiceController::class, 'reject'])->name('reject');
+            Route::post('/{id}/withdraw', [InvoiceController::class, 'withdraw'])->name('withdraw');
             Route::post('/', [InvoiceController::class, 'store'])->name('store');
             Route::get('/{id}', [InvoiceController::class, 'show'])->name('show');
             Route::put('/{id}', [InvoiceController::class, 'update'])->name('update');

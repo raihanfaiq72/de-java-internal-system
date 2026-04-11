@@ -225,6 +225,16 @@
     .mac-btn-success:hover {
         background: #248a3d;
     }
+
+    .mac-btn-warning {
+        background: #FF9500;
+        color: white;
+        box-shadow: 0 2px 10px rgba(255, 149, 0, 0.3);
+    }
+
+    .mac-btn-warning:hover {
+        background: #E88600;
+    }
 </style>
 
 <div id="mac-toast-container"></div>
@@ -259,7 +269,7 @@
      * @param {string} message
      * @param {object} [options]
      * @param {string} [options.confirmText='Hapus']
-     * @param {string} [options.confirmType='danger'] - 'danger', 'primary', 'success'
+     * @param {string} [options.confirmType='danger'] - 'danger', 'primary', 'success', 'warning'
      * @param {string} [options.cancelText='Batal']
      * @returns {Promise<boolean>}
      */

@@ -102,6 +102,11 @@ return [
                 'route' => 'sales.receipt',
                 'icon' => 'iconoir-hand-contactless',
             ],
+            [
+                'title' => 'Setujui Invoice',
+                'route' => 'sales.approval',
+                'icon' => 'iconoir-check-circle',
+            ],
         ],
     ],
     [
