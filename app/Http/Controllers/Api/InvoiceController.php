@@ -300,6 +300,7 @@ class InvoiceController extends Controller
 
             'items' => 'required|array|min:1',
             'items.*.qty' => 'required|numeric|min:0.01',
+            'items.*.tempo' => 'nullable|integer|min:0',
             'items.*.harga_satuan' => 'required|numeric|min:0',
             'items.*.taxes' => 'nullable|array',
         ]);

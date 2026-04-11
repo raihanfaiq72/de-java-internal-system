@@ -90,7 +90,7 @@ class BrandController extends Controller
             }
 
             $validator = Validator::make($request->all(), [
-                'nama_brand' => 'required|string|max:100|unique:brands,nama_brand,NULL,id,office_id,'.session('active_office_id'),
+                'nama_brand' => 'required|string|max:100',
                 'supplier_ids' => 'nullable|array',
                 'supplier_ids.*' => 'exists:mitras,id',
             ]);
@@ -100,21 +100,33 @@ class BrandController extends Controller
             }
 
             $brand = DB::transaction(function () use ($request) {
+                // Upsert Brand: Cari berdasarkan nama & office, jika tidak ada buat baru
+                $brand = Brand::withTrashed()->firstOrCreate(
+                    [
+                        'nama_brand' => $request->nama_brand,
+                        'office_id' => session('active_office_id'),
+                    ],
+                    [
+                        'office_id' => session('active_office_id'),
+                    ]
+                );
 
-                $brand = Brand::create([
-                    'office_id' => session('active_office_id'),
-                    'nama_brand' => $request->nama_brand,
-                ]);
+                // Kembalikan jika sebelumnya didelete
+                if ($brand->trashed()) {
+                    $brand->restore();
+                }
 
+                // Append Suppliers (Sync Without Detaching)
                 if ($request->filled('supplier_ids')) {
                     $attachData = collect($request->supplier_ids)->mapWithKeys(function ($id) {
                         return [$id => ['office_id' => session('active_office_id')]];
                     });
 
-                    $brand->suppliers()->attach($attachData);
+                    // Gunakan syncWithoutDetaching agar tidak menduplikasi dan tidak menghapus yang sudah ada
+                    $brand->suppliers()->syncWithoutDetaching($attachData);
                 }
 
-                return $brand; // ⬅️ penting
+                return $brand;
             });
 
             return apiResponse(true, 'Brand berhasil ditambahkan', $brand->load('suppliers'), null, 201);
@@ -151,31 +163,12 @@ class BrandController extends Controller
                 ]);
 
                 if ($request->has('supplier_ids')) {
+                    $attachData = collect($request->supplier_ids)->mapWithKeys(function ($id) {
+                        return [$id => ['office_id' => session('active_office_id')]];
+                    });
 
-                    $newIds = collect($request->supplier_ids)->unique()->values();
-
-                    $existing = SupplierBrand::where('brand_id', $brand->id)
-                        ->whereNull('deleted_at')
-                        ->pluck('supplier_id');
-
-                    $toDelete = $existing->diff($newIds);
-                    SupplierBrand::where('brand_id', $brand->id)
-                        ->whereIn('supplier_id', $toDelete)
-                        ->delete();
-
-                    $toAdd = $newIds->diff($existing);
-                    foreach ($toAdd as $supplierId) {
-                        SupplierBrand::updateOrCreate(
-                            [
-                                'brand_id' => $brand->id,
-                                'supplier_id' => $supplierId,
-                            ],
-                            [
-                                'office_id' => session('active_office_id'),
-                                'deleted_at' => null,
-                            ]
-                        );
-                    }
+                    // Append logic: hanya tambahkan yang baru, jangan hapus yang lama
+                    $brand->suppliers()->syncWithoutDetaching($attachData);
                 }
 
                 return $brand;
