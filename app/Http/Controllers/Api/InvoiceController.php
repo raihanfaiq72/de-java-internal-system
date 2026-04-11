@@ -428,15 +428,11 @@ class InvoiceController extends Controller
         });
     }
 
-    public function accAdmin(Request $request) {
+    public function accAdmin() {
         $query = Invoice::with(['mitra', 'items'])
-            ->where('status_dok', 'Draft')
+            ->where('tipe_invoice', 'Sales')
             ->where('perlu_acc_admin', true)
             ->where('office_id', session('active_office_id'));
-
-        if ($request->tipe_invoice) {
-            $query->where('tipe_invoice', $request->tipe_invoice);
-        }
 
         $invoice = $query->latest()->get();
 
