@@ -97,17 +97,21 @@
 
                                                 <div class="col-12">
                                                     <label class="f-label">Salesperson</label>
-                                                    @if(isset($canSelectSales) && $canSelectSales)
+                                                    @if (isset($canSelectSales) && $canSelectSales)
                                                         <select id="modal_sales_id" class="form-select f-input">
                                                             <option value="0">Tanpa Sales Person</option>
                                                             <option value="">Pilih Sales...</option>
-                                                            @foreach($users ?? [] as $u)
-                                                                <option value="{{ $u->id }}" @if($u->id == auth()->id()) selected @endif>{{ $u->name }}</option>
+                                                            @foreach ($users ?? [] as $u)
+                                                                <option value="{{ $u->id }}"
+                                                                    @if ($u->id == auth()->id()) selected @endif>
+                                                                    {{ $u->name }}</option>
                                                             @endforeach
                                                         </select>
                                                     @else
-                                                        <input type="text" class="form-control f-input bg-light" value="{{ auth()->user()->name }}" readonly>
-                                                        <input type="hidden" id="modal_sales_id" value="{{ auth()->id() }}">
+                                                        <input type="text" class="form-control f-input bg-light"
+                                                            value="{{ auth()->user()->name }}" readonly>
+                                                        <input type="hidden" id="modal_sales_id"
+                                                            value="{{ auth()->id() }}">
                                                     @endif
                                                 </div>
                                             </div>
@@ -129,7 +133,8 @@
                                             onclick="openStockModal()">
                                             <i class="fa fa-search me-1"></i> Cari Stok
                                         </button>
-                                        <button type="button" class="btn btn-primary btn-sm fw-bold px-3 rounded-pill"
+                                        <button type="button"
+                                            class="btn btn-primary btn-sm fw-bold px-3 rounded-pill"
                                             onclick="addNewProductRow()">
                                             <i class="fa fa-plus me-1"></i> Tambah Baris
                                         </button>
@@ -139,19 +144,21 @@
                                     <table class="table align-middle mb-0 table-hover" id="mainItemTable">
                                         <thead class="bg-light text-secondary small fw-bold text-uppercase">
                                             <tr>
-                                                <th class="ps-4 py-3" width="35%">Produk / Deskripsi</th>
-                                                <th class="text-center" width="10%">Qty</th>
-                                                <th class="text-center" width="10%">Satuan</th>
+                                                <th class="ps-4 py-3" width="30%">Produk / Deskripsi</th>
+                                                <th class="text-center" width="8%">Qty</th>
+                                                <th class="text-center" width="12%">Tempo</th>
+                                                <th class="text-center" width="8%">Satuan</th>
                                                 <th class="text-end" width="15%">Harga</th>
                                                 <th class="text-end" width="10%">Disc (Rp)</th>
-                                                <th class="text-end pe-4" width="15%">Total</th>
-                                                <th width="5%"></th>
+                                                <th class="text-end pe-4" width="13%">Total</th>
+                                                <th width="4%"></th>
                                             </tr>
                                         </thead>
                                         <tbody id="itemBodyList" class="border-top-0"></tbody>
                                         <tfoot class="bg-light">
                                             <tr>
-                                                <td colspan="7" class="text-center py-2 text-muted small fst-italic">
+                                                <td colspan="7"
+                                                    class="text-center py-2 text-muted small fst-italic">
                                                     Klik tombol tambah untuk memasukkan item
                                                 </td>
                                             </tr>
@@ -166,14 +173,12 @@
                                     <div class="row g-4">
                                         <div class="col-md-6">
                                             <label class="f-label mb-2">Catatan Internal</label>
-                                            <textarea id="modal_keterangan"
-                                                class="form-control f-text bg-light border-0" rows="3"
+                                            <textarea id="modal_keterangan" class="form-control f-text bg-light border-0" rows="3"
                                                 placeholder="Catatan untuk tim internal..."></textarea>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="f-label mb-2">Syarat & Ketentuan</label>
-                                            <textarea id="modal_syarat" class="form-control f-text bg-light border-0"
-                                                rows="3">1. Pembayaran ditujukan ke rekening perusahaan.&#10;2. Barang yang dibeli tidak dapat dikembalikan.</textarea>
+                                            <textarea id="modal_syarat" class="form-control f-text bg-light border-0" rows="3">1. Pembayaran ditujukan ke rekening perusahaan.&#10;2. Barang yang dibeli tidak dapat dikembalikan.</textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -247,8 +252,8 @@
                     <table class="table table-hover align-middle mb-0" id="stockTable">
                         <thead class="bg-light sticky-top">
                             <tr>
-                                <th width="5%" class="text-center py-3"><input type="checkbox" class="form-check-input"
-                                        id="checkAllStock" onclick="toggleAllStock(this)">
+                                <th width="5%" class="text-center py-3"><input type="checkbox"
+                                        class="form-check-input" id="checkAllStock" onclick="toggleAllStock(this)">
                                 </th>
                                 <th class="py-3">Produk</th>
                                 <th class="py-3">Kategori</th>
@@ -287,17 +292,33 @@
                 placeholder="Deskripsi (Opsional)">
         </td>
         <td class="py-3">
-            <input type="number" class="form-control form-control-sm text-center prod-qty" value="1" min="1"
-                oninput="calculateInvoiceTotal()">
+            <input type="number" class="form-control form-control-sm text-center prod-qty" value="1"
+                min="1" oninput="calculateInvoiceTotal()">
+        </td>
+        <td class="py-3 text-center">
+            <div class="d-flex flex-column align-items-center gap-2">
+                <div class="form-check form-switch p-0 m-0">
+                    <input class="form-check-input prod-is-tempo shadow-none ms-0" type="checkbox"
+                        onchange="toggleRowTempo(this)">
+                </div>
+                <div class="tempo-container d-none">
+                    <div class="input-group input-group-sm tempo-input-group">
+                        <input type="number" class="form-control text-center prod-tempo-val" value="0"
+                            min="0" disabled oninput="calculateInvoiceTotal()">
+                    </div>
+                </div>
+            </div>
         </td>
         <td class="py-3 text-center">
             <span class="badge bg-light text-secondary border prod-unit-label">-</span>
         </td>
         <td class="py-3">
-            <input type="text" class="form-control form-control-sm text-end prod-price rupiah-input" value="0">
+            <input type="text" class="form-control form-control-sm text-end prod-price rupiah-input"
+                value="0">
         </td>
         <td class="py-3">
-            <input type="text" class="form-control form-control-sm text-end prod-disc rupiah-input" value="0">
+            <input type="text" class="form-control form-control-sm text-end prod-disc rupiah-input"
+                value="0">
         </td>
         <td class="py-3 text-end pe-4 fw-bold text-dark prod-subtotal">Rp 0</td>
         <td class="py-3 text-center">
@@ -399,6 +420,34 @@
     .flatpickr-current-month select {
         appearance: auto !important;
     }
+
+    /* Tempo UI Styling */
+    .tempo-input-group {
+        max-width: 100px;
+        margin: 0 auto;
+    }
+
+    .tempo-input-group .input-group-text {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        background-color: #f1f5f9;
+        color: #64748b;
+        border-color: #e2e8f0;
+    }
+
+    .prod-tempo-val:disabled {
+        background-color: #f8fafc !important;
+        opacity: 0.6;
+    }
+
+    .row-tempo-active {
+        background-color: rgba(37, 99, 235, 0.02);
+    }
+
+    .prod-is-tempo:checked {
+        background-color: #2563eb;
+        border-color: #2563eb;
+    }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -434,10 +483,10 @@
         return parseFloat(String(angka).replace(/\./g, '').replace(',', '.')) || 0;
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         const discInput = document.getElementById('modal_diskon_tambahan');
         if (discInput) {
-            discInput.addEventListener('keyup', function (e) {
+            discInput.addEventListener('keyup', function(e) {
                 // 1. Format tampilan (tambah titik)
                 this.value = formatRupiah(this.value);
                 // 2. Hitung ulang total invoice
@@ -513,29 +562,29 @@
         sidebar.innerHTML = '<div class="fp-title">Tempo</div>';
 
         const options = [{
-            l: 'Hari Ini',
-            d: 0
-        },
-        {
-            l: '+7 Hari',
-            d: 7
-        },
-        {
-            l: '+14 Hari',
-            d: 14
-        },
-        {
-            l: '+30 Hari',
-            d: 30
-        },
-        {
-            l: '+45 Hari',
-            d: 45
-        },
-        {
-            l: '+60 Hari',
-            d: 60
-        }
+                l: 'Hari Ini',
+                d: 0
+            },
+            {
+                l: '+7 Hari',
+                d: 7
+            },
+            {
+                l: '+14 Hari',
+                d: 14
+            },
+            {
+                l: '+30 Hari',
+                d: 30
+            },
+            {
+                l: '+45 Hari',
+                d: 45
+            },
+            {
+                l: '+60 Hari',
+                d: 60
+            }
         ];
 
         options.forEach(opt => {
@@ -557,7 +606,7 @@
 
     // Override openInvoiceModal untuk memanggil inisialisasi picker
     const originalOpenInvoiceModal = openInvoiceModal;
-    openInvoiceModal = async function (id = null, type = null, mode = 'create') {
+    openInvoiceModal = async function(id = null, type = null, mode = 'create') {
         await originalOpenInvoiceModal(id, type, mode);
         initInvoiceDatePickers();
     };
@@ -576,7 +625,7 @@
         if (tomSelectMitraModal) {
             try {
                 tomSelectMitraModal.destroy();
-            } catch (_) { }
+            } catch (_) {}
             tomSelectMitraModal = null;
         }
 
@@ -608,7 +657,7 @@
             `,
                 item: (data, escape) => `<div>${escape(data.nama || '')}</div>`
             },
-            onChange: function (val) {
+            onChange: function(val) {
                 renderMitraDetail();
             }
         });
@@ -622,7 +671,7 @@
         if (tomSelectMitraModal) {
             try {
                 tomSelectMitraModal.destroy();
-            } catch (_) { }
+            } catch (_) {}
             tomSelectMitraModal = null;
         }
     });
@@ -734,6 +783,37 @@
 
     }
 
+    function toggleRowTempo(el) {
+        const row = el.closest('tr');
+        const tempoInput = row.querySelector('.prod-tempo-val');
+        const tempoContainer = row.querySelector('.tempo-container');
+        const priceInput = row.querySelector('.prod-price');
+        const prodId = row.querySelector('.prod-id').value;
+
+        const isTempo = el.checked;
+        tempoInput.disabled = !isTempo;
+
+        if (isTempo) {
+            row.classList.add('row-tempo-active');
+            tempoContainer.classList.remove('d-none');
+        } else {
+            row.classList.remove('row-tempo-active');
+            tempoContainer.classList.add('d-none');
+            tempoInput.value = 0;
+        }
+
+        // Switch price if product selected
+        if (prodId) {
+            const product = masterProduk.find(p => String(p.id) === String(prodId));
+            if (product) {
+                const newPrice = isTempo ? (product.harga_tempo || 0) : (product.harga_jual || 0);
+                priceInput.value = formatRupiah(Math.round(newPrice));
+            }
+        }
+
+        calculateInvoiceTotal();
+    }
+
     // --- Item Logic ---
     function addNewProductRow(data = null) {
         const tbody = document.getElementById('itemBodyList');
@@ -753,7 +833,7 @@
         const descInput = tr.querySelector('.prod-desc');
 
         [priceInput, discInput].forEach(el => {
-            el.addEventListener('keyup', function (e) {
+            el.addEventListener('keyup', function(e) {
                 this.value = formatRupiah(this.value);
                 calculateInvoiceTotal();
             });
@@ -776,11 +856,18 @@
                     `<div><div class="fw-bold">${esc(d.nama)}</div><small class="text-muted">${esc(d.sku)}</small></div>`,
                 item: (d, esc) => `<div>${esc(d.nama)}</div>`
             },
-            onChange: function (val) {
+            onChange: function(val) {
                 const selected = this.options[val];
                 if (selected) {
+                    const isTempo = tr.querySelector('.prod-is-tempo').checked;
+                    const product = masterProduk.find(p => String(p.id) === String(val));
+
                     idInput.value = selected.id;
-                    priceInput.value = formatRupiah(selected.harga);
+
+                    const price = isTempo ? (product?.harga_tempo || 0) : (product?.harga_jual || selected
+                        .harga);
+                    priceInput.value = formatRupiah(Math.round(price));
+
                     unitLabel.innerText = selected.unit;
                     calculateInvoiceTotal();
                 }
@@ -823,6 +910,17 @@
                 priceInput.value = formatRupiah(rawPrice);
                 discInput.value = formatRupiah(rawDisc);
                 descInput.value = data.deskripsi_item || data.deskripsi_produk || '';
+
+                if (data.tempo && data.tempo > 0) {
+                    const toggle = tr.querySelector('.prod-is-tempo');
+                    const tempoVal = tr.querySelector('.prod-tempo-val');
+                    const tempoContainer = tr.querySelector('.tempo-container');
+                    toggle.checked = true;
+                    tempoVal.disabled = false;
+                    tempoVal.value = data.tempo;
+                    tempoContainer.classList.remove('d-none');
+                    tr.classList.add('row-tempo-active');
+                }
 
                 let unitName = 'Pcs';
                 const masterItem = masterProduk.find(p => String(p.id) === prodId);
@@ -903,6 +1001,7 @@
             const price = cleanNumber(priceEl.value);
             const disc = cleanNumber(discEl.value);
 
+            // Tempo is metadata, not a multiplier
             let lineTotal = (qty * price) - disc;
             if (lineTotal < 0) lineTotal = 0;
 
@@ -970,6 +1069,8 @@
                     nama_produk_manual: namaProduk,
                     deskripsi_produk: row.querySelector('.prod-desc').value,
                     qty: qty,
+                    tempo: row.querySelector('.prod-is-tempo').checked ? (parseFloat(row.querySelector(
+                        '.prod-tempo-val').value) || 0) : 0,
                     harga_satuan: price,
                     diskon_nilai: disc,
                     total_harga_item: Math.max(0, (qty * price) - disc)
@@ -1113,7 +1214,7 @@
 
     // Filter Stock
     document.querySelectorAll('.col-filter').forEach(inp => {
-        inp.addEventListener('keyup', function () {
+        inp.addEventListener('keyup', function() {
             const val = this.value.toLowerCase();
             const col = this.dataset.col; // 1=code, 2=name, 3=cat
 
