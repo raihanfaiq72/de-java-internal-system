@@ -142,6 +142,7 @@ Route::middleware(['web', 'auth'])->group(function () {
         ->name('invoice-api.')
         ->group(function () {
             Route::get('/', [InvoiceController::class, 'index'])->name('index');
+            Route::get('/acc-admin', [InvoiceController::class, 'accAdmin'])->name('acc-admin');
             Route::post('/', [InvoiceController::class, 'store'])->name('store');
             Route::get('/{id}', [InvoiceController::class, 'show'])->name('show');
             Route::put('/{id}', [InvoiceController::class, 'update'])->name('update');
