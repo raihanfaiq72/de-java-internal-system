@@ -31,6 +31,7 @@ class InvoiceItemController extends Controller
             'invoice_id' => 'required|exists:invoices,id',
             'qty' => 'required|numeric|min:0.01',
             'harga_satuan' => 'required|numeric|min:0',
+            'tempo' => 'required|numeric|min:0'
         ]);
 
         if ($validator->fails()) {

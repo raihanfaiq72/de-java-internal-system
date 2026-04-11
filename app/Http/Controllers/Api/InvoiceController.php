@@ -37,7 +37,10 @@ class InvoiceController extends Controller
         if ($request->tab_status === 'trash') {
             $query->onlyTrashed();
         } elseif ($request->tab_status === 'archive') {
-            $query->where('status_dok', 'Archived');
+            $query->where(function ($q) {
+                $q->where('status_dok', 'Draft')
+                    ->orWhere('tgl_invoice', '<=', now()->subDays(60));
+            });
         }
 
         if ($request->tipe_invoice) {
@@ -128,7 +131,7 @@ class InvoiceController extends Controller
             if ($maxOverdue > 60) {
                 // Check if user is owner
                 if (! $this->isOwner(auth()->id(), $officeId)) {
-                    $input['status_dok'] = 'Arsip';
+                    $input['status_dok'] = 'Draft';
                     $input['perlu_acc_admin'] = true;
                     $input['keterangan'] = ($request->keterangan ? $request->keterangan."\n" : '')."Auto-Archived: Umur nota > 60 hari ($maxOverdue hari). Perlu ACC Owner.";
                     
@@ -339,7 +342,7 @@ class InvoiceController extends Controller
             if ($maxOverdue > 60) {
                 // Check if user is owner
                 if (! $this->isOwner(auth()->id(), session('active_office_id'))) {
-                    $invoiceData['status_dok'] = 'Arsip';
+                    $invoiceData['status_dok'] = 'Draft';
                     $invoiceData['perlu_acc_admin'] = true;
                     $invoiceData['keterangan'] = ($invoiceData['keterangan'] ?? '')."\nAuto-Archived: Umur nota > 60 hari ($maxOverdue hari). Perlu ACC Owner.";
 
