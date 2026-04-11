@@ -222,7 +222,6 @@ class SalesImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
                         'total_akhir' => 0, // Will calculate
                         'total_diskon_item' => 0,
                         'is_kop' => 1,
-                        'perlu_acc_admin' => 0,
                     ]
                 );
 

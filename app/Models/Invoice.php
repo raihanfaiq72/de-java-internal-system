@@ -36,7 +36,6 @@ class Invoice extends Model
         'total_akhir',
         'keterangan',
         'syarat_ketentuan',
-        'perlu_acc_admin',
     ];
 
     public function mitra()
@@ -62,5 +61,10 @@ class Invoice extends Model
     public function deliveryOrderInvoices()
     {
         return $this->hasMany(DeliveryOrderInvoice::class);
+    }
+
+    public function approvals()
+    {
+        return $this->hasMany(InvoiceApprovalDetail::class);
     }
 }
