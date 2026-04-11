@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
+use App\Models\InvoiceApprovalDetail;
 use App\Models\InvoiceItem;
 use App\Models\InvoiceItemTax;
 use App\Models\Partner;
@@ -124,23 +125,22 @@ class InvoiceController extends Controller
         $input = $request->all();
         $input['office_id'] = $officeId;
 
-        // AR Aging Check (Only for Sales)
-        $warningMessage = '';
+        $invoice = Invoice::create($input);
+
+        // AR Aging Check Approval Creation
         if ($request->tipe_invoice === 'Sales') {
             $maxOverdue = $this->getMaxOverdueDays($partner->id);
-            if ($maxOverdue > 60) {
-                // Check if user is owner
-                if (! $this->isOwner(auth()->id(), $officeId)) {
-                    $input['status_dok'] = 'Draft';
-                    $input['perlu_acc_admin'] = true;
-                    $input['keterangan'] = ($request->keterangan ? $request->keterangan."\n" : '')."Auto-Archived: Umur nota > 60 hari ($maxOverdue hari). Perlu ACC Owner.";
-                    
-                    $warningMessage = "Harus ACC Owner, dikarenakan umur nota ($maxOverdue hari). Invoice masuk ke Arsip.";
-                }
+            if ($maxOverdue > 60 && ! $this->isOwner(auth()->id(), $officeId)) {
+                InvoiceApprovalDetail::create([
+                    'invoice_id' => $invoice->id,
+                    'office_id' => $officeId,
+                    'requested_by' => auth()->id(),
+                    'status' => 'pending',
+                ]);
+
+                $warningMessage = "Harus ACC Owner, dikarenakan umur nota ($maxOverdue hari). Invoice masuk ke Arsip.";
             }
         }
-
-        $invoice = Invoice::create($input);
 
         $msg = 'Invoice berhasil dibuat';
         if ($warningMessage) {
@@ -337,17 +337,15 @@ class InvoiceController extends Controller
         // AR Aging Check (Only for Sales)
         $warningMessage = '';
         $invoiceData = $request->invoice;
+        $needsApproval = false;
         if (($invoiceData['tipe_invoice'] ?? '') === 'Sales') {
             $maxOverdue = $this->getMaxOverdueDays($mitra->id);
-            if ($maxOverdue > 60) {
-                // Check if user is owner
-                if (! $this->isOwner(auth()->id(), session('active_office_id'))) {
-                    $invoiceData['status_dok'] = 'Draft';
-                    $invoiceData['perlu_acc_admin'] = true;
-                    $invoiceData['keterangan'] = ($invoiceData['keterangan'] ?? '')."\nAuto-Archived: Umur nota > 60 hari ($maxOverdue hari). Perlu ACC Owner.";
+            if ($maxOverdue > 60 && ! $this->isOwner(auth()->id(), session('active_office_id'))) {
+                $invoiceData['status_dok'] = 'Draft';
+                $invoiceData['keterangan'] = ($invoiceData['keterangan'] ?? '')."\nAuto-Archived: Umur nota > 60 hari ($maxOverdue hari). Perlu ACC Owner.";
 
-                    $warningMessage = "Harus ACC Owner, dikarenakan umur nota ($maxOverdue hari). Invoice masuk ke Arsip.";
-                }
+                $warningMessage = "Harus ACC Owner, dikarenakan umur nota ($maxOverdue hari). Invoice masuk ke Arsip.";
+                $needsApproval = true;
             }
         }
 
@@ -362,11 +360,20 @@ class InvoiceController extends Controller
             }
         }
 
-        return DB::transaction(function () use ($request, $invoiceData, $warningMessage) {
+        return DB::transaction(function () use ($request, $invoiceData, $warningMessage, $needsApproval) {
 
             // $invoiceData = $request->invoice; // Removed because defined above
             $invoiceData['office_id'] = session('active_office_id');
             $invoice = Invoice::create($invoiceData);
+
+            if ($needsApproval) {
+                InvoiceApprovalDetail::create([
+                    'invoice_id' => $invoice->id,
+                    'office_id' => session('active_office_id'),
+                    'requested_by' => auth()->id(),
+                    'status' => 'pending',
+                ]);
+            }
 
             foreach ($request->items as $itemData) {
 
@@ -428,15 +435,73 @@ class InvoiceController extends Controller
         });
     }
 
-    public function accAdmin() {
-        $query = Invoice::with(['mitra', 'items'])
+    public function accAdmin()
+    {
+        $officeId = session('active_office_id');
+
+        $invoice = Invoice::with(['mitra', 'items', 'approvals.requestedBy', 'approvals.processedBy'])
             ->where('tipe_invoice', 'Sales')
-            ->where('perlu_acc_admin', true)
-            ->where('office_id', session('active_office_id'));
+            ->where('office_id', $officeId)
+            ->has('approvals')
+            ->latest()
+            ->get();
 
-        $invoice = $query->latest()->get();
+        return apiResponse(true, 'Data invoice approval berhasil diambil', $invoice, null, 200);
+    }
 
-        return apiResponse(true, 'Invoice berhasil diambil', $invoice, null, 200);
+    public function approve($id)
+    {
+        return DB::transaction(function () use ($id) {
+            $invoice = Invoice::where('office_id', session('active_office_id'))->find($id);
+
+            if (! $invoice) {
+                return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
+            }
+
+            $approval = InvoiceApprovalDetail::where('invoice_id', $id)
+                ->where('status', 'pending')
+                ->first();
+
+            if (! $approval) {
+                return apiResponse(false, 'Request approval tidak ditemukan', null, null, 404);
+            }
+
+            $approval->update([
+                'status' => 'approved',
+                'processed_by' => auth()->id(),
+            ]);
+
+            // Optional: Update invoice status if needed
+            // $invoice->update(['status_dok' => 'Post']);
+
+            return apiResponse(true, 'Invoice berhasil disetujui');
+        });
+    }
+
+    public function reject($id)
+    {
+        return DB::transaction(function () use ($id) {
+            $invoice = Invoice::where('office_id', session('active_office_id'))->find($id);
+
+            if (! $invoice) {
+                return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
+            }
+
+            $approval = InvoiceApprovalDetail::where('invoice_id', $id)
+                ->where('status', 'pending')
+                ->first();
+
+            if (! $approval) {
+                return apiResponse(false, 'Request approval tidak ditemukan', null, null, 404);
+            }
+
+            $approval->update([
+                'status' => 'rejected',
+                'processed_by' => auth()->id(),
+            ]);
+
+            return apiResponse(true, 'Invoice ditolak');
+        });
     }
     
 }
