@@ -594,7 +594,8 @@
             try {
                 // 1. Verify success first before showing preview
                 const response = await fetch(url +
-                '&check=1'); // check parameter to differentiate between full render and quick check if needed, but here we just check if response is ok
+                    '&check=1'
+                ); // check parameter to differentiate between full render and quick check if needed, but here we just check if response is ok
                 if (!response.ok) {
                     const errData = await response.json();
                     throw new Error(errData.error || 'Terjadi kesalahan sistem');
@@ -771,7 +772,7 @@
                     fetch(`${finalUrl}${finalUrl.includes('?') ? '&' : '?'}${params.toString()}`),
                     fetch(
                         `/api/payment-api?tipe_receipt=Sales&limit=1000`
-                        ) // Fetch enough payments to cover visible invoices
+                    ) // Fetch enough payments to cover visible invoices
                 ]);
 
                 const result = await invoiceRes.json();

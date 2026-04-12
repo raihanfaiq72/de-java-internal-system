@@ -98,7 +98,7 @@ class FinanceController extends Controller
             $rows = [];
 
             $payments = Payment::with(['invoice' => function ($q) {
-                $q->select('id', 'mitra_id', 'nomor_invoice');
+                $q->select('id', 'mitra_id', 'nomor_invoice', 'tipe_invoice');
             }, 'invoice.mitra:id,nama'])
                 ->select('tgl_pembayaran', 'jumlah_bayar', 'invoice_id', 'nomor_pembayaran')
                 ->where('office_id', $officeId)
@@ -107,12 +107,13 @@ class FinanceController extends Controller
                 ->get();
 
             foreach ($payments as $p) {
+                $isPurchase = ($p->invoice?->tipe_invoice === 'Purchase');
                 $rows[] = [
                     'date' => $p->tgl_pembayaran,
-                    'account_name' => 'PENDAPATAN',
-                    'description' => ($p->invoice?->mitra?->nama ?? 'Pembayaran').' - '.($p->invoice?->nomor_invoice ?? $p->nomor_pembayaran),
-                    'debit' => $p->jumlah_bayar,
-                    'credit' => 0,
+                    'account_name' => $isPurchase ? 'BEBAN' : 'PENDAPATAN',
+                    'description' => ($p->invoice?->mitra?->nama ?? 'Pembayaran') . ' - ' . ($p->invoice?->nomor_invoice ?? $p->nomor_pembayaran),
+                    'debit' => $isPurchase ? 0 : $p->jumlah_bayar,
+                    'credit' => $isPurchase ? $p->jumlah_bayar : 0,
                 ];
             }
 
@@ -263,6 +264,16 @@ class FinanceController extends Controller
     {
         $income = Payment::where('office_id', $officeId)
             ->where('akun_keuangan_id', $accountId)
+            ->whereHas('invoice', function ($q) {
+                $q->where('tipe_invoice', 'Sales');
+            })
+            ->sum('jumlah_bayar');
+
+        $purchaseExpense = Payment::where('office_id', $officeId)
+            ->where('akun_keuangan_id', $accountId)
+            ->whereHas('invoice', function ($q) {
+                $q->where('tipe_invoice', 'Purchase');
+            })
             ->sum('jumlah_bayar');
 
         $expense = Expense::where('office_id', $officeId)
@@ -297,13 +308,16 @@ class FinanceController extends Controller
             ->where('chart_of_accounts_id', $accountId)
             ->sum('total_cost');
 
-        return ($income + $transferIn + $otherIncome) - ($expense + $transferOut + $otherExpense + $deliveryOrderAmount);
+        return ($income + $transferIn + $otherIncome) - ($purchaseExpense + $expense + $transferOut + $otherExpense + $deliveryOrderAmount);
     }
 
     private function calculateIncomeLain($accountId, $officeId)
     {
         $income = Payment::where('office_id', $officeId)
             ->where('akun_keuangan_id', $accountId)
+            ->whereHas('invoice', function ($q) {
+                $q->where('tipe_invoice', 'Sales');
+            })
             ->sum('jumlah_bayar');
 
         $transferIn = FinancialTransaction::where('office_id', $officeId)
@@ -327,6 +341,13 @@ class FinanceController extends Controller
             ->where('akun_keuangan_id', $accountId)
             ->sum('jumlah');
 
+        $purchaseExpense = Payment::where('office_id', $officeId)
+            ->where('akun_keuangan_id', $accountId)
+            ->whereHas('invoice', function ($q) {
+                $q->where('tipe_invoice', 'Purchase');
+            })
+            ->sum('jumlah_bayar');
+
         $transferOut = FinancialTransaction::where('office_id', $officeId)
             ->where('from_account_id', $accountId)
             ->where('type', 'transfer')
@@ -343,7 +364,7 @@ class FinanceController extends Controller
             ->where('chart_of_accounts_id', $accountId)
             ->sum('total_cost');
 
-        return $expense + $transferOut + $otherExpense + $deliveryOrderAmount;
+        return $expense + $purchaseExpense + $transferOut + $otherExpense + $deliveryOrderAmount;
     }
 
     public function storeTransaction(Request $request)

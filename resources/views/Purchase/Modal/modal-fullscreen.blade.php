@@ -95,7 +95,7 @@
                                                         class="form-control f-input">
                                                 </div>
                                                 <div class="col-12">
-                                                    <label class="f-label">Purchasing Staff</label>
+                                                    <label class="f-label">Purchasing Staff <span class="text-danger">*</span></label>
                                                     <select id="modal_sales_id" class="form-select f-input">
                                                         <option value="">Pilih Staff...</option>
                                                     </select>
@@ -517,6 +517,34 @@
     };
 
     let tomSelectMitraModal = null;
+    let tomSelectStaffModal = null;
+
+    function initTomSelectStaffModal(staffData = [], selectedId = null) {
+        if (!window.TomSelect) return;
+
+        if (tomSelectStaffModal) {
+            try { staffSelectStaffModal.destroy(); } catch (_) { }
+            tomSelectStaffModal = null;
+        }
+
+        const sel = document.getElementById('modal_sales_id');
+        sel.innerHTML = '<option value="">Pilih Staff...</option>';
+        
+        tomSelectStaffModal = new TomSelect('#modal_sales_id', {
+            options: staffData.map(s => ({ id: s.id, name: s.name })),
+            valueField: 'id',
+            labelField: 'name',
+            searchField: ['name'],
+            allowEmptyOption: true,
+            placeholder: 'Pilih Staff...',
+            create: false,
+            dropdownParent: 'body'
+        });
+
+        if (selectedId) {
+            tomSelectStaffModal.setValue(String(selectedId), true);
+        }
+    }
 
     function initTomSelectMitraModal(selectedId = null) {
         if (!window.TomSelect) {
@@ -578,6 +606,12 @@
                 tomSelectMitraModal.destroy();
             } catch (_) { }
             tomSelectMitraModal = null;
+        }
+        if (tomSelectStaffModal) {
+            try {
+                tomSelectStaffModal.destroy();
+            } catch (_) { }
+            tomSelectStaffModal = null;
         }
     });
 
@@ -766,9 +800,10 @@
     // Initialize Master Data
     async function initializeInvoiceData() {
         try {
-            const [mRes, pRes] = await Promise.all([
+            const [mRes, pRes, sRes] = await Promise.all([
                 fetch('/api/mitra-api?per_page=1000').then(r => r.json()),
-                fetch('/api/product-api').then(r => r.json())
+                fetch('/api/product-api').then(r => r.json()),
+                fetch('/api/user-api/staff-by-permission?permission=purchase').then(r => r.json())
             ]);
             
             // Handle both paginated and non-paginated responses
@@ -784,6 +819,9 @@
             select.innerHTML = '<option value="">Cari dan pilih supplier...</option>';
             modalMasterMitra.forEach(m => select.insertAdjacentHTML('beforeend',
                 `<option value="${m.id}">${m.nama}</option>`));
+
+            const staffData = sRes.success ? sRes.data : [];
+            initTomSelectStaffModal(staffData);
         } catch (e) {
             console.error("Master data fail", e);
         }
@@ -795,6 +833,8 @@
         document.getElementById('itemBodyList').innerHTML = '';
         document.getElementById('mitra_detail_display').classList.add('d-none');
         document.getElementById('mitra_empty_state').classList.remove('d-none');
+
+        if (tomSelectStaffModal) tomSelectStaffModal.clear();
 
         // Reset totals
         document.getElementById('summary_subtotal').innerText = 'Rp 0';
@@ -1018,6 +1058,7 @@
                 ref_no: document.getElementById('modal_ref_no').value,
                 keterangan: document.getElementById('modal_keterangan').value,
                 syarat_ketentuan: document.getElementById('modal_syarat').value,
+                sales_id: document.getElementById('modal_sales_id').value,
                 diskon_tambahan_nilai: cleanNumber(document.getElementById('modal_diskon_tambahan').value),
                 total_akhir: parseFloat(document.getElementById('summary_grand_total').innerText.replace(
                     /[^0-9,-]+/g, '').replace(',', '.')) || 0,
@@ -1036,6 +1077,10 @@
         }
         if (!payload.invoice.tgl_invoice) {
             alert('Harap isi Tanggal Invoice!');
+            return;
+        }
+        if (!payload.invoice.sales_id) {
+            alert('Harap pilih Purchasing Staff!');
             return;
         }
         if (!payload.invoice.nomor_invoice) {
