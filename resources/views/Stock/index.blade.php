@@ -609,7 +609,7 @@
         // --- LOCATIONS ---
         function loadLocations() {
             // Populate Dropdown Filter
-            fetch('{{ route('stock-location-api.index') }}')
+            fetch('{{ route('stock-location-api.index') }}?per_page=1000')
                 .then(res => res.json())
                 .then(data => {
                     const select = document.getElementById('filter-stock-location');
