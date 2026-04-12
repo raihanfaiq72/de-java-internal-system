@@ -192,7 +192,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-6 col-lg-4">
+                                <div class="col-md-6 col-lg-6">
                                     <div class="card border-0 shadow-sm mb-3 bg-soft-success">
                                         <div class="card-body p-3">
                                             <p class="text-success font-11 fw-bold text-uppercase mb-1">Saldo Aktif</p>
@@ -202,24 +202,13 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-6 col-lg-4">
+                                <div class="col-md-6 col-lg-6">
                                     <div class="card border-0 shadow-sm mb-3">
                                         <div class="card-body p-3">
-                                            <p class="text-muted font-11 fw-bold text-uppercase mb-1">Laba Kotor</p>
-                                            <h4 class="fw-bold mb-0 text-dark">Rp <span id="dashboardLabaKotor">0</span>
-                                            </h4>
-                                            <div class="mt-1 small text-muted font-10">Revenue - HPP</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="card border-0 shadow-sm mb-3">
-                                        <div class="card-body p-3">
-                                            <p class="text-muted font-11 fw-bold text-uppercase mb-1">Laba Bersih</p>
+                                            <p class="text-muted font-11 fw-bold text-uppercase mb-1">Pendapatan Bersih</p>
                                             <h4 class="fw-bold mb-0 text-success">Rp <span
                                                     id="dashboardLabaBersih">0</span></h4>
-                                            <div class="mt-1 small text-muted font-10">Gross Profit - Biaya</div>
+                                            <div class="mt-1 small text-muted font-10">Total Pendapatan - Total Beban</div>
                                         </div>
                                     </div>
                                 </div>
@@ -381,8 +370,6 @@
                         ?.hutang_usaha ?? 0);
                     document.getElementById('dashboardSaldo').textContent = formatRupiah(d.stats?.saldo_aktif ??
                         0);
-                    document.getElementById('dashboardLabaKotor').textContent = formatRupiah(d.stats
-                        ?.laba_kotor ?? 0);
                     document.getElementById('dashboardLabaBersih').textContent = formatRupiah(d.stats
                         ?.laba_bersih ?? 0);
 

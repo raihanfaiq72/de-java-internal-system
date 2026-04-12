@@ -78,6 +78,7 @@ class DashboardController extends Controller
                 $data['stats']['piutang_usaha'] = Invoice::where('office_id', $officeId)
                     ->where('tipe_invoice', 'Sales')
                     ->where('status_pembayaran', '!=', 'Paid')
+                    ->where('status_pembayaran', '!=', 'Draft') // Exclude Archived
                     ->get()
                     ->sum(function ($inv) {
                         return $inv->total_akhir - $inv->payment()->sum('jumlah_bayar');
@@ -86,6 +87,7 @@ class DashboardController extends Controller
                 $data['stats']['hutang_usaha'] = Invoice::where('office_id', $officeId)
                     ->where('tipe_invoice', 'Purchase')
                     ->where('status_pembayaran', '!=', 'Paid')
+                    ->where('status_pembayaran', '!=', 'Draft') // Exclude Archived
                     ->get()
                     ->sum(function ($inv) {
                         return $inv->total_akhir - $inv->payment()->sum('jumlah_bayar');
@@ -101,11 +103,55 @@ class DashboardController extends Controller
 
                 $data['stats']['saldo_aktif'] = $totalIncome - $totalOutcome - $totalExpenses;
 
-                $data['stats']['laba_kotor'] = $data['stats']['revenue'] - $totalOutcome; // Simple estimate
-                $data['stats']['laba_bersih'] = $data['stats']['laba_kotor'] - $totalExpenses;
+                // Accurate Net Profit calculation based on GL (matching ReportController@profitAndLoss)
+                $firstDayOfMonth = date('Y-m-01');
+                $now = date('Y-m-d');
+                $movements = \Illuminate\Support\Facades\DB::table('journal_details')
+                    ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
+                    ->where('journals.office_id', $officeId)
+                    ->whereNull('journals.deleted_at')
+                    ->whereNull('journal_details.deleted_at')
+                    ->whereBetween('journals.tgl_jurnal', [$firstDayOfMonth, $now])
+                    ->select(
+                        'journal_details.akun_id',
+                        \Illuminate\Support\Facades\DB::raw('SUM(journal_details.debit) as total_debit'),
+                        \Illuminate\Support\Facades\DB::raw('SUM(journal_details.kredit) as total_credit')
+                    )
+                    ->groupBy('journal_details.akun_id')
+                    ->get();
+
+                $incomeGroups = ['4000', '7001'];
+                $expenseGroups = ['5000', '6000', '6800', '8001', '9000'];
+
+                $allGroups = \Illuminate\Support\Facades\DB::table('coa_group')
+                    ->join('coa_type', 'coa_group.id', '=', 'coa_type.kelompok_id')
+                    ->join('chart_of_accounts', 'coa_type.id', '=', 'chart_of_accounts.tipe_id')
+                    ->where('coa_group.office_id', $officeId)
+                    ->whereIn('coa_group.kode_kelompok', array_merge($incomeGroups, $expenseGroups))
+                    ->select('chart_of_accounts.id', 'coa_group.kode_kelompok')
+                    ->get()
+                    ->groupBy('id');
+
+                $totalRevenue = 0;
+                $totalExpense = 0;
+
+                foreach ($movements as $mov) {
+                    $groupInfo = $allGroups->get($mov->akun_id);
+                    if ($groupInfo) {
+                        $groupCode = $groupInfo->first()->kode_kelompok;
+                        if (in_array($groupCode, $incomeGroups)) {
+                            $totalRevenue += ($mov->total_credit - $mov->total_debit);
+                        } else {
+                            $totalExpense += ($mov->total_debit - $mov->total_credit);
+                        }
+                    }
+                }
+
+                $data['stats']['laba_bersih'] = $totalRevenue - $totalExpense;
 
                 $data['stats']['new_orders'] = Invoice::where('office_id', $officeId)
                     ->where('tipe_invoice', 'Sales')
+                    ->where('status_dok', 'Approved') // Filter by Approved
                     ->whereDate('created_at', today())
                     ->count();
 
@@ -117,6 +163,7 @@ class DashboardController extends Controller
                 $recent = Invoice::with('mitra')
                     ->where('office_id', $officeId)
                     ->where('tipe_invoice', 'Sales')
+                    ->where('status_dok', 'Approved') // Only show approved transactions
                     ->latest()
                     ->limit(10)
                     ->get();

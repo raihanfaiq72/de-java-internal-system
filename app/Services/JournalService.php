@@ -4,11 +4,13 @@ namespace App\Services;
 
 use App\Models\COA;
 use App\Models\Expense;
+use App\Models\FinancialAccount;
 use App\Models\Invoice;
 use App\Models\Journal;
 use App\Models\JournalDetail;
 use App\Models\Payment;
 use App\Models\StockMutation;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class JournalService
@@ -49,7 +51,7 @@ class JournalService
     {
         $account = COA::find($accountId);
         $code = $this->getAccountCode($account->nama_akun);
-        $year = \Carbon\Carbon::parse($date)->format('Y');
+        $year = Carbon::parse($date)->format('Y');
 
         $lastNumber = JournalDetail::whereHas('journal', function ($q) use ($year) {
             $q->whereYear('tgl_jurnal', $year);
@@ -168,7 +170,7 @@ class JournalService
 
         // Credit Payment Account (Cash/Bank)
         // Resolve COA from FinancialAccount
-        $finAccount = \App\Models\FinancialAccount::find($expense->akun_keuangan_id);
+        $finAccount = FinancialAccount::find($expense->akun_keuangan_id);
         $creditCoaId = null;
         if ($finAccount) {
             $code = ($finAccount->type == 'Cash') ? '1101' : '1201'; // Default Cash or Bank
@@ -308,14 +310,19 @@ class JournalService
         ];
 
         // 2. COGS Entry (Perpetual)
-        // Check StockMutations for this invoice
-        $mutations = StockMutation::where('reference_type', 'Sales')
-            ->where('reference_id', $invoice->id)
+        // Check StockMutations for this invoice (Net Cost calculation)
+        $mutations = StockMutation::where('reference_id', $invoice->id)
+            ->whereIn('reference_type', ['Sales', 'Sales Return (Archived)', 'Sales Return (Rejected)'])
             ->get();
 
         $totalCOGS = 0;
         foreach ($mutations as $mut) {
-            $totalCOGS += ($mut->qty * $mut->cost_price);
+            $amount = ($mut->qty * $mut->cost_price);
+            if ($mut->type === 'OUT') {
+                $totalCOGS += $amount;
+            } else {
+                $totalCOGS -= $amount;
+            }
         }
 
         if ($totalCOGS > 0 && $accHPP && $accInventory) {
@@ -350,12 +357,12 @@ class JournalService
         $officeId = $payment->office_id;
         $invoice = $payment->invoice;
 
-        if (!$invoice) {
+        if (! $invoice) {
             return;
         }
 
         // Resolve COA from FinancialAccount
-        $finAccount = \App\Models\FinancialAccount::find($payment->akun_keuangan_id);
+        $finAccount = FinancialAccount::find($payment->akun_keuangan_id);
         $accCashBank = null;
         if ($finAccount) {
             $code = ($finAccount->type == 'Cash') ? '1101' : '1201';
@@ -440,14 +447,14 @@ class JournalService
             $this->recordPayment($payment);
         });
     }
-    
+
     public function deletePaymentJournal(Payment $payment)
     {
         DB::transaction(function () use ($payment) {
             $journal = Journal::where('nomor_referensi', $payment->nomor_pembayaran)
                 ->orWhere('nomor_referensi', "PAY-{$payment->id}")
                 ->first();
- 
+
             if ($journal) {
                 $journal->details()->delete();
                 $journal->delete();
