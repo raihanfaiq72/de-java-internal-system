@@ -29,7 +29,12 @@ class PaymentController extends Controller
             $query->where('invoice_id', $request->invoice_id);
         }
 
-        $data = $query->latest()->paginate($request->get('per_page', 10))->withQueryString();
+        $perPage = $request->get('per_page', 10);
+        if ($perPage >= 1000) {
+            $data = $query->latest()->get();
+        } else {
+            $data = $query->latest()->paginate($perPage)->withQueryString();
+        }
 
         return apiResponse(true, 'Data pembayaran', $data);
     }

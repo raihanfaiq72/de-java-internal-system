@@ -30,7 +30,7 @@ class ProductController extends Controller
         }
 
         if ($request->category) {
-            $query->where('category_id', $request->category);
+            $query->where('product_category_id', $request->category);
         }
 
         $perPage = $request->get('per_page', 10);

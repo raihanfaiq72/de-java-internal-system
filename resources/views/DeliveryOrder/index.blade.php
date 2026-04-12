@@ -259,14 +259,17 @@
             }
         }
 
-        async function loadInvoiceData(url = DO_API_URL) {
+        async function loadInvoiceData(url = DO_API_URL, page = 1) {
             const tbody = document.getElementById('invoiceTableBody');
             tbody.innerHTML =
                 '<tr><td colspan="5" class="text-center p-5"><div class="spinner-border spinner-border-sm text-primary"></div><p class="mt-2 text-muted small mb-0">Memuat data...</p></td></tr>';
 
             try {
                 const searchVal = document.getElementById('filter-search').value;
-                let finalUrl = url;
+                let finalUrl = (typeof url === 'string' && url.includes('/')) ? url : DO_API_URL;
+                if (!finalUrl.includes('page=') && page) {
+                    finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'page=' + page;
+                }
                 // Basic search query param
                 if (url.includes('?')) {
                     finalUrl += `&search=${searchVal}`;
@@ -358,18 +361,32 @@
         }
 
         function renderPagination(meta) {
-            const c = document.getElementById('pagination-container');
-            c.innerHTML = '';
+            const container = document.getElementById('pagination-container');
+            const info = document.getElementById('pagination-info');
+            
             if (!meta || !meta.links) return;
-            document.getElementById('pagination-info').innerText = `${meta.from || 0}-${meta.to || 0} dari ${meta.total} data`;
-            meta.links.forEach(l => {
-                const cls = l.active ? 'bg-primary text-white' : 'bg-white text-dark';
-                // Only show if url is present
-                const onclick = l.url ? `onclick="loadInvoiceData('${l.url}')"` : '';
-                const disabled = !l.url ? 'disabled' : '';
 
-                c.insertAdjacentHTML('beforeend',
-                    `<li class="page-item ${disabled}"><a class="page-link border-0 mx-1 rounded shadow-sm fw-bold ${cls}" href="#" ${onclick}>${l.label}</a></li>`
+            if (info) {
+                info.innerText = `${meta.from || 0}-${meta.to || 0} dari ${meta.total} data`;
+            }
+
+            container.innerHTML = '';
+            meta.links.forEach(link => {
+                const activeClass = link.active ? 'active' : '';
+                const disabledClass = !link.url ? 'disabled' : '';
+                
+                let pageNum = 1;
+                if (link.url) {
+                    const url = new URL(link.url, window.location.origin);
+                    pageNum = url.searchParams.get('page') || 1;
+                }
+
+                const onclick = link.url ? `onclick="loadInvoiceData(undefined, ${pageNum})"` : '';
+
+                container.insertAdjacentHTML('beforeend', `
+                    <li class="page-item ${activeClass} ${disabledClass}">
+                        <button class="page-link border-0 mx-1 rounded shadow-sm fw-bold" ${onclick}>${link.label}</button>
+                    </li>`
                 );
             });
         }

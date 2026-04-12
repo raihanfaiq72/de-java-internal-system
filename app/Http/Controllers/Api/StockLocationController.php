@@ -9,13 +9,18 @@ use Illuminate\Support\Facades\Validator;
 
 class StockLocationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $locations = StockLocation::where('office_id', session('active_office_id'))
-            ->latest()
-            ->get();
+        $query = StockLocation::where('office_id', session('active_office_id'))->latest();
 
-        return apiResponse(true, 'Data lokasi stok', $locations);
+        $perPage = $request->get('per_page', 10);
+        if ($perPage >= 1000) {
+            $data = $query->get();
+        } else {
+            $data = $query->paginate($perPage)->withQueryString();
+        }
+
+        return apiResponse(true, 'Data lokasi stok', $data);
     }
 
     public function store(Request $request)

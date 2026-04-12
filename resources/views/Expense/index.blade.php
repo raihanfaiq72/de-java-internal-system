@@ -828,17 +828,30 @@
             }
 
             function renderPagination(data) {
-                let html = '';
-                if (data.prev_page_url) {
-                    html +=
-                        `<button class="btn btn-sm btn-light border" onclick="loadExpenses(${data.current_page - 1})">Prev</button>`;
-                }
-                html += `<span class="mx-2 small text-muted">Halaman ${data.current_page} dari ${data.last_page}</span>`;
-                if (data.next_page_url) {
-                    html +=
-                        `<button class="btn btn-sm btn-light border" onclick="loadExpenses(${data.current_page + 1})">Next</button>`;
-                }
-                $('#pagination').html(html);
+                if (!data || !data.links) return;
+
+                let html = '<ul class="pagination pagination-sm mb-0">';
+                data.links.forEach(link => {
+                    const activeClass = link.active ? 'active' : '';
+                    const disabledClass = !link.url ? 'disabled' : '';
+
+                    let pageNum = 1;
+                    if (link.url) {
+                        const url = new URL(link.url, window.location.origin);
+                        pageNum = url.searchParams.get('page') || 1;
+                    }
+
+                    const onclick = link.url ? `onclick="loadExpenses(${pageNum})"` : '';
+
+                    html += `
+                        <li class="page-item ${activeClass} ${disabledClass}">
+                            <button class="page-link" ${onclick}>${link.label}</button>
+                        </li>`;
+                });
+                html += '</ul>';
+
+                const infoHtml = `<span class="small text-muted">Menampilkan ${data.from || 0}-${data.to || 0} dari ${data.total} data</span>`;
+                $('#pagination').html(infoHtml + html);
             }
             $.ajaxSetup({
                 headers: {
