@@ -20,7 +20,7 @@ class BulkReportController extends Controller
     {
         $bulkReports = BulkReport::with('generator')
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->paginate(10)->withQueryString();
 
         return view('Reports.bulk.index', compact('bulkReports'));
     }

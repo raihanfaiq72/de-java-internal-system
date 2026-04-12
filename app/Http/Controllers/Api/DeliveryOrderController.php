@@ -20,10 +20,16 @@ class DeliveryOrderController extends Controller
                     $q->where('delivery_order_number', 'like', "%{$search}%")
                         ->orWhere('status', 'like', "%{$search}%");
                 })
-                ->latest()
-                ->paginate(10);
+                ->latest();
 
-            return response()->json(['success' => true, 'data' => $data]);
+            $perPage = $request->get('per_page', 10);
+            if ($perPage >= 1000) {
+                $data = $data->get();
+            } else {
+                $data = $data->paginate($perPage)->withQueryString();
+            }
+
+            return apiResponse(true, 'Delivery order list', $data);
         } catch (\Throwable $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }

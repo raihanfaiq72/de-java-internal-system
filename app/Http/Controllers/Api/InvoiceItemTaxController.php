@@ -19,7 +19,7 @@ class InvoiceItemTaxController extends Controller
             $query->where('invoice_item_id', $request->invoice_item_id);
         }
 
-        $data = $query->latest()->paginate(10);
+        $data = $query->latest()->paginate($request->get('per_page', 10))->withQueryString();
 
         return apiResponse(true, 'Data pajak item invoice', $data);
     }

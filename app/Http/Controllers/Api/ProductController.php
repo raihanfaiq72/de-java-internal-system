@@ -33,7 +33,12 @@ class ProductController extends Controller
             $query->where('category_id', $request->category);
         }
 
-        $data = $query->latest()->paginate(10);
+        $perPage = $request->get('per_page', 10);
+        if ($perPage >= 1000) {
+            $data = $query->latest()->get();
+        } else {
+            $data = $query->latest()->paginate($perPage)->withQueryString();
+        }
 
         return apiResponse(true, 'Data produk', $data);
     }
@@ -157,14 +162,16 @@ class ProductController extends Controller
         return apiResponse(true, 'Produk berhasil dihapus');
     }
 
-    public function search($value)
+    public function search(Request $request, $value)
     {
         $data = Product::where('office_id', session('active_office_id'))
             ->where(function ($q) use ($value) {
                 $q->where('nama_produk', 'LIKE', "%$value%")
                     ->orWhere('sku_kode', 'LIKE', "%$value%");
             })
-            ->paginate(10);
+            ->latest()
+            ->paginate($request->get('per_page', 10))
+            ->withQueryString();
 
         return apiResponse(true, 'Hasil pencarian produk', $data);
     }

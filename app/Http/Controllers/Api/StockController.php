@@ -52,7 +52,12 @@ class StockController extends Controller
             ]);
         }
 
-        $data = $query->latest()->paginate(10);
+        $perPage = $request->get('per_page', 10);
+        if ($perPage >= 1000) {
+            $data = $query->latest()->get();
+        } else {
+            $data = $query->latest()->paginate($perPage)->withQueryString();
+        }
 
         return apiResponse(true, 'Data stok produk', $data);
     }
@@ -251,7 +256,7 @@ class StockController extends Controller
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
-        $data = $query->latest()->paginate(10);
+        $data = $query->latest()->paginate($request->get('per_page', 10))->withQueryString();
 
         $mutationIds = $data->getCollection()->pluck('id')->all();
         $actors = [];

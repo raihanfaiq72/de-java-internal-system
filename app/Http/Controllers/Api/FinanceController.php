@@ -250,7 +250,7 @@ class FinanceController extends Controller
             $query->whereDate('transaction_date', '<=', $request->end_date);
         }
 
-        $transactions = $query->latest('transaction_date')->paginate(10);
+        $transactions = $query->latest('transaction_date')->paginate(10)->withQueryString();
 
         if ($request->ajax()) {
             return view('Finance.partials.transaction_table', compact('transactions'))->render();

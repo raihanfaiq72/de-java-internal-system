@@ -20,7 +20,7 @@ class InvoiceItemController extends Controller
             $query->where('invoice_id', $request->invoice_id);
         }
 
-        $data = $query->latest()->paginate(10);
+        $data = $query->latest()->paginate($request->get('per_page', 10))->withQueryString();
 
         return apiResponse(true, 'Data item invoice', $data);
     }

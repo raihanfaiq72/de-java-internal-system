@@ -26,8 +26,14 @@ class SupplierBrandController extends Controller
                         });
                     });
                 })
-                ->latest()
-                ->paginate(10);
+                ->latest();
+
+            $perPage = $request->get('per_page', 10);
+            if ($perPage >= 1000) {
+                $data = $data->get();
+            } else {
+                $data = $data->paginate($perPage)->withQueryString();
+            }
 
             return apiResponse(true, 'Data relasi supplier-brand berhasil diambil', $data);
         } catch (Throwable $e) {

@@ -20,9 +20,16 @@ class DeliveryOrderInvoiceController extends Controller
                 ->when($search, function ($q) use ($search) {
                     $q->whereHas('invoice', fn ($q2) => $q2->where('nomor_invoice', 'like', "%{$search}%"));
                 })
-                ->paginate(10);
+                ->latest();
 
-            return response()->json(['success' => true, 'data' => $data]);
+            $perPage = $request->get('per_page', 10);
+            if ($perPage >= 1000) {
+                $data = $data->get();
+            } else {
+                $data = $data->paginate($perPage)->withQueryString();
+            }
+
+            return apiResponse(true, 'Delivery order invoice list', $data);
         } catch (\Throwable $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }

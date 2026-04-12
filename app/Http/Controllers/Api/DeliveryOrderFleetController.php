@@ -29,10 +29,15 @@ class DeliveryOrderFleetController extends Controller
                 ->when($mine, function ($q) {
                     $q->where('driver_id', Auth::id());
                 })
-                ->latest()
-                ->paginate($perPage);
+                ->latest();
 
-            return response()->json(['success' => true, 'data' => $data]);
+            if ($perPage >= 1000) {
+                $data = $data->get();
+            } else {
+                $data = $data->paginate($perPage)->withQueryString();
+            }
+
+            return apiResponse(true, 'Delivery order fleet list', $data);
         } catch (\Throwable $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }

@@ -17,7 +17,12 @@ class ProductCategoryController extends Controller
             $query->where('nama_kategori', 'LIKE', "%{$request->search}%");
         }
 
-        $data = $query->orderBy('nama_kategori')->paginate(10);
+        $perPage = $request->get('per_page', 10);
+        if ($perPage >= 1000) {
+            $data = $query->orderBy('nama_kategori')->get();
+        } else {
+            $data = $query->orderBy('nama_kategori')->paginate($perPage)->withQueryString();
+        }
 
         return apiResponse(true, 'Data kategori produk', $data);
     }
@@ -85,11 +90,13 @@ class ProductCategoryController extends Controller
         return apiResponse(true, 'Kategori produk berhasil dihapus');
     }
 
-    public function search($value)
+    public function search(Request $request, $value)
     {
         $data = ProductCategory::where('office_id', session('active_office_id'))
             ->where('nama_kategori', 'LIKE', "%$value%")
-            ->paginate(10);
+            ->orderBy('nama_kategori')
+            ->paginate($request->get('per_page', 10))
+            ->withQueryString();
 
         return apiResponse(true, 'Hasil pencarian kategori produk', $data);
     }

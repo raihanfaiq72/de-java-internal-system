@@ -45,7 +45,8 @@ class DashboardSalesController extends Controller
                 DB::raw('ROUND(AVG(CASE WHEN invoices.status_pembayaran != "Paid" AND mitras.is_cash_customer = 0 THEN DATEDIFF(NOW(), invoices.tgl_invoice) ELSE NULL END)) as avg_aging')
             )->first();
 
-            $invoices = $query->select(
+            $invoicesQuery = clone $query;
+            $invoicesQuery->select(
                 'invoices.id',
                 'invoices.nomor_invoice',
                 'invoices.tgl_invoice',
@@ -54,9 +55,14 @@ class DashboardSalesController extends Controller
                 'mitras.nama as nama_pelanggan',
                 DB::raw('DATEDIFF(NOW(), invoices.tgl_invoice) as umur_nota')
             )
-                ->orderBy('invoices.tgl_invoice', 'desc')
-                ->paginate($perPage)
-                ->withQueryString();
+                ->orderBy('invoices.tgl_invoice', 'desc');
+
+            $perPage = (int) ($request->get('per_page', 10));
+            if ($perPage >= 1000) {
+                $invoices = $invoicesQuery->get();
+            } else {
+                $invoices = $invoicesQuery->paginate($perPage)->withQueryString();
+            }
 
             $listMitra = DB::table('mitras')
                 ->whereIn('tipe_mitra', ['Client', 'Both'])

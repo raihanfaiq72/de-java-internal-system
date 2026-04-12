@@ -12,12 +12,12 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        if ($request->has('all')) {
+        $perPage = $request->get('per_page', 10);
+        if ($perPage >= 1000 || $request->has('all')) {
             $data = User::latest()->get();
-
-            return apiResponse(true, 'Data all users', $data);
+        } else {
+            $data = User::latest()->paginate($perPage)->withQueryString();
         }
-        $data = User::latest()->paginate(10);
 
         return apiResponse(true, 'Data user', $data);
     }
@@ -117,16 +117,22 @@ class UserController extends Controller
         }
     }
 
-    public function search($value)
+    public function search(Request $request, $value)
     {
         try {
-            $data = User::where(function ($q) use ($value) {
+            $query = User::where(function ($q) use ($value) {
                 $q->where('name', 'LIKE', "%{$value}%")
                     ->orWhere('username', 'LIKE', "%{$value}%")
                     ->orWhere('email', 'LIKE', "%{$value}%");
             })
-                ->latest()
-                ->paginate(10);
+                ->latest();
+
+            $perPage = $request->get('per_page', 10);
+            if ($perPage >= 1000) {
+                $data = $query->get();
+            } else {
+                $data = $query->paginate($perPage)->withQueryString();
+            }
 
             return apiResponse(
                 true,
