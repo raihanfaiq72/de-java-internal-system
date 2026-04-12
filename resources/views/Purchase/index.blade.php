@@ -410,14 +410,16 @@
     </div>
 
     <!-- Modal Preview Mass Print -->
-    <div class="modal fade" id="modalMassPrintPreview" tabindex="-1" aria-labelledby="modalMassPrintPreviewLabel" aria-hidden="true">
+    <div class="modal fade" id="modalMassPrintPreview" tabindex="-1" aria-labelledby="modalMassPrintPreviewLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content shadow-lg border-0 rounded-4">
                 <div class="modal-header border-bottom-0 pt-4 px-4">
                     <h5 class="modal-title fw-bold" id="modalMassPrintPreviewLabel">
                         <i class="fa fa-file-pdf text-danger me-2"></i> Preview Cetak Massal Pembelian
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="ratio ratio-16x9 border rounded bg-light" style="min-height: 70vh;">
@@ -438,14 +440,16 @@
     </div>
 
     <!-- Modal Cetak Massal -->
-    <div class="modal fade" id="modalMassPrint" tabindex="-1" aria-labelledby="modalMassPrintLabel" aria-hidden="true">
+    <div class="modal fade" id="modalMassPrint" tabindex="-1" aria-labelledby="modalMassPrintLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content shadow-lg border-0 rounded-4">
                 <div class="modal-header border-bottom-0 pt-4 px-4">
                     <h5 class="modal-title fw-bold" id="modalMassPrintLabel">
                         <i class="fa fa-print text-danger me-2"></i> Cetak Massal Berdasarkan Staff
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <form id="massPrintForm">
@@ -455,9 +459,6 @@
                                 <select id="massPrintSalesId" class="form-select" required>
                                     <option value="">Pilih Staff...</option>
                                     <option value="0">Tanpa Staff</option>
-                                    @foreach($users ?? [] as $user)
-                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                    @endforeach
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -617,6 +618,7 @@
             window.financeApp = {
                 API_URL: '/api/invoice-api',
                 selectedIds: [],
+                tomSelectMassStaff: null,
                 formatIDR: (val) => new Intl.NumberFormat('id-ID', {
                     style: 'currency',
                     currency: 'IDR',
@@ -670,8 +672,9 @@
 
         async function initializeMasterData() {
             try {
-                const [mitraRes] = await Promise.all([
-                    fetch('/api/mitra-api').then(r => r.json())
+                const [mitraRes, staffRes] = await Promise.all([
+                    fetch('/api/mitra-api').then(r => r.json()),
+                    fetch('/api/user-api/staff-by-permission?permission=purchase').then(r => r.json())
                 ]);
 
                 if (mitraRes.success) {
@@ -686,6 +689,27 @@
                     });
 
                     if (tomSelectMitraIndex) tomSelectMitraIndex.sync();
+                }
+
+                if (staffRes.success) {
+                    if (window.financeApp.tomSelectMassStaff) {
+                        try {
+                            window.financeApp.tomSelectMassStaff.destroy();
+                        } catch (_) {}
+                    }
+
+                    const selectStaff = document.getElementById('massPrintSalesId');
+                    selectStaff.innerHTML =
+                        '<option value="">Pilih Staff...</option><option value="0">Tanpa Staff</option>';
+
+                    window.financeApp.tomSelectMassStaff = safeTomSelect('#massPrintSalesId', {
+                        options: staffRes.data.map(s => ({
+                            value: s.id,
+                            text: s.name
+                        })),
+                        allowEmptyOption: true,
+                        placeholder: 'Pilih Staff...'
+                    });
                 }
             } catch (error) {
                 alert('Gagal memuat data master:', error);
@@ -1203,7 +1227,7 @@
                     iframe.onload = function() {
                         // 4. Hide setup & Show preview only after load
                         bootstrap.Modal.getInstance(document.getElementById('modalMassPrint')).hide();
-                        
+
                         const previewModal = document.getElementById('modalMassPrintPreview');
                         const bModal = bootstrap.Modal.getOrCreateInstance(previewModal);
                         bModal.show();
@@ -1211,7 +1235,7 @@
                         // Reset button
                         btn.innerHTML = originalText;
                         btn.disabled = false;
-                        
+
                         // Clear listener
                         iframe.onload = null;
                     };

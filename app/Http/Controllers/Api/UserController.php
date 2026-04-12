@@ -150,4 +150,32 @@ class UserController extends Controller
             );
         }
     }
+
+    public function getStaffByPermission(Request $request)
+    {
+        $permission = $request->permission;
+        $officeId = session('active_office_id');
+
+        if (! $officeId) {
+            return apiResponse(false, 'Office ID not found in session', [], null, 400);
+        }
+
+        $users = User::join('user_office_roles', 'users.id', '=', 'user_office_roles.user_id')
+            ->join('roles', 'user_office_roles.role_id', '=', 'roles.id')
+            ->leftJoin('role_permissions', 'roles.id', '=', 'role_permissions.role_id')
+            ->leftJoin('permissions', 'role_permissions.permission_id', '=', 'permissions.id')
+            ->where('user_office_roles.office_id', $officeId)
+            ->where(function ($q) use ($permission) {
+                // Include if user is superadmin or has the target permission
+                $q->whereRaw('LOWER(roles.name) = ?', ['superadmin'])
+                    ->orWhere('permissions.name', $permission)
+                    ->orWhere('permissions.name', 'like', $permission.'.%');
+            })
+            ->select('users.id', 'users.name')
+            ->distinct()
+            ->orderBy('users.name')
+            ->get();
+
+        return apiResponse(true, 'Data staff', $users);
+    }
 }

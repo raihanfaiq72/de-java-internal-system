@@ -204,10 +204,11 @@ Route::middleware(['web', 'auth'])->group(function () {
         ->group(function () {
             Route::get('/', [UserController::class, 'index'])->name('index');
             Route::post('/', [UserController::class, 'store'])->name('store');
+            Route::get('/search/{value}', [UserController::class, 'search'])->name('search');
+            Route::get('/staff-by-permission', [UserController::class, 'getStaffByPermission'])->name('staff-by-permission');
             Route::get('/{id}', [UserController::class, 'show'])->name('show');
             Route::put('/{id}', [UserController::class, 'update'])->name('update');
             Route::delete('/{id}', [UserController::class, 'destroy'])->name('destroy');
-            Route::get('/search/{value}', [UserController::class, 'search'])->name('search');
         });
 
     Route::prefix('coa-api')

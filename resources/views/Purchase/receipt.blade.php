@@ -105,11 +105,8 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold text-muted small">Pembayaran Kepada</label>
                                 <select id="mitra_id" name="mitra_id" class="tom-select-init"
-                                    placeholder="No Supplier Selected">
-                                    <option value="">No Supplier Selected</option>
-                                    @foreach ($mitras as $m)
-                                        <option value="{{ $m->id }}">{{ $m->nama }}</option>
-                                    @endforeach
+                                    placeholder="Pilih Supplier...">
+                                    <option value="">Loading...</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
@@ -131,9 +128,7 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold text-muted small">Diambil Dari (Akun Keuangan)</label>
                                 <select id="akun_keuangan_id" name="akun_keuangan_id" class="form-select">
-                                    @foreach ($accounts as $acc)
-                                        <option value="{{ $acc->id }}">{{ $acc->nama_akun }}</option>
-                                    @endforeach
+                                    <option value="">Loading...</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -455,36 +450,13 @@
         let tomMitra;
         let selectedInvoices = [];
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // Mitra TomSelect
-            if (document.getElementById('mitra_id')) {
-                tomMitra = new TomSelect("#mitra_id", {
-                    create: false,
-                    sortField: {
-                        field: "text",
-                        direction: "asc"
-                    },
-                    onChange: () => {
-                        selectedInvoices = [];
-                        renderSelectedTable();
-                    }
-                });
-            }
-
-            // Akun Keuangan TomSelect
-            if (document.getElementById('akun_keuangan_id')) {
-                new TomSelect("#akun_keuangan_id", {
-                    create: false,
-                    sortField: {
-                        field: "text",
-                        direction: "asc"
-                    }
-                });
-            }
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load Dropdowns Data
+            await loadDropdowns();
 
             document.getElementById('signature_file').addEventListener('change', (e) => {
                 const file = e.target.files[0];
-                if (file && file.type.startsWith('image/')) {
+                if (file) {
                     const reader = new FileReader();
                     reader.onload = (ev) => {
                         document.getElementById('upload-signature-area').classList.add('d-none');
@@ -495,38 +467,125 @@
                 }
             });
 
-            // Handle params from redirect
-            const urlParams = new URLSearchParams(window.location.search);
-            const openCreate = urlParams.get('open_create');
-            const invoiceId = urlParams.get('invoice_id');
-            const mitraId = urlParams.get('mitra_id');
+            loadReceiptData();
 
-            if (openCreate === 'true') {
+            // Check URL Params for Direct Create
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('open_create') === 'true') {
                 openCreateModal();
+
+                const mitraId = urlParams.get('mitra_id');
+                const invoiceId = urlParams.get('invoice_id');
+
                 if (mitraId && tomMitra) {
+                    tomMitra.skipClear = true;
                     tomMitra.setValue(mitraId);
-                    // Slight delay to ensure TomSelect is updated before opening invoice selection
-                    setTimeout(() => {
-                        openInvoiceSelection().then(() => {
-                            // Automatically check the invoice if invoice_id is provided
-                            if (invoiceId) {
-                                setTimeout(() => {
-                                    const checkbox = document.querySelector(
-                                        `#selection-list-container input[type="checkbox"][value="${invoiceId}"]`
-                                    );
-                                    if (checkbox) {
-                                        checkbox.checked = true;
-                                        addSelectedInvoices();
-                                    }
-                                }, 500); // Wait for modal content to load
+                    tomMitra.skipClear = false;
+                }
+
+                if (invoiceId) {
+                    try {
+                        const res = await fetch(`${API_INVOICE}/${invoiceId}`);
+                        const json = await res.json();
+                        if (json.success) {
+                            const data = json.data;
+                            if (!selectedInvoices.find(s => s.id == data.id)) {
+                                const tertagih = data.total_akhir - (data.payment_sum_jumlah_bayar || 0);
+                                selectedInvoices.push({
+                                    id: data.id,
+                                    nomor_invoice: data.nomor_invoice,
+                                    pelanggan: data.mitra?.nama || '-',
+                                    tgl: data.tgl_invoice,
+                                    jatuh_tempo: data.tgl_jatuh_tempo || '-',
+                                    total: data.total_akhir,
+                                    tertagih: tertagih,
+                                    bayar: tertagih
+                                });
+                                renderSelectedTable();
                             }
-                        });
-                    }, 300);
+                        }
+                    } catch (e) {
+                        console.error('Failed to load invoice for receipt', e);
+                    }
                 }
             }
-
-            loadReceiptData();
         });
+
+        async function loadDropdowns() {
+            try {
+                // Load Mitras (Suppliers)
+                const resMitra = await fetch(API_MITRA);
+                const jsonMitra = await resMitra.json();
+
+                let mitraData = [];
+                if (jsonMitra.success) {
+                    if (Array.isArray(jsonMitra.data)) {
+                        mitraData = jsonMitra.data;
+                    } else if (jsonMitra.data && Array.isArray(jsonMitra.data.data)) {
+                        mitraData = jsonMitra.data.data;
+                    }
+                }
+
+                const mitraSelect = document.getElementById('mitra_id');
+                if (tomMitra) {
+                    tomMitra.destroy();
+                    tomMitra = null;
+                }
+
+                mitraSelect.innerHTML = '<option value="">Pilih Supplier...</option>';
+                mitraData.forEach(m => {
+                    mitraSelect.innerHTML += `<option value="${m.id}">${m.nama}</option>`;
+                });
+
+                tomMitra = new TomSelect("#mitra_id", {
+                    create: false,
+                    sortField: {
+                        field: "text",
+                        direction: "asc"
+                    },
+                    onChange: () => {
+                        if (!tomMitra.skipClear) {
+                            selectedInvoices = [];
+                            renderSelectedTable();
+                        }
+                    }
+                });
+
+                // Load Financial Accounts
+                const resFin = await fetch(API_FIN_ACC);
+                const jsonFin = await resFin.json();
+
+                let finData = [];
+                if (jsonFin.success) {
+                    if (Array.isArray(jsonFin.data)) {
+                        finData = jsonFin.data;
+                    } else if (jsonFin.data && Array.isArray(jsonFin.data.data)) {
+                        finData = jsonFin.data.data;
+                    }
+                }
+
+                const coaSelect = document.getElementById('akun_keuangan_id');
+                if (coaSelect.tomselect) {
+                    coaSelect.tomselect.destroy();
+                }
+
+                coaSelect.innerHTML = '<option value="">Pilih Akun...</option>';
+                finData.forEach(acc => {
+                    coaSelect.innerHTML += `<option value="${acc.id}">${acc.name} (${acc.code})</option>`;
+                });
+
+                new TomSelect("#akun_keuangan_id", {
+                    create: false,
+                    sortField: {
+                        field: "text",
+                        direction: "asc"
+                    }
+                });
+
+            } catch (e) {
+                console.error("Failed to load dropdowns", e);
+            }
+        }
 
         // --- RUPIAH FORMATTER HELPER ---
         function formatRupiahSimple(angka) {
@@ -703,7 +762,7 @@
             const container = document.getElementById('selection-list-container');
             container.innerHTML = '<div class="text-center"><div class="spinner-border"></div></div>';
 
-            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalInvoiceSelection'));
+            const modal = new bootstrap.Modal(document.getElementById('modalInvoiceSelection'));
             modal.show();
 
             try {
@@ -800,8 +859,7 @@
 
                 clone.querySelector('.tpl-inv-no').textContent = inv.nomor_invoice;
                 clone.querySelector('.tpl-pelanggan').textContent = inv.pelanggan;
-                clone.querySelector('.tpl-tgl').textContent = inv
-                    .tgl; // Purchase uses concat inside loop usually, but we have helper
+                clone.querySelector('.tpl-tgl').textContent = formatDateToDMY(inv.tgl);
                 clone.querySelector('.tpl-total').textContent = formatNumber(inv.total);
                 clone.querySelector('.tpl-tertagih').textContent = formatNumber(inv.tertagih);
 
@@ -848,11 +906,12 @@
 
         async function submitReceipt(action) {
             if (selectedInvoices.length === 0) {
-                alert('Pilih minimal satu invoice.');
+                alert('Pilih minimal satu invoice!');
                 return;
             }
-            const t = selectedInvoices.reduce((a, c) => a + c.bayar, 0);
-            if (t <= 0) {
+
+            const totalBayarInput = selectedInvoices.reduce((a, c) => a + parseFloat(c.bayar || 0), 0);
+            if (totalBayarInput <= 0) {
                 alert('Masukkan jumlah bayar yang valid.');
                 return;
             }
@@ -866,30 +925,25 @@
             const btn = document.getElementById('btn-save-submit');
             const originalText = btn.innerText;
             btn.disabled = true;
-            btn.innerHTML = 'MEMPROSES...';
+            btn.innerText = 'Menyimpan...';
 
             try {
                 const formData = new FormData(document.getElementById('form-receipt'));
                 let successCount = 0;
 
                 for (const inv of selectedInvoices) {
-                    if (inv.bayar > 0) {
+                    if (parseFloat(inv.bayar) > 0) {
                         const payload = new FormData();
                         payload.append('invoice_id', inv.id);
 
-                        // Generate Unique Payment Number: PYP/Year/InvID/Random
                         const uniqueSuffix = Math.random().toString(36).substr(2, 5).toUpperCase();
                         payload.append('nomor_pembayaran', `PYP/${new Date().getFullYear()}/${inv.id}/${uniqueSuffix}`);
 
                         payload.append('tgl_pembayaran', new Date().toISOString().split('T')[0]);
-
-                        // Use the selected metode or default to Cash/Transfer if missing (but we added it)
-                        const metode = document.getElementById('metode_pembayaran') ? document.getElementById(
-                            'metode_pembayaran').value : 'Cash';
-                        payload.append('metode_pembayaran', metode);
+                        payload.append('metode_pembayaran', document.getElementById('metode_pembayaran').value);
 
                         payload.append('jumlah_bayar', inv.bayar);
-                        payload.append('akun_keuangan_id', akunId);
+                        payload.append('akun_keuangan_id', formData.get('akun_keuangan_id'));
                         payload.append('catatan', formData.get('catatan') || '');
                         if (formData.get('ref_no')) payload.append('ref_no', formData.get('ref_no'));
 
@@ -907,17 +961,18 @@
                     }
                 }
 
-                if (successCount > 0) {
+                if (successCount === selectedInvoices.length) {
                     alert('Kuitansi pembelian berhasil disimpan!');
                     bootstrap.Modal.getInstance(document.getElementById('modalCreateReceipt')).hide();
                     loadReceiptData();
                 } else {
-                    alert('Gagal menyimpan beberapa data.');
+                    alert(`Berhasil menyimpan ${successCount} dari ${selectedInvoices.length} pembayaran.`);
+                    loadReceiptData();
                 }
 
             } catch (e) {
                 console.error(e);
-                alert('Kesalahan server.');
+                alert('Terjadi kesalahan saat menyimpan.');
             } finally {
                 btn.disabled = false;
                 btn.innerText = originalText;
