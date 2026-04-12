@@ -688,22 +688,98 @@ class InvoiceController extends Controller
 
     public function archive($id)
     {
-        $invoice = Invoice::where('office_id', session('active_office_id'))->findOrFail($id);
-        $invoice->update([
-            'status_dok' => 'Draft',
-            'status_pembayaran' => 'Draft'
-        ]);
+        return DB::transaction(function () use ($id) {
+            $invoice = Invoice::where('office_id', session('active_office_id'))->findOrFail($id);
 
-        return apiResponse(true, 'Invoice berhasil diarsipkan');
+            // Check if already has payments
+            if ($invoice->payment()->count() > 0) {
+                return apiResponse(false, 'Invoice tidak dapat diarsipkan karena sudah ada kuitansi/pembayaran.', null, null, 422);
+            }
+
+            // 1. Reverse COA
+            $this->journalService->deleteInvoiceJournal($invoice);
+
+            // 2. Reverse Stock
+            foreach ($invoice->items as $item) {
+                if ($item->product && $item->product->track_stock) {
+                    if ($invoice->tipe_invoice === 'Sales') {
+                        $this->stockService->recordIn(
+                            $item->produk_id,
+                            $item->qty,
+                            $item->product->harga_beli,
+                            $invoice->stock_location_id,
+                            'Sales Return (Archived)',
+                            $invoice->id,
+                            "Stock Return (Invoice Archived): #{$invoice->nomor_invoice}"
+                        );
+                    } elseif ($invoice->tipe_invoice === 'Purchase') {
+                        $this->stockService->recordOut(
+                            $item->produk_id,
+                            $item->qty,
+                            $invoice->stock_location_id,
+                            'Purchase Cancel (Archived)',
+                            $invoice->id,
+                            "Stock Deduct (Purchase Invoice Archived): #{$invoice->nomor_invoice}"
+                        );
+                    }
+                }
+            }
+
+            // 3. Update Status
+            $invoice->update([
+                'status_dok' => 'Draft',
+                'status_pembayaran' => 'Draft'
+            ]);
+
+            return apiResponse(true, 'Invoice berhasil diarsipkan');
+        });
     }
 
     public function unarchive($id)
     {
-        $invoice = Invoice::where('office_id', session('active_office_id'))->findOrFail($id);
-        $invoice->update([
-            'status_pembayaran' => 'Unpaid' // Bring back to Active WIP
-        ]);
+        return DB::transaction(function () use ($id) {
+            $invoice = Invoice::where('office_id', session('active_office_id'))->findOrFail($id);
 
-        return apiResponse(true, 'Invoice berhasil dikembalikan dari arsip');
+            // 1. Update Status to Approved (as per new requirement)
+            $invoice->update([
+                'status_dok' => 'Approved',
+                'status_pembayaran' => 'Unpaid'
+            ]);
+
+            // 2. Redo Stock
+            foreach ($invoice->items as $item) {
+                if ($item->product && $item->product->track_stock) {
+                    if ($invoice->tipe_invoice === 'Sales') {
+                        $this->stockService->recordOut(
+                            $item->produk_id,
+                            $item->qty,
+                            $invoice->stock_location_id,
+                            'Sales',
+                            $invoice->id,
+                            "Sales Invoice (Unarchived) #{$invoice->nomor_invoice}"
+                        );
+                    } elseif ($invoice->tipe_invoice === 'Purchase') {
+                        $this->stockService->recordIn(
+                            $item->produk_id,
+                            $item->qty,
+                            $item->harga_satuan,
+                            $invoice->stock_location_id,
+                            'Purchase',
+                            $invoice->id,
+                            "Purchase Invoice (Unarchived) #{$invoice->nomor_invoice}"
+                        );
+                    }
+                }
+            }
+
+            // 3. Redo COA
+            if ($invoice->tipe_invoice === 'Purchase') {
+                $this->journalService->recordPurchaseInvoice($invoice->fresh(['items.product']));
+            } elseif ($invoice->tipe_invoice === 'Sales') {
+                $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
+            }
+
+            return apiResponse(true, 'Invoice berhasil dikembalikan dari arsip');
+        });
     }
 }

@@ -447,6 +447,21 @@ class JournalService
             $journal = Journal::where('nomor_referensi', $payment->nomor_pembayaran)
                 ->orWhere('nomor_referensi', "PAY-{$payment->id}")
                 ->first();
+ 
+            if ($journal) {
+                $journal->details()->delete();
+                $journal->delete();
+            }
+        });
+    }
+
+    public function deleteInvoiceJournal(Invoice $invoice)
+    {
+        DB::transaction(function () use ($invoice) {
+            $journal = Journal::where('nomor_referensi', $invoice->nomor_invoice)
+                ->orWhere('nomor_referensi', "Sales Invoice #{$invoice->nomor_invoice}")
+                ->orWhere('nomor_referensi', "Purchase Invoice #{$invoice->nomor_invoice}")
+                ->first();
 
             if ($journal) {
                 $journal->details()->delete();

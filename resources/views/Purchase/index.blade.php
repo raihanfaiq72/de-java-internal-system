@@ -935,12 +935,18 @@
                 const btnArchive = row.querySelector('.btn-archive');
                 const btnUnarchive = row.querySelector('.btn-unarchive');
 
+                const hasPayment = parseFloat(item.payment_sum_jumlah_bayar || 0) > 0 || 
+                                 item.status_pembayaran === 'Paid' || 
+                                 item.status_pembayaran === 'Partial';
+
                 if (archived) {
                     btnUnarchive.classList.remove('d-none');
                     btnUnarchive.onclick = () => unarchiveInvoice(item.id);
                 } else {
-                    btnArchive.classList.remove('d-none');
-                    btnArchive.onclick = () => archiveInvoice(item.id);
+                    if (!hasPayment) {
+                        btnArchive.classList.remove('d-none');
+                        btnArchive.onclick = () => archiveInvoice(item.id);
+                    }
                 }
 
                 // Remove chevron
