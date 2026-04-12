@@ -11,6 +11,8 @@ class Invoice extends Model
     use ActivityLogs, SoftDeletes;
 
     protected $table = 'invoices';
+    
+    protected $appends = ['pajak_ppn'];
 
     protected $fillable = [
         'office_id',
@@ -66,5 +68,16 @@ class Invoice extends Model
     public function approvals()
     {
         return $this->hasMany(InvoiceApprovalDetail::class);
+    }
+
+    public function getPajakPpnAttribute()
+    {
+        $tax = 0;
+        foreach ($this->items as $item) {
+            foreach ($item->taxes as $itemTax) {
+                $tax += $itemTax->nilai_pajak_diterapkan;
+            }
+        }
+        return $tax;
     }
 }

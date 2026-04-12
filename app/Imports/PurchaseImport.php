@@ -13,26 +13,30 @@ use App\Models\Partner;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Tax;
+use App\Models\User;
+use App\Notifications\SystemNotification;
 use App\Services\JournalService;
 use App\Services\StockService;
+use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use App\Models\User;
-use App\Notifications\SystemNotification;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
 
-class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChunkReading, WithEvents
+class PurchaseImport implements ShouldQueue, ToCollection, WithChunkReading, WithEvents, WithHeadingRow
 {
     protected $officeId;
+
     protected $userId;
+
     protected $processedCount = 0;
+
     public static $mandatoryHeaders = ['number', 'supplier', 'product_name'];
 
     public function __construct($officeId, $userId)
@@ -49,7 +53,7 @@ class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
     public function registerEvents(): array
     {
         return [
-            AfterImport::class => function(AfterImport $event) {
+            AfterImport::class => function (AfterImport $event) {
                 $user = User::find($this->userId);
                 if ($user) {
                     $user->notify(new SystemNotification(
@@ -60,17 +64,17 @@ class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
                     ));
                 }
             },
-            ImportFailed::class => function(ImportFailed $event) {
+            ImportFailed::class => function (ImportFailed $event) {
                 $user = User::find($this->userId);
                 if ($user) {
                     $user->notify(new SystemNotification(
                         'Import Purchase Gagal',
-                        'Terjadi kesalahan saat import data purchase: ' . $event->getException()->getMessage(),
+                        'Terjadi kesalahan saat import data purchase: '.$event->getException()->getMessage(),
                         route('import.index'),
                         'error'
                     ));
                 }
-                Log::error('PurchaseImport Failed Event: ' . $event->getException()->getMessage());
+                Log::error('PurchaseImport Failed Event: '.$event->getException()->getMessage());
             },
         ];
     }
@@ -81,12 +85,12 @@ class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
         if ($user) {
             $user->notify(new SystemNotification(
                 'Import Purchase Gagal',
-                'Job import gagal diproses: ' . $e->getMessage(),
+                'Job import gagal diproses: '.$e->getMessage(),
                 route('import.index'),
                 'error'
             ));
         }
-        Log::error('PurchaseImport Job Failed: ' . $e->getMessage());
+        Log::error('PurchaseImport Job Failed: '.$e->getMessage());
     }
 
     public function collection(Collection $rows)
@@ -120,21 +124,21 @@ class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
             $defaultCoa = COA::where('office_id', $officeId)
                 ->where('nama_akun', 'like', '%Persediaan%')
                 ->first();
-                
-            if (!$defaultCoa) {
+
+            if (! $defaultCoa) {
                 $defaultCoa = COA::where('office_id', $officeId)->first();
             }
 
             // If still no COA, create a default one to prevent error
-            if (!$defaultCoa) {
+            if (! $defaultCoa) {
                 // Ensure Group exists
-                $group = \App\Models\COAGroup::firstOrCreate(
+                $group = COAGroup::firstOrCreate(
                     ['office_id' => $officeId, 'nama_kelompok' => 'Aktiva Lancar'],
                     ['kode_kelompok' => '10000']
                 );
 
                 // Ensure Type exists
-                $type = \App\Models\COAType::firstOrCreate(
+                $type = COAType::firstOrCreate(
                     ['kelompok_id' => $group->id, 'nama_tipe' => 'Persediaan Barang']
                 );
 
@@ -149,11 +153,13 @@ class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
             }
 
             // 1. Validate Header (Strict Check)
-            if ($rows->isEmpty()) return;
+            if ($rows->isEmpty()) {
+                return;
+            }
             $firstRow = $rows->first();
             $requiredColumns = ['number', 'supplier', 'product_name'];
             foreach ($requiredColumns as $col) {
-                if (!isset($firstRow[$col]) && !array_key_exists($col, $firstRow->toArray())) {
+                if (! isset($firstRow[$col]) && ! array_key_exists($col, $firstRow->toArray())) {
                     throw new \Exception("Template tidak sesuai. Kolom wajib '$col' tidak ditemukan di tab Pembelian.");
                 }
             }
@@ -164,30 +170,33 @@ class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
             });
 
             foreach ($invoices as $invoiceNumber => $items) {
-                if ($invoiceNumber === 'UNKNOWN') continue;
+                if ($invoiceNumber === 'UNKNOWN') {
+                    continue;
+                }
 
                 $firstRow = $items->first();
-                
+
                 // 1. Get/Create Partner (Supplier)
                 $partnerName = $firstRow['partner_name'] ?? $firstRow['mitra'] ?? $firstRow['supplier'] ?? null;
                 $partnerId = null;
-                
+
                 if ($partnerName) {
                     $cleanName = $partnerName;
                     $badanUsaha = '-';
-                    $pattern = '/^(PT|CV|UD|Fa|Firma|Yayasan|Koperasi|Perum|Perjan|Persero)\.?\s+/i';
+                    // Comprehensive list of prefixes: PT, CV, UD, Fa, Firma, Yayasan, Koperasi, Perum, Perjan, Persero
+                    $pattern = '/^(PT|CV|UD|Fa|Firma|Yayasan|Koperasi|Perum|Perjan|Persero)[.\s]+/i';
                     if (preg_match($pattern, $partnerName, $matches)) {
-                        $badanUsaha = strtoupper($matches[1]);
+                        $badanUsaha = strtoupper(trim($matches[1], '. '));
                         $cleanName = trim(preg_replace($pattern, '', $partnerName, 1));
                     }
 
                     $partner = Partner::where('office_id', $officeId)
-                        ->where(function($q) use ($cleanName, $partnerName) {
+                        ->where(function ($q) use ($cleanName, $partnerName) {
                             $q->where('nama', 'like', "%$cleanName%")
-                              ->orWhere('nama', 'like', "%$partnerName%");
+                                ->orWhere('nama', 'like', "%$partnerName%");
                         })->first();
 
-                    if (!$partner) {
+                    if (! $partner) {
                         // Create new Partner (Supplier)
                         $partner = Partner::create([
                             'office_id' => $officeId,
@@ -217,12 +226,12 @@ class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
                         'tgl_jatuh_tempo' => $dueDate,
                         'mitra_id' => $partnerId,
                         'status_dok' => $this->mapStatusDok($firstRow['status'] ?? 'Draft'),
-                        'status_pembayaran' => 'Unpaid', 
+                        'status_pembayaran' => 'Unpaid',
                         'sales_id' => $userId, // Created by
                         'ref_no' => $firstRow['document_reference'] ?? null,
                         'currency' => $firstRow['currency'] ?? 'IDR',
-                        'subtotal' => 0, 
-                        'total_akhir' => 0, 
+                        'subtotal' => 0,
+                        'total_akhir' => 0,
                         'total_diskon_item' => 0,
                         'is_kop' => 1,
                     ]
@@ -238,21 +247,21 @@ class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
                 foreach ($items as $item) {
                     $productName = $item['product_name'] ?? $item['product'] ?? 'Item Manual';
                     $qty = $this->parseNumber($item['quantity'] ?? 1);
-                    $price = $this->parseNumber($item['amount'] ?? 0); 
-                    
+                    $price = $this->parseNumber($item['amount'] ?? 0);
+
                     // Logic for Unit Price vs Amount
                     // If 'unit_price' is provided, use it. Else calculate.
                     $unitPrice = $item['unit_price'] ?? ($qty > 0 ? $price / $qty : 0);
-                    
-                    $discountVal = $this->parseNumber($item['discount'] ?? 0); 
-                    $discountAmt = $this->parseNumber($item['discount_amt_per_qty'] ?? 0); 
-                    
+
+                    $discountVal = $this->parseNumber($item['discount'] ?? 0);
+                    $discountAmt = $this->parseNumber($item['discount_amt_per_qty'] ?? 0);
+
                     // Logic for Product ID
                     $productId = null;
                     $product = Product::where('office_id', $officeId)
                         ->where('nama_produk', 'like', "%$productName%")
                         ->first();
-                    
+
                     if ($product) {
                         $productId = $product->id;
                         // Update Buying Price? Optional.
@@ -261,7 +270,7 @@ class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
                         $product = Product::create([
                             'office_id' => $officeId,
                             'nama_produk' => $productName,
-                            'sku_kode' => 'IMP-' . strtoupper(Str::random(6)),
+                            'sku_kode' => 'IMP-'.strtoupper(Str::random(6)),
                             'product_category_id' => $defaultCategory->id,
                             'brand_id' => $defaultBrand->id,
                             'supplier_id' => $partnerId ?? $defaultSupplier->id,
@@ -312,14 +321,17 @@ class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
                 // Update Invoice Totals
                 $invoice->subtotal = $subtotal;
                 $invoice->total_akhir = $subtotal + $totalTax;
-                
+
                 $amountDue = $this->parseNumber($firstRow['amount_due'] ?? $invoice->total_akhir);
-                if ($amountDue == 0) {
+                $roundedDue = round($amountDue, 2);
+                $roundedTotal = round($invoice->total_akhir, 2);
+
+                if ($roundedDue <= 0) {
                     $invoice->status_pembayaran = 'Paid';
-                } elseif ($amountDue < $invoice->total_akhir) {
-                    $invoice->status_pembayaran = 'Partially Paid';
-                } else {
+                } elseif ($roundedDue >= $roundedTotal) {
                     $invoice->status_pembayaran = 'Unpaid';
+                } else {
+                    $invoice->status_pembayaran = 'Partially Paid';
                 }
 
                 $invoice->save();
@@ -350,7 +362,7 @@ class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
                 }
             }
         } catch (\Throwable $e) {
-            Log::error('PurchaseImport Error: ' . $e->getMessage());
+            Log::error('PurchaseImport Error: '.$e->getMessage());
             Log::error($e->getTraceAsString());
             throw $e;
         }
@@ -359,20 +371,35 @@ class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
     private function mapStatusDok($status)
     {
         $status = strtolower($status);
-        if (strpos($status, 'draft') !== false) return 'Draft';
-        if (strpos($status, 'sent') !== false) return 'Sent';
-        if (strpos($status, 'paid') !== false) return 'Approved';
-        if (strpos($status, 'appr') !== false) return 'Approved';
-        if (strpos($status, 'fail') !== false) return 'Failed';
-        if (strpos($status, 'rej') !== false) return 'Rejected';
+        if (strpos($status, 'draft') !== false) {
+            return 'Draft';
+        }
+        if (strpos($status, 'sent') !== false) {
+            return 'Sent';
+        }
+        if (strpos($status, 'paid') !== false) {
+            return 'Approved';
+        }
+        if (strpos($status, 'appr') !== false) {
+            return 'Approved';
+        }
+        if (strpos($status, 'fail') !== false) {
+            return 'Failed';
+        }
+        if (strpos($status, 'rej') !== false) {
+            return 'Rejected';
+        }
+
         return 'Draft';
     }
 
     private function parseDate($date)
     {
-        if (!$date) return null;
+        if (! $date) {
+            return null;
+        }
         try {
-            return \Carbon\Carbon::parse($date)->format('Y-m-d');
+            return Carbon::parse($date)->format('Y-m-d');
         } catch (\Exception $e) {
             return null;
         }
@@ -380,35 +407,43 @@ class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
 
     private function parseNumber($value)
     {
-        if (is_numeric($value)) return $value;
-        if (is_string($value)) {
-            if (strpos($value, '=') === 0) $value = substr($value, 1);
-            $clean = preg_replace('/[^0-9,.-]/', '', $value);
-            // Handling IDR format: 1.000,00 vs 1,000.00
-            // Simple heuristic: if both exist, assume dot is thousand, comma is decimal (IDR standard) or vice versa.
-            // But usually in programmatic export it's standard 1000.00.
-            // If comma is last separator, it's decimal (European/IDR).
-            if (strpos($clean, ',') !== false && strpos($clean, '.') !== false) {
-                 $lastDot = strrpos($clean, '.');
-                 $lastComma = strrpos($clean, ',');
-                 if ($lastComma > $lastDot) {
-                     // 1.000,00
-                     $clean = str_replace('.', '', $clean);
-                     $clean = str_replace(',', '.', $clean);
-                 } else {
-                     // 1,000.00
-                     $clean = str_replace(',', '', $clean);
-                 }
-            } elseif (strpos($clean, ',') !== false) {
-                 // 1000,00 or 1,000
-                 // Assume decimal if 2 digits? risky.
-                 // Let's assume standard excel/csv is usually dot decimal.
-                 // But user said "IDR", so maybe 1.000.000
-                 $clean = str_replace(',', '.', $clean);
-            }
-            return (float) $clean;
+        if (is_numeric($value)) {
+            return (float) $value;
         }
-        return 0;
+        if (! $value) {
+            return 0;
+        }
+
+        $clean = str_replace(['Rp', ' ', "\xc2\xa0"], '', $value);
+        $clean = preg_replace('/[^0-9,.-]/', '', $clean);
+
+        $lastDot = strrpos($clean, '.');
+        $lastComma = strrpos($clean, ',');
+
+        if ($lastDot !== false && $lastComma !== false) {
+            if ($lastComma > $lastDot) {
+                // Format 1.000,00 (IDR)
+                $clean = str_replace('.', '', $clean);
+                $clean = str_replace(',', '.', $clean);
+            } else {
+                // Format 1,000.00 (EN)
+                $clean = str_replace(',', '', $clean);
+            }
+        } elseif ($lastDot !== false) {
+            // Hanya ada titik.
+            if (substr_count($clean, '.') > 1 || strlen(substr($clean, $lastDot + 1)) === 3) {
+                $clean = str_replace('.', '', $clean);
+            }
+        } elseif ($lastComma !== false) {
+            // Hanya ada koma.
+            if (substr_count($clean, ',') > 1 || strlen(substr($clean, $lastComma + 1)) === 3) {
+                $clean = str_replace(',', '', $clean);
+            } else {
+                $clean = str_replace(',', '.', $clean);
+            }
+        }
+
+        return (float) $clean;
     }
 
     private function generateNomorMitra($officeId)
@@ -425,7 +460,7 @@ class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
         }
 
         do {
-            $code = 'M-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
+            $code = 'M-'.str_pad($nextId, 5, '0', STR_PAD_LEFT);
             $exists = Partner::where('office_id', $officeId)->where('nomor_mitra', $code)->exists();
             if ($exists) {
                 $nextId++;
