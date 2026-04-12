@@ -145,23 +145,6 @@
                                                 class="fa fa-eye"></i></a>
                                     </div>
 
-                                    <!-- Placeholder for other docs -->
-                                    <div class="list-group-item p-3 d-flex align-items-center justify-content-between">
-                                        <div class="d-flex align-items-center">
-                                            <div class="bg-light rounded p-2 me-3 text-secondary">
-                                                <i class="fa fa-file-invoice fs-5"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="mb-0 text-dark fw-medium" style="font-size: 13px;">Surat Jalan
-                                                </h6>
-                                                <small class="text-warning" style="font-size: 11px;">Belum
-                                                    Diunggah</small>
-                                            </div>
-                                        </div>
-                                        <button class="btn btn-sm btn-white border text-primary"><i
-                                                class="fa fa-upload"></i></button>
-                                    </div>
-
                                     <div class="list-group-item p-3 d-flex align-items-center justify-content-between">
                                         <div class="d-flex align-items-center">
                                             <div class="bg-light rounded p-2 me-3 text-secondary">
