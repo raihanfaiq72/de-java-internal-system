@@ -235,22 +235,8 @@
                                     Status</h6>
                             </div>
                             <div class="card-body p-4">
-                                <div class="timeline-simple">
-                                    <div class="d-flex mb-3">
-                                        <div class="me-3 d-flex flex-column align-items-center">
-                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
-                                                style="width: 24px; height: 24px; font-size: 10px; flex-shrink: 0;">
-                                                <i class="fa fa-check"></i>
-                                            </div>
-                                            <div class="h-100 border-start border-2 mt-1" style="border-color: #e2e8f0;">
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <h6 class="fw-bold text-dark mb-0 small">Invoice Dibuat</h6>
-                                            <p class="text-muted small mb-0" id="created-at">-</p>
-                                            <p class="text-muted small fst-italic">Dibuat oleh System</p>
-                                        </div>
-                                    </div>
+                                <div class="timeline-simple" id="timeline-body">
+                                    <!-- Dynamic content -->
                                 </div>
                             </div>
                         </div>
@@ -460,7 +446,78 @@
                 });
             }
 
-            document.getElementById('created-at').textContent = new Date(data.created_at).toLocaleString('id-ID');
+            // Timeline
+            renderTimeline(data.activities);
+        }
+
+        function renderTimeline(activities) {
+            const body = document.getElementById('timeline-body');
+            body.innerHTML = '';
+
+            if (!activities || activities.length === 0) {
+                body.innerHTML = '<p class="text-muted small text-center py-3">Belum ada riwayat aktivitas.</p>';
+                return;
+            }
+
+            activities.forEach((log, index) => {
+                const isLast = index === activities.length - 1;
+                const date = new Date(log.created_at).toLocaleString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                let title = log.tindakan;
+                let color = 'bg-primary';
+                let icon = 'fa-info-circle';
+
+                // Mapping user-friendly names
+                if (log.tindakan === 'Create') {
+                    title = 'Invoice Dibuat';
+                    color = 'bg-info';
+                    icon = 'fa-plus';
+                } else if (log.tindakan === 'Update') {
+                    title = 'Invoice Diperbarui';
+                    color = 'bg-primary';
+                    icon = 'fa-edit';
+
+                    // Specific check for status changes
+                    if (log.data_sesudah && log.data_sesudah.status_pembayaran) {
+                        title = `Status: ${log.data_sesudah.status_pembayaran}`;
+                        color = log.data_sesudah.status_pembayaran === 'Paid' ? 'bg-success' : 'bg-warning';
+                        icon = 'fa-wallet';
+                    }
+                    if (log.data_sesudah && log.data_sesudah.status_dok) {
+                        title = `Dokumen: ${log.data_sesudah.status_dok}`;
+                        color = log.data_sesudah.status_dok === 'Approved' ? 'bg-success' : (log.data_sesudah
+                            .status_dok === 'Rejected' ? 'bg-danger' : 'bg-secondary');
+                        icon = 'fa-file-check';
+                    }
+                } else if (log.tindakan === 'Soft Delete') {
+                    title = 'Invoice Dihapus (Trash)';
+                    color = 'bg-danger';
+                    icon = 'fa-trash';
+                }
+
+                body.innerHTML += `
+                    <div class="d-flex mb-3">
+                        <div class="me-3 d-flex flex-column align-items-center">
+                            <div class="rounded-circle ${color} text-white d-flex align-items-center justify-content-center"
+                                style="width: 24px; height: 24px; font-size: 10px; flex-shrink: 0;">
+                                <i class="fa ${icon}"></i>
+                            </div>
+                            ${!isLast ? '<div class="h-100 border-start border-2 mt-1" style="border-color: #e2e8f0;"></div>' : ''}
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-dark mb-0 small">${title}</h6>
+                            <p class="text-muted small mb-0">${date}</p>
+                            <p class="text-muted small fst-italic">Oleh: ${log.user ? log.user.name : 'System'}</p>
+                        </div>
+                    </div>
+                `;
+            });
         }
 
         function formatIDR(val) {

@@ -102,6 +102,7 @@ class InvoiceController extends Controller
             'items.product.category',
             'approvals.requestedBy',
             'approvals.processedBy',
+            'activities.user',
         ])
             ->where('office_id', session('active_office_id'))
             ->find($id);
