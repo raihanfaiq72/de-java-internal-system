@@ -42,75 +42,17 @@ class FinanceController extends Controller
             return redirect()->back()->with('error', 'Akun tidak ditemukan');
         }
 
+        $account = FinancialAccount::find($accountId);
         $start = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfMonth();
         $end = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
 
-        $filename = 'Laporan_Kas_Kecil_' . date('YmdHis') . '.xls';
         $reportData = $this->getReportData($officeId, $accountId, $start, $end);
+        $filename = 'Laporan_Keuangan_'.($account->name ?? 'Account').'_'.$start->format('YmdHis').'.xlsx';
 
-        return response()->streamDownload(function () use ($reportData, $start, $end) {
-            $balance = $reportData['opening_balance'];
-
-            echo '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>';
-            echo '<table border="1" style="border-collapse: collapse; width: 100%;">';
-            echo '<thead>';
-            echo '<tr><th></th><th colspan="7" style="text-align: center; font-weight: bold; font-size: 16px; border: 1px solid black;">LAPORAN KAS KECIL CV DE JAVANESE AUTO PARTS</th></tr>';
-            echo '<tr><th></th><th colspan="7" style="text-align: center; font-weight: bold; font-size: 14px; border: 1px solid black;">PERIODE ' . $start->translatedFormat('d F Y') . ' - ' . $end->translatedFormat('d F Y') . '</th></tr>';
-            echo '<tr>
-                    <th></th>
-                    <th style="border: 1px solid black; font-weight: bold; text-align: center; width: 50px;">No</th>
-                    <th style="border: 1px solid black; font-weight: bold; text-align: center; width: 100px;">Tanggal</th>
-                    <th style="border: 1px solid black; font-weight: bold; text-align: center; width: 150px;">Nama Akun</th>
-                    <th style="border: 1px solid black; font-weight: bold; text-align: center; width: 300px;">Keterangan</th>
-                    <th style="border: 1px solid black; font-weight: bold; text-align: center; width: 120px;">Debit</th>
-                    <th style="border: 1px solid black; font-weight: bold; text-align: center; width: 120px;">Kredit</th>
-                    <th style="border: 1px solid black; font-weight: bold; text-align: center; width: 120px;">Total Saldo</th>
-                  </tr>';
-            echo '</thead><tbody>';
-
-            echo '<tr>
-                    <td></td>
-                    <td style="border: 1px solid black; text-align: center;">1</td>
-                    <td style="border: 1px solid black; text-align: center;">' . $start->format('M d, y') . '</td>
-                    <td style="border: 1px solid black; text-align: center;">SALDO</td>
-                    <td style="border: 1px solid black;">SISA SALDO</td>
-                    <td style="border: 1px solid black; text-align: right;">' . ($balance > 0 ? 'Rp ' . number_format($balance, 0, ',', '.') : '') . '</td>
-                    <td style="border: 1px solid black; text-align: right;">' . ($balance < 0 ? 'Rp ' . number_format(abs($balance), 0, ',', '.') : '') . '</td>
-                    <td style="border: 1px solid black; text-align: right;">Rp ' . number_format($balance, 0, ',', '.') . '</td>
-                  </tr>';
-
-            $iteration = 2;
-            $totalDebit = 0;
-            $totalCredit = 0;
-
-            foreach ($reportData['rows'] as $row) {
-                $totalDebit += $row['debit'];
-                $totalCredit += $row['credit'];
-                $balance += $row['debit'] - $row['credit'];
-
-                echo '<tr>';
-                echo '<td></td>';
-                echo '<td style="border: 1px solid black; text-align: center;">' . $iteration . '</td>';
-                echo '<td style="border: 1px solid black; text-align: center;">' . Carbon::parse($row['date'])->format('M d, y') . '</td>';
-                echo '<td style="border: 1px solid black; text-align: center;">' . $row['account_name'] . '</td>';
-                echo '<td style="border: 1px solid black;">' . $row['description'] . '</td>';
-                echo '<td style="border: 1px solid black; text-align: right;">' . ($row['debit'] ? 'Rp ' . number_format($row['debit'], 0, ',', '.') : '') . '</td>';
-                echo '<td style="border: 1px solid black; text-align: right;">' . ($row['credit'] ? 'Rp ' . number_format($row['credit'], 0, ',', '.') : '') . '</td>';
-                echo '<td style="border: 1px solid black; text-align: right;">Rp ' . number_format($balance, 0, ',', '.') . '</td>';
-                echo '</tr>';
-                $iteration++;
-            }
-
-            echo '<tr style="font-weight: bold; background-color: #f1f1f1;">';
-            echo '<td></td>';
-            echo '<td colspan="4" style="border: 1px solid black; text-align: center;">TOTAL</td>';
-            echo '<td style="border: 1px solid black; text-align: right;">Rp ' . number_format($totalDebit, 0, ',', '.') . '</td>';
-            echo '<td style="border: 1px solid black; text-align: right;">Rp ' . number_format($totalCredit, 0, ',', '.') . '</td>';
-            echo '<td style="border: 1px solid black; text-align: right;">Rp ' . number_format($balance, 0, ',', '.') . '</td>';
-            echo '</tr>';
-
-            echo '</tbody></table></body></html>';
-        }, $filename);
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\FinanceReportExport($reportData, $account, $start, $end),
+            $filename
+        );
     }
 
     private function getReportData($officeId, $accountId, $start, $end)
