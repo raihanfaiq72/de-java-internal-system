@@ -52,6 +52,11 @@
                         <input type="number" id="produk-harga-jual" class="form-control form-control-sm">
                     </div>
 
+                    <div class="col-md-4">
+                        <label class="small fw-bold">Harga Tempo</label>
+                        <input type="number" id="produk-harga-tempo" class="form-control form-control-sm" value="0">
+                    </div>
+
                     <div class="col-12">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="produk-track-stock"

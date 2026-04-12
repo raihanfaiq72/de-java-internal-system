@@ -30,6 +30,7 @@ header("Content-Disposition: attachment; filename=Data_Barang_" . date('Y-m-d') 
                 <th>Satuan</th>
                 <th>Harga Beli</th>
                 <th>Harga Jual</th>
+                <th>Harga Tempo</th>
                 <th>Stok</th>
             </tr>
         </thead>
@@ -46,6 +47,7 @@ header("Content-Disposition: attachment; filename=Data_Barang_" . date('Y-m-d') 
                 <td>{{ $product->satuan }}</td>
                 <td class="text-right">{{ number_format($product->harga_beli, 0, ',', '.') }}</td>
                 <td class="text-right">{{ number_format($product->harga_jual, 0, ',', '.') }}</td>
+                <td class="text-right">{{ number_format($product->harga_tempo, 0, ',', '.') }}</td>
                 <td class="text-right">{{ $product->stok ?? 0 }}</td>
             </tr>
             @endforeach
