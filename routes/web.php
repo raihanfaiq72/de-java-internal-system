@@ -32,6 +32,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [App\Http\Controllers\Api\ProfileController::class, 'update'])->name('profile.update');
 
+    // Finance Preview & Export
+    Route::get('finance/preview', [App\Http\Controllers\Api\FinanceController::class, 'previewReport'])->name('finance.preview');
+    Route::get('finance/export', [App\Http\Controllers\Api\FinanceController::class, 'exportExcel'])->name('finance.export');
+
     Route::middleware(['module.access'])->group(function () {
         // Notifications (moved inside middleware group)
         Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
@@ -94,7 +98,6 @@ Route::middleware(['auth'])->group(function () {
 
         // Finance
         Route::get('finance', [App\Http\Controllers\Api\FinanceController::class, 'index'])->name('finance.index');
-        Route::get('finance/export', [App\Http\Controllers\Api\FinanceController::class, 'exportExcel'])->name('finance.export');
         Route::post('finance/transaction', [App\Http\Controllers\Api\FinanceController::class, 'storeTransaction'])->name('finance.transaction.store');
         Route::post('finance/account', [App\Http\Controllers\Api\FinanceController::class, 'storeAccount'])->name('finance.account.store');
         Route::delete('finance/account/{id}', [App\Http\Controllers\Api\FinanceController::class, 'destroyAccount'])->name('finance.account.destroy');

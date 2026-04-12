@@ -42,7 +42,7 @@ class Invoice extends Model
 
     public function mitra()
     {
-        return $this->belongsTo(Partner::class);
+        return $this->belongsTo(Partner::class, 'mitra_id');
     }
 
     public function sales()

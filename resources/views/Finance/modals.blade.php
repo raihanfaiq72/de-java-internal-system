@@ -454,3 +454,71 @@
         });
     </script>
 @endpush
+
+<!-- Preview Report Modal -->
+<div class="modal fade" id="modalPreviewReport" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="iconoir-page-search me-2"></i>Preview Laporan: <span id="preview-account-name"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3 mb-4 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Dari Tanggal</label>
+                        <input type="date" class="form-control" id="preview-start-date" value="{{ date('Y-m-01') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Sampai Tanggal</label>
+                        <input type="date" class="form-control" id="preview-end-date" value="{{ date('Y-m-d') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-primary w-100" onclick="fetchPreviewData()">
+                            <i class="iconoir-refresh me-1"></i> Perbarui Preview
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive rounded-3 border">
+                    <table class="table table-hover mb-0" id="preview-table">
+                        <thead class="bg-light sticky-top">
+                            <tr>
+                                <th class="text-center" style="width: 50px;">No</th>
+                                <th style="width: 140px;">Tanggal</th>
+                                <th style="min-width: 300px;">Keterangan</th>
+                                <th class="text-end" style="width: 160px;">Debit</th>
+                                <th class="text-end" style="width: 160px;">Kredit</th>
+                                <th class="text-end" style="width: 170px;">Saldo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="preview-body">
+                            <!-- Data populated via AJAX -->
+                        </tbody>
+                        <tfoot class="bg-light fw-bold">
+                            <tr>
+                                <td colspan="3" class="text-center">TOTAL</td>
+                                <td class="text-end text-success" id="total-debit">-</td>
+                                <td class="text-end text-danger" id="total-credit">-</td>
+                                <td class="text-end text-dark" id="final-balance">-</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div id="preview-loading" class="text-center d-none py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-muted">Memuat data preview...</p>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-white border" data-bs-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-success text-white px-4" onclick="downloadReport()">
+                    <i class="iconoir-download me-1"></i> Download Excel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
