@@ -1,7 +1,7 @@
 <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content border-0" style="background-color: #f8fafc;">
-            <div class="modal-header bg-white border-bottom px-4 py-3 sticky-top shadow-sm">
+            <div class="modal-header bg-white border-bottom px-5 py-4 sticky-top shadow-sm">
                 <div class="d-flex align-items-center">
                     <div class="bg-primary text-white p-2 rounded-2 me-3">
                         <i class="fa fa-user-lock fa-lg"></i>

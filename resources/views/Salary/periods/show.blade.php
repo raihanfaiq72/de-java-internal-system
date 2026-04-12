@@ -21,7 +21,8 @@
                             </div>
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="{{ route('salary-periods.index') }}">Periode Gaji</a></li>
+                                <li class="breadcrumb-item"><a href="{{ route('salary-periods.index') }}">Periode Gaji</a>
+                                </li>
                                 <li class="breadcrumb-item active">Detail</li>
                             </ol>
                         </div>
@@ -29,16 +30,19 @@
                 </div>
 
                 <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
-                    <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                    <div
+                        class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
                         <h6 class="mb-0 fw-bold text-dark">Daftar Slip Gaji Karyawan</h6>
                         <div class="d-flex gap-2">
-                            @if($salaryPeriod->salarySlips->count() > 0)
-                                <button type="button" class="btn btn-success fw-bold px-4 shadow-sm" onclick="openBulkPrint()">
+                            @if ($salaryPeriod->salarySlips->count() > 0)
+                                <button type="button" class="btn btn-success fw-bold px-4 shadow-sm"
+                                    onclick="openBulkPrint()">
                                     <i class="fa fa-print me-1"></i> Cetak Massal
                                 </button>
                             @endif
                             @if ($salaryPeriod->status == 'open')
-                                <button class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCreateSlipOne">
+                                <button class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal"
+                                    data-bs-target="#modalCreateSlipOne">
                                     <i class="fa fa-plus-circle me-1"></i> Buat Gaji Karyawan
                                 </button>
                             @endif
@@ -78,7 +82,8 @@
                                             </td>
                                             <td class="text-end pe-4">
                                                 <div class="btn-group">
-                                                    <button type="button" class="btn btn-sm btn-outline-primary fw-bold" onclick='openEditSlip(@json($slip))'>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary fw-bold"
+                                                        onclick='openEditSlip(@json($slip))'>
                                                         Edit
                                                     </button>
                                                     <button type="button" onclick="openPrintPreview({{ $slip->id }})"
@@ -86,13 +91,16 @@
                                                         <i class="fa fa-print"></i>
                                                     </button>
                                                     @if ($salaryPeriod->status == 'open' && $slip->status !== 'paid')
-                                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteSlip('{{ $slip->id }}', '{{ $slip->employee->name }}')">
+                                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                            onclick="deleteSlip('{{ $slip->id }}', '{{ $slip->employee->name }}')">
                                                             <i class="fa fa-trash"></i>
                                                         </button>
                                                     @endif
                                                 </div>
                                                 @if ($salaryPeriod->status == 'open' && $slip->status !== 'paid')
-                                                    <form id="delete-slip-{{ $slip->id }}" action="{{ route('salary-slips.destroy', $slip->id) }}" method="POST" class="d-none">
+                                                    <form id="delete-slip-{{ $slip->id }}"
+                                                        action="{{ route('salary-slips.destroy', $slip->id) }}"
+                                                        method="POST" class="d-none">
                                                         @csrf
                                                         @method('DELETE')
                                                     </form>
@@ -119,12 +127,13 @@
     </div>
 
     <!-- Create Single Slip Modal -->
-    <div class="modal fade" id="modalCreateSlipOne" tabindex="-1" aria-hidden="true">
+    <div class="modal-fade" id="modalCreateSlipOne" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
-                <form id="form-create-slip-one" method="POST" action="{{ route('salary-periods.slips.store-one', $salaryPeriod->id) }}">
+                <form id="form-create-slip-one" method="POST"
+                    action="{{ route('salary-periods.slips.store-one', $salaryPeriod->id) }}">
                     @csrf
-                    <div class="modal-header">
+                    <div class="modal-header px-5 py-4">
                         <h5 class="fw-bold mb-0">Buat Gaji Karyawan</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
@@ -134,53 +143,73 @@
                                 <label class="small fw-bold text-muted">Nama Karyawan</label>
                                 <select class="form-select" name="employee_id" id="create_employee_id" required>
                                     <option value="">-Pilih karyawan-</option>
-                                    @foreach($employees as $emp)
-                                        <option value="{{ $emp->id }}" data-position="{{ $emp->position }}" data-daily="{{ $emp->daily_salary ?? 0 }}" data-premi="{{ $emp->premi ?? 0 }}">{{ $emp->name }}</option>
+                                    @foreach ($employees as $emp)
+                                        <option value="{{ $emp->id }}" data-position="{{ $emp->position }}"
+                                            data-daily="{{ $emp->daily_salary ?? 0 }}"
+                                            data-premi="{{ $emp->premi ?? 0 }}">{{ $emp->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="small fw-bold text-muted">Hari Kerja</label>
-                                <input type="number" min="0" class="form-control" name="work_days" id="create_work_days" placeholder="Hari Kerja">
+                                <input type="number" min="0" class="form-control" name="work_days"
+                                    id="create_work_days" placeholder="Hari Kerja">
                             </div>
                             <div class="col-md-6">
                                 <label class="small fw-bold text-muted">Gaji/Hari</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0">Rp</span>
-                                    <input type="text" class="form-control border-start-0 ps-0 rupiah-input" id="create_daily_basic_salary_display" value="0" placeholder="0" onkeyup="syncInput(this)">
-                                    <input type="hidden" min="0" step="0.01" class="real-value slip-one-input" data-field="daily_basic_salary" name="daily_basic_salary" id="create_daily_basic_salary" value="0">
+                                    <input type="text" class="form-control border-start-0 ps-0 rupiah-input"
+                                        id="create_daily_basic_salary_display" value="0" placeholder="0"
+                                        onkeyup="syncInput(this)">
+                                    <input type="hidden" min="0" step="0.01"
+                                        class="real-value slip-one-input" data-field="daily_basic_salary"
+                                        name="daily_basic_salary" id="create_daily_basic_salary" value="0">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="small fw-bold text-muted">Tunjangan Makan</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0">Rp</span>
-                                    <input type="text" class="form-control border-start-0 ps-0 rupiah-input" value="0" placeholder="0" onkeyup="syncInput(this)">
-                                    <input type="hidden" min="0" step="0.01" class="real-value slip-one-input" data-field="meal_allowance" name="meal_allowance" value="0">
+                                    <input type="text" class="form-control border-start-0 ps-0 rupiah-input"
+                                        value="0" placeholder="0" onkeyup="syncInput(this)">
+                                    <input type="hidden" min="0" step="0.01"
+                                        class="real-value slip-one-input" data-field="meal_allowance"
+                                        name="meal_allowance" value="0">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="small fw-bold text-muted">Premi</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0">Rp</span>
-                                    <input type="text" class="form-control border-start-0 ps-0 rupiah-input" id="create_premi_display" value="0" placeholder="0" onkeyup="syncInput(this)">
-                                    <input type="hidden" min="0" step="0.01" class="real-value slip-one-input" data-field="premi" name="premi" id="create_premi" value="0">
+                                    <input type="text" class="form-control border-start-0 ps-0 rupiah-input"
+                                        id="create_premi_display" value="0" placeholder="0"
+                                        onkeyup="syncInput(this)">
+                                    <input type="hidden" min="0" step="0.01"
+                                        class="real-value slip-one-input" data-field="premi" name="premi"
+                                        id="create_premi" value="0">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="small fw-bold text-muted">Pot. Telat</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0">Rp</span>
-                                    <input type="text" class="form-control border-start-0 ps-0 rupiah-input" value="0" placeholder="0" onkeyup="syncInput(this)">
-                                    <input type="hidden" min="0" step="0.01" class="real-value slip-one-input" data-field="late_deduction" name="late_deduction" value="0">
+                                    <input type="text" class="form-control border-start-0 ps-0 rupiah-input"
+                                        value="0" placeholder="0" onkeyup="syncInput(this)">
+                                    <input type="hidden" min="0" step="0.01"
+                                        class="real-value slip-one-input" data-field="late_deduction"
+                                        name="late_deduction" value="0">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="small fw-bold text-muted">Pot. Lainnya</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0">Rp</span>
-                                    <input type="text" class="form-control border-start-0 ps-0 rupiah-input" value="0" placeholder="0" onkeyup="syncInput(this)">
-                                    <input type="hidden" min="0" step="0.01" class="real-value slip-one-input" data-field="other_deduction" name="other_deduction" value="0">
+                                    <input type="text" class="form-control border-start-0 ps-0 rupiah-input"
+                                        value="0" placeholder="0" onkeyup="syncInput(this)">
+                                    <input type="hidden" min="0" step="0.01"
+                                        class="real-value slip-one-input" data-field="other_deduction"
+                                        name="other_deduction" value="0">
                                 </div>
                             </div>
                             <div class="col-12">
@@ -221,27 +250,33 @@
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label class="small fw-bold text-muted">Hari Kerja</label>
-                                <input type="number" min="0" id="edit_work_days" name="work_days" class="form-control">
+                                <input type="number" min="0" id="edit_work_days" name="work_days"
+                                    class="form-control">
                             </div>
                             <div class="col-md-4">
                                 <label class="small fw-bold text-muted">Gaji/Hari</label>
-                                <input type="number" min="0" step="0.01" id="edit_daily_basic_salary" name="daily_basic_salary" class="form-control">
+                                <input type="number" min="0" step="0.01" id="edit_daily_basic_salary"
+                                    name="daily_basic_salary" class="form-control">
                             </div>
                             <div class="col-md-4">
                                 <label class="small fw-bold text-muted">Premi</label>
-                                <input type="number" min="0" step="0.01" id="edit_premi" name="premi" class="form-control">
+                                <input type="number" min="0" step="0.01" id="edit_premi" name="premi"
+                                    class="form-control">
                             </div>
                             <div class="col-md-4">
                                 <label class="small fw-bold text-muted">Uang Makan</label>
-                                <input type="number" min="0" step="0.01" id="edit_meal_allowance" name="meal_allowance" class="form-control">
+                                <input type="number" min="0" step="0.01" id="edit_meal_allowance"
+                                    name="meal_allowance" class="form-control">
                             </div>
                             <div class="col-md-4">
                                 <label class="small fw-bold text-muted">Pot. Telat</label>
-                                <input type="number" min="0" step="0.01" id="edit_late_deduction" name="late_deduction" class="form-control">
+                                <input type="number" min="0" step="0.01" id="edit_late_deduction"
+                                    name="late_deduction" class="form-control">
                             </div>
                             <div class="col-md-4">
                                 <label class="small fw-bold text-muted">Pot. Lainnya</label>
-                                <input type="number" min="0" step="0.01" id="edit_other_deduction" name="other_deduction" class="form-control">
+                                <input type="number" min="0" step="0.01" id="edit_other_deduction"
+                                    name="other_deduction" class="form-control">
                             </div>
                             <div class="col-12 text-end">
                                 <label class="small fw-bold text-muted">Diterima</label>
@@ -472,10 +507,17 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const employeeSelect = document.getElementById('create_employee_id');
             if (employeeSelect) {
-                new TomSelect(employeeSelect, { create: false, maxOptions: 5000, sortField: { field: 'text', direction: 'asc' } });
+                new TomSelect(employeeSelect, {
+                    create: false,
+                    maxOptions: 5000,
+                    sortField: {
+                        field: 'text',
+                        direction: 'asc'
+                    }
+                });
                 employeeSelect.addEventListener('change', applyEmployeeDefaults);
             }
 
@@ -490,6 +532,7 @@
 
         // Edit Slip modal
         let editSlipId = null;
+
         function openEditSlip(slip) {
             editSlipId = slip.id;
             document.getElementById('editSlipTitle').textContent = `Edit Gaji: ${slip.employee.name}`;
@@ -506,6 +549,7 @@
             // Set form action
             document.getElementById('form-edit-slip').action = `{{ url('salary-slips') }}/${slip.id}`;
         }
+
         function recalcEdit() {
             const workDays = parseFloat(document.getElementById('edit_work_days').value || 0);
             const daily = parseFloat(document.getElementById('edit_daily_basic_salary').value || 0);
@@ -518,7 +562,9 @@
             document.getElementById('edit_take_home').textContent = fmtIDR(takeHome);
             document.getElementById('edit_basic_salary_hidden').value = basicTotal;
         }
-        ['edit_work_days','edit_daily_basic_salary','edit_premi','edit_meal_allowance','edit_late_deduction','edit_other_deduction'].forEach(id => {
+        ['edit_work_days', 'edit_daily_basic_salary', 'edit_premi', 'edit_meal_allowance', 'edit_late_deduction',
+            'edit_other_deduction'
+        ].forEach(id => {
             document.getElementById(id).addEventListener('input', recalcEdit);
         });
     </script>

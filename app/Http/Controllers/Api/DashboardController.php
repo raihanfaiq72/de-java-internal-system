@@ -69,19 +69,44 @@ class DashboardController extends Controller
 
                 $data['stats']['active_jobs'] = $driverJobs->count();
             } else {
+                // Main Dashboard Stats
                 $data['stats']['revenue'] = Invoice::where('office_id', $officeId)
                     ->where('tipe_invoice', 'Sales')
                     ->where('status_pembayaran', 'Paid')
                     ->sum('total_akhir');
 
+                $data['stats']['piutang_usaha'] = Invoice::where('office_id', $officeId)
+                    ->where('tipe_invoice', 'Sales')
+                    ->where('status_pembayaran', '!=', 'Paid')
+                    ->get()
+                    ->sum(function ($inv) {
+                        return $inv->total_akhir - $inv->payment()->sum('jumlah_bayar');
+                    });
+
+                $data['stats']['hutang_usaha'] = Invoice::where('office_id', $officeId)
+                    ->where('tipe_invoice', 'Purchase')
+                    ->where('status_pembayaran', '!=', 'Paid')
+                    ->get()
+                    ->sum(function ($inv) {
+                        return $inv->total_akhir - $inv->payment()->sum('jumlah_bayar');
+                    });
+
+                $totalIncome = \App\Models\Payment::where('office_id', $officeId)
+                    ->whereHas('invoice', fn($q) => $q->where('tipe_invoice', 'Sales'))
+                    ->sum('jumlah_bayar');
+                $totalOutcome = \App\Models\Payment::where('office_id', $officeId)
+                    ->whereHas('invoice', fn($q) => $q->where('tipe_invoice', 'Purchase'))
+                    ->sum('jumlah_bayar');
+                $totalExpenses = \App\Models\Expense::where('office_id', $officeId)->sum('jumlah');
+
+                $data['stats']['saldo_aktif'] = $totalIncome - $totalOutcome - $totalExpenses;
+
+                $data['stats']['laba_kotor'] = $data['stats']['revenue'] - $totalOutcome; // Simple estimate
+                $data['stats']['laba_bersih'] = $data['stats']['laba_kotor'] - $totalExpenses;
+
                 $data['stats']['new_orders'] = Invoice::where('office_id', $officeId)
                     ->where('tipe_invoice', 'Sales')
                     ->whereDate('created_at', today())
-                    ->count();
-
-                $data['stats']['pending_purchases'] = Invoice::where('office_id', $officeId)
-                    ->where('tipe_invoice', 'Purchase')
-                    ->where('status_pembayaran', '!=', 'Paid')
                     ->count();
 
                 $data['stats']['low_stock'] = Product::where('office_id', $officeId)
@@ -93,12 +118,13 @@ class DashboardController extends Controller
                     ->where('office_id', $officeId)
                     ->where('tipe_invoice', 'Sales')
                     ->latest()
-                    ->limit(5)
+                    ->limit(10)
                     ->get();
 
                 $data['recentTransactions'] = $recent->map(function ($tx) {
                     return [
                         'nomor_invoice' => $tx->nomor_invoice,
+                        'tipe_invoice' => $tx->tipe_invoice,
                         'mitra' => [
                             'nama' => $tx->mitra->nama ?? null,
                         ],

@@ -41,6 +41,10 @@
         box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
         border: none !important;
     }
+
+    .shepherd-step-wide {
+        max-width: 600px !important;
+    }
     
     .shepherd-arrow::before {
         background: #ffffff !important;
@@ -157,6 +161,7 @@
                 id: 'dashboard',
                 text: 'Selamat datang di Dashboard DeJava! Di sini Anda bisa melihat ringkasan bisnis Anda secara real-time.',
                 title: '🏠 Dashboard',
+                classes: 'shepherd-step-wide',
                 attachTo: {
                     element: '.page-title-box',
                     on: 'bottom'

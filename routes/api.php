@@ -151,6 +151,8 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::put('/{id}', [InvoiceController::class, 'update'])->name('update');
             Route::delete('/{id}', [InvoiceController::class, 'destroy'])->name('destroy');
             Route::get('/search/{value}', [InvoiceController::class, 'search'])->name('search');
+            Route::post('/{id}/archive', [InvoiceController::class, 'archive'])->name('archive');
+            Route::post('/{id}/unarchive', [InvoiceController::class, 'unarchive'])->name('unarchive');
         });
 
     Route::prefix('invoice-item-api')

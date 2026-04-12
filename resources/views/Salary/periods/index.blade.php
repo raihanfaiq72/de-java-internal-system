@@ -63,8 +63,8 @@
                                                     </button>
                                                 </div>
                                                 <form id="delete-{{ $period->id }}"
-                                                    action="{{ route('salary-periods.destroy', $period->id) }}" method="POST"
-                                                    class="d-none">
+                                                    action="{{ route('salary-periods.destroy', $period->id) }}"
+                                                    method="POST" class="d-none">
                                                     @csrf
                                                     @method('DELETE')
                                                 </form>
@@ -72,7 +72,8 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="5" class="text-center py-5 text-muted">Belum ada periode penggajian.
+                                            <td colspan="5" class="text-center py-5 text-muted">Belum ada periode
+                                                penggajian.
                                             </td>
                                         </tr>
                                     @endforelse
@@ -111,7 +112,8 @@
                         <div class="mb-3">
                             <label class="form-label fw-bold small text-uppercase text-muted">Nama Periode
                                 (Opsional)</label>
-                            <input type="text" name="name" class="form-control" placeholder="Contoh: Gaji Februari 2026">
+                            <input type="text" name="name" class="form-control"
+                                placeholder="Contoh: Gaji Februari 2026">
                             <small class="text-muted">Jika kosong, akan otomatis dibuat berdasarkan tanggal.</small>
                         </div>
                     </div>

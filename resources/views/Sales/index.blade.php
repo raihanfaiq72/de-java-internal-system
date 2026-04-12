@@ -981,6 +981,18 @@
                 btnPrint.href = 'javascript:void(0)';
                 btnPrint.onclick = () => openPrintPreview(item.id);
 
+                const archived = item.status_dok === 'Draft' && item.status_pembayaran === 'Draft';
+                const btnArchive = row.querySelector('.btn-archive');
+                const btnUnarchive = row.querySelector('.btn-unarchive');
+
+                if (archived) {
+                    btnUnarchive.classList.remove('d-none');
+                    btnUnarchive.onclick = () => unarchiveInvoice(item.id);
+                } else {
+                    btnArchive.classList.remove('d-none');
+                    btnArchive.onclick = () => archiveInvoice(item.id);
+                }
+
                 // Remove chevron
                 const chevron = row.querySelector('.chevron-icon');
                 if (chevron) chevron.remove();
@@ -1084,7 +1096,7 @@
         function renderPagination(meta) {
             const container = document.getElementById('pagination-container');
             const info = document.getElementById('pagination-info');
-            
+
             if (!meta || !meta.links) return;
 
             if (info) {
@@ -1095,7 +1107,7 @@
             meta.links.forEach(link => {
                 const activeClass = link.active ? 'active' : '';
                 const disabledClass = !link.url ? 'disabled' : '';
-                
+
                 let pageNum = 1;
                 if (link.url) {
                     const url = new URL(link.url, window.location.origin);
@@ -1107,9 +1119,58 @@
                 container.insertAdjacentHTML('beforeend', `
                     <li class="page-item ${activeClass} ${disabledClass}">
                         <button class="page-link border-0 mx-1 rounded shadow-sm fw-bold" ${onclick}>${link.label}</button>
-                    </li>`
-                );
+                    </li>`);
             });
+        }
+
+        async function archiveInvoice(id) {
+            if (!await macConfirm('Arsipkan', 'Arsipkan invoice ini?', {
+                    confirmText: 'Arsipkan',
+                    confirmType: 'warning',
+                })) return;
+            try {
+                const res = await fetch(`${window.financeApp.API_URL}/${id}/archive`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
+                    }
+                });
+                const json = await res.json();
+                if (json.success) {
+                    alert('Invoice telah diarsipkan');
+                    loadInvoiceData();
+                } else {
+                    alert('Gagal mengarsipkan: ' + (json.message || 'Error'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Error sistem saat mengarsipkan.');
+            }
+        }
+
+        async function unarchiveInvoice(id) {
+            if (!await macConfirm('Pulihkan', 'Pulihkan invoice dari arsip?', {
+                    confirmType: 'primary',
+                    confirmText: 'Pulihkan'
+                })) return;
+            try {
+                const res = await fetch(`${window.financeApp.API_URL}/${id}/unarchive`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
+                    }
+                });
+                const json = await res.json();
+                if (json.success) {
+                    alert('Invoice telah dikembalikan ke daftar aktif');
+                    loadInvoiceData();
+                } else {
+                    alert('Gagal memulihkan: ' + (json.message || 'Error'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Error sistem saat memulihkan.');
+            }
         }
 
         function resetFilter() {

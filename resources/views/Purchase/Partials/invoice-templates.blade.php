@@ -54,6 +54,16 @@
                             Nota</a>
                     </li>
                     <li>
+                        <a class="dropdown-item btn-archive d-none" href="javascript:void(0)">
+                            <i class="fa fa-archive text-info me-2"></i> Arsipkan
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item btn-unarchive d-none" href="javascript:void(0)">
+                            <i class="fa fa-box-open text-success me-2"></i> Pulihkan
+                        </a>
+                    </li>
+                    <li>
                         <hr class="dropdown-divider">
                     </li>
                     <li>

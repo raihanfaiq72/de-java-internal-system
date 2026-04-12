@@ -41,8 +41,22 @@ class InvoiceController extends Controller
             $query->onlyTrashed();
         } elseif ($request->tab_status === 'archive') {
             $query->where(function ($q) {
-                $q->where('status_dok', 'Draft')
-                    ->orWhere('tgl_invoice', '<=', now()->subDays(60));
+                $q->where(function ($sub) {
+                    $sub->where('status_dok', 'Draft')
+                        ->where('status_pembayaran', 'Draft');
+                })->orWhere('tgl_invoice', '<=', now()->subDays(60));
+            });
+        } else {
+            // Active Tab (Default)
+            // Show Drafts that are NOT archived, and Approved/Rejected ones that are NOT > 60 days
+            $query->where(function ($q) {
+                $q->where(function ($sub) {
+                    $sub->where('status_dok', 'Draft')
+                        ->where('status_pembayaran', '!=', 'Draft');
+                })->orWhere(function ($sub) {
+                    $sub->where('status_dok', '!=', 'Draft')
+                        ->where('tgl_invoice', '>', now()->subDays(60));
+                });
             });
         }
 
@@ -670,5 +684,26 @@ class InvoiceController extends Controller
 
             return apiResponse(true, 'Persetujuan berhasil ditarik');
         });
+    }
+
+    public function archive($id)
+    {
+        $invoice = Invoice::where('office_id', session('active_office_id'))->findOrFail($id);
+        $invoice->update([
+            'status_dok' => 'Draft',
+            'status_pembayaran' => 'Draft'
+        ]);
+
+        return apiResponse(true, 'Invoice berhasil diarsipkan');
+    }
+
+    public function unarchive($id)
+    {
+        $invoice = Invoice::where('office_id', session('active_office_id'))->findOrFail($id);
+        $invoice->update([
+            'status_pembayaran' => 'Unpaid' // Bring back to Active WIP
+        ]);
+
+        return apiResponse(true, 'Invoice berhasil dikembalikan dari arsip');
     }
 }

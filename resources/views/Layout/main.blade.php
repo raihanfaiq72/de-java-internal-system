@@ -666,7 +666,6 @@
                             {{ $office->name }}
                         </small>
                     </span>
-
                 </a>
             </div>
             @include('Layout._sidebar')

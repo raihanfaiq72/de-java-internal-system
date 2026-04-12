@@ -153,12 +153,13 @@
 
         async function loadUserData(url = USER_API_URL, page = 1) {
             const tbody = document.getElementById('userTableBody');
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center p-5"><div class="spinner-border spinner-border-sm text-primary"></div><p class="mt-2 text-muted small mb-0">Memuat data user...</p></td></tr>';
+            tbody.innerHTML =
+                '<tr><td colspan="7" class="text-center p-5"><div class="spinner-border spinner-border-sm text-primary"></div><p class="mt-2 text-muted small mb-0">Memuat data user...</p></td></tr>';
 
             try {
                 const searchVal = document.getElementById('filter-search').value;
                 let finalUrlStr = (typeof url === 'string' && url.includes('/')) ? url : USER_API_URL;
-                
+
                 if (searchVal) {
                     finalUrlStr = `/api/user-api/search/${encodeURIComponent(searchVal)}`;
                 }
@@ -175,7 +176,8 @@
                 }
             } catch (error) {
                 console.error(error);
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger p-4">Gagal memuat data.</td></tr>';
+                tbody.innerHTML =
+                    '<tr><td colspan="7" class="text-center text-danger p-4">Gagal memuat data.</td></tr>';
             }
         }
 
@@ -184,7 +186,8 @@
             tbody.innerHTML = '';
 
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center p-5 text-muted fst-italic">Data user tidak ditemukan.</td></tr>';
+                tbody.innerHTML =
+                    '<tr><td colspan="7" class="text-center p-5 text-muted fst-italic">Data user tidak ditemukan.</td></tr>';
                 return;
             }
 
@@ -195,7 +198,11 @@
                                         <td class="fw-bold text-dark">${item.name}</td>
                                         <td class="text-muted">${item.username}</td>
                                         <td class="text-muted"><i class="fa fa-envelope me-1 small"></i> ${item.email}</td>
-                                        <td class="text-center"><span class="f-badge f-active">Active</span></td>
+                                        <td class="text-center">
+                                            ${item.email_verified_at 
+                                                ? '<span class="f-badge f-active text-success"><i class="fa fa-check-circle me-1"></i>Verified</span>' 
+                                                : '<span class="f-badge bg-soft-secondary text-secondary"><i class="fa fa-clock me-1"></i>Unverified</span>'}
+                                        </td>
                                         <td class="text-center text-muted small">${new Date(item.created_at).toLocaleDateString('id-ID')}</td>
                                         <td class="text-end pe-4">
                                             <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-primary me-1" onclick="openUserModal(${item.id})"><i class="fa fa-pencil"></i></button>
@@ -211,18 +218,26 @@
             if (!await macConfirm('Hapus User', 'Hapus user ini?')) return;
             try {
                 const res = await fetch(`${USER_API_URL}/${id}`, {
-                    method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
                 });
                 const dat = await res.json();
-                if (dat.success) { alert('Berhasil dihapus'); loadUserData(); }
-                else alert(dat.message);
-            } catch (e) { alert('Gagal menghapus'); }
+                if (dat.success) {
+                    alert('Berhasil dihapus');
+                    loadUserData();
+                } else alert(dat.message);
+            } catch (e) {
+                alert('Gagal menghapus');
+            }
         }
 
         function renderPagination(meta) {
             const container = document.getElementById('pagination-container');
             const info = document.getElementById('pagination-info');
-            
+
             if (!meta || !meta.links) return;
 
             if (info) {
@@ -233,7 +248,7 @@
             meta.links.forEach(link => {
                 const activeClass = link.active ? 'active' : '';
                 const disabledClass = !link.url ? 'disabled' : '';
-                
+
                 let pageNum = 1;
                 if (link.url) {
                     const url = new URL(link.url, window.location.origin);
@@ -245,8 +260,7 @@
                 container.insertAdjacentHTML('beforeend', `
                     <li class="page-item ${activeClass} ${disabledClass}">
                         <button class="page-link border-0 mx-1 rounded shadow-sm fw-bold" ${onclick}>${link.label}</button>
-                    </li>`
-                );
+                    </li>`);
             });
         }
 
