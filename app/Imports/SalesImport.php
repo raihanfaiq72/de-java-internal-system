@@ -14,6 +14,8 @@ use App\Models\Partner;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Tax;
+use App\Services\JournalService;
+use App\Services\StockService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -336,6 +338,29 @@ class SalesImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
                 }
 
                 $invoice->save();
+
+                // 5. Automatic Stock & Journal Entry
+                if ($invoice->status_dok === 'Approved') {
+                    $stockService = app(StockService::class);
+                    $journalService = app(JournalService::class);
+
+                    // Record Stock
+                    foreach ($invoice->items as $invItem) {
+                        if ($invItem->product && $invItem->product->track_stock) {
+                             $stockService->recordOut(
+                                $invItem->produk_id,
+                                $invItem->qty,
+                                null, // Default location
+                                'Sales',
+                                $invoice->id,
+                                "Sales Invoice #{$invoice->nomor_invoice} (Imported)"
+                            );
+                        }
+                    }
+
+                    // Record Journal
+                    $journalService->recordSalesInvoice($invoice->fresh(['items.product']));
+                }
             }
         } catch (\Throwable $e) {
             Log::error('SalesImport Error: ' . $e->getMessage());

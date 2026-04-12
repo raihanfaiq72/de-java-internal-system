@@ -156,6 +156,9 @@ class ExpenseController extends Controller
 
         $this->logActivity('Update', 'expenses', $id, $before, $data);
 
+        // Automatic Journal Entry on Update
+        $this->journalService->recordExpense($data);
+
         return apiResponse(true, 'Biaya berhasil diperbarui', $data);
     }
 

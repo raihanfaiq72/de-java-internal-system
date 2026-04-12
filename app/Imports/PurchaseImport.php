@@ -13,6 +13,8 @@ use App\Models\Partner;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Tax;
+use App\Services\JournalService;
+use App\Services\StockService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -309,6 +311,30 @@ class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
                 }
 
                 $invoice->save();
+
+                // 5. Automatic Stock & Journal Entry
+                if ($invoice->status_dok === 'Approved') {
+                    $stockService = app(StockService::class);
+                    $journalService = app(JournalService::class);
+
+                    // Record Stock
+                    foreach ($invoice->items as $invItem) {
+                        if ($invItem->product && $invItem->product->track_stock) {
+                            $stockService->recordIn(
+                                $invItem->produk_id,
+                                $invItem->qty,
+                                $invItem->harga_satuan,
+                                null, // Default location
+                                'Purchase',
+                                $invoice->id,
+                                "Purchase Invoice #{$invoice->nomor_invoice} (Imported)"
+                            );
+                        }
+                    }
+
+                    // Record Journal
+                    $journalService->recordPurchaseInvoice($invoice->fresh(['items.product']));
+                }
             }
         } catch (\Throwable $e) {
             Log::error('PurchaseImport Error: ' . $e->getMessage());

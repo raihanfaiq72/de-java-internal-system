@@ -11,6 +11,7 @@ use Smalot\PdfParser\Parser;
 use App\Models\Payment;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Services\JournalService;
 use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -92,7 +93,7 @@ class ImportPurchaseReceiptJob implements ShouldQueue
             }
 
             // Create Payment
-            Payment::create([
+            $payment = Payment::create([
                 'office_id' => $this->officeId,
                 'invoice_id' => $invoice->id,
                 'nomor_pembayaran' => $paymentNo ?? 'PAY-' . time(),
@@ -103,6 +104,10 @@ class ImportPurchaseReceiptJob implements ShouldQueue
                 'akun_keuangan_id' => 1,
                 'catatan' => "Imported from PDF: {$this->originalName}",
             ]);
+
+            // record journal
+            $journalService = app(JournalService::class);
+            $journalService->recordPayment($payment);
 
             // Update Invoice Status
             $totalPaid = Payment::where('invoice_id', $invoice->id)->sum('jumlah_bayar');
