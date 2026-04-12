@@ -22,6 +22,8 @@ class MitraImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
 {
     protected $officeId;
     protected $userId;
+    protected $processedCount = 0;
+    public static $mandatoryHeaders = ['type', 'nama'];
 
     public function __construct($officeId, $userId)
     {
@@ -42,7 +44,7 @@ class MitraImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
                 if ($user) {
                     $user->notify(new SystemNotification(
                         'Import Mitra Selesai',
-                        'Proses import data mitra telah berhasil diselesaikan.',
+                        "Proses import data mitra telah berhasil diselesaikan. {$this->processedCount} data dimasukkan.",
                         route('import.index'),
                         'success'
                     ));
@@ -84,6 +86,17 @@ class MitraImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
 
         try {
             $officeId = $this->officeId;
+
+            // 1. Validate Header (Strict Check)
+            if ($rows->isEmpty()) return;
+            $firstRow = $rows->first();
+            $requiredColumns = ['type', 'nama'];
+            foreach ($requiredColumns as $col) {
+                $lowerCol = strtolower($col);
+                if (!isset($firstRow[$lowerCol]) && !array_key_exists($lowerCol, $firstRow->toArray())) {
+                    throw new \Exception("Template tidak sesuai. Kolom wajib '$col' tidak ditemukan di tab Mitra.");
+                }
+            }
 
             foreach ($rows as $row) {
                 $rawName = $row['nama'] ?? $row['nama_mitra'] ?? $row['partner_name'] ?? null;
@@ -155,6 +168,7 @@ class MitraImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
                         'is_cash_customer' => false,
                     ]
                 );
+                $this->processedCount++;
             }
         } catch (\Throwable $e) {
             Log::error('MitraImport Error: ' . $e->getMessage());

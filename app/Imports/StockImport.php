@@ -28,6 +28,8 @@ class StockImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
 {
     protected $officeId;
     protected $userId;
+    protected $processedCount = 0;
+    public static $mandatoryHeaders = ['sku', 'nama_produk', 'kategori'];
 
     public function __construct($officeId, $userId)
     {
@@ -48,7 +50,7 @@ class StockImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
                 if ($user) {
                     $user->notify(new SystemNotification(
                         'Import Stock Selesai',
-                        'Proses import data stok telah berhasil diselesaikan.',
+                        "Proses import data stok telah berhasil diselesaikan. {$this->processedCount} data dimasukkan.",
                         route('import.index'),
                         'success'
                     ));
@@ -127,6 +129,16 @@ class StockImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
                 ]);
             }
 
+            // 1. Validate Header (Strict Check)
+            if ($rows->isEmpty()) return;
+            $firstRow = $rows->first();
+            $requiredColumns = ['sku', 'nama_produk', 'kategori'];
+            foreach ($requiredColumns as $col) {
+                if (!isset($firstRow[$col]) && !array_key_exists($col, $firstRow->toArray())) {
+                    throw new \Exception("Template tidak sesuai. Kolom wajib '$col' tidak ditemukan di tab Stok.");
+                }
+            }
+
             foreach ($rows as $row) {
                 // Flexible Column Mapping
                 $sku = $row['sku'] ?? $row['kode'] ?? $row['kode_barang'] ?? $row['sku_kode'] ?? null;
@@ -202,6 +214,7 @@ class StockImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
                     $product->coa_id = $defaultCoa->id;
                 }
                 $product->save();
+                $this->processedCount++;
 
                 // 6. Stock Mutation
                 $qty = $this->parseNumber($row['stok'] ?? $row['qty'] ?? $row['jumlah'] ?? 0);

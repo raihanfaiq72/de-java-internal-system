@@ -194,6 +194,7 @@
             cursor: pointer;
             padding: 0;
         }
+
         .mobile-menu-btn:active,
         .mobile-menu-btn:focus {
             outline: none;
@@ -314,27 +315,36 @@
                 align-items: flex-start !important;
                 gap: 8px;
             }
+
             .page-title-box .breadcrumb {
                 font-size: 12px;
             }
+
             .card-body {
                 padding: 12px !important;
             }
+
             .card-header {
                 padding: 12px !important;
             }
-            .nav, .nav-tabs, .nav-pills {
+
+            .nav,
+            .nav-tabs,
+            .nav-pills {
                 flex-wrap: nowrap;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
             }
+
             .nav .nav-item {
                 white-space: nowrap;
             }
+
             .table {
                 font-size: 12px;
             }
-            .input-group > .form-control,
+
+            .input-group>.form-control,
             .form-select,
             .btn {
                 font-size: 0.9rem;
@@ -405,12 +415,14 @@
             pointer-events: none;
             transition: opacity 0.18s ease, visibility 0s linear 0.18s;
         }
+
         .page-loader.active {
             opacity: 1;
             visibility: visible;
             pointer-events: auto;
             transition: opacity 0.18s ease;
         }
+
         .page-loader-card {
             display: flex;
             flex-direction: column;
@@ -422,6 +434,7 @@
             border: 1px solid rgba(0, 0, 0, 0.06);
             box-shadow: 0 14px 34px rgba(16, 24, 40, 0.10);
         }
+
         .page-loader-spinner {
             width: 46px;
             height: 46px;
@@ -430,21 +443,28 @@
             border-top-color: #0d6efd;
             animation: pageLoaderSpin 0.75s linear infinite;
         }
+
         .page-loader-text {
             font-size: 13px;
             font-weight: 600;
             letter-spacing: 0.02em;
             color: #6c757d;
         }
+
         @keyframes pageLoaderSpin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
+
         .page-content {
             transition: opacity 0.18s ease;
         }
+
         body.page-transition-start .page-content {
             opacity: 0.6;
         }
+
         /* Header Profile adjustments */
         .dropdown-menu .bg-secondary-subtle {
             background: transparent !important;
@@ -505,6 +525,7 @@
             opacity: 1;
             visibility: visible;
         }
+
         /* Prevent background scroll when sidebar open */
         body.sidebar-open {
             overflow: hidden;
@@ -559,7 +580,7 @@
         </div>
     </div>
     <script>
-        (function () {
+        (function() {
             const el = document.getElementById('pageLoader');
             if (!el) return;
             let shownAt = performance.now();
@@ -587,16 +608,27 @@
                     hide();
                 });
             };
-            window.PageLoader = { show, hide, track, pending: () => pending };
-            document.addEventListener('DOMContentLoaded', function () { hide(); }, { once: true });
-            window.addEventListener('pageshow', function () { hide(); });
-            document.addEventListener('submit', function (ev) {
+            window.PageLoader = {
+                show,
+                hide,
+                track,
+                pending: () => pending
+            };
+            document.addEventListener('DOMContentLoaded', function() {
+                hide();
+            }, {
+                once: true
+            });
+            window.addEventListener('pageshow', function() {
+                hide();
+            });
+            document.addEventListener('submit', function(ev) {
                 const f = ev.target;
                 if (!f || !(f instanceof HTMLFormElement)) return;
                 if (f.hasAttribute('data-no-loader')) return;
                 show();
             }, true);
-            document.addEventListener('click', function (ev) {
+            document.addEventListener('click', function(ev) {
                 if (ev.defaultPrevented) return;
                 if (ev.button !== 0) return;
                 if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
@@ -609,7 +641,8 @@
                 const href = a.getAttribute('href') || '';
                 if (!href || href.startsWith('#')) return;
                 const lower = href.toLowerCase();
-                if (lower.startsWith('javascript:') || lower.startsWith('mailto:') || lower.startsWith('tel:')) return;
+                if (lower.startsWith('javascript:') || lower.startsWith('mailto:') || lower.startsWith('tel:'))
+                    return;
                 show();
             }, true);
         })();
@@ -644,7 +677,9 @@
 
     @include('Layout._alert_helper')
 
-    <script>window.__jq_loaded = !!window.jQuery;</script>
+    <script>
+        window.__jq_loaded = !!window.jQuery;
+    </script>
     <script src="/assets/vendor/jquery/jquery-3.7.1.min.js" onerror="window.__jq_loaded=false"></script>
     <script>
         if (!window.__jq_loaded) {
@@ -662,8 +697,9 @@
 
     <!-- Force Sidebar Open Script -->
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const BODY = document.body;
+
             function enforceSidebar() {
                 if (window.innerWidth >= 992) {
                     if (document.body.getAttribute('data-sidebar-size') === 'collapsed') {
@@ -702,7 +738,7 @@
             const pageLoader = document.getElementById('pageLoader');
 
             if (toggleBtn && startbar && overlay) {
-                toggleBtn.addEventListener('click', function (e) {
+                toggleBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     startbar.classList.toggle('show');
@@ -713,7 +749,7 @@
                     toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
                 });
 
-                overlay.addEventListener('click', function () {
+                overlay.addEventListener('click', function() {
                     startbar.classList.remove('show');
                     overlay.classList.remove('show');
                     BODY.classList.remove('sidebar-open');
@@ -721,7 +757,7 @@
                     toggleBtn.setAttribute('aria-expanded', 'false');
                 });
 
-                startbar.addEventListener('click', function (ev) {
+                startbar.addEventListener('click', function(ev) {
                     const link = ev.target.closest('.nav-link');
                     if (!link) return;
                     const isCollapseToggle = link.getAttribute('data-bs-toggle') === 'collapse';
@@ -745,7 +781,7 @@
                 });
 
                 // ESC to close
-                document.addEventListener('keydown', function (ev) {
+                document.addEventListener('keydown', function(ev) {
                     if (ev.key === 'Escape' && startbar.classList.contains('show')) {
                         startbar.classList.remove('show');
                         overlay.classList.remove('show');
@@ -755,11 +791,7 @@
                     }
                 });
             }
-            window.addEventListener('beforeunload', function () {
-                BODY.classList.add('page-transition-start');
-                pageLoader?.classList.add('active');
-            });
-            window.addEventListener('load', function () {
+            window.addEventListener('load', function() {
                 BODY.classList.remove('page-transition-start');
                 pageLoader?.classList.remove('active');
             });

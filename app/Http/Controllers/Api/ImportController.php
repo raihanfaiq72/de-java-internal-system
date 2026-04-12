@@ -3,28 +3,43 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Imports\EmployeeImport;
+use App\Imports\MitraImport;
+use App\Imports\PurchaseImport;
+use App\Imports\SalesImport;
+use App\Imports\StockImport;
+use App\Jobs\ImportPurchaseReceiptJob;
+use App\Jobs\ImportReceiptJob;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\HeadingRowImport;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class ImportController extends Controller
 {
     public function importStock(Request $request)
     {
-        return $this->handleImport($request, \App\Imports\StockImport::class, [session('active_office_id'), auth()->id()]);
+        return $this->handleImport($request, StockImport::class, [session('active_office_id'), auth()->id()]);
     }
 
     public function importMitra(Request $request)
     {
-        return $this->handleImport($request, \App\Imports\MitraImport::class, [session('active_office_id'), auth()->id()]);
+        return $this->handleImport($request, MitraImport::class, [session('active_office_id'), auth()->id()]);
     }
 
     public function importSales(Request $request)
     {
-        return $this->handleImport($request, \App\Imports\SalesImport::class, [session('active_office_id'), auth()->id()]);
+        return $this->handleImport($request, SalesImport::class, [session('active_office_id'), auth()->id()]);
     }
 
     public function importPurchase(Request $request)
     {
-        return $this->handleImport($request, \App\Imports\PurchaseImport::class, [session('active_office_id'), auth()->id()]);
+        return $this->handleImport($request, PurchaseImport::class, [session('active_office_id'), auth()->id()]);
     }
 
     public function importReceipt(Request $request)
@@ -34,7 +49,7 @@ class ImportController extends Controller
         set_time_limit(0);
         ini_set('max_execution_time', 0);
         ini_set('max_input_time', 0);
-        
+
         // Increase upload limits
         ini_set('upload_max_filesize', '100M');
         ini_set('post_max_size', '2048M');
@@ -67,33 +82,33 @@ class ImportController extends Controller
         $count = 0;
         $batchSize = 100; // Process in batches to avoid memory issues (increased for large uploads)
         $fileBatches = array_chunk($files, $batchSize);
-        
-        \Log::info('Starting receipt import: Total files = ' . count($files) . ', Batches = ' . count($fileBatches));
-        
+
+        \Log::info('Starting receipt import: Total files = '.count($files).', Batches = '.count($fileBatches));
+
         foreach ($fileBatches as $batchIndex => $batch) {
-            \Log::info('Processing batch ' . ($batchIndex + 1) . ' of ' . count($fileBatches) . ' with ' . count($batch) . ' files');
-            
+            \Log::info('Processing batch '.($batchIndex + 1).' of '.count($fileBatches).' with '.count($batch).' files');
+
             foreach ($batch as $file) {
                 try {
                     $path = $file->store('temp_receipts');
                     $originalName = $file->getClientOriginalName();
-                    \App\Jobs\ImportReceiptJob::dispatch($path, $originalName, $officeId, $userId);
+                    ImportReceiptJob::dispatch($path, $originalName, $officeId, $userId);
                     $count++;
-                    
-                    \Log::info('Dispatched job for file: ' . $originalName . ' (Total: ' . $count . ')');
+
+                    \Log::info('Dispatched job for file: '.$originalName.' (Total: '.$count.')');
                 } catch (\Exception $e) {
-                    \Log::error('Failed to process file: ' . $file->getClientOriginalName() . ' - ' . $e->getMessage());
+                    \Log::error('Failed to process file: '.$file->getClientOriginalName().' - '.$e->getMessage());
                     // Continue processing other files
                 }
             }
-            
+
             // Small delay between batches to prevent overwhelming the system
             if (count($fileBatches) > 1) {
                 usleep(100000); // 0.1 second delay
             }
         }
 
-        \Log::info('Receipt import completed: ' . $count . ' files dispatched to queue');
+        \Log::info('Receipt import completed: '.$count.' files dispatched to queue');
 
         return redirect()->back()->with('success', $count.' File PDF sedang diproses di background. Proses akan memakan waktu beberapa menit untuk file yang banyak.');
     }
@@ -105,7 +120,7 @@ class ImportController extends Controller
         set_time_limit(0);
         ini_set('max_execution_time', 0);
         ini_set('max_input_time', 0);
-        
+
         // Increase upload limits
         ini_set('upload_max_filesize', '100M');
         ini_set('post_max_size', '2048M');
@@ -138,20 +153,20 @@ class ImportController extends Controller
         $count = 0;
         $batchSize = 50; // Process in batches to avoid memory issues
         $fileBatches = array_chunk($files, $batchSize);
-        
+
         foreach ($fileBatches as $batch) {
             foreach ($batch as $file) {
                 try {
                     $path = $file->store('temp_receipts');
                     $originalName = $file->getClientOriginalName();
-                    \App\Jobs\ImportPurchaseReceiptJob::dispatch($path, $originalName, $officeId, $userId);
+                    ImportPurchaseReceiptJob::dispatch($path, $originalName, $officeId, $userId);
                     $count++;
                 } catch (\Exception $e) {
-                    \Log::error('Failed to process file: ' . $file->getClientOriginalName() . ' - ' . $e->getMessage());
+                    \Log::error('Failed to process file: '.$file->getClientOriginalName().' - '.$e->getMessage());
                     // Continue processing other files
                 }
             }
-            
+
             // Small delay between batches to prevent overwhelming the system
             if (count($fileBatches) > 1) {
                 usleep(100000); // 0.1 second delay
@@ -163,7 +178,7 @@ class ImportController extends Controller
 
     public function importEmployee(Request $request)
     {
-        return $this->handleImport($request, \App\Imports\EmployeeImport::class, [session('active_office_id'), auth()->id()]);
+        return $this->handleImport($request, EmployeeImport::class, [session('active_office_id'), auth()->id()]);
     }
 
     public function downloadTemplate($type)
@@ -198,7 +213,25 @@ class ImportController extends Controller
         if (class_exists('Maatwebsite\Excel\Facades\Excel')) {
             try {
                 $importInstance = new $importClass(...$params);
-                \Maatwebsite\Excel\Facades\Excel::queueImport($importInstance, $file);
+
+                // Synchronous Header Validation
+                if (method_exists($importClass, 'mandatoryHeaders') || property_exists($importClass, 'mandatoryHeaders')) {
+                    $headingRows = (new HeadingRowImport)->toArray($file);
+
+                    if (! empty($headingRows) && ! empty($headingRows[0])) {
+                        $firstRow = $headingRows[0][0]; // First sheet, first row
+                        // Standardize keys (Maatwebsite slugifies them)
+                        $slugifiedHeaders = array_map(fn ($h) => Str::slug($h, '_'), $firstRow);
+
+                        foreach ($importClass::$mandatoryHeaders as $header) {
+                            if (! in_array($header, $slugifiedHeaders)) {
+                                return redirect()->back()->with('error', "Template tidak sesuai. Kolom wajib '$header' tidak ditemukan. Pastikan Anda mengunggah file di tab yang benar.");
+                            }
+                        }
+                    }
+                }
+
+                Excel::queueImport($importInstance, $file);
 
                 return redirect()->back()->with('success', 'Data sedang diproses di background. Silakan cek beberapa saat lagi.');
             } catch (\Exception $e) {
@@ -214,7 +247,7 @@ class ImportController extends Controller
         $fileName = 'Template_Import_Sales.xlsx';
 
         if (class_exists('Maatwebsite\Excel\Facades\Excel')) {
-            return \Maatwebsite\Excel\Facades\Excel::download(new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\ShouldAutoSize, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithStyles
+            return Excel::download(new class implements FromArray, ShouldAutoSize, WithHeadings, WithStyles
             {
                 public function array(): array
                 {
@@ -255,7 +288,7 @@ class ImportController extends Controller
         $fileName = 'Template_Import_Purchase.xlsx';
 
         if (class_exists('Maatwebsite\Excel\Facades\Excel')) {
-            return \Maatwebsite\Excel\Facades\Excel::download(new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\ShouldAutoSize, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithStyles
+            return Excel::download(new class implements FromArray, ShouldAutoSize, WithHeadings, WithStyles
             {
                 public function array(): array
                 {
@@ -279,7 +312,7 @@ class ImportController extends Controller
                     ];
                 }
 
-                public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet)
+                public function styles(Worksheet $sheet)
                 {
                     return [1 => ['font' => ['bold' => true]]];
                 }
@@ -294,7 +327,7 @@ class ImportController extends Controller
         $fileName = 'Template_Import_Mitra.xlsx';
 
         if (class_exists('Maatwebsite\Excel\Facades\Excel')) {
-            return \Maatwebsite\Excel\Facades\Excel::download(new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\ShouldAutoSize, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithStyles
+            return Excel::download(new class implements FromArray, ShouldAutoSize, WithHeadings, WithStyles
             {
                 public function array(): array
                 {
@@ -310,7 +343,7 @@ class ImportController extends Controller
                     return ['Type', 'No Mitra', 'Nama', 'Telp', 'Alamat'];
                 }
 
-                public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet)
+                public function styles(Worksheet $sheet)
                 {
                     return [1 => ['font' => ['bold' => true]]];
                 }
@@ -325,7 +358,7 @@ class ImportController extends Controller
         $fileName = 'Template_Import_Stok.xlsx';
 
         if (class_exists('Maatwebsite\Excel\Facades\Excel')) {
-            return \Maatwebsite\Excel\Facades\Excel::download(new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\ShouldAutoSize, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithStyles
+            return Excel::download(new class implements FromArray, ShouldAutoSize, WithHeadings, WithStyles
             {
                 public function array(): array
                 {
@@ -340,7 +373,7 @@ class ImportController extends Controller
                     return ['sku', 'nama_produk', 'kategori', 'brand', 'supplier', 'satuan', 'harga_beli', 'harga_jual', 'stok', 'lokasi'];
                 }
 
-                public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet)
+                public function styles(Worksheet $sheet)
                 {
                     return [1 => ['font' => ['bold' => true]]];
                 }
@@ -355,19 +388,19 @@ class ImportController extends Controller
         $fileName = 'Template_Import_Karyawan.xlsx';
 
         if (class_exists('Maatwebsite\Excel\Facades\Excel')) {
-            return \Maatwebsite\Excel\Facades\Excel::download(new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\ShouldAutoSize, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithStyles
+            return Excel::download(new class implements FromArray, ShouldAutoSize, WithHeadings, WithStyles
             {
                 public function array(): array
                 {
                     return [
                         [
-                            'EMP-00001', 'Ahmad Rizki', 'Software Engineer', 150000, 50000, '2023-01-15', 'Active', 'ahmad.rizki@example.com'
+                            'EMP-00001', 'Ahmad Rizki', 'Software Engineer', 150000, 50000, '2023-01-15', 'Active', 'ahmad.rizki@example.com',
                         ],
                         [
-                            'EMP-00002', 'Siti Nurhaliza', 'Accountant', 120000, 30000, '2023-02-01', 'Active', 'siti.nurhaliza@example.com'
+                            'EMP-00002', 'Siti Nurhaliza', 'Accountant', 120000, 30000, '2023-02-01', 'Active', 'siti.nurhaliza@example.com',
                         ],
                         [
-                            '', 'Budi Santoso', 'Sales Manager', 180000, 75000, '2023-03-10', 'Active', ''
+                            '', 'Budi Santoso', 'Sales Manager', 180000, 75000, '2023-03-10', 'Active', '',
                         ],
                     ];
                 }
@@ -377,7 +410,7 @@ class ImportController extends Controller
                     return ['nik', 'name', 'position', 'daily_salary', 'premi', 'join_date', 'status', 'email'];
                 }
 
-                public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet)
+                public function styles(Worksheet $sheet)
                 {
                     return [
                         1 => ['font' => ['bold' => true]],

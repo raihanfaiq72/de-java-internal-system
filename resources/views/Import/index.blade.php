@@ -51,8 +51,9 @@
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-purchase-receipt" role="tab">
-                                    <i class="iconoir-doc-text me-2"></i>Import Kuitansi Pembelian (PDF)
+                                <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-purchase-receipt"
+                                    role="tab">
+                                    <i class="iconoir-journal-page me-2"></i>Import Kuitansi Pembelian (PDF)
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
@@ -66,16 +67,18 @@
                         <div class="tab-content">
                             <!-- Tab Stock -->
                             <div class="tab-pane fade show active" id="tab-stock" role="tabpanel">
-                                @if(session('success'))
+                                @if (session('success'))
                                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                                         {{ session('success') }}
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                            aria-label="Close"></button>
                                     </div>
                                 @endif
-                                @if(session('error'))
+                                @if (session('error'))
                                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                         {{ session('error') }}
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                            aria-label="Close"></button>
                                     </div>
                                 @endif
 
@@ -90,25 +93,29 @@
                                                 Format yang didukung: .xlsx, .xls, .csv<br>
                                                 Pastikan file memiliki header kolom yang sesuai.
                                             </p>
-                                            <a href="{{ route('import.template', ['type' => 'stock']) }}" class="btn btn-outline-success btn-sm fw-bold">
+                                            <a href="{{ route('import.template', ['type' => 'stock']) }}"
+                                                class="btn btn-outline-success btn-sm fw-bold" data-no-loader>
                                                 <i class="iconoir-download me-1"></i> Download Template Import Stok
                                             </a>
                                         </div>
 
-                                        <form action="{{ route('import.stock') }}" method="POST" enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
+                                        <form action="{{ route('import.stock') }}" method="POST"
+                                            enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
                                             @csrf
                                             <div class="card-header bg-white border-bottom">
                                                 <h5 class="mb-0">
                                                     <i class="fas fa-upload me-2"></i>
                                                     Import Data
-                                                    <a href="{{ route('pdf.to.excel') }}" class="btn btn-sm btn-warning float-end">
+                                                    <a href="{{ route('pdf.to.excel') }}"
+                                                        class="btn btn-sm btn-warning float-end">
                                                         <i class="fas fa-file-pdf me-1"></i> PDF to Excel
                                                     </a>
                                                 </h5>
                                             </div>
                                             <div class="mb-3">
                                                 <label for="file" class="form-label fw-bold">Pilih File</label>
-                                                <input class="form-control" type="file" id="file" name="file" required>
+                                                <input class="form-control" type="file" id="file" name="file"
+                                                    required>
                                             </div>
                                             <div class="d-grid">
                                                 <button type="submit" class="btn btn-primary fw-bold">
@@ -128,7 +135,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Tab Mitra -->
                             <div class="tab-pane fade" id="tab-mitra" role="tabpanel">
                                 <div class="row justify-content-center">
@@ -142,16 +149,19 @@
                                                 Format yang didukung: .xlsx, .xls, .csv<br>
                                                 Pastikan file memiliki header kolom yang sesuai.
                                             </p>
-                                            <a href="{{ route('import.template', ['type' => 'mitra']) }}" class="btn btn-outline-success btn-sm fw-bold">
+                                            <a href="{{ route('import.template', ['type' => 'mitra']) }}"
+                                                class="btn btn-outline-success btn-sm fw-bold" data-no-loader>
                                                 <i class="iconoir-download me-1"></i> Download Template Import Mitra
                                             </a>
                                         </div>
 
-                                        <form action="{{ route('import.mitra') }}" method="POST" enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
+                                        <form action="{{ route('import.mitra') }}" method="POST"
+                                            enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
                                             @csrf
                                             <div class="mb-3">
                                                 <label for="file_mitra" class="form-label fw-bold">Pilih File</label>
-                                                <input class="form-control" type="file" id="file_mitra" name="file" required>
+                                                <input class="form-control" type="file" id="file_mitra"
+                                                    name="file" required>
                                             </div>
                                             <div class="d-grid">
                                                 <button type="submit" class="btn btn-info fw-bold text-white">
@@ -171,7 +181,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Tab Sales -->
                             <div class="tab-pane fade" id="tab-sales" role="tabpanel">
                                 <div class="row justify-content-center">
@@ -185,16 +195,19 @@
                                                 Format yang didukung: .xlsx, .xls, .csv<br>
                                                 Pastikan file memiliki header kolom yang sesuai.
                                             </p>
-                                            <a href="{{ route('import.template', ['type' => 'sales']) }}" class="btn btn-outline-success btn-sm fw-bold">
+                                            <a href="{{ route('import.template', ['type' => 'sales']) }}"
+                                                class="btn btn-outline-success btn-sm fw-bold" data-no-loader>
                                                 <i class="iconoir-download me-1"></i> Download Template Sales Invoice
                                             </a>
                                         </div>
 
-                                        <form action="{{ route('import.sales') }}" method="POST" enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
+                                        <form action="{{ route('import.sales') }}" method="POST"
+                                            enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
                                             @csrf
                                             <div class="mb-3">
                                                 <label for="file_sales" class="form-label fw-bold">Pilih File</label>
-                                                <input class="form-control" type="file" id="file_sales" name="file" required>
+                                                <input class="form-control" type="file" id="file_sales"
+                                                    name="file" required>
                                             </div>
                                             <div class="d-grid">
                                                 <button type="submit" class="btn btn-success fw-bold text-white">
@@ -208,14 +221,16 @@
                                             <ul class="mb-0 ps-3">
                                                 <li>Satu Invoice bisa memiliki banyak baris (item).</li>
                                                 <li>Pastikan kolom "number" sama untuk item dalam invoice yang sama.</li>
-                                                <li>Nama Partner akan dicari otomatis atau dibuat baru jika tidak ditemukan.</li>
-                                                <li>Produk akan dicari berdasarkan nama atau dibuat baru (dengan SKU otomatis) jika tidak ada.</li>
+                                                <li>Nama Partner akan dicari otomatis atau dibuat baru jika tidak ditemukan.
+                                                </li>
+                                                <li>Produk akan dicari berdasarkan nama atau dibuat baru (dengan SKU
+                                                    otomatis) jika tidak ada.</li>
                                             </ul>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Tab Receipt -->
                             <div class="tab-pane fade" id="tab-receipt" role="tabpanel">
                                 <div class="row justify-content-center">
@@ -231,13 +246,18 @@
                                             </p>
                                         </div>
 
-                                        <form action="{{ route('import.receipt') }}" method="POST" enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
+                                        <form action="{{ route('import.receipt') }}" method="POST"
+                                            enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
                                             @csrf
                                             <div class="mb-3">
-                                                <label for="file_receipt" class="form-label fw-bold">Pilih File PDF</label>
-                                                <input class="form-control" type="file" id="file_receipt" name="file[]" multiple required accept=".pdf" onchange="updateFileCount()">
+                                                <label for="file_receipt" class="form-label fw-bold">Pilih File
+                                                    PDF</label>
+                                                <input class="form-control" type="file" id="file_receipt"
+                                                    name="file[]" multiple required accept=".pdf"
+                                                    onchange="updateFileCount()">
                                                 <div class="form-text">
-                                                    <span id="file-count-info">Bisa pilih banyak file sekaligus (Max 5.000 file per upload).</span>
+                                                    <span id="file-count-info">Bisa pilih banyak file sekaligus (Max 5.000
+                                                        file per upload).</span>
                                                 </div>
                                             </div>
                                             <div class="d-grid">
@@ -259,7 +279,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Tab Purchase -->
                             <div class="tab-pane fade" id="tab-purchase" role="tabpanel">
                                 <div class="row justify-content-center">
@@ -273,16 +293,19 @@
                                                 Format yang didukung: .xlsx, .xls, .csv<br>
                                                 Pastikan file memiliki header kolom yang sesuai.
                                             </p>
-                                            <a href="{{ route('import.template', ['type' => 'purchase']) }}" class="btn btn-outline-warning btn-sm fw-bold">
+                                            <a href="{{ route('import.template', ['type' => 'purchase']) }}"
+                                                class="btn btn-outline-warning btn-sm fw-bold" data-no-loader>
                                                 <i class="iconoir-download me-1"></i> Download Template Purchase Invoice
                                             </a>
                                         </div>
 
-                                        <form action="{{ route('import.purchase') }}" method="POST" enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
+                                        <form action="{{ route('import.purchase') }}" method="POST"
+                                            enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
                                             @csrf
                                             <div class="mb-3">
                                                 <label for="file_purchase" class="form-label fw-bold">Pilih File</label>
-                                                <input class="form-control" type="file" id="file_purchase" name="file" required>
+                                                <input class="form-control" type="file" id="file_purchase"
+                                                    name="file" required>
                                             </div>
                                             <div class="d-grid">
                                                 <button type="submit" class="btn btn-warning fw-bold text-dark">
@@ -296,8 +319,10 @@
                                             <ul class="mb-0 ps-3">
                                                 <li>Satu Invoice bisa memiliki banyak baris (item).</li>
                                                 <li>Pastikan kolom "number" sama untuk item dalam invoice yang sama.</li>
-                                                <li>Nama Supplier akan dicari otomatis atau dibuat baru jika tidak ditemukan.</li>
-                                                <li>Produk akan dicari berdasarkan nama atau dibuat baru (dengan SKU otomatis) jika tidak ada.</li>
+                                                <li>Nama Supplier akan dicari otomatis atau dibuat baru jika tidak
+                                                    ditemukan.</li>
+                                                <li>Produk akan dicari berdasarkan nama atau dibuat baru (dengan SKU
+                                                    otomatis) jika tidak ada.</li>
                                             </ul>
                                         </div>
                                     </div>
@@ -319,12 +344,16 @@
                                             </p>
                                         </div>
 
-                                        <form action="{{ route('import.purchase.receipt') }}" method="POST" enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
+                                        <form action="{{ route('import.purchase.receipt') }}" method="POST"
+                                            enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
                                             @csrf
                                             <div class="mb-3">
-                                                <label for="file_purchase_receipt" class="form-label fw-bold">Pilih File PDF</label>
-                                                <input class="form-control" type="file" id="file_purchase_receipt" name="file[]" multiple required accept=".pdf">
-                                                <div class="form-text">Bisa pilih banyak file sekaligus (Max 1.000 file per upload).</div>
+                                                <label for="file_purchase_receipt" class="form-label fw-bold">Pilih File
+                                                    PDF</label>
+                                                <input class="form-control" type="file" id="file_purchase_receipt"
+                                                    name="file[]" multiple required accept=".pdf">
+                                                <div class="form-text">Bisa pilih banyak file sekaligus (Max 1.000 file per
+                                                    upload).</div>
                                             </div>
                                             <div class="d-grid">
                                                 <button type="submit" class="btn btn-secondary fw-bold text-white">
@@ -345,7 +374,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Tab Employee -->
                             <div class="tab-pane fade" id="tab-employee" role="tabpanel">
                                 <div class="row justify-content-center">
@@ -359,16 +388,19 @@
                                                 Format yang didukung: .xlsx, .xls, .csv<br>
                                                 Pastikan file memiliki header kolom yang sesuai.
                                             </p>
-                                            <a href="{{ route('import.template', ['type' => 'employee']) }}" class="btn btn-outline-primary btn-sm fw-bold">
+                                            <a href="{{ route('import.template', ['type' => 'employee']) }}"
+                                                class="btn btn-outline-primary btn-sm fw-bold" data-no-loader>
                                                 <i class="iconoir-download me-1"></i> Download Template Import Karyawan
                                             </a>
                                         </div>
 
-                                        <form action="{{ route('import.employee') }}" method="POST" enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
+                                        <form action="{{ route('import.employee') }}" method="POST"
+                                            enctype="multipart/form-data" class="border rounded-3 p-4 bg-light">
                                             @csrf
                                             <div class="mb-3">
                                                 <label for="file_employee" class="form-label fw-bold">Pilih File</label>
-                                                <input class="form-control" type="file" id="file_employee" name="file" required>
+                                                <input class="form-control" type="file" id="file_employee"
+                                                    name="file" required>
                                             </div>
                                             <div class="d-grid">
                                                 <button type="submit" class="btn btn-primary fw-bold text-white">
@@ -398,37 +430,37 @@
 @endsection
 
 @push('js')
-<script>
-function updateFileCount() {
-    const fileInput = document.getElementById('file_receipt');
-    const fileCountInfo = document.getElementById('file-count-info');
-    const fileCount = fileInput.files.length;
-    
-    if (fileCount > 0) {
-        fileCountInfo.textContent = `${fileCount} file dipilih (Max 5.000 file per upload).`;
-        
-        if (fileCount > 5000) {
-            fileCountInfo.textContent = `⚠️ ${fileCount} file dipilih - Melebihi batas maksimal 5.000 file!`;
-            fileCountInfo.style.color = 'red';
-        } else if (fileCount > 2000) {
-            fileCountInfo.style.color = 'orange';
-        } else {
-            fileCountInfo.style.color = 'green';
-        }
-    } else {
-        fileCountInfo.textContent = 'Bisa pilih banyak file sekaligus (Max 5.000 file per upload).';
-        fileCountInfo.style.color = '';
-    }
-    
-    console.log('Files selected:', fileCount);
-    console.log('Files:', fileInput.files);
-}
+    <script>
+        function updateFileCount() {
+            const fileInput = document.getElementById('file_receipt');
+            const fileCountInfo = document.getElementById('file-count-info');
+            const fileCount = fileInput.files.length;
 
-// Debug form submission
-document.querySelector('form[action*="import.receipt"]').addEventListener('submit', function(e) {
-    const fileInput = document.getElementById('file_receipt');
-    console.log('Submitting form with files:', fileInput.files.length);
-    console.log('File names:', Array.from(fileInput.files).map(f => f.name));
-});
-</script>
+            if (fileCount > 0) {
+                fileCountInfo.textContent = `${fileCount} file dipilih (Max 5.000 file per upload).`;
+
+                if (fileCount > 5000) {
+                    fileCountInfo.textContent = `⚠️ ${fileCount} file dipilih - Melebihi batas maksimal 5.000 file!`;
+                    fileCountInfo.style.color = 'red';
+                } else if (fileCount > 2000) {
+                    fileCountInfo.style.color = 'orange';
+                } else {
+                    fileCountInfo.style.color = 'green';
+                }
+            } else {
+                fileCountInfo.textContent = 'Bisa pilih banyak file sekaligus (Max 5.000 file per upload).';
+                fileCountInfo.style.color = '';
+            }
+
+            console.log('Files selected:', fileCount);
+            console.log('Files:', fileInput.files);
+        }
+
+        // Debug form submission
+        document.querySelector('form[action*="import.receipt"]').addEventListener('submit', function(e) {
+            const fileInput = document.getElementById('file_receipt');
+            console.log('Submitting form with files:', fileInput.files.length);
+            console.log('File names:', Array.from(fileInput.files).map(f => f.name));
+        });
+    </script>
 @endpush
