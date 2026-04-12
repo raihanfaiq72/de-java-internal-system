@@ -609,7 +609,7 @@
         // --- LOCATIONS ---
         function loadLocations() {
             // Populate Dropdown Filter
-            fetch('{{ route('stock-location-api.index') }}')
+            fetch('{{ route('stock-location-api.index') }}?per_page=1000')
                 .then(res => res.json())
                 .then(data => {
                     const select = document.getElementById('filter-stock-location');
@@ -895,24 +895,31 @@
             const container = document.getElementById(containerId);
             const info = document.getElementById(infoId);
 
-            info.innerText = `Menampilkan ${data.from || 0} sampai ${data.to || 0} dari ${data.total} data`;
+            if (!data || !data.links) return;
+
+            if (info) {
+                info.innerText = `Menampilkan ${data.from || 0} sampai ${data.to || 0} dari ${data.total} data`;
+            }
 
             let html = '';
-            if (data.prev_page_url) {
-                html +=
-                    `<li class="page-item"><button class="page-link" onclick="${loadFunction.name}(${data.current_page - 1})">Prev</button></li>`;
-            } else {
-                html += `<li class="page-item disabled"><button class="page-link">Prev</button></li>`;
-            }
+            data.links.forEach(link => {
+                const activeClass = link.active ? 'active' : '';
+                const disabledClass = !link.url ? 'disabled' : '';
+                
+                // Extract page number from URL
+                let pageNum = 1;
+                if (link.url) {
+                    const url = new URL(link.url);
+                    pageNum = url.searchParams.get('page') || 1;
+                }
 
-            html += `<li class="page-item active"><button class="page-link">${data.current_page}</button></li>`;
+                const onclick = link.url ? `onclick="${loadFunction.name}(${pageNum})"` : '';
 
-            if (data.next_page_url) {
-                html +=
-                    `<li class="page-item"><button class="page-link" onclick="${loadFunction.name}(${data.current_page + 1})">Next</button></li>`;
-            } else {
-                html += `<li class="page-item disabled"><button class="page-link">Next</button></li>`;
-            }
+                html += `
+                    <li class="page-item ${activeClass} ${disabledClass}">
+                        <button class="page-link" ${onclick}>${link.label}</button>
+                    </li>`;
+            });
 
             container.innerHTML = html;
         }

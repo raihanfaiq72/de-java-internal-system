@@ -21,8 +21,14 @@ class FleetController extends Controller
                         ->orWhere('license_plate', 'like', "%{$search}%")
                         ->orWhere('fuel_type', 'like', "%{$search}%");
                 })
-                ->latest()
-                ->paginate(10);
+                ->latest();
+
+            $perPage = $request->get('per_page', 10);
+            if ($perPage >= 1000) {
+                $data = $data->get();
+            } else {
+                $data = $data->paginate($perPage)->withQueryString();
+            }
 
             return apiResponse(true, 'Fleet list', $data);
         } catch (Throwable $e) {

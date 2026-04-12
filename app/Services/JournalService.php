@@ -418,6 +418,43 @@ class JournalService
         );
     }
 
+    /**
+     * Update existing payment journal
+     */
+    public function updatePaymentJournal(Payment $payment)
+    {
+        DB::transaction(function () use ($payment) {
+            $oldRef = $payment->getOriginal('nomor_pembayaran');
+            $journal = Journal::where('nomor_referensi', $oldRef)
+                ->orWhere('nomor_referensi', $payment->nomor_pembayaran)
+                ->orWhere('nomor_referensi', "PAY-{$payment->id}")
+                ->first();
+
+            if ($journal) {
+                // Delete existing details and journal
+                $journal->details()->delete();
+                $journal->delete();
+            }
+
+            // Recreate journal with new data
+            $this->recordPayment($payment);
+        });
+    }
+    
+    public function deletePaymentJournal(Payment $payment)
+    {
+        DB::transaction(function () use ($payment) {
+            $journal = Journal::where('nomor_referensi', $payment->nomor_pembayaran)
+                ->orWhere('nomor_referensi', "PAY-{$payment->id}")
+                ->first();
+
+            if ($journal) {
+                $journal->details()->delete();
+                $journal->delete();
+            }
+        });
+    }
+
     private function findAccount($officeId, $code)
     {
         return COA::where('office_id', $officeId)

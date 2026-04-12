@@ -317,12 +317,17 @@
             }
         }
 
-        async function loadMitraData(url = '/api/mitra-api', type = null) {
+        async function loadMitraData(url = '/api/mitra-api', type = null, page = 1) {
             // Determine type based on active tab if not provided
             if (!type) type = activeTab;
 
             // Fix for null URL
             if (!url || url === 'null') url = '/api/mitra-api';
+
+            // Ensure page is added to URL
+            if (url === '/api/mitra-api') {
+                url += `?page=${page}`;
+            }
 
             const isDeleted = type === 'deleted';
             const tbodyId = isDeleted ? 'mitraTableBodyDeleted' : 'mitraTableBody';
@@ -519,22 +524,34 @@
             const infoId = isDeleted ? 'pagination-info-deleted' : 'pagination-info';
 
             const c = document.getElementById(containerId);
-            c.innerHTML = '';
-
+            const info = document.getElementById(infoId);
+            
             if (!meta || !meta.links) return;
 
-            document.getElementById(infoId).innerText = `${meta.from || 0}-${meta.to || 0} dari ${meta.total} data`;
+            if (info) {
+                info.innerText = `${meta.from || 0}-${meta.to || 0} dari ${meta.total} data`;
+            }
 
-            // Current type context for pagination clicks
+            c.innerHTML = '';
+            
             const type = isDeleted ? 'deleted' : 'active';
 
             meta.links.forEach(l => {
-                const cls = l.active ? 'bg-primary text-white' : 'bg-white text-dark';
-                const onclick = l.url ? `onclick="loadMitraData('${l.url}', '${type}')"` : '';
-                const href = l.url ? '#' : 'javascript:void(0)';
+                const activeClass = l.active ? 'active' : '';
+                const disabledClass = !l.url ? 'disabled' : '';
+                
+                let pageNum = 1;
+                if (l.url) {
+                    const url = new URL(l.url, window.location.origin);
+                    pageNum = url.searchParams.get('page') || 1;
+                }
 
-                c.insertAdjacentHTML('beforeend',
-                    `<li class="page-item ${!l.url ? 'disabled' : ''}"><a class="page-link border-0 mx-1 rounded shadow-sm fw-bold ${cls}" href="${href}" ${onclick}>${l.label}</a></li>`
+                const onclick = l.url ? `onclick="loadMitraData(undefined, '${type}', ${pageNum})"` : '';
+
+                c.insertAdjacentHTML('beforeend', `
+                    <li class="page-item ${activeClass} ${disabledClass}">
+                        <button class="page-link border-0 mx-1 rounded shadow-sm fw-bold" ${onclick}>${l.label}</button>
+                    </li>`
                 );
             });
         }

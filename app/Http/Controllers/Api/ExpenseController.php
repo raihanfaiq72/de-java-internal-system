@@ -30,7 +30,12 @@ class ExpenseController extends Controller
             $query->whereBetween('tgl_biaya', [$request->tgl_mulai, $request->tgl_selesai]);
         }
 
-        $data = $query->latest()->paginate(10);
+        $perPage = $request->get('per_page', 10);
+        if ($perPage >= 1000) {
+            $data = $query->latest()->get();
+        } else {
+            $data = $query->latest()->paginate($perPage)->withQueryString();
+        }
 
         return apiResponse(true, 'Data biaya operasional', $data);
     }
@@ -181,6 +186,24 @@ class ExpenseController extends Controller
         $this->logActivity('Delete', 'expenses', $id, $before, null);
 
         return apiResponse(true, 'Biaya berhasil dihapus');
+    }
+
+    public function search(Request $request, $value)
+    {
+        $query = Expense::with(['akunKeuangan', 'akunBeban'])->where('office_id', session('active_office_id'))
+            ->where(function ($q) use ($value) {
+                $q->where('nama_biaya', 'LIKE', "%$value%")
+                    ->orWhere('kategori_biaya', 'LIKE', "%$value%");
+            });
+
+        $perPage = $request->get('per_page', 10);
+        if ($perPage >= 1000) {
+            $data = $query->latest()->get();
+        } else {
+            $data = $query->latest()->paginate($perPage)->withQueryString();
+        }
+
+        return apiResponse(true, 'Hasil pencarian biaya', $data);
     }
 
     public function analyticsSummary(Request $request)

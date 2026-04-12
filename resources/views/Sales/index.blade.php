@@ -747,7 +747,7 @@
 
         let paidInvoiceIds = [];
 
-        async function loadInvoiceData(url = window.financeApp.API_URL) {
+        async function loadInvoiceData(url = window.financeApp.API_URL, page = 1) {
             const tbody = document.getElementById('invoiceTableBody');
             tbody.innerHTML =
                 '<tr><td colspan="10" class="text-center p-5"><div class="spinner-border spinner-border-sm text-primary"></div><p class="mt-2 text-muted small mb-0">Memuat data...</p></td></tr>';
@@ -756,6 +756,9 @@
 
             try {
                 let finalUrl = (typeof url === 'string' && url.includes('/')) ? url : window.financeApp.API_URL;
+                if (!finalUrl.includes('page=') && page) {
+                    finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'page=' + page;
+                }
                 const params = new URLSearchParams({
                     tipe_invoice: 'Sales',
                     tab_status: currentTabStatus,
@@ -1079,13 +1082,32 @@
         }
 
         function renderPagination(meta) {
-            const c = document.getElementById('pagination-container');
-            c.innerHTML = '';
-            document.getElementById('pagination-info').innerText = `${meta.from || 0}-${meta.to || 0} dari ${meta.total}`;
-            meta.links.forEach(l => {
-                const cls = l.active ? 'bg-primary text-white' : 'bg-white text-dark';
-                c.insertAdjacentHTML('beforeend',
-                    `<li class="page-item ${!l.url ? 'disabled' : ''}"><a class="page-link border-0 mx-1 rounded shadow-sm fw-bold ${cls}" href="#" onclick="loadInvoiceData('${l.url}')">${l.label}</a></li>`
+            const container = document.getElementById('pagination-container');
+            const info = document.getElementById('pagination-info');
+            
+            if (!meta || !meta.links) return;
+
+            if (info) {
+                info.innerText = `${meta.from || 0}-${meta.to || 0} dari ${meta.total}`;
+            }
+
+            container.innerHTML = '';
+            meta.links.forEach(link => {
+                const activeClass = link.active ? 'active' : '';
+                const disabledClass = !link.url ? 'disabled' : '';
+                
+                let pageNum = 1;
+                if (link.url) {
+                    const url = new URL(link.url, window.location.origin);
+                    pageNum = url.searchParams.get('page') || 1;
+                }
+
+                const onclick = link.url ? `onclick="loadInvoiceData(undefined, ${pageNum})"` : '';
+
+                container.insertAdjacentHTML('beforeend', `
+                    <li class="page-item ${activeClass} ${disabledClass}">
+                        <button class="page-link border-0 mx-1 rounded shadow-sm fw-bold" ${onclick}>${link.label}</button>
+                    </li>`
                 );
             });
         }

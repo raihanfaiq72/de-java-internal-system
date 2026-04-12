@@ -79,7 +79,11 @@ class InvoiceController extends Controller
         }
 
         $perPage = $request->get('per_page', 10);
-        $data = $query->latest()->paginate($perPage);
+        if ($perPage >= 1000) {
+            $data = $query->latest()->get();
+        } else {
+            $data = $query->latest()->paginate($perPage)->withQueryString();
+        }
 
         return apiResponse(true, 'Data invoice', $data);
     }
@@ -301,7 +305,12 @@ class InvoiceController extends Controller
             });
         }
 
-        $data = $query->latest()->paginate(10);
+        $perPage = $request->get('per_page', 10);
+        if ($perPage >= 1000) {
+            $data = $query->latest()->get();
+        } else {
+            $data = $query->latest()->paginate($perPage)->withQueryString();
+        }
 
         return apiResponse(true, 'Hasil pencarian invoice', $data);
     }
@@ -488,8 +497,12 @@ class InvoiceController extends Controller
             });
         }
 
-        $perPage = $request->input('per_page', 10);
-        $data = $query->latest()->paginate($perPage);
+        $perPage = $request->get('per_page', 10);
+        if ($perPage >= 1000) {
+            $data = $query->latest()->get();
+        } else {
+            $data = $query->latest()->paginate($perPage)->withQueryString();
+        }
 
         return apiResponse(true, 'Data invoice approval berhasil diambil', $data, null, 200);
     }

@@ -36,13 +36,14 @@
                     <th>Satuan</th>
                     <th>Harga Beli</th>
                     <th>Harga Jual</th>
+                    <th>Harga Tempo</th>
                     <th>COA</th>
                     <th width="80" class="text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody id="produk-table-body">
                 <tr>
-                    <td colspan="11" class="text-center text-muted">Memuat data...</td>
+                    <td colspan="12" class="text-center text-muted">Memuat data...</td>
                 </tr>
             </tbody>
         </table>
@@ -87,6 +88,9 @@
             <input type="text" class="form-control form-control-sm in-jual" value="0">
         </td>
         <td>
+            <input type="text" class="form-control form-control-sm in-tempo" value="0">
+        </td>
+        <td>
             <select class="in-coa"></select>
         </td>
         <td class="text-center">
@@ -113,6 +117,7 @@
         <td class="col-satuan text-center"></td>
         <td class="col-beli text-end"></td>
         <td class="col-jual text-end"></td>
+        <td class="col-tempo text-end"></td>
         <td class="col-coa text-start"></td>
         <td class="text-center">
             <div class="dropdown">
@@ -229,11 +234,15 @@
 
             const inBeli = tr.querySelector('.in-beli');
             const inJual = tr.querySelector('.in-jual');
-
+            const inTempo = tr.querySelector('.in-tempo');
+            
             inBeli.addEventListener('input', function() {
                 formatRupiahInput(this);
             });
             inJual.addEventListener('input', function() {
+                formatRupiahInput(this);
+            });
+            inTempo.addEventListener('input', function() {
                 formatRupiahInput(this);
             });
 
@@ -407,6 +416,7 @@
                     satuan: tr.querySelector('.in-satuan').value,
                     harga_beli: inBeli.value.replace(/\./g, ''),
                     harga_jual: inJual.value.replace(/\./g, ''),
+                    harga_tempo: inTempo.value.replace(/\./g, ''),
                     track_stock: 1,
                     akun_penjualan_id: 1,
                     akun_pembelian_id: 1,
@@ -630,6 +640,7 @@
             editRow.querySelector('.in-satuan').value = item.satuan || '';
             editRow.querySelector('.in-beli').value = item.harga_beli || 0;
             editRow.querySelector('.in-jual').value = item.harga_jual || 0;
+            editRow.querySelector('.in-tempo').value = item.harga_tempo || 0;
 
             tsSupplier.setValue(item.supplier_id);
             tsBrand.setValue(item.brand_id);
@@ -638,6 +649,7 @@
 
             const inBeliEdit = editRow.querySelector('.in-beli');
             const inJualEdit = editRow.querySelector('.in-jual');
+            const inTempoEdit = editRow.querySelector('.in-tempo');
 
             inBeliEdit.addEventListener('input', function() {
                 formatRupiahInput(this);
@@ -645,9 +657,13 @@
             inJualEdit.addEventListener('input', function() {
                 formatRupiahInput(this);
             });
+            inTempoEdit.addEventListener('input', function() {
+                formatRupiahInput(this);
+            });
 
             inBeliEdit.value = new Intl.NumberFormat('id-ID').format(item.harga_beli || 0);
             inJualEdit.value = new Intl.NumberFormat('id-ID').format(item.harga_jual || 0);
+            inTempoEdit.value = new Intl.NumberFormat('id-ID').format(item.harga_tempo || 0);
 
             oldRow.replaceWith(editRow);
 
@@ -671,6 +687,7 @@
                     satuan: editRow.querySelector('.in-satuan').value,
                     harga_beli: inBeliEdit.value.replace(/\./g, ''),
                     harga_jual: inJualEdit.value.replace(/\./g, ''),
+                    harga_tempo: inTempoEdit.value.replace(/\./g, ''),
                     coa_id: coaId,
                     track_stock: 1
                 };
@@ -798,6 +815,7 @@
                 clone.querySelector('.col-satuan').textContent = item.satuan || '-';
                 clone.querySelector('.col-beli').textContent = formatIDR(item.harga_beli);
                 clone.querySelector('.col-jual').textContent = formatIDR(item.harga_jual);
+                clone.querySelector('.col-tempo').textContent = formatIDR(item.harga_tempo);
                 clone.querySelector('.col-coa').textContent = coaName;
 
                 // Memasang Event Klik

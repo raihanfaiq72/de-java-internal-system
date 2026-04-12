@@ -9,11 +9,16 @@ use Illuminate\Support\Facades\Validator;
 
 class TaxController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $data = Tax::where('office_id', session('active_office_id'))
-            ->latest()
-            ->paginate(10);
+        $query = Tax::where('office_id', session('active_office_id'))->latest();
+
+        $perPage = $request->get('per_page', 10);
+        if ($perPage >= 1000) {
+            $data = $query->get();
+        } else {
+            $data = $query->paginate($perPage)->withQueryString();
+        }
 
         return apiResponse(true, 'Data pajak', $data);
     }
@@ -78,11 +83,13 @@ class TaxController extends Controller
         return apiResponse(true, 'Pajak berhasil dihapus');
     }
 
-    public function search($value)
+    public function search(Request $request, $value)
     {
         $data = Tax::where('office_id', session('active_office_id'))
             ->where('nama_pajak', 'LIKE', "%$value%")
-            ->paginate(10);
+            ->latest()
+            ->paginate($request->get('per_page', 10))
+            ->withQueryString();
 
         return apiResponse(true, 'Hasil pencarian pajak', $data);
     }

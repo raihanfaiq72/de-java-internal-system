@@ -29,7 +29,12 @@ class PaymentController extends Controller
             $query->where('invoice_id', $request->invoice_id);
         }
 
-        $data = $query->latest()->paginate(10);
+        $perPage = $request->get('per_page', 10);
+        if ($perPage >= 1000) {
+            $data = $query->latest()->get();
+        } else {
+            $data = $query->latest()->paginate($perPage)->withQueryString();
+        }
 
         return apiResponse(true, 'Data pembayaran', $data);
     }
@@ -219,7 +224,7 @@ class PaymentController extends Controller
             // Update journal entries if amount changed
             if ($oldJumlahBayar != $newJumlahBayar) {
                 // Delete old journal entries and create new ones
-                $this->journalService->updatePaymentJournal($payment, $difference);
+                $this->journalService->updatePaymentJournal($payment);
             }
 
             return apiResponse(true, 'Kuitansi berhasil diperbarui', [
@@ -256,6 +261,9 @@ class PaymentController extends Controller
             $before = $payment->toArray();
 
             $payment->delete();
+
+            // Delete associated journal
+            $this->journalService->deletePaymentJournal($payment);
 
             $totalBayar = round(
                 $invoice->payment()->sum('jumlah_bayar'),

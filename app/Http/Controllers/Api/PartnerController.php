@@ -34,15 +34,14 @@ class PartnerController extends Controller
                 $query->where('tipe_mitra', $request->tipe_mitra);
             }
 
-            // Handle per_page parameter for getting all data
+            // Handle per_page parameter
             $perPage = $request->get('per_page', 10);
             if ($perPage >= 1000) {
                 // Return all data without pagination for large per_page values
                 $data = $query->latest()->get();
-                return apiResponse(true, 'Data mitra berhasil diambil', $data);
+            } else {
+                $data = $query->latest()->paginate($perPage)->withQueryString();
             }
-
-            $data = $query->latest()->paginate($perPage);
 
             return apiResponse(true, 'Data mitra berhasil diambil', $data);
         } catch (Throwable $e) {
@@ -133,7 +132,7 @@ class PartnerController extends Controller
 
             $dataToUpdate = $request->all();
             if (empty($dataToUpdate['nomor_mitra'])) {
-                if (empty($mitra->nomor_mitra)) {
+                if (empty($partner->nomor_mitra)) {
                     $dataToUpdate['nomor_mitra'] = $this->generateNomorMitra();
                 } else {
                     unset($dataToUpdate['nomor_mitra']);
@@ -167,7 +166,7 @@ class PartnerController extends Controller
         }
     }
 
-    public function search($value)
+    public function search(Request $request, $value)
     {
         try {
             $data = Partner::with(['akunHutang', 'akunPiutang'])
@@ -186,7 +185,8 @@ class PartnerController extends Controller
                         ->orWhere('kontak_email', 'LIKE', "%{$value}%");
                 })
                 ->latest()
-                ->paginate(10);
+                ->paginate($request->get('per_page', 10))
+                ->withQueryString();
 
             return apiResponse(
                 true,

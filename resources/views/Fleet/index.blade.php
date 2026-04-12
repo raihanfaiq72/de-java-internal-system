@@ -150,15 +150,18 @@
     <script>
         const FLEET_URL = "{{ route('fleet-api.index') }}";
 
-        async function loadFleetsData(url = FLEET_URL) {
+        async function loadFleetsData(url = FLEET_URL, page = 1) {
             const tbody = document.getElementById('fleetTableBody');
             tbody.innerHTML =
                 '<tr><td colspan="7" class="text-center p-5"><div class="spinner-border spinner-border-sm text-primary"></div><p class="mt-2 text-muted small mb-0">Memuat data fleet...</p></td></tr>';
 
             try {
                 const searchVal = document.getElementById('filter-search').value;
-                const finalUrl = new URL(url, window.location.origin);
+                let finalUrlStr = (typeof url === 'string' && url.includes('/')) ? url : FLEET_URL;
+                const finalUrl = new URL(finalUrlStr, window.location.origin);
+                
                 if (searchVal) finalUrl.searchParams.set('search', searchVal);
+                if (page) finalUrl.searchParams.set('page', page);
 
                 const response = await fetch(finalUrl.toString());
                 const result = await response.json();
@@ -224,14 +227,32 @@
         }
 
         function renderPagination(meta) {
-            const c = document.getElementById('pagination-container');
-            c.innerHTML = '';
+            const container = document.getElementById('pagination-container');
+            const info = document.getElementById('pagination-info');
+            
             if (!meta || !meta.links) return;
-            document.getElementById('pagination-info').innerText = `${meta.from || 0}-${meta.to || 0} dari ${meta.total} data`;
-            meta.links.forEach(l => {
-                const cls = l.active ? 'bg-primary text-white' : 'bg-white text-dark';
-                c.insertAdjacentHTML('beforeend',
-                    `<li class="page-item ${!l.url ? 'disabled' : ''}"><a class="page-link border-0 mx-1 rounded shadow-sm fw-bold ${cls}" href="#" onclick="loadFleetsData('${l.url}')">${l.label}</a></li>`
+
+            if (info) {
+                info.innerText = `${meta.from || 0}-${meta.to || 0} dari ${meta.total} data`;
+            }
+
+            container.innerHTML = '';
+            meta.links.forEach(link => {
+                const activeClass = link.active ? 'active' : '';
+                const disabledClass = !link.url ? 'disabled' : '';
+                
+                let pageNum = 1;
+                if (link.url) {
+                    const url = new URL(link.url, window.location.origin);
+                    pageNum = url.searchParams.get('page') || 1;
+                }
+
+                const onclick = link.url ? `onclick="loadFleetsData(undefined, ${pageNum})"` : '';
+
+                container.insertAdjacentHTML('beforeend', `
+                    <li class="page-item ${activeClass} ${disabledClass}">
+                        <button class="page-link border-0 mx-1 rounded shadow-sm fw-bold" ${onclick}>${link.label}</button>
+                    </li>`
                 );
             });
         }

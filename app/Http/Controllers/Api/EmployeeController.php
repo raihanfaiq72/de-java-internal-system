@@ -17,7 +17,7 @@ class EmployeeController extends Controller
                     ->orWhere('nik', 'like', "%{$request->search}%");
             })
             ->latest()
-            ->paginate(10);
+            ->paginate(10)->withQueryString();
 
         $users = User::orderBy('name')->get();
 

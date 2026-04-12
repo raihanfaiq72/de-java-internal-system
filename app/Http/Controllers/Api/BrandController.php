@@ -23,8 +23,14 @@ class BrandController extends Controller
                 ->when($search, function ($q) use ($search) {
                     $q->where('nama_brand', 'like', "%{$search}%");
                 })
-                ->orderBy('nama_brand')
-                ->paginate(10);
+                ->orderBy('nama_brand');
+
+            $perPage = $request->get('per_page', 10);
+            if ($perPage >= 1000) {
+                $data = $data->get();
+            } else {
+                $data = $data->paginate($perPage)->withQueryString();
+            }
 
             return apiResponse(true, 'Data brand berhasil diambil', $data);
         } catch (Throwable $e) {
