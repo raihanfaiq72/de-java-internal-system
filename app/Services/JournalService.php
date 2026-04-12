@@ -350,6 +350,10 @@ class JournalService
         $officeId = $payment->office_id;
         $invoice = $payment->invoice;
 
+        if (!$invoice) {
+            return;
+        }
+
         // Resolve COA from FinancialAccount
         $finAccount = \App\Models\FinancialAccount::find($payment->akun_keuangan_id);
         $accCashBank = null;
