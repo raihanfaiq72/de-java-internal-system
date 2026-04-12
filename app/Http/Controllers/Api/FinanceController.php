@@ -17,61 +17,45 @@ class FinanceController extends Controller
 {
     use LogsActivity;
 
+    public function previewReport(Request $request)
+    {
+        $officeId = session('active_office_id');
+        $accountId = $request->account_id;
+        $start = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfMonth();
+        $end = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
+
+        $data = $this->getReportData($officeId, $accountId, $start, $end);
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
+
     public function exportExcel(Request $request)
     {
         $officeId = session('active_office_id');
         $accounts = FinancialAccount::where('office_id', $officeId)->orderBy('code')->get();
         $accountId = $request->account_id ?: ($accounts->first()->id ?? null);
 
-        if (! $accountId) {
+        if (!$accountId) {
             return redirect()->back()->with('error', 'Akun tidak ditemukan');
         }
 
         $start = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfMonth();
         $end = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
 
-        $filename = 'Laporan_Kas_Kecil_'.date('YmdHis').'.xls';
+        $filename = 'Laporan_Kas_Kecil_' . date('YmdHis') . '.xls';
+        $reportData = $this->getReportData($officeId, $accountId, $start, $end);
 
-        return response()->streamDownload(function () use ($officeId, $accountId, $start, $end) {
-            $startStr = $start->toDateString();
-            $endStr = $end->toDateString();
-
-            $openingIncome = Payment::where('office_id', $officeId)
-                ->where('akun_keuangan_id', $accountId)
-                ->where('tgl_pembayaran', '<', $startStr)
-                ->sum('jumlah_bayar');
-
-            $openingExpense = Expense::where('office_id', $officeId)
-                ->where('akun_keuangan_id', $accountId)
-                ->where('tgl_biaya', '<', $startStr)
-                ->sum('jumlah');
-
-            $openingTransferIn = FinancialTransaction::where('office_id', $officeId)
-                ->where('to_account_id', $accountId)
-                ->where('status', 'posted')
-                ->whereIn('type', ['transfer', 'income'])
-                ->where('transaction_date', '<', $startStr)
-                ->sum('amount');
-
-            $openingTransferOut = FinancialTransaction::where('office_id', $officeId)
-                ->where('from_account_id', $accountId)
-                ->where('status', 'posted')
-                ->whereIn('type', ['transfer', 'expense'])
-                ->where('transaction_date', '<', $startStr)
-                ->sum('amount');
-
-            $openingDeliveryCost = DB::table('delivery_order_invoices')
-                ->where('chart_of_accounts_id', $accountId)
-                ->where('created_at', '<', $start)
-                ->sum('total_cost');
-
-            $balance = $openingIncome + $openingTransferIn - ($openingExpense + $openingTransferOut + $openingDeliveryCost);
+        return response()->streamDownload(function () use ($reportData, $start, $end) {
+            $balance = $reportData['opening_balance'];
 
             echo '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>';
             echo '<table border="1" style="border-collapse: collapse; width: 100%;">';
             echo '<thead>';
             echo '<tr><th></th><th colspan="7" style="text-align: center; font-weight: bold; font-size: 16px; border: 1px solid black;">LAPORAN KAS KECIL CV DE JAVANESE AUTO PARTS</th></tr>';
-            echo '<tr><th></th><th colspan="7" style="text-align: center; font-weight: bold; font-size: 14px; border: 1px solid black;">PERIODE '.$start->translatedFormat('d F Y').' - '.$end->translatedFormat('d F Y').'</th></tr>';
+            echo '<tr><th></th><th colspan="7" style="text-align: center; font-weight: bold; font-size: 14px; border: 1px solid black;">PERIODE ' . $start->translatedFormat('d F Y') . ' - ' . $end->translatedFormat('d F Y') . '</th></tr>';
             echo '<tr>
                     <th></th>
                     <th style="border: 1px solid black; font-weight: bold; text-align: center; width: 50px;">No</th>
@@ -87,119 +71,32 @@ class FinanceController extends Controller
             echo '<tr>
                     <td></td>
                     <td style="border: 1px solid black; text-align: center;">1</td>
-                    <td style="border: 1px solid black; text-align: center;">'.$start->format('M d, y').'</td>
+                    <td style="border: 1px solid black; text-align: center;">' . $start->format('M d, y') . '</td>
                     <td style="border: 1px solid black; text-align: center;">SALDO</td>
                     <td style="border: 1px solid black;">SISA SALDO</td>
-                    <td style="border: 1px solid black; text-align: right;">'.($balance > 0 ? 'Rp '.number_format($balance, 0, ',', '.') : '').'</td>
-                    <td style="border: 1px solid black; text-align: right;">'.($balance < 0 ? 'Rp '.number_format(abs($balance), 0, ',', '.') : '').'</td>
-                    <td style="border: 1px solid black; text-align: right;">Rp '.number_format($balance, 0, ',', '.').'</td>
+                    <td style="border: 1px solid black; text-align: right;">' . ($balance > 0 ? 'Rp ' . number_format($balance, 0, ',', '.') : '') . '</td>
+                    <td style="border: 1px solid black; text-align: right;">' . ($balance < 0 ? 'Rp ' . number_format(abs($balance), 0, ',', '.') : '') . '</td>
+                    <td style="border: 1px solid black; text-align: right;">Rp ' . number_format($balance, 0, ',', '.') . '</td>
                   </tr>';
 
-            $rows = [];
-
-            $payments = Payment::with(['invoice' => function ($q) {
-                $q->select('id', 'mitra_id', 'nomor_invoice', 'tipe_invoice');
-            }, 'invoice.mitra:id,nama'])
-                ->select('tgl_pembayaran', 'jumlah_bayar', 'invoice_id', 'nomor_pembayaran')
-                ->where('office_id', $officeId)
-                ->where('akun_keuangan_id', $accountId)
-                ->whereBetween('tgl_pembayaran', [$startStr, $endStr])
-                ->get();
-
-            foreach ($payments as $p) {
-                $isPurchase = ($p->invoice?->tipe_invoice === 'Purchase');
-                $rows[] = [
-                    'date' => $p->tgl_pembayaran,
-                    'account_name' => $isPurchase ? 'BEBAN' : 'PENDAPATAN',
-                    'description' => ($p->invoice?->mitra?->nama ?? 'Pembayaran') . ' - ' . ($p->invoice?->nomor_invoice ?? $p->nomor_pembayaran),
-                    'debit' => $isPurchase ? 0 : $p->jumlah_bayar,
-                    'credit' => $isPurchase ? $p->jumlah_bayar : 0,
-                ];
-            }
-
-            $expenses = Expense::select('tgl_biaya', 'nama_biaya', 'jumlah')
-                ->where('office_id', $officeId)
-                ->where('akun_keuangan_id', $accountId)
-                ->whereBetween('tgl_biaya', [$startStr, $endStr])
-                ->get();
-
-            foreach ($expenses as $e) {
-                $rows[] = [
-                    'date' => $e->tgl_biaya,
-                    'account_name' => 'BEBAN',
-                    'description' => $e->nama_biaya,
-                    'debit' => 0,
-                    'credit' => $e->jumlah,
-                ];
-            }
-
-            $transactions = FinancialTransaction::select('transaction_date', 'type', 'amount', 'description', 'to_account_id', 'from_account_id')
-                ->where('office_id', $officeId)
-                ->where('status', 'posted')
-                ->where(function ($q) use ($accountId) {
-                    $q->where('from_account_id', $accountId)->orWhere('to_account_id', $accountId);
-                })
-                ->whereBetween('transaction_date', [$startStr, $endStr])
-                ->get();
-
-            foreach ($transactions as $t) {
-                if ($t->to_account_id == $accountId && in_array($t->type, ['transfer', 'income'])) {
-                    $rows[] = [
-                        'date' => $t->transaction_date,
-                        'account_name' => 'DEPOSIT',
-                        'description' => $t->description ?? 'Penerimaan',
-                        'debit' => $t->amount,
-                        'credit' => 0,
-                    ];
-                } elseif ($t->from_account_id == $accountId && in_array($t->type, ['transfer', 'expense'])) {
-                    $rows[] = [
-                        'date' => $t->transaction_date,
-                        'account_name' => 'BEBAN',
-                        'description' => $t->description ?? 'Pengeluaran',
-                        'debit' => 0,
-                        'credit' => $t->amount,
-                    ];
-                }
-            }
-
-            $deliveryCosts = DB::table('delivery_order_invoices')
-                ->select('created_at', 'total_cost')
-                ->where('chart_of_accounts_id', $accountId)
-                ->whereBetween('created_at', [$start, $end])
-                ->get();
-
-            foreach ($deliveryCosts as $dc) {
-                $rows[] = [
-                    'date' => substr($dc->created_at, 0, 10),
-                    'account_name' => 'BEBAN PENGIRIMAN',
-                    'description' => 'Biaya Pengiriman DO',
-                    'debit' => 0,
-                    'credit' => $dc->total_cost,
-                ];
-            }
-
-            usort($rows, function ($a, $b) {
-                return strcmp($a['date'], $b['date']);
-            });
-
+            $iteration = 2;
             $totalDebit = 0;
             $totalCredit = 0;
-            $iteration = 2;
 
-            foreach ($rows as $row) {
+            foreach ($reportData['rows'] as $row) {
                 $totalDebit += $row['debit'];
                 $totalCredit += $row['credit'];
                 $balance += $row['debit'] - $row['credit'];
 
                 echo '<tr>';
                 echo '<td></td>';
-                echo '<td style="border: 1px solid black; text-align: center;">'.$iteration.'</td>';
-                echo '<td style="border: 1px solid black; text-align: center;">'.Carbon::parse($row['date'])->format('M d, y').'</td>';
-                echo '<td style="border: 1px solid black; text-align: center;">'.$row['account_name'].'</td>';
-                echo '<td style="border: 1px solid black;">'.$row['description'].'</td>';
-                echo '<td style="border: 1px solid black; text-align: right;">'.($row['debit'] ? 'Rp '.number_format($row['debit'], 0, ',', '.') : '').'</td>';
-                echo '<td style="border: 1px solid black; text-align: right;">'.($row['credit'] ? 'Rp '.number_format($row['credit'], 0, ',', '.') : '').'</td>';
-                echo '<td style="border: 1px solid black; text-align: right;">Rp '.number_format($balance, 0, ',', '.').'</td>';
+                echo '<td style="border: 1px solid black; text-align: center;">' . $iteration . '</td>';
+                echo '<td style="border: 1px solid black; text-align: center;">' . Carbon::parse($row['date'])->format('M d, y') . '</td>';
+                echo '<td style="border: 1px solid black; text-align: center;">' . $row['account_name'] . '</td>';
+                echo '<td style="border: 1px solid black;">' . $row['description'] . '</td>';
+                echo '<td style="border: 1px solid black; text-align: right;">' . ($row['debit'] ? 'Rp ' . number_format($row['debit'], 0, ',', '.') : '') . '</td>';
+                echo '<td style="border: 1px solid black; text-align: right;">' . ($row['credit'] ? 'Rp ' . number_format($row['credit'], 0, ',', '.') : '') . '</td>';
+                echo '<td style="border: 1px solid black; text-align: right;">Rp ' . number_format($balance, 0, ',', '.') . '</td>';
                 echo '</tr>';
                 $iteration++;
             }
@@ -207,13 +104,144 @@ class FinanceController extends Controller
             echo '<tr style="font-weight: bold; background-color: #f1f1f1;">';
             echo '<td></td>';
             echo '<td colspan="4" style="border: 1px solid black; text-align: center;">TOTAL</td>';
-            echo '<td style="border: 1px solid black; text-align: right;">Rp '.number_format($totalDebit, 0, ',', '.').'</td>';
-            echo '<td style="border: 1px solid black; text-align: right;">Rp '.number_format($totalCredit, 0, ',', '.').'</td>';
-            echo '<td style="border: 1px solid black; text-align: right;">Rp '.number_format($balance, 0, ',', '.').'</td>';
+            echo '<td style="border: 1px solid black; text-align: right;">Rp ' . number_format($totalDebit, 0, ',', '.') . '</td>';
+            echo '<td style="border: 1px solid black; text-align: right;">Rp ' . number_format($totalCredit, 0, ',', '.') . '</td>';
+            echo '<td style="border: 1px solid black; text-align: right;">Rp ' . number_format($balance, 0, ',', '.') . '</td>';
             echo '</tr>';
 
             echo '</tbody></table></body></html>';
         }, $filename);
+    }
+
+    private function getReportData($officeId, $accountId, $start, $end)
+    {
+        $startStr = $start->toDateString();
+        $endStr = $end->toDateString();
+
+        $openingIncome = Payment::where('office_id', $officeId)
+            ->where('akun_keuangan_id', $accountId)
+            ->where('tgl_pembayaran', '<', $startStr)
+            ->sum('jumlah_bayar');
+
+        $openingExpense = Expense::where('office_id', $officeId)
+            ->where('akun_keuangan_id', $accountId)
+            ->where('tgl_biaya', '<', $startStr)
+            ->sum('jumlah');
+
+        $openingTransferIn = FinancialTransaction::where('office_id', $officeId)
+            ->where('to_account_id', $accountId)
+            ->where('status', 'posted')
+            ->whereIn('type', ['transfer', 'income'])
+            ->where('transaction_date', '<', $startStr)
+            ->sum('amount');
+
+        $openingTransferOut = FinancialTransaction::where('office_id', $officeId)
+            ->where('from_account_id', $accountId)
+            ->where('status', 'posted')
+            ->whereIn('type', ['transfer', 'expense'])
+            ->where('transaction_date', '<', $startStr)
+            ->sum('amount');
+
+        $openingDeliveryCost = DB::table('delivery_order_invoices')
+            ->where('chart_of_accounts_id', $accountId)
+            ->where('created_at', '<', $start)
+            ->sum('total_cost');
+
+        $openingBalance = $openingIncome + $openingTransferIn - ($openingExpense + $openingTransferOut + $openingDeliveryCost);
+
+        $rows = [];
+
+        $payments = Payment::with([
+            'invoice' => function ($q) {
+                $q->select('id', 'mitra_id', 'nomor_invoice', 'tipe_invoice');
+            }, 'invoice.mitra:id,nama'
+        ])
+            ->select('tgl_pembayaran', 'jumlah_bayar', 'invoice_id', 'nomor_pembayaran')
+            ->where('office_id', $officeId)
+            ->where('akun_keuangan_id', $accountId)
+            ->whereBetween('tgl_pembayaran', [$startStr, $endStr])
+            ->get();
+
+        foreach ($payments as $p) {
+            $isPurchase = ($p->invoice?->tipe_invoice === 'Purchase');
+            $rows[] = [
+                'date' => $p->tgl_pembayaran,
+                'account_name' => $isPurchase ? 'BEBAN' : 'PENDAPATAN',
+                'description' => ($p->invoice?->mitra?->nama ?? 'Pembayaran') . ' - ' . ($p->invoice?->nomor_invoice ?? $p->nomor_pembayaran),
+                'debit' => $isPurchase ? 0 : $p->jumlah_bayar,
+                'credit' => $isPurchase ? $p->jumlah_bayar : 0,
+            ];
+        }
+
+        $expenses = Expense::select('tgl_biaya', 'nama_biaya', 'jumlah')
+            ->where('office_id', $officeId)
+            ->where('akun_keuangan_id', $accountId)
+            ->whereBetween('tgl_biaya', [$startStr, $endStr])
+            ->get();
+
+        foreach ($expenses as $e) {
+            $rows[] = [
+                'date' => $e->tgl_biaya,
+                'account_name' => 'BEBAN',
+                'description' => $e->nama_biaya,
+                'debit' => 0,
+                'credit' => $e->jumlah,
+            ];
+        }
+
+        $transactions = FinancialTransaction::select('transaction_date', 'type', 'amount', 'description', 'to_account_id', 'from_account_id')
+            ->where('office_id', $officeId)
+            ->where('status', 'posted')
+            ->where(function ($q) use ($accountId) {
+                $q->where('from_account_id', $accountId)->orWhere('to_account_id', $accountId);
+            })
+            ->whereBetween('transaction_date', [$startStr, $endStr])
+            ->get();
+
+        foreach ($transactions as $t) {
+            if ($t->to_account_id == $accountId && in_array($t->type, ['transfer', 'income'])) {
+                $rows[] = [
+                    'date' => $t->transaction_date,
+                    'account_name' => 'DEPOSIT',
+                    'description' => $t->description ?? 'Penerimaan',
+                    'debit' => $t->amount,
+                    'credit' => 0,
+                ];
+            } elseif ($t->from_account_id == $accountId && in_array($t->type, ['transfer', 'expense'])) {
+                $rows[] = [
+                    'date' => $t->transaction_date,
+                    'account_name' => 'BEBAN',
+                    'description' => $t->description ?? 'Pengeluaran',
+                    'debit' => 0,
+                    'credit' => $t->amount,
+                ];
+            }
+        }
+
+        $deliveryCosts = DB::table('delivery_order_invoices')
+            ->select('created_at', 'total_cost')
+            ->where('chart_of_accounts_id', $accountId)
+            ->whereBetween('created_at', [$start, $end])
+            ->get();
+
+        foreach ($deliveryCosts as $dc) {
+            $rows[] = [
+                'date' => substr($dc->created_at, 0, 10),
+                'account_name' => 'BEBAN PENGIRIMAN',
+                'description' => 'Biaya Pengiriman DO',
+                'debit' => 0,
+                'credit' => $dc->total_cost,
+            ];
+        }
+
+        usort($rows, function ($a, $b) {
+            return strcmp($a['date'], $b['date']);
+        });
+
+        return [
+            'opening_balance' => $openingBalance,
+            'rows' => $rows
+        ];
     }
 
     public function index(Request $request)

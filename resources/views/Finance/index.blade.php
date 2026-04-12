@@ -79,7 +79,13 @@
                                                             class="badge bg-light text-secondary border">{{ $account->code }}</span>
                                                     </div>
                                                 </div>
-                                                <div class="dropdown">
+                                                <div class="d-flex align-items-center">
+                                                    <button class="btn btn-icon btn-sm btn-light rounded-circle me-2"
+                                                        type="button" title="Export Laporan"
+                                                        onclick="openPreviewModal({{ $account->id }}, '{{ $account->name }}')">
+                                                        <i class="iconoir-page-search"></i>
+                                                    </button>
+                                                    <div class="dropdown">
                                                     <button class="btn btn-icon btn-sm btn-light rounded-circle"
                                                         type="button" data-bs-toggle="dropdown">
                                                         <i class="iconoir-more-vert"></i>
@@ -112,6 +118,7 @@
                                                     </ul>
                                                 </div>
                                             </div>
+                                        </div>
 
                                             <!-- Chart Container -->
                                             <div id="chart-{{ $account->id }}"
@@ -122,14 +129,14 @@
                                                     <div class="col-6">
                                                         <div class="p-2 bg-success bg-opacity-10 rounded-3 text-center">
                                                             <small class="text-muted d-block mb-1">Pemasukan</small>
-                                                            <span class="fw-bold text-success small">Rp
+                                                            <span class="fw-bold text-success small text-nowrap">Rp
                                                                 {{ number_format($account->income_lain, 0, ',', '.') }}</span>
                                                         </div>
                                                     </div>
                                                     <div class="col-6">
                                                         <div class="p-2 bg-danger bg-opacity-10 rounded-3 text-center">
                                                             <small class="text-muted d-block mb-1">Pengeluaran</small>
-                                                            <span class="fw-bold text-danger small">Rp
+                                                            <span class="fw-bold text-danger small text-nowrap">Rp
                                                                 {{ number_format($account->expense_lain, 0, ',', '.') }}</span>
                                                         </div>
                                                     </div>
@@ -510,6 +517,110 @@
                             'Unknown error'));
                     }
                 });
+            }
+
+            // Report Preview & Export
+            let currentPreviewAccountId = null;
+
+            function openPreviewModal(id, name) {
+                currentPreviewAccountId = id;
+                document.getElementById('preview-account-name').textContent = name;
+
+                // Reset dates to current month
+                const now = new Date();
+                const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+                const today = now.toISOString().split('T')[0];
+
+                document.getElementById('preview-start-date').value = firstDay;
+                document.getElementById('preview-end-date').value = today;
+
+                const modal = new bootstrap.Modal(document.getElementById('modalPreviewReport'));
+                modal.show();
+
+                fetchPreviewData();
+            }
+
+            function fetchPreviewData() {
+                const start = document.getElementById('preview-start-date').value;
+                const end = document.getElementById('preview-end-date').value;
+
+                $('#preview-loading').removeClass('d-none');
+                $('#preview-table').addClass('d-none');
+
+                $.ajax({
+                    url: "{{ route('finance.preview') }}",
+                    type: "GET",
+                    data: {
+                        account_id: currentPreviewAccountId,
+                        start_date: start,
+                        end_date: end
+                    },
+                    success: function(res) {
+                        if (res.success) {
+                            renderPreviewTable(res.data, start);
+                        }
+                    },
+                    complete: function() {
+                        $('#preview-loading').addClass('d-none');
+                        $('#preview-table').removeClass('d-none');
+                    }
+                });
+            }
+
+            function renderPreviewTable(data, start) {
+                const body = document.getElementById('preview-body');
+                body.innerHTML = '';
+
+                let balance = data.opening_balance;
+                let totalDebit = 0;
+                let totalCredit = 0;
+
+                // Opening Balance Row
+                body.innerHTML += `
+                    <tr class="table-light">
+                        <td class="text-center">1</td>
+                        <td>${new Date(start).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'2-digit'})}</td>
+                        <td class="fw-bold">SALDO AWAL</td>
+                        <td class="text-end">${balance > 0 ? formatIDR(balance) : ''}</td>
+                        <td class="text-end">${balance < 0 ? formatIDR(Math.abs(balance)) : ''}</td>
+                        <td class="text-end fw-bold">${formatIDR(balance)}</td>
+                    </tr>
+                `;
+
+                data.rows.forEach((row, index) => {
+                    totalDebit += row.debit;
+                    totalCredit += row.credit;
+                    balance += (row.debit - row.credit);
+
+                    body.innerHTML += `
+                        <tr>
+                            <td class="text-center">${index + 2}</td>
+                            <td>${new Date(row.date).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'2-digit'})}</td>
+                            <td>
+                                <div class="fw-bold small">${row.account_name}</div>
+                                <div class="text-muted" style="font-size: 11px;">${row.description}</div>
+                            </td>
+                            <td class="text-end text-success">${row.debit ? formatIDR(row.debit) : ''}</td>
+                            <td class="text-end text-danger">${row.credit ? formatIDR(row.credit) : ''}</td>
+                            <td class="text-end">${formatIDR(balance)}</td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('total-debit').textContent = formatIDR(totalDebit);
+                document.getElementById('total-credit').textContent = formatIDR(totalCredit);
+                document.getElementById('final-balance').textContent = formatIDR(balance);
+            }
+
+            function downloadReport() {
+                const start = document.getElementById('preview-start-date').value;
+                const end = document.getElementById('preview-end-date').value;
+                const url = `{{ route('finance.export') }}?account_id=${currentPreviewAccountId}&start_date=${start}&end_date=${end}`;
+                window.location.href = url;
+            }
+
+            function formatIDR(val) {
+                return "Rp " + new Intl.NumberFormat('id-ID').format(val);
             }
 
             // AJAX Filter & Pagination
