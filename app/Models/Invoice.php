@@ -65,6 +65,11 @@ class Invoice extends Model
         return $this->hasMany(DeliveryOrderInvoice::class);
     }
 
+    public function activities()
+    {
+        return $this->hasMany(ActivityLog::class, 'data_id')->where('tabel_terkait', $this->getTable())->latest();
+    }
+
     public function approvals()
     {
         return $this->hasMany(InvoiceApprovalDetail::class);
