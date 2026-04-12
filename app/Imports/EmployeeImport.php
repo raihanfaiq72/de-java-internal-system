@@ -20,6 +20,8 @@ class EmployeeImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
 {
     protected $officeId;
     protected $userId;
+    protected $processedCount = 0;
+    public static $mandatoryHeaders = ['name', 'position', 'daily_salary'];
 
     public function __construct($officeId, $userId)
     {
@@ -40,7 +42,7 @@ class EmployeeImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
                 if ($user) {
                     $user->notify(new SystemNotification(
                         'Import Karyawan Selesai',
-                        'Proses import data karyawan telah berhasil diselesaikan.',
+                        "Proses import data karyawan telah berhasil diselesaikan. {$this->processedCount} karyawan dimasukkan.",
                         route('import.index'),
                         'success'
                     ));
@@ -82,6 +84,16 @@ class EmployeeImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
 
         try {
             $officeId = $this->officeId;
+
+            // 1. Validate Header (Strict Check)
+            if ($rows->isEmpty()) return;
+            $firstRow = $rows->first();
+            $requiredColumns = ['name', 'position', 'daily_salary'];
+            foreach ($requiredColumns as $col) {
+                if (!isset($firstRow[$col]) && !array_key_exists($col, $firstRow->toArray())) {
+                    throw new \Exception("Template tidak sesuai. Kolom wajib '$col' tidak ditemukan di tab Karyawan.");
+                }
+            }
 
             foreach ($rows as $row) {
                 $name = $row['name'] ?? $row['nama'] ?? $row['nama_karyawan'] ?? null;
@@ -141,6 +153,7 @@ class EmployeeImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
                         'status' => $status,
                     ]
                 );
+                $this->processedCount++;
             }
         } catch (\Throwable $e) {
             Log::error('EmployeeImport Error: ' . $e->getMessage());

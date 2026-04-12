@@ -32,6 +32,8 @@ class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
 {
     protected $officeId;
     protected $userId;
+    protected $processedCount = 0;
+    public static $mandatoryHeaders = ['number', 'supplier', 'product_name'];
 
     public function __construct($officeId, $userId)
     {
@@ -52,7 +54,7 @@ class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
                 if ($user) {
                     $user->notify(new SystemNotification(
                         'Import Purchase Selesai',
-                        'Proses import data purchase telah berhasil diselesaikan.',
+                        "Proses import data pembelian telah berhasil diselesaikan. {$this->processedCount} invoice dimasukkan.",
                         route('import.index'),
                         'success'
                     ));
@@ -144,6 +146,16 @@ class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
                     'nama_akun' => 'Persediaan Barang',
                     'is_kas_bank' => 0,
                 ]);
+            }
+
+            // 1. Validate Header (Strict Check)
+            if ($rows->isEmpty()) return;
+            $firstRow = $rows->first();
+            $requiredColumns = ['number', 'supplier', 'product_name'];
+            foreach ($requiredColumns as $col) {
+                if (!isset($firstRow[$col]) && !array_key_exists($col, $firstRow->toArray())) {
+                    throw new \Exception("Template tidak sesuai. Kolom wajib '$col' tidak ditemukan di tab Pembelian.");
+                }
             }
 
             // Group rows by Invoice Number to handle multiple items per invoice
@@ -311,6 +323,7 @@ class PurchaseImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
                 }
 
                 $invoice->save();
+                $this->processedCount++;
 
                 // 5. Automatic Stock & Journal Entry
                 if ($invoice->status_dok === 'Approved') {
