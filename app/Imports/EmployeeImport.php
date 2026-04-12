@@ -4,23 +4,26 @@ namespace App\Imports;
 
 use App\Models\Employee;
 use App\Models\User;
+use App\Notifications\SystemNotification;
+use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use App\Notifications\SystemNotification;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
 
-class EmployeeImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChunkReading, WithEvents
+class EmployeeImport implements ShouldQueue, ToCollection, WithChunkReading, WithEvents, WithHeadingRow
 {
     protected $officeId;
+
     protected $userId;
+
     protected $processedCount = 0;
+
     public static $mandatoryHeaders = ['name', 'position', 'daily_salary'];
 
     public function __construct($officeId, $userId)
@@ -37,7 +40,7 @@ class EmployeeImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
     public function registerEvents(): array
     {
         return [
-            AfterImport::class => function(AfterImport $event) {
+            AfterImport::class => function (AfterImport $event) {
                 $user = User::find($this->userId);
                 if ($user) {
                     $user->notify(new SystemNotification(
@@ -48,17 +51,17 @@ class EmployeeImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
                     ));
                 }
             },
-            ImportFailed::class => function(ImportFailed $event) {
+            ImportFailed::class => function (ImportFailed $event) {
                 $user = User::find($this->userId);
                 if ($user) {
                     $user->notify(new SystemNotification(
                         'Import Karyawan Gagal',
-                        'Terjadi kesalahan saat import data karyawan: ' . $event->getException()->getMessage(),
+                        'Terjadi kesalahan saat import data karyawan: '.$event->getException()->getMessage(),
                         route('import.index'),
                         'error'
                     ));
                 }
-                Log::error('EmployeeImport Failed Event: ' . $event->getException()->getMessage());
+                Log::error('EmployeeImport Failed Event: '.$event->getException()->getMessage());
             },
         ];
     }
@@ -69,12 +72,12 @@ class EmployeeImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
         if ($user) {
             $user->notify(new SystemNotification(
                 'Import Karyawan Gagal',
-                'Job import gagal diproses: ' . $e->getMessage(),
+                'Job import gagal diproses: '.$e->getMessage(),
                 route('import.index'),
                 'error'
             ));
         }
-        Log::error('EmployeeImport Job Failed: ' . $e->getMessage());
+        Log::error('EmployeeImport Job Failed: '.$e->getMessage());
     }
 
     public function collection(Collection $rows)
@@ -86,19 +89,23 @@ class EmployeeImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
             $officeId = $this->officeId;
 
             // 1. Validate Header (Strict Check)
-            if ($rows->isEmpty()) return;
+            if ($rows->isEmpty()) {
+                return;
+            }
             $firstRow = $rows->first();
             $requiredColumns = ['name', 'position', 'daily_salary'];
             foreach ($requiredColumns as $col) {
-                if (!isset($firstRow[$col]) && !array_key_exists($col, $firstRow->toArray())) {
+                if (! isset($firstRow[$col]) && ! array_key_exists($col, $firstRow->toArray())) {
                     throw new \Exception("Template tidak sesuai. Kolom wajib '$col' tidak ditemukan di tab Karyawan.");
                 }
             }
 
             foreach ($rows as $row) {
                 $name = $row['name'] ?? $row['nama'] ?? $row['nama_karyawan'] ?? null;
-                
-                if (!$name) continue;
+
+                if (! $name) {
+                    continue;
+                }
 
                 // Generate NIK if not provided
                 $nik = $row['nik'] ?? $row['no_induk'] ?? $this->generateNIK($officeId);
@@ -120,18 +127,32 @@ class EmployeeImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
                     $status = 'Active'; // Default to Active
                 }
 
-                // Find or create user if user_id is provided or email exists
+                // Find or create user
                 $userId = null;
+                $username = $row['username'] ?? $row['user_name'] ?? null;
                 $email = $row['email'] ?? $row['user_email'] ?? null;
-                if ($email) {
-                    $user = User::where('email', $email)->first();
-                    if (!$user) {
+
+                if (! $username && $name) {
+                    $username = str_replace(' ', '.', strtolower(trim($name)));
+                }
+
+                if ($username || $email) {
+                    $user = User::where(function ($q) use ($username, $email) {
+                        if ($username) {
+                            $q->where('username', $username);
+                        }
+                        if ($email) {
+                            $q->orWhere('email', $email);
+                        }
+                    })->first();
+
+                    if (! $user) {
                         // Create a basic user account
                         $user = User::create([
                             'name' => $name,
-                            'email' => $email,
-                            'password' => bcrypt('password123'), // Default password, should be changed
-                            'office_id' => $officeId,
+                            'username' => $username,
+                            'email' => $email ?? ($username.'@example.com'),
+                            'password' => bcrypt('password123'), // Default password
                             'email_verified_at' => now(),
                         ]);
                     }
@@ -140,7 +161,6 @@ class EmployeeImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
 
                 Employee::updateOrCreate(
                     [
-                        'office_id' => $officeId,
                         'nik' => $nik,
                     ],
                     [
@@ -156,7 +176,7 @@ class EmployeeImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
                 $this->processedCount++;
             }
         } catch (\Throwable $e) {
-            Log::error('EmployeeImport Error: ' . $e->getMessage());
+            Log::error('EmployeeImport Error: '.$e->getMessage());
             Log::error($e->getTraceAsString());
             throw $e;
         }
@@ -165,8 +185,7 @@ class EmployeeImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
     private function generateNIK($officeId)
     {
         // Find the highest NIK number in EMP-XXXXX format
-        $lastEmployee = Employee::where('office_id', $officeId)
-            ->where('nik', 'like', 'EMP-%')
+        $lastEmployee = Employee::where('nik', 'like', 'EMP-%')
             ->orderByRaw('CAST(SUBSTRING(nik, 5) AS UNSIGNED) DESC')
             ->first();
 
@@ -179,8 +198,8 @@ class EmployeeImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
 
         // Ensure uniqueness
         do {
-            $code = 'EMP-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
-            $exists = Employee::where('office_id', $officeId)->where('nik', $code)->exists();
+            $code = 'EMP-'.str_pad($nextId, 5, '0', STR_PAD_LEFT);
+            $exists = Employee::where('nik', $code)->exists();
             if ($exists) {
                 $nextId++;
             }
@@ -191,55 +210,75 @@ class EmployeeImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
 
     private function parseDate($value)
     {
-        if (!$value) return null;
-        
-        if ($value instanceof \Carbon\Carbon) {
+        if (! $value) {
+            return null;
+        }
+
+        if ($value instanceof Carbon) {
             return $value;
         }
-        
+
         if (is_string($value)) {
             try {
                 // Handle various date formats
                 if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
-                    return \Carbon\Carbon::createFromFormat('Y-m-d', $value);
+                    return Carbon::createFromFormat('Y-m-d', $value);
                 } elseif (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $value)) {
-                    return \Carbon\Carbon::createFromFormat('d/m/Y', $value);
+                    return Carbon::createFromFormat('d/m/Y', $value);
                 } elseif (preg_match('/^\d{2}-\d{2}-\d{4}$/', $value)) {
-                    return \Carbon\Carbon::createFromFormat('d-m-Y', $value);
+                    return Carbon::createFromFormat('d-m-Y', $value);
                 } else {
                     // Try to parse with Carbon's flexible parsing
-                    return \Carbon\Carbon::parse($value);
+                    return Carbon::parse($value);
                 }
             } catch (\Exception $e) {
-                Log::warning('Could not parse date: ' . $value);
+                Log::warning('Could not parse date: '.$value);
+
                 return null;
             }
         }
-        
+
         return null;
     }
 
     private function parseNumber($value)
     {
-        if (is_numeric($value)) return $value;
-        if (is_string($value)) {
-            // Handle "=0" case or other excel formula artifacts
-            if (strpos($value, '=') === 0) {
-                $value = substr($value, 1);
-            }
-            
-            // Remove currency symbols, dots (thousand separator), replace comma with dot
-            $clean = preg_replace('/[^0-9,.-]/', '', $value);
-            
-            // Assuming Indonesian format: 1.000,00
-            // If it contains comma, replace dot with nothing, comma with dot
-            if (strpos($clean, ',') !== false) {
+        if (is_numeric($value)) {
+            return (float) $value;
+        }
+        if (! $value) {
+            return 0;
+        }
+
+        $clean = str_replace(['Rp', ' ', "\xc2\xa0"], '', $value);
+        $clean = preg_replace('/[^0-9,.-]/', '', $clean);
+
+        $lastDot = strrpos($clean, '.');
+        $lastComma = strrpos($clean, ',');
+
+        if ($lastDot !== false && $lastComma !== false) {
+            if ($lastComma > $lastDot) {
+                // Format 1.000,00 (IDR)
                 $clean = str_replace('.', '', $clean);
                 $clean = str_replace(',', '.', $clean);
+            } else {
+                // Format 1,000.00 (EN)
+                $clean = str_replace(',', '', $clean);
             }
-            
-            return (float) $clean;
+        } elseif ($lastDot !== false) {
+            // Hanya ada titik.
+            if (substr_count($clean, '.') > 1 || strlen(substr($clean, $lastDot + 1)) === 3) {
+                $clean = str_replace('.', '', $clean);
+            }
+        } elseif ($lastComma !== false) {
+            // Hanya ada koma.
+            if (substr_count($clean, ',') > 1 || strlen(substr($clean, $lastComma + 1)) === 3) {
+                $clean = str_replace(',', '', $clean);
+            } else {
+                $clean = str_replace(',', '.', $clean);
+            }
         }
-        return 0;
+
+        return (float) $clean;
     }
 }

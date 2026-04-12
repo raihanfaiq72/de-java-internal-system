@@ -182,9 +182,11 @@ class SalesImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
                     // Extract entity if possible to match better
                     $cleanName = $partnerName;
                     $badanUsaha = '-';
-                    $pattern = '/^(PT|CV|UD|Fa|Firma|Yayasan|Koperasi|Perum|Perjan|Persero)\.?\s+/i';
+                    // Comprehensive list of prefixes: PT, CV, UD, Fa, Firma, Yayasan, Koperasi, Perum, Perjan, Persero
+                    // Case insensitive and handles dots/spaces
+                    $pattern = '/^(PT|CV|UD|Fa|Firma|Yayasan|Koperasi|Perum|Perjan|Persero)[.\s]+/i';
                     if (preg_match($pattern, $partnerName, $matches)) {
-                        $badanUsaha = strtoupper($matches[1]);
+                        $badanUsaha = strtoupper(trim($matches[1], '. '));
                         $cleanName = trim(preg_replace($pattern, '', $partnerName, 1));
                     }
 
@@ -339,14 +341,17 @@ class SalesImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
                     // For now, let's trust calculation based on items to be consistent.
                 }
                 
-                // Map amount_due to status_pembayaran
+                // Map amount_due to status_pembayaran (with rounding to fix precision matching)
                 $amountDue = $this->parseNumber($firstRow['amount_due'] ?? $invoice->total_akhir);
-                if ($amountDue == 0) {
+                $roundedDue = round($amountDue, 2);
+                $roundedTotal = round($invoice->total_akhir, 2);
+
+                if ($roundedDue <= 0) {
                     $invoice->status_pembayaran = 'Paid';
-                } elseif ($amountDue < $invoice->total_akhir) {
-                    $invoice->status_pembayaran = 'Partially Paid';
-                } else {
+                } elseif ($roundedDue >= $roundedTotal) {
                     $invoice->status_pembayaran = 'Unpaid';
+                } else {
+                    $invoice->status_pembayaran = 'Partially Paid';
                 }
 
                 $invoice->save();
@@ -407,21 +412,40 @@ class SalesImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
 
     private function parseNumber($value)
     {
-        if (is_numeric($value)) return $value;
-        if (is_string($value)) {
-            if (strpos($value, '=') === 0) $value = substr($value, 1);
-            $clean = preg_replace('/[^0-9,.-]/', '', $value);
-            if (strpos($clean, ',') !== false && strpos($clean, '.') !== false) {
-                 // 1.000,00 -> 1000.00
-                 $clean = str_replace('.', '', $clean);
-                 $clean = str_replace(',', '.', $clean);
-            } elseif (strpos($clean, ',') !== false) {
-                 // 1000,00 -> 1000.00
-                 $clean = str_replace(',', '.', $clean);
+        if (is_numeric($value)) return (float)$value;
+        if (!$value) return 0;
+        
+        $clean = str_replace(['Rp', ' ', "\xc2\xa0"], '', $value);
+        $clean = preg_replace('/[^0-9,.-]/', '', $clean);
+        
+        $lastDot = strrpos($clean, '.');
+        $lastComma = strrpos($clean, ',');
+        
+        if ($lastDot !== false && $lastComma !== false) {
+            if ($lastComma > $lastDot) {
+                // Format 1.000,00 (IDR)
+                $clean = str_replace('.', '', $clean);
+                $clean = str_replace(',', '.', $clean);
+            } else {
+                // Format 1,000.00 (EN)
+                $clean = str_replace(',', '', $clean);
             }
-            return (float) $clean;
+        } elseif ($lastDot !== false) {
+            // Hanya ada titik. Cek apakah ini ribuan atau desimal.
+            // Heuristik: jika titik ada lebih dari satu, atau diikuti 3 digit, anggap ribuan.
+            if (substr_count($clean, '.') > 1 || strlen(substr($clean, $lastDot + 1)) === 3) {
+                $clean = str_replace('.', '', $clean);
+            }
+        } elseif ($lastComma !== false) {
+            // Hanya ada koma.
+            if (substr_count($clean, ',') > 1 || strlen(substr($clean, $lastComma + 1)) === 3) {
+                $clean = str_replace(',', '', $clean);
+            } else {
+                $clean = str_replace(',', '.', $clean);
+            }
         }
-        return 0;
+        
+        return (float) $clean;
     }
 
     private function generateNomorMitra($officeId)
@@ -470,17 +494,7 @@ class SalesImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
             return $user->id;
         }
 
-        // Create new user if not found
-        $username = strtolower(str_replace(' ', '', $cleanName)) . date('dmY');
-        $password = date('dmY'); // Format DDMMYYYY
-        
-        $newUser = User::create([
-            'name' => $cleanName,
-            'username' => $username,
-            'email' => $username . '@example.com',
-            'password' => bcrypt($password),
-        ]);
-
-        return $newUser->id;
+        // If not found, default to the user performing the import
+        return $this->userId;
     }
 }

@@ -124,31 +124,22 @@
                                         <textarea id="modal_alamat" class="form-control f-input" rows="3"
                                             placeholder="Masukkan alamat lengkap..." required></textarea>
 
-                                        <!-- Map Section -->
-                                        <div class="mt-3">
-                                            <label class="f-label d-flex justify-content-between align-items-center">
-                                                <span>Lokasi Peta</span>
-                                                <button type="button"
-                                                    class="btn btn-sm btn-link text-decoration-none p-0 fw-bold"
-                                                    onclick="geocodeAddress()" style="font-size: 11px;">
-                                                    <i class="fa fa-search-location me-1"></i>Cari dari Alamat
-                                                </button>
-                                            </label>
-                                            <div id="mitraMap" class="w-100 rounded-3 border"
-                                                style="height: 250px; z-index: 0;"></div>
-                                            <div class="row g-2 mt-2">
-                                                <div class="col-6">
-                                                    <input type="text" id="modal_latitude"
-                                                        class="form-control f-input bg-light" placeholder="Latitude"
-                                                        readonly>
-                                                </div>
-                                                <div class="col-6">
-                                                    <input type="text" id="modal_longitude"
-                                                        class="form-control f-input bg-light" placeholder="Longitude"
-                                                        readonly>
-                                                </div>
+                                            <!-- Map Section -->
+                                            <div class="mt-3">
+                                                <label class="f-label d-flex justify-content-between align-items-center">
+                                                    <span>Lokasi Peta</span>
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-link text-decoration-none p-0 fw-bold"
+                                                        onclick="geocodeAddress()" style="font-size: 11px;">
+                                                        <i class="fa fa-search-location me-1"></i>Cari dari Alamat
+                                                    </button>
+                                                </label>
+                                                <div id="mitraMap" class="w-100 rounded-3 border"
+                                                    style="height: 250px; z-index: 0;"></div>
+                                                
+                                                <input type="hidden" id="modal_latitude">
+                                                <input type="hidden" id="modal_longitude">
                                             </div>
-                                        </div>
                                     </div>
 
                                     <div class="row g-3 mt-1">
@@ -265,8 +256,12 @@
 
     function fixLeafletDefaultIcon() {
         if (leafletIconFixed) return;
+        if (!window.L || !L.Icon) {
+            setTimeout(fixLeafletDefaultIcon, 200);
+            return;
+        }
         leafletIconFixed = true;
-        if (!window.L || !L.Icon || !L.Icon.Default) return;
+        delete L.Icon.Default.prototype._getIconUrl;
         L.Icon.Default.mergeOptions({
             iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
             iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
