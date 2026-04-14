@@ -451,10 +451,8 @@
             loadStockDashboard();
             loadStockData();
             loadLocations(); // For filter dropdown
+            fetchCategories(); // Load categories for filter dropdown
             loadMutationData();
-
-            // Initial load of categories for filter
-            fetchCategories();
         });
 
         // --- DASHBOARD & STATS ---
@@ -876,12 +874,23 @@
                 .then(res => res.json())
                 .then(data => {
                     const select = document.getElementById('filter-stock-kategori');
-                    data.data.forEach(cat => {
-                        const opt = document.createElement('option');
-                        opt.value = cat.id;
-                        opt.textContent = cat.nama_kategori;
-                        select.appendChild(opt);
-                    });
+                    
+                    // Clear existing options except first one
+                    select.innerHTML = '<option value="">Semua Kategori</option>';
+                    
+                    // Add categories
+                    if (data.success && data.data) {
+                        const categories = data.data.data || data.data;
+                        categories.forEach(cat => {
+                            const opt = document.createElement('option');
+                            opt.value = cat.id;
+                            opt.textContent = cat.nama_kategori;
+                            select.appendChild(opt);
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to load categories:', err);
                 });
         }
 
