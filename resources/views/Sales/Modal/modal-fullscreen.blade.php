@@ -77,7 +77,7 @@
                                                     <label class="f-label">Nomor Invoice</label>
                                                     <input type="text" id="modal_nomor_invoice"
                                                         class="form-control f-input fw-bold bg-light text-primary"
-                                                        readonly placeholder="Auto Generated">
+                                                         placeholder="Auto Generated">
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="f-label">Referensi / PO</label>
