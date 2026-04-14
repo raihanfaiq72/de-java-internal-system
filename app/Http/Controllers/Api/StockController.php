@@ -27,7 +27,8 @@ class StockController extends Controller
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('nama_produk', 'LIKE', "%{$request->search}%")
-                    ->orWhere('sku_kode', 'LIKE', "%{$request->search}%");
+                    ->orWhere('sku_kode', 'LIKE', "%{$request->search}%")
+                    ->orWhere('kode_produk', 'LIKE', "%{$request->search}%");
             });
         }
 
@@ -35,7 +36,8 @@ class StockController extends Controller
             $query->where('product_category_id', $request->category);
         }
 
-        $query->where('track_stock', true);
+        // Hapus filter track_stock agar semua produk muncul
+        // $query->where('track_stock', true);
 
         if ($request->location_id) {
             $query->withSum(['stock_mutations as location_qty' => function ($q) use ($request) {
@@ -52,11 +54,11 @@ class StockController extends Controller
             ]);
         }
 
-        $perPage = $request->get('per_page', 10);
-        if ($perPage >= 1000) {
+        // Untuk modal pemilihan produk, load semua data tanpa pagination
+        if ($request->get('all', false) || $request->get('per_page', 10) >= 1000) {
             $data = $query->latest()->get();
         } else {
-            $data = $query->latest()->paginate($perPage)->withQueryString();
+            $data = $query->latest()->paginate($request->get('per_page', 10))->withQueryString();
         }
 
         return apiResponse(true, 'Data stok produk', $data);

@@ -23,18 +23,18 @@
                         <div class="card-header bg-white border-bottom">
                             <h5 class="mb-0">
                                 <i class="fas fa-laptop-code text-primary me-2"></i>
-                                Client-Side PDF to Excel Converter
+                                Convert PDF Kuitansi Penjualan ke Excel (Client-Side)
                             </h5>
                         </div>
                         <div class="card-body">
                             <div class="alert alert-success mb-4">
-                                <h6><i class="fas fa-info-circle me-2"></i>Keuntungan Client-Side:</h6>
+                                <h6><i class="fas fa-info-circle me-2"></i>Convert PDF Kuitansi Penjualan ke Excel:</h6>
                                 <ul class="mb-0">
-                                    <li>✅ Tidak perlu edit php.ini</li>
-                                    <li>✅ Tidak ada batasan file upload</li>
-                                    <li>✅ Proses langsung di browser</li>
-                                    <li>✅ Data tidak terupload ke server (privasi)</li>
-                                    <li>✅ Bisa handle ribuan file</li>
+                                    <li>📄 Upload file PDF kuitansi penjualan</li>
+                                    <li>🔍 Extract data: Payment No, Invoice No, Amount, Payment Date</li>
+                                    <li>📊 Generate Excel siap import ke sistem</li>
+                                    <li>🚀 Proses 100% client-side (tidak perlu edit php.ini)</li>
+                                    <li>🔒 Data aman, tidak terupload ke server</li>
                                 </ul>
                             </div>
 
@@ -42,19 +42,19 @@
                             <div class="border rounded-3 p-4 bg-light mb-4">
                                 <h6 class="fw-bold mb-3">
                                     <span class="badge bg-primary me-2">STEP 1</span>
-                                    Upload File PDF (Client-Side Processing)
+                                    Upload File PDF Kuitansi Penjualan
                                 </h6>
                                 
                                 <div class="mb-3">
-                                    <label for="file_pdf_client" class="form-label fw-bold">Pilih File PDF Kuitansi</label>
+                                    <label for="file_pdf_client" class="form-label fw-bold">Pilih File PDF Kuitansi Penjualan</label>
                                     <input class="form-control" type="file" id="file_pdf_client" multiple required accept=".pdf" onchange="updateClientPdfCount()">
                                     <div class="form-text">
                                         <span id="client-pdf-count-info">Bisa pilih banyak file sekaligus (Tidak ada batasan!)</span>
                                     </div>
                                 </div>
                                 <div class="d-grid">
-                                    <button onclick="processClientSide()" class="btn btn-primary fw-bold text-white">
-                                        <i class="fas fa-cogs me-1"></i> Proses di Browser
+                                    <button onclick="processClientSide()" class="btn btn-danger fw-bold text-white">
+                                        <i class="fas fa-cogs me-1"></i> Convert PDF ke Excel
                                     </button>
                                 </div>
                             </div>
@@ -63,12 +63,12 @@
                             <div id="client-progress" class="border rounded-3 p-4 bg-light mb-4" style="display: none;">
                                 <h6 class="fw-bold mb-3">
                                     <span class="badge bg-warning me-2">PROCESSING</span>
-                                    Konversi PDF ke Excel
+                                    Convert PDF Kuitansi Penjualan ke Excel
                                 </h6>
                                 <div class="progress mb-3">
                                     <div id="client-progress-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
                                 </div>
-                                <div id="client-status">Memproses file...</div>
+                                <div id="client-status">Mengconvert PDF kuitansi...</div>
                                 <div id="client-current-file" class="small text-muted mt-2"></div>
                             </div>
 
@@ -76,7 +76,7 @@
                             <div id="client-results" class="border rounded-3 p-4 bg-light" style="display: none;">
                                 <h6 class="fw-bold mb-3">
                                     <span class="badge bg-success me-2">RESULTS</span>
-                                    Hasil Konversi
+                                    Hasil Convert PDF Kuitansi
                                 </h6>
                                 <div id="client-results-content"></div>
                             </div>
@@ -85,16 +85,16 @@
                             <div class="border rounded-3 p-4 bg-light">
                                 <h6 class="fw-bold mb-3">
                                     <span class="badge bg-success me-2">STEP 2</span>
-                                    Import Excel ke Sistem
+                                    Import Excel ke Tab Kuitansi Penjualan
                                 </h6>
                                 
                                 <p class="text-muted mb-3">
-                                    Setelah mendownload file Excel, Anda bisa import ke sistem menggunakan halaman Import.
+                                    Setelah mendownload file Excel dari Step 1, import ke sistem menggunakan tab "Import Kuitansi Penjualan (PDF)" di halaman Import.
                                 </p>
 
                                 <div class="d-grid">
                                     <a href="{{ route('import.index') }}" class="btn btn-success fw-bold text-white">
-                                        <i class="fas fa-upload me-1"></i> Buka Halaman Import
+                                        <i class="fas fa-upload me-1"></i> Buka Halaman Import Kuitansi
                                     </a>
                                 </div>
                             </div>
@@ -178,8 +178,8 @@ async function extractPdfData(pdfFile) {
         const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
         let fullText = '';
         
-        // Hanya baca 2 halaman pertama untuk hemat memory
-        const numPages = Math.min(pdf.numPages, 2);
+        // Bisa baca lebih banyak halaman untuk mendapatkan data lengkap
+        const numPages = Math.min(pdf.numPages, 5);
         
         for (let pageNum = 1; pageNum <= numPages; pageNum++) {
             const page = await pdf.getPage(pageNum);
@@ -194,7 +194,7 @@ async function extractPdfData(pdfFile) {
         // Cleanup PDF reference
         pdf.destroy();
         
-        // Extract data menggunakan regex
+        // Extract data menggunakan regex yang sesuai dengan ImportReceiptJob
         const data = {
             fileName: pdfFile.name,
             paymentNo: '',
@@ -205,9 +205,9 @@ async function extractPdfData(pdfFile) {
             status: 'EXTRACTED'
         };
         
-        // Payment No patterns
+        // Payment No patterns - sesuai dengan ImportReceiptJob
         const paymentPatterns = [
-            /Payment\s+No[:\s]*([A-Z0-9\-\/]+)/i,
+            /Payment No\.?\s*:?\s*([A-Z0-9\/-]+)/i,
             /No\.?\s*Payment[:\s]*([A-Z0-9\-\/]+)/i,
             /PAYMENT\s+([A-Z0-9\-\/]+)/i,
             /PYE[_\s]*([0-9]+)/i,
@@ -222,9 +222,9 @@ async function extractPdfData(pdfFile) {
             }
         }
         
-        // Invoice No patterns
+        // Invoice No patterns - sesuai dengan ImportReceiptJob
         const invoicePatterns = [
-            /Invoice\s+No[:\s]*([A-Z0-9\-\/]+)/i,
+            /Invoice No\.?\s*:?\s*([A-Z0-9\/-]+)/i,
             /No\.?\s*Invoice[:\s]*([A-Z0-9\-\/]+)/i,
             /INV[_\s]*([0-9]+)/i,
             /Sales\s+Invoice[:\s]*([A-Z0-9\-\/]+)/i
@@ -238,8 +238,9 @@ async function extractPdfData(pdfFile) {
             }
         }
         
-        // Amount patterns
+        // Amount patterns - sesuai dengan ImportReceiptJob
         const amountPatterns = [
+            /Jumlah Rp\s*:?\s*([\d,.]+)/i,
             /Rp\s*([\d,\.]+)/i,
             /IDR\s*([\d,\.]+)/i,
             /\$\s*([\d,\.]+)/,
@@ -250,16 +251,20 @@ async function extractPdfData(pdfFile) {
         for (const pattern of amountPatterns) {
             const match = fullText.match(pattern);
             if (match) {
-                const amount = match[1].replace(/[.,]/g, '');
+                // Clean amount - sesuai dengan ImportReceiptJob logic
+                const amountString = match[1];
+                const cleanAmount = amountString.replace(',', ''); // Remove comma separators
+                const amount = parseFloat(cleanAmount);
                 if (!isNaN(amount)) {
-                    data.amount = parseFloat(amount);
+                    data.amount = amount;
                     break;
                 }
             }
         }
         
-        // Date patterns
+        // Date patterns - sesuai dengan ImportReceiptJob
         const datePatterns = [
+            /([A-Za-z]{3}\s+\d{1,2},\s+\d{4})/, // "Jan 7, 2025" format
             /(\d{1,2}[-\/]\d{1,2}[-\/]\d{4})/,
             /(\d{4}[-\/]\d{1,2}[-\/]\d{1,2})/,
             /Date[:\s]*(\d{1,2}[-\/]\d{1,2}[-\/]\d{4})/i
@@ -273,8 +278,8 @@ async function extractPdfData(pdfFile) {
             }
         }
         
-        if (!data.paymentNo && !data.invoiceNo) {
-            data.status = 'NO_DATA_FOUND';
+        if (!data.invoiceNo) {
+            data.status = 'NO_INVOICE_FOUND';
         }
         
         // Cleanup text variable
@@ -319,8 +324,8 @@ async function processClientSide() {
         
         // Update progress
         document.getElementById('client-progress-bar').style.width = progress + '%';
-        document.getElementById('client-status').textContent = `Processing ${i + 1} of ${totalFiles} files...`;
-        document.getElementById('client-current-file').textContent = `Current: ${file.name}`;
+        document.getElementById('client-status').textContent = `Mengconvert ${i + 1} dari ${totalFiles} file PDF kuitansi...`;
+        document.getElementById('client-current-file').textContent = `Sedang diproses: ${file.name}`;
         
         try {
             // Process satu file saja
@@ -350,8 +355,8 @@ async function processClientSide() {
     }
     
     // Generate Excel setelah semua selesai
-    document.getElementById('client-status').textContent = 'Generating Excel file...';
-    document.getElementById('client-current-file').textContent = 'Creating Excel workbook...';
+    document.getElementById('client-status').textContent = 'Membuat file Excel dari data kuitansi...';
+    document.getElementById('client-current-file').textContent = 'Generate worksheet: Payment No, Invoice No, Amount, Payment Date...';
     
     await new Promise(resolve => setTimeout(resolve, 1000));
     generateClientExcel();
@@ -363,15 +368,13 @@ function generateClientExcel() {
     // Create workbook
     const wb = XLSX.utils.book_new();
     
-    // Create worksheet data
+    // Create worksheet data - Format sesuai import kuitansi PDF
     const wsData = [
-        ['No', 'File Name', 'Payment No', 'Invoice No', 'Amount', 'Payment Date', 'Description', 'Status']
+        ['Payment No', 'Invoice No', 'Amount', 'Payment Date', 'Description', 'Status']
     ];
     
     clientResults.forEach((data, index) => {
         wsData.push([
-            index + 1,
-            data.fileName,
             data.paymentNo,
             data.invoiceNo,
             data.amount,
@@ -386,8 +389,8 @@ function generateClientExcel() {
     wsData.push(['SUMMARY']);
     wsData.push(['Total Files Processed', clientResults.length]);
     wsData.push(['Successfully Extracted', clientResults.filter(r => r.status === 'EXTRACTED').length]);
+    wsData.push(['No Invoice Found', clientResults.filter(r => r.status === 'NO_INVOICE_FOUND').length]);
     wsData.push(['Errors', clientResults.filter(r => r.status === 'FAILED').length]);
-    wsData.push(['No Data Found', clientResults.filter(r => r.status === 'NO_DATA_FOUND').length]);
     
     // Create worksheet
     const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -405,14 +408,14 @@ function generateClientExcel() {
     }
     
     // Add worksheet to workbook
-    XLSX.utils.book_append_sheet(wb, ws, "PDF Conversion Results");
+    XLSX.utils.book_append_sheet(wb, ws, "PDF Receipt Data");
     
     // Generate file
     const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     
     // Download
-    const fileName = `PDF_Conversion_Client_${new Date().toISOString().split('T')[0]}.xlsx`;
+    const fileName = `PDF_Receipt_Data_${new Date().toISOString().split('T')[0]}.xlsx`;
     const url = window.URL.createObjectURL(blob);
     
     const a = document.createElement('a');
@@ -433,7 +436,7 @@ function showClientResults() {
     
     const successCount = clientResults.filter(r => r.status === 'EXTRACTED').length;
     const errorCount = clientResults.filter(r => r.status === 'FAILED').length;
-    const noDataCount = clientResults.filter(r => r.status === 'NO_DATA_FOUND').length;
+    const noInvoiceCount = clientResults.filter(r => r.status === 'NO_INVOICE_FOUND').length;
     
     const resultsHtml = `
         <div class="row mb-3">
@@ -456,8 +459,8 @@ function showClientResults() {
             <div class="col-md-3">
                 <div class="card border-warning">
                     <div class="card-body text-center">
-                        <h4 class="text-warning">${noDataCount}</h4>
-                        <small>No Data</small>
+                        <h4 class="text-warning">${noInvoiceCount}</h4>
+                        <small>No Invoice</small>
                     </div>
                 </div>
             </div>
@@ -472,13 +475,24 @@ function showClientResults() {
         </div>
         
         <div class="alert alert-success">
-            <h6>✅ Excel file berhasil di-generate dan di-download!</h6>
-            <p class="mb-0">File: <strong>PDF_Conversion_Client_${new Date().toISOString().split('T')[0]}.xlsx</strong></p>
+            <h6>Excel file berhasil di-generate dan di-download!</h6>
+            <p class="mb-0">File: <strong>PDF_Receipt_Data_${new Date().toISOString().split('T')[0]}.xlsx</strong></p>
+            <p class="mb-0">Format: <strong>Payment No | Invoice No | Amount | Payment Date | Description | Status</strong></p>
+        </div>
+        
+        <div class="alert alert-info">
+            <h6><i class="fas fa-info-circle me-2"></i>Cara Import:</h6>
+            <ol class="mb-0">
+                <li>Buka halaman <a href="{{ route('import.index') }}" target="_blank">Import Data</a></li>
+                <li>Pilih tab "Import Kuitansi Penjualan (PDF)"</li>
+                <li>Upload file Excel yang baru di-download</li>
+                <li>System akan memproses data dan membuat payment records</li>
+            </ol>
         </div>
         
         <div class="d-grid">
             <a href="{{ route('import.index') }}" class="btn btn-success fw-bold text-white">
-                <i class="fas fa-upload me-1"></i> Lanjut Import Excel ke Sistem
+                <i class="fas fa-upload me-1"></i> Lanjut Import ke Sistem
             </a>
         </div>
     `;

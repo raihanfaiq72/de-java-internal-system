@@ -87,6 +87,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('import/purchase-receipt', [App\Http\Controllers\Api\ImportController::class, 'importPurchaseReceipt'])->name('import.purchase.receipt');
         Route::post('import/employee', [App\Http\Controllers\Api\ImportController::class, 'importEmployee'])->name('import.employee');
         Route::get('import/template/{type}', [App\Http\Controllers\Api\ImportController::class, 'downloadTemplate'])->name('import.template');
+        Route::get('export/receipt', [App\Http\Controllers\Api\ImportController::class, 'exportReceiptPdf'])->name('export.receipt');
         Route::get('mitra', [MitraController::class, 'index'])->name('mitra');
         Route::get('barang/export', [BarangController::class, 'export'])->name('barang.export');
         Route::get('barang', [BarangController::class, 'index'])->name('barang');

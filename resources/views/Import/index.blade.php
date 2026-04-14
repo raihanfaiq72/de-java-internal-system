@@ -57,6 +57,12 @@
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
+                                <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-export-receipt"
+                                    role="tab">
+                                    <i class="iconoir-file-pdf me-2"></i>Export PDF Kuitansi
+                                </a>
+                            </li>
+                            <li class="nav-item" role="presentation">
                                 <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-employee" role="tab">
                                     <i class="iconoir-user me-2"></i>Import Data Karyawan
                                 </a>
@@ -375,6 +381,67 @@
                                 </div>
                             </div>
 
+                            <!-- Tab Export Receipt -->
+                            <div class="tab-pane fade" id="tab-export-receipt" role="tabpanel">
+                                <div class="row justify-content-center">
+                                    <div class="col-lg-6">
+                                        <div class="text-center mb-4">
+                                            <div class="mb-3">
+                                                <i class="iconoir-file-pdf fs-1 text-danger"></i>
+                                            </div>
+                                            <h5 class="fw-bold">Export PDF Kuitansi</h5>
+                                            <p class="text-muted">
+                                                Export data kuitansi yang ada di database menjadi file PDF.<br>
+                                                Pilih rentang tanggal atau export semua data.
+                                            </p>
+                                        </div>
+
+                                        <form action="{{ route('export.receipt') }}" method="GET" class="border rounded-3 p-4 bg-light">
+                                            <div class="mb-3">
+                                                <label for="start_date" class="form-label fw-bold">Tanggal Mulai</label>
+                                                <input type="date" class="form-control" id="start_date" name="start_date">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="end_date" class="form-label fw-bold">Tanggal Selesai</label>
+                                                <input type="date" class="form-control" id="end_date" name="end_date">
+                                            </div>
+                                            <div class="mb-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="export_all" name="export_all" onchange="toggleDateFields()">
+                                                    <label class="form-check-label fw-bold" for="export_all">
+                                                        Export Semua Data
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="status_filter" class="form-label fw-bold">Filter Status</label>
+                                                <select class="form-select" id="status_filter" name="status_filter">
+                                                    <option value="">Semua Status</option>
+                                                    <option value="Paid">Lunas</option>
+                                                    <option value="Partially Paid">Sebagian</option>
+                                                    <option value="Unpaid">Belum Lunas</option>
+                                                </select>
+                                            </div>
+                                            <div class="d-grid">
+                                                <button type="submit" class="btn btn-danger fw-bold text-white">
+                                                    <i class="iconoir-file-pdf me-1"></i> Export PDF Kuitansi
+                                                </button>
+                                            </div>
+                                        </form>
+
+                                        <div class="mt-4 alert alert-info small">
+                                            <strong>Proses Export:</strong>
+                                            <ul class="mb-0 ps-3">
+                                                <li>Pilih rentang tanggal atau centang "Export Semua Data".</li>
+                                                <li>Filter berdasarkan status pembayaran (opsional).</li>
+                                                <li>System akan generate PDF untuk semua kuitansi yang sesuai kriteria.</li>
+                                                <li>File PDF akan langsung di-download.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Tab Employee -->
                             <div class="tab-pane fade" id="tab-employee" role="tabpanel">
                                 <div class="row justify-content-center">
@@ -454,6 +521,22 @@
 
             console.log('Files selected:', fileCount);
             console.log('Files:', fileInput.files);
+        }
+
+        function toggleDateFields() {
+            const exportAllCheckbox = document.getElementById('export_all');
+            const startDateField = document.getElementById('start_date');
+            const endDateField = document.getElementById('end_date');
+            
+            if (exportAllCheckbox.checked) {
+                startDateField.disabled = true;
+                endDateField.disabled = true;
+                startDateField.value = '';
+                endDateField.value = '';
+            } else {
+                startDateField.disabled = false;
+                endDateField.disabled = false;
+            }
         }
 
         // Debug form submission

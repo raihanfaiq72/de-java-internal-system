@@ -236,16 +236,18 @@
                 <div class="p-3 bg-light border-bottom">
                     <div class="row g-2">
                         <div class="col-md-4">
-                            <input type="text" class="form-control col-filter" data-col="1"
-                                placeholder="Cari Kode Produk...">
+                            <input type="text" class="form-control" id="stockSearchInput"
+                                placeholder="Cari produk (nama, kode, kategori)...">
                         </div>
                         <div class="col-md-4">
-                            <input type="text" class="form-control col-filter" data-col="2"
-                                placeholder="Cari Nama Produk...">
+                            <select class="form-select" id="stockCategoryFilter">
+                                <option value="">Semua Kategori</option>
+                            </select>
                         </div>
                         <div class="col-md-4">
-                            <input type="text" class="form-control col-filter" data-col="3"
-                                placeholder="Cari Kategori...">
+                            <button type="button" class="btn btn-outline-secondary" onclick="resetStockFilters()">
+                                <i class="fa fa-refresh me-1"></i> Reset
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1166,17 +1168,57 @@
         modal.show();
 
         try {
-            // Adjust API endpoint as needed
-            const res = await fetch('/api/stock-api');
+            // Load semua produk tanpa pagination untuk modal
+            const res = await fetch('/api/stock-api?all=1');
             const result = await res.json();
             if (result.success) {
                 stockCache = result.data.data || result.data; // Handle pagination structure
                 renderStockList(stockCache);
+                
+                // Setup search functionality
+                setupStockSearch();
             }
         } catch (e) {
             document.getElementById('stockBodyList').innerHTML =
                 '<tr><td colspan="6" class="text-center text-danger p-4">Gagal load stock</td></tr>';
         }
+    }
+
+    function setupStockSearch() {
+        // Setup search input untuk pencarian real-time
+        const searchInput = document.getElementById('stockSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', debounce(async function() {
+                const searchTerm = this.value.trim();
+                
+                if (searchTerm.length >= 2) {
+                    try {
+                        const res = await fetch(`/api/stock-api?search=${encodeURIComponent(searchTerm)}`);
+                        const result = await res.json();
+                        if (result.success) {
+                            const data = result.data.data || result.data;
+                            renderStockList(data);
+                        }
+                    } catch (e) {
+                        console.error('Search failed:', e);
+                    }
+                } else if (searchTerm.length === 0) {
+                    renderStockList(stockCache);
+                }
+            }, 300));
+        }
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
     }
 
     function renderStockList(data) {

@@ -421,4 +421,47 @@ class ImportController extends Controller
 
         return redirect()->back()->with('error', 'Library Excel tidak terinstall.');
     }
+
+    public function exportReceiptPdf(Request $request)
+    {
+        $query = \App\Models\Payment::with(['invoice.mitra', 'akun_keuangan'])
+            ->where('office_id', session('active_office_id'));
+
+        // Filter by date range
+        if (!$request->has('export_all') || !$request->get('export_all')) {
+            if ($request->filled('start_date')) {
+                $query->whereDate('tgl_pembayaran', '>=', $request->get('start_date'));
+            }
+            if ($request->filled('end_date')) {
+                $query->whereDate('tgl_pembayaran', '<=', $request->get('end_date'));
+            }
+        }
+
+        // Filter by status
+        if ($request->filled('status_filter')) {
+            $statusFilter = $request->get('status_filter');
+            $query->whereHas('invoice', function ($q) use ($statusFilter) {
+                $q->where('status_pembayaran', $statusFilter);
+            });
+        }
+
+        $payments = $query->orderBy('tgl_pembayaran', 'desc')->get();
+
+        if ($payments->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada data kuitansi yang sesuai dengan kriteria.');
+        }
+
+        // Generate PDF
+        $pdf = \PDF::loadView('Export.receipt-pdf', [
+            'payments' => $payments,
+            'startDate' => $request->get('start_date'),
+            'endDate' => $request->get('end_date'),
+            'statusFilter' => $request->get('status_filter'),
+            'exportAll' => $request->get('export_all'),
+        ]);
+
+        $fileName = 'Export_Kuitansi_' . date('Y-m-d_H-i-s') . '.pdf';
+
+        return $pdf->download($fileName);
+    }
 }
