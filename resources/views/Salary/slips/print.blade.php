@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,22 +13,27 @@
             margin: 0;
             padding: 10px;
         }
+
         .wrapper {
             border: 1px solid #000;
             padding: 25px;
         }
+
         table {
             border-collapse: collapse;
             width: 100%;
         }
+
         .table-info td {
             border: 1px solid #000;
             padding: 4px 10px;
         }
+
         .table-title {
             width: 120px;
             float: right;
         }
+
         .table-title td {
             border: 1px solid #000;
             padding: 10px;
@@ -35,46 +41,69 @@
             font-weight: bold;
             line-height: 1.4;
         }
+
         .section-title {
             font-weight: bold;
             margin-top: 30px;
             margin-bottom: 5px;
             text-transform: uppercase;
         }
+
         .table-earnings td {
             padding: 3px 0;
             vertical-align: top;
         }
-        .col-desc { width: 30%; }
-        .col-calc { width: 40%; }
-        .col-eq { width: 5%; text-align: center; }
-        .col-amount { width: 25%; }
+
+        .col-desc {
+            width: 30%;
+        }
+
+        .col-calc {
+            width: 40%;
+        }
+
+        .col-eq {
+            width: 5%;
+            text-align: center;
+        }
+
+        .col-amount {
+            width: 25%;
+        }
+
         .box-total {
             border: 2px solid #000;
             margin-top: 5px;
         }
+
         .box-total td {
             padding: 4px 5px;
             font-weight: bold;
         }
+
         .row-total {
             border-bottom: 1px solid #000;
         }
+
         .row-ket {
             text-align: center;
             font-style: italic;
         }
+
         .table-signature {
             margin-top: 20px;
         }
+
         .table-signature td {
             vertical-align: top;
         }
+
         .spacer {
             height: 60px;
         }
     </style>
 </head>
+
 <body>
 
     <div class="wrapper">
@@ -115,13 +144,16 @@
             </tr>
             <tr>
                 <td class="col-desc">GAJI HARIAN</td>
-                <td class="col-calc">RP. {{ number_format($salarySlip->details['daily_rate'] ?? 50000, 0, ',', '.') }} x {{ $salarySlip->details['work_days'] ?? 0 }}(HARI)</td>
+                <td class="col-calc">RP. {{ number_format($salarySlip->details['daily_rate'] ?? 50000, 0, ',', '.') }} x
+                    {{ $salarySlip->details['work_days'] ?? 0 }}(HARI)</td>
                 <td class="col-eq">=</td>
                 <td class="col-amount">Rp. {{ number_format($salarySlip->basic_salary, 0, ',', '.') }}</td>
             </tr>
             <tr>
                 <td class="col-desc">UANG MAKAN</td>
-                <td class="col-calc">RP. {{ number_format(($salarySlip->meal_allowance / ($salarySlip->details['work_days'] ?? 1)), 0, ',', '.') }} x {{ $salarySlip->details['work_days'] ?? 0 }}(HARI)</td>
+                <td class="col-calc">RP.
+                    {{ number_format($salarySlip->meal_allowance / ($salarySlip->details['work_days'] ?? 1), 0, ',', '.') }}
+                    x {{ $salarySlip->details['work_days'] ?? 0 }}(HARI)</td>
                 <td class="col-eq">=</td>
                 <td class="col-amount">Rp. {{ number_format($salarySlip->meal_allowance, 0, ',', '.') }}</td>
             </tr>
@@ -141,17 +173,22 @@
             </tr>
             <tr>
                 <td colspan="3" class="row-ket">
-                    KET {{ $salarySlip->details['notes'] ?? ('IZIN ' . (($salarySlip->details['work_days'] ?? 0) - ($salarySlip->details['present'] ?? 0)) . ' HARI, TERLAMBAT ABSEN ' . ($salarySlip->details['late'] ?? 0) . 'X') }}
+                    KET
+                    {{ $salarySlip->details['notes'] ?? 'IZIN ' . (($salarySlip->details['work_days'] ?? 0) - ($salarySlip->details['present'] ?? 0)) . ' HARI, TERLAMBAT ABSEN ' . ($salarySlip->details['late'] ?? 0) . 'X' }}
                 </td>
             </tr>
         </table>
 
+        @php
+            \Carbon\Carbon::setLocale('id');
+            $date = Carbon\Carbon::parse($salarySlip->salaryPeriod->end_date)->translatedFormat('l, d F Y');
+        @endphp
         <table class="table-signature">
             <tr>
                 <td style="width: 35%;">Penerima</td>
                 <td style="width: 30%; text-align: left;">Mengetahui,</td>
                 <td style="width: 35%;">
-                    Senin, 2 Maret 2026<br>
+                    {{ $date }}<br>
                     Adm. Finance
                 </td>
             </tr>
@@ -167,4 +204,5 @@
     </div>
 
 </body>
+
 </html>

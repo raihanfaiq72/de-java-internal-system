@@ -21,7 +21,8 @@
                 </div>
 
                 <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
-                    <div class="card-header bg-white border-bottom py-0 px-4 d-flex align-items-center justify-content-between">
+                    <div
+                        class="card-header bg-white border-bottom py-0 px-4 d-flex align-items-center justify-content-between">
                         <ul class="nav nav-tabs nav-tabs-finance" role="tablist">
                             <li class="nav-item"><a class="nav-link active fw-bold py-3" data-bs-toggle="tab"
                                     href="#mitra-active">Mitra Aktif</a></li>
@@ -29,7 +30,8 @@
                                     href="#mitra-deleted">Mitra Terhapus</a></li>
                         </ul>
                         <div class="text-end">
-                            <button class="btn btn-white border fw-bold px-3 me-2 shadow-sm text-dark" onclick="exportMitra()">
+                            <button class="btn btn-white border fw-bold px-3 me-2 shadow-sm text-dark"
+                                onclick="exportMitra()">
                                 <i class="fa fa-file-excel me-1 text-success"></i> Export .xls
                             </button>
                             <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openMitraModal()">
@@ -162,7 +164,9 @@
     </div>
 
     @include('Mitra.Modal.modal-fullscreen')
-    <script src="/assets/libs/leaflet/leaflet.js" onerror="(function(){var s=document.createElement('script');s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';document.head.appendChild(s)})()"></script>
+    <script src="/assets/libs/leaflet/leaflet.js"
+        onerror="(function(){var s=document.createElement('script');s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';document.head.appendChild(s)})()">
+    </script>
 @endsection
 
 @push('css')
@@ -462,7 +466,8 @@
         }
 
         async function deleteMitra(id) {
-            if (!await macConfirm('Hapus mitra', 'Hapus mitra ini? Data akan dipindahkan ke tab Mitra Terhapus dan dapat dipulihkan.')) return;
+            if (!await macConfirm('Hapus mitra',
+                    'Hapus mitra ini? Data akan dipindahkan ke tab Mitra Terhapus dan dapat dipulihkan.')) return;
             try {
                 const res = await fetch(`/api/mitra-api/${id}`, {
                     method: 'DELETE',
@@ -482,7 +487,10 @@
         }
 
         async function restoreMitra(id) {
-            if (!await macConfirm('Pulihkan data mitra', 'Pulihkan data mitra ini?')) return;
+            if (!await macConfirm('Pulihkan data mitra', 'Pulihkan data mitra ini?', {
+                    confirmText: 'Ya',
+                    confirmType: 'success'
+                })) return;
             try {
                 const res = await fetch(`/api/mitra-api/${id}/restore`, {
                     method: 'POST',
@@ -525,7 +533,7 @@
 
             const c = document.getElementById(containerId);
             const info = document.getElementById(infoId);
-            
+
             if (!meta || !meta.links) return;
 
             if (info) {
@@ -533,13 +541,13 @@
             }
 
             c.innerHTML = '';
-            
+
             const type = isDeleted ? 'deleted' : 'active';
 
             meta.links.forEach(l => {
                 const activeClass = l.active ? 'active' : '';
                 const disabledClass = !l.url ? 'disabled' : '';
-                
+
                 let pageNum = 1;
                 if (l.url) {
                     const url = new URL(l.url, window.location.origin);
@@ -551,8 +559,7 @@
                 c.insertAdjacentHTML('beforeend', `
                     <li class="page-item ${activeClass} ${disabledClass}">
                         <button class="page-link border-0 mx-1 rounded shadow-sm fw-bold" ${onclick}>${l.label}</button>
-                    </li>`
-                );
+                    </li>`);
             });
         }
 
@@ -577,7 +584,7 @@
             // Tab Change Listener
             const tabEls = document.querySelectorAll('a[data-bs-toggle="tab"]');
             tabEls.forEach(el => {
-                el.addEventListener('shown.bs.tab', function (event) {
+                el.addEventListener('shown.bs.tab', function(event) {
                     if (event.target.getAttribute('href') === '#mitra-deleted') {
                         activeTab = 'deleted';
                         loadMitraData(undefined, 'deleted');

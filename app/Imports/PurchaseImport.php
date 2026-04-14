@@ -448,7 +448,7 @@ class PurchaseImport implements ShouldQueue, ToCollection, WithChunkReading, Wit
 
     private function generateNomorMitra($officeId)
     {
-        $lastPartner = Partner::where('office_id', $officeId)
+        $lastPartner = Partner::withTrashed()->where('office_id', $officeId)
             ->where('nomor_mitra', 'like', 'M-%')
             ->orderByRaw('CAST(SUBSTRING(nomor_mitra, 3) AS UNSIGNED) DESC')
             ->first();
@@ -461,7 +461,7 @@ class PurchaseImport implements ShouldQueue, ToCollection, WithChunkReading, Wit
 
         do {
             $code = 'M-'.str_pad($nextId, 5, '0', STR_PAD_LEFT);
-            $exists = Partner::where('office_id', $officeId)->where('nomor_mitra', $code)->exists();
+            $exists = Partner::withTrashed()->where('office_id', $officeId)->where('nomor_mitra', $code)->exists();
             if ($exists) {
                 $nextId++;
             }

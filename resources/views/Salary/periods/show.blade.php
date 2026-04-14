@@ -127,14 +127,14 @@
     </div>
 
     <!-- Create Single Slip Modal -->
-    <div class="modal-fade" id="modalCreateSlipOne" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="modalCreateSlipOne" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
                 <form id="form-create-slip-one" method="POST"
                     action="{{ route('salary-periods.slips.store-one', $salaryPeriod->id) }}">
                     @csrf
-                    <div class="modal-header px-5 py-4">
-                        <h5 class="fw-bold mb-0">Buat Gaji Karyawan</h5>
+                    <div class="modal-header py-4">
+                        <h5 class="fw-bold mb-0 text-white">Buat Gaji Karyawan</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
@@ -243,7 +243,7 @@
                     @csrf
                     @method('PUT')
                     <div class="modal-header">
-                        <h5 class="fw-bold mb-0" id="editSlipTitle">Edit Gaji Karyawan</h5>
+                        <h5 class="fw-bold mb-0 text-white" id="editSlipTitle">Edit Gaji Karyawan</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
@@ -324,10 +324,10 @@
     <div class="modal fade" id="modalPrintPreview" tabindex="-1" aria-labelledby="modalPrintPreviewLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content shadow-lg border-9 rounded-4">
+            <div class="modal-content shadow-lg border-0 rounded-4">
                 <div class="modal-header border-bottom-0 pt-4 px-4">
                     <h5 class="modal-title fw-bold" id="modalPrintPreviewLabel">
-                        <i class="iconoir-printing-page text-primary me-2"></i> Preview Cetak Slip Gaji
+                        <i class="iconoir-printing-page text-white me-2"></i> Preview Cetak Slip Gaji
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>

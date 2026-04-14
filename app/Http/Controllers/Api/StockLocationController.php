@@ -11,14 +11,21 @@ class StockLocationController extends Controller
 {
     public function index(Request $request)
     {
-        $query = StockLocation::where('office_id', session('active_office_id'))->latest();
+        $query = StockLocation::where('office_id', session('active_office_id'))
+            ->latest();
 
-        $perPage = $request->get('per_page', 10);
+        $perPage = $request->input('per_page', 10);
         if ($perPage >= 1000) {
             $data = $query->get();
         } else {
             $data = $query->paginate($perPage)->withQueryString();
         }
+
+        $data->map(function ($location) {
+            $location->type = ucwords(strtolower($location->type));
+
+            return $location;
+        });
 
         return apiResponse(true, 'Data lokasi stok', $data);
     }

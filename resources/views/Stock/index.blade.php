@@ -874,10 +874,10 @@
                 .then(res => res.json())
                 .then(data => {
                     const select = document.getElementById('filter-stock-kategori');
-                    
+
                     // Clear existing options except first one
                     select.innerHTML = '<option value="">Semua Kategori</option>';
-                    
+
                     // Add categories
                     if (data.success && data.data) {
                         const categories = data.data.data || data.data;
@@ -916,7 +916,7 @@
             data.links.forEach(link => {
                 const activeClass = link.active ? 'active' : '';
                 const disabledClass = !link.url ? 'disabled' : '';
-                
+
                 // Extract page number from URL
                 let pageNum = 1;
                 if (link.url) {

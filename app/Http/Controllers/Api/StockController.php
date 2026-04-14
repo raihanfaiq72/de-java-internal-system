@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Invoice;
 use App\Models\Product;
+use App\Models\StockLocation;
 use App\Models\StockMutation;
 use App\Services\StockService;
 use Illuminate\Http\Request;
@@ -28,7 +30,7 @@ class StockController extends Controller
             $query->where(function ($q) use ($request) {
                 $q->where('nama_produk', 'LIKE', "%{$request->search}%")
                     ->orWhere('sku_kode', 'LIKE', "%{$request->search}%");
-                    // ->orWhere('kode_produk', 'LIKE', "%{$request->search}%");
+                // ->orWhere('kode_produk', 'LIKE', "%{$request->search}%");
             });
         }
 
@@ -76,11 +78,11 @@ class StockController extends Controller
             ->where('office_id', $officeId);
 
         // Base Invoice query for pending orders (These might be office-based, not location-based)
-        $pendingReceiveQuery = \App\Models\Invoice::where('tipe_invoice', 'Purchase')
+        $pendingReceiveQuery = Invoice::where('tipe_invoice', 'Purchase')
             ->where('office_id', $officeId)
             ->where('status_perjalanan', '!=', 'Diterima');
 
-        $pendingShipQuery = \App\Models\Invoice::where('tipe_invoice', 'Sales')
+        $pendingShipQuery = Invoice::where('tipe_invoice', 'Sales')
             ->where('office_id', $officeId)
             ->where('status_perjalanan', '!=', 'Terkirim')
             ->where('status_perjalanan', '!=', 'Diterima');
@@ -326,7 +328,7 @@ class StockController extends Controller
 
         // Validate Location ownership if provided
         if ($request->stock_location_id) {
-            $location = \App\Models\StockLocation::where('id', $request->stock_location_id)
+            $location = StockLocation::where('id', $request->stock_location_id)
                 ->where('office_id', session('active_office_id'))
                 ->first();
             if (! $location) {
@@ -363,7 +365,7 @@ class StockController extends Controller
         }
 
         // Validate Location ownership
-        $location = \App\Models\StockLocation::where('id', $request->stock_location_id)
+        $location = StockLocation::where('id', $request->stock_location_id)
             ->where('office_id', session('active_office_id'))
             ->first();
         if (! $location) {
@@ -407,7 +409,7 @@ class StockController extends Controller
         }
 
         // Validate Location ownership
-        $location = \App\Models\StockLocation::where('id', $request->stock_location_id)
+        $location = StockLocation::where('id', $request->stock_location_id)
             ->where('office_id', session('active_office_id'))
             ->first();
         if (! $location) {

@@ -182,7 +182,8 @@ class ProductController extends Controller
 
     public function nextSku()
     {
-        $last = Product::where('office_id', session('active_office_id'))
+        $last = Product::withTrashed()
+            // ->where('office_id', session('active_office_id'))
             ->orderBy('id', 'desc')->first();
 
         if (! $last || ! $last->sku_kode) {

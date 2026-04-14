@@ -246,7 +246,7 @@ class PartnerController extends Controller
     {
         $prefix = 'M-'.date('ym').'-';
 
-        $lastMitra = Partner::where('nomor_mitra', 'LIKE', $prefix.'%')
+        $lastMitra = Partner::withTrashed()->where('nomor_mitra', 'LIKE', $prefix.'%')
             ->orderBy('id', 'desc')
             ->first();
 
