@@ -10,7 +10,7 @@
                             <h4 class="page-title">Laporan Stok</h4>
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
-                                <li class="breadcrumb-item active">Report: Stock</li>
+                                <li class="breadcrumb-item active">Laporan Stok</li>
                             </ol>
                         </div>
                     </div>
@@ -21,12 +21,12 @@
                     <div class="card-body p-4">
                         <form action="{{ route('report.stock') }}" method="GET" class="row g-3 align-items-end">
                             <div class="col-md-3">
-                                <label class="form-label fw-bold text-muted small text-uppercase">Tanggal Dari</label>
+                                <label class="form-label fw-bold text-muted small text-uppercase">Tanggal Mulai</label>
                                 <input type="date" name="start_date" class="form-control"
                                     value="{{ request('start_date', date('Y-m-01')) }}">
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label fw-bold text-muted small text-uppercase">Tanggal Sampai</label>
+                                <label class="form-label fw-bold text-muted small text-uppercase">Tanggal Hingga</label>
                                 <input type="date" name="end_date" class="form-control"
                                     value="{{ request('end_date', date('Y-m-t')) }}">
                             </div>
@@ -67,9 +67,9 @@
                                 </select>
                             </div>
                             <div class="col-12 mt-3 text-end">
-                                <button type="submit" class="btn btn-primary fw-bold px-4">Hasilkan Laporan</button>
+                                <button type="submit" class="btn btn-primary fw-bold px-4">Buat Laporan</button>
                                 <button type="button" onclick="exportStock()" class="btn btn-success fw-bold px-4 ms-2">
-                                    <i class="fa fa-file-excel me-1"></i> Export Excel
+                                    <i class="fa fa-file-excel me-1"></i> Ekspor Excel
                                 </button>
                             </div>
                         </form>
@@ -82,8 +82,8 @@
                     <div class="col-md-3">
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-body p-4 border-start border-4 border-secondary">
-                                <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Opening
-                                    Quantity</label>
+                                <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Stok
+                                    Awal</label>
                                 <h5 class="fw-bold mb-0 text-dark">{{ number_format($stats['opening_qty'], 2) }}</h5>
                             </div>
                         </div>
@@ -91,8 +91,8 @@
                     <div class="col-md-3">
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-body p-4 border-start border-4 border-info">
-                                <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Quantity
-                                    In</label>
+                                <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Barang
+                                    Masuk</label>
                                 <h5 class="fw-bold mb-0 text-info">{{ number_format($stats['qty_in'], 2) }}</h5>
                             </div>
                         </div>
@@ -100,8 +100,8 @@
                     <div class="col-md-3">
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-body p-4 border-start border-4 border-warning">
-                                <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Quantity
-                                    Out</label>
+                                <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Barang
+                                    Keluar</label>
                                 <h5 class="fw-bold mb-0 text-warning">{{ number_format($stats['qty_out'], 2) }}</h5>
                             </div>
                         </div>
@@ -109,8 +109,8 @@
                     <div class="col-md-3">
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-body p-4 border-start border-4 border-primary">
-                                <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Closing
-                                    Quantity</label>
+                                <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Stok
+                                    Akhir</label>
                                 <h5 class="fw-bold mb-0 text-primary">{{ number_format($stats['closing_qty'], 2) }}</h5>
                             </div>
                         </div>
@@ -120,8 +120,8 @@
                     <div class="col-md-3">
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-body p-4 border-start border-4 border-secondary">
-                                <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Opening
-                                    Value</label>
+                                <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Nilai
+                                    Awal</label>
                                 <h5 class="fw-bold mb-0 text-dark">Rp {{ number_format($stats['opening_value']) }}</h5>
                             </div>
                         </div>
@@ -129,8 +129,8 @@
                     <div class="col-md-3">
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-body p-4 border-start border-4 border-info">
-                                <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Value
-                                    In</label>
+                                <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Nilai
+                                    Masuk</label>
                                 <h5 class="fw-bold mb-0 text-info">Rp {{ number_format($stats['value_in']) }}</h5>
                             </div>
                         </div>
@@ -138,8 +138,8 @@
                     <div class="col-md-3">
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-body p-4 border-start border-4 border-warning">
-                                <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Value
-                                    Out</label>
+                                <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Nilai
+                                    Keluar</label>
                                 <h5 class="fw-bold mb-0 text-warning">Rp {{ number_format($stats['value_out']) }}</h5>
                             </div>
                         </div>
@@ -147,8 +147,8 @@
                     <div class="col-md-3">
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-body p-4 border-start border-4 border-primary">
-                                <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Closing
-                                    Value</label>
+                                <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 10px;">Nilai
+                                    Akhir</label>
                                 <h5 class="fw-bold mb-0 text-primary">Rp {{ number_format($stats['closing_value']) }}</h5>
                             </div>
                         </div>
@@ -166,14 +166,14 @@
                                         <th>Nama Produk</th>
                                         <th>Kategori</th>
                                         <th>Satuan</th>
-                                        <th class="text-end">Opening Qty</th>
-                                        <th class="text-end">Qty In</th>
-                                        <th class="text-end">Qty Out</th>
-                                        <th class="text-end fw-bold">Closing Qty</th>
-                                        <th class="text-end ps-4">Opening Value</th>
-                                        <th class="text-end">Value In</th>
-                                        <th class="text-end">Value Out</th>
-                                        <th class="text-end fw-bold pe-4">Closing Value</th>
+                                        <th class="text-end">Stok Awal</th>
+                                        <th class="text-end">Barang Masuk</th>
+                                        <th class="text-end">Barang Keluar</th>
+                                        <th class="text-end fw-bold">Stok Akhir</th>
+                                        <th class="text-end ps-4">Nilai Awal</th>
+                                        <th class="text-end">Nilai Masuk</th>
+                                        <th class="text-end">Nilai Keluar</th>
+                                        <th class="text-end fw-bold pe-4">Nilai Akhir</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -258,7 +258,7 @@
                         placeholder: "Cari...",
                         perPage: "item per halaman",
                         noRows: "Tidak ada data ditemukan",
-                        info: "Menampilkan {start} sampai {end} dari {rows} entri",
+                        info: "Menampilkan {start} sampai {end} dari {rows} data",
                     }
                 });
             }
