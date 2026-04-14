@@ -27,8 +27,8 @@ class StockController extends Controller
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('nama_produk', 'LIKE', "%{$request->search}%")
-                    ->orWhere('sku_kode', 'LIKE', "%{$request->search}%")
-                    ->orWhere('kode_produk', 'LIKE', "%{$request->search}%");
+                    ->orWhere('sku_kode', 'LIKE', "%{$request->search}%");
+                    // ->orWhere('kode_produk', 'LIKE', "%{$request->search}%");
             });
         }
 
