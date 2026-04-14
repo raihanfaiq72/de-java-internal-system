@@ -120,6 +120,7 @@ class InvoiceController extends Controller
             'activities.user',
             'sales',
         ])
+            ->withSum('payment', 'jumlah_bayar')
             ->where('office_id', session('active_office_id'))
             ->find($id);
 

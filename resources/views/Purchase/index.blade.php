@@ -996,38 +996,37 @@
 
                     if (isRestricted) {
                         if (btnEdit) btnEdit.closest('li').remove();
-                        if (btnReceipt) btnReceipt.closest('li').remove();
                         if (btnArchive) btnArchive.closest('li').remove();
                         if (btnUnarchive) btnUnarchive.closest('li').remove();
                         if (btnDelete) btnDelete.closest('li').remove();
                         if (divider) divider.remove();
                     } else {
-                        if (btnReceipt) {
-                            // Hide if payment exists for this invoice
-                            if (paidInvoiceIds.includes(String(item.id))) {
-                                btnReceipt.closest('li').remove();
-                            } else {
-                                btnReceipt.onclick = (e) => {
-                                    e.preventDefault();
-                                    // Redirect to receipt page with params
-                                    window.location.href =
-                                        `{{ route('purchase.receipt') }}?open_create=true&invoice_id=${item.id}&mitra_id=${item.mitra_id}`;
-                                };
-                            }
-                        }
-
                         if (btnEdit) btnEdit.onclick = () => openInvoiceModal(item.id, null, 'edit');
                         if (btnDelete) btnDelete.onclick = () => deleteInvoice(item.id);
+                    }
 
-                        const hasPayment = parseFloat(item.payment_sum_jumlah_bayar || 0) > 0 ||
-                            item.status_pembayaran === 'Paid' ||
-                            item.status_pembayaran === 'Partially Paid';
+                    // Unified Receipt Logic: Hide only if fully Paid
+                    if (btnReceipt) {
+                        if (item.status_pembayaran === 'Paid') {
+                            btnReceipt.closest('li').remove();
+                        } else {
+                            btnReceipt.onclick = (e) => {
+                                e.preventDefault();
+                                // Redirect to receipt page with params
+                                window.location.href =
+                                    `{{ route('purchase.receipt') }}?open_create=true&invoice_id=${item.id}&mitra_id=${item.mitra_id}`;
+                            };
+                        }
+                    }
 
-                        if (!hasPayment) {
-                            if (btnArchive) {
-                                btnArchive.classList.remove('d-none');
-                                btnArchive.onclick = () => archiveInvoice(item.id);
-                            }
+                    const hasPayment = parseFloat(item.payment_sum_jumlah_bayar || 0) > 0 ||
+                        item.status_pembayaran === 'Paid' ||
+                        item.status_pembayaran === 'Partially Paid';
+
+                    if (!hasPayment) {
+                        if (btnArchive) {
+                            btnArchive.classList.remove('d-none');
+                            btnArchive.onclick = () => archiveInvoice(item.id);
                         }
                     }
                 }
@@ -1244,7 +1243,7 @@
         async function forceDeleteInvoice(id, invNo) {
             const confirmNo = prompt(
                 `PERINGATAN: Invoice akan dihapus secara PERMANEN dan tidak dapat dikembalikan.\nKetik nomor invoice "${invNo}" untuk mengonfirmasi:`
-                );
+            );
 
             if (confirmNo !== invNo) {
                 if (confirmNo !== null) alert('Nomor invoice tidak cocok. Pembatalan penghapusan.');

@@ -22,7 +22,12 @@ class PaymentController extends Controller
 
     public function index(Request $request)
     {
-        $query = Payment::with(['invoice.items.product', 'invoice.mitra', 'akun_keuangan'])
+        $query = Payment::with([
+            'invoice' => fn($q) => $q->withSum('payment', 'jumlah_bayar'),
+            'invoice.items.product',
+            'invoice.mitra',
+            'akun_keuangan'
+        ])
             ->where('office_id', session('active_office_id'));
 
         if ($request->invoice_id) {
@@ -41,7 +46,11 @@ class PaymentController extends Controller
 
     public function show($id)
     {
-        $data = Payment::with(['invoice.mitra', 'akun_keuangan'])
+        $data = Payment::with([
+                'invoice' => fn($q) => $q->withSum('payment', 'jumlah_bayar'),
+                'invoice.mitra',
+                'akun_keuangan'
+            ])
             ->where('office_id', session('active_office_id'))
             ->find($id);
         if (! $data) {
