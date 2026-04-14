@@ -669,6 +669,7 @@
         });
 
         let masterMitra = [];
+        let paidInvoiceIds = [];
 
         async function initializeMasterData() {
             try {
@@ -722,6 +723,8 @@
                 '<tr><td colspan="10" class="text-center p-5"><div class="spinner-border spinner-border-sm text-primary"></div><p class="mt-2 text-muted small mb-0">Memuat data...</p></td></tr>';
             resetSelection();
 
+            paidInvoiceIds = []; // Reset
+
             try {
                 let finalUrl = (typeof url === 'string' && url.includes('/')) ? url : window.financeApp.API_URL;
                 if (!finalUrl.includes('page=') && page) {
@@ -741,8 +744,20 @@
                 // Store for export
                 window.financeApp.currentParams = params.toString();
 
-                const response = await fetch(`${finalUrl}${finalUrl.includes('?') ? '&' : '?'}${params.toString()}`);
-                const result = await response.json();
+                // Fetch invoices and payments in parallel
+                const [invoiceRes, paymentRes] = await Promise.all([
+                    fetch(`${finalUrl}${finalUrl.includes('?') ? '&' : '?'}${params.toString()}`),
+                    fetch(`/api/payment-api?tipe_receipt=Purchase&limit=1000`)
+                ]);
+
+                const result = await invoiceRes.json();
+                const paymentResult = await paymentRes.json();
+
+                // Extract invoice_ids from payments
+                if (paymentResult.success) {
+                    const payments = paymentResult.data.data || paymentResult.data || [];
+                    paidInvoiceIds = payments.map(p => String(p.invoice_id));
+                }
 
                 if (result.success) {
                     renderInvoiceList(result.data.data);
@@ -917,12 +932,17 @@
 
                 const btnReceipt = row.querySelector('.btn-create-receipt');
                 if (btnReceipt) {
-                    btnReceipt.onclick = (e) => {
-                        e.preventDefault();
-                        // Redirect to receipt page with params
-                        window.location.href =
-                            `{{ route('purchase.receipt') }}?open_create=true&invoice_id=${item.id}&mitra_id=${item.mitra_id}`;
-                    };
+                    // Hide if payment exists for this invoice
+                    if (paidInvoiceIds.includes(String(item.id))) {
+                        btnReceipt.closest('li').remove();
+                    } else {
+                        btnReceipt.onclick = (e) => {
+                            e.preventDefault();
+                            // Redirect to receipt page with params
+                            window.location.href =
+                                `{{ route('purchase.receipt') }}?open_create=true&invoice_id=${item.id}&mitra_id=${item.mitra_id}`;
+                        };
+                    }
                 }
 
                 row.querySelector('.btn-edit').onclick = () => openInvoiceModal(item.id, null, 'edit');

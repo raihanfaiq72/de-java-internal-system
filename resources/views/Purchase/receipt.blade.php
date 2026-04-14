@@ -472,11 +472,10 @@
             // Check URL Params for Direct Create
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('open_create') === 'true') {
-                openCreateModal();
-
                 const mitraId = urlParams.get('mitra_id');
                 const invoiceId = urlParams.get('invoice_id');
 
+                // Set data terlebih dahulu sebelum buka modal
                 if (mitraId && tomMitra) {
                     tomMitra.skipClear = true;
                     tomMitra.setValue(mitraId);
@@ -508,6 +507,9 @@
                         console.error('Failed to load invoice for receipt', e);
                     }
                 }
+
+                // Buka modal setelah data di-set (skip clear)
+                openCreateModal(true);
             }
         });
 
@@ -727,11 +729,13 @@
             });
         }
         // --- LOGIKA MODAL CREATE ---
-        function openCreateModal() {
+        function openCreateModal(skipClear = false) {
             document.getElementById('form-receipt').reset();
-            selectedInvoices = [];
-            renderSelectedTable();
-            if (tomMitra) tomMitra.clear();
+            if (!skipClear) {
+                selectedInvoices = [];
+                renderSelectedTable();
+                if (tomMitra) tomMitra.clear();
+            }
             document.getElementById('upload-signature-area').classList.remove('d-none');
             document.getElementById('signature-preview').classList.add('d-none');
 

@@ -222,16 +222,18 @@
                 <div class="p-3 bg-light border-bottom">
                     <div class="row g-2">
                         <div class="col-md-4">
-                            <input type="text" class="form-control col-filter" data-col="1"
-                                placeholder="Cari Kode Produk...">
+                            <input type="text" class="form-control" id="stockSearchInput"
+                                placeholder="Cari produk (nama, kode, kategori)...">
                         </div>
                         <div class="col-md-4">
-                            <input type="text" class="form-control col-filter" data-col="2"
-                                placeholder="Cari Nama Produk...">
+                            <select class="form-select" id="stockCategoryFilter">
+                                <option value="">Semua Kategori</option>
+                            </select>
                         </div>
                         <div class="col-md-4">
-                            <input type="text" class="form-control col-filter" data-col="3"
-                                placeholder="Cari Kategori...">
+                            <button type="button" class="btn btn-outline-secondary" onclick="resetStockFilters()">
+                                <i class="fa fa-refresh me-1"></i> Reset
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1132,16 +1134,26 @@
         modal.show();
 
         try {
-            // Adjust API endpoint as needed
-            const res = await fetch('/api/stock-api');
+            // Gunakan product-api dengan per_page besar untuk mengambil semua stok
+            const res = await fetch('/api/product-api?per_page=1000');
             const result = await res.json();
+            console.log('Product API Response:', result); // Debug log
+            
             if (result.success) {
                 stockCache = result.data.data || result.data; // Handle pagination structure
+                console.log('Stock Cache:', stockCache); // Debug log
                 renderStockList(stockCache);
+                
+                // Load kategori saat modal dibuka
+                loadStockCategories();
+            } else {
+                document.getElementById('stockBodyList').innerHTML =
+                    '<tr><td colspan="6" class="text-center text-danger p-4">API Error: ' + (result.message || 'Unknown error') + '</td></tr>';
             }
         } catch (e) {
+            console.error('Product API Error:', e); // Debug log
             document.getElementById('stockBodyList').innerHTML =
-                '<tr><td colspan="6" class="text-center text-danger p-4">Gagal load stock</td></tr>';
+                '<tr><td colspan="6" class="text-center text-danger p-4">Gagal load produk: ' + e.message + '</td></tr>';
         }
     }
 
@@ -1185,21 +1197,107 @@
         if (masterChk) masterChk.checked = false;
     }
 
-    // Filter Stock
-    document.querySelectorAll('.col-filter').forEach(inp => {
-        inp.addEventListener('keyup', function () {
-            const val = this.value.toLowerCase();
-            const col = this.dataset.col; // 1=code, 2=name, 3=cat
-
-            const filtered = stockCache.filter(item => {
-                if (col == 1) return (item.kode_produk || '').toLowerCase().includes(val);
-                if (col == 2) return (item.nama_produk || '').toLowerCase().includes(val);
-                if (col == 3) return (item.kategori?.nama_kategori || '').toLowerCase()
-                    .includes(val);
-                return true;
+    // Setup search functionality - server side search
+    function setupStockSearch() {
+        const searchInput = document.getElementById('stockSearchInput');
+        const categoryFilter = document.getElementById('stockCategoryFilter');
+        
+        // Load kategori options
+        loadStockCategories();
+        
+        if (searchInput) {
+            searchInput.addEventListener('input', async function() {
+                const searchTerm = this.value ? this.value.trim() : '';
+                const categoryId = categoryFilter ? categoryFilter.value : '';
+                
+                try {
+                    let url = `/api/product-api?per_page=1000`;
+                    if (searchTerm) {
+                        url += `&search=${encodeURIComponent(searchTerm)}`;
+                    }
+                    if (categoryId) {
+                        url += `&category=${categoryId}`;
+                    }
+                    
+                    const res = await fetch(url);
+                    const result = await res.json();
+                    
+                    if (result.success) {
+                        const data = result.data.data || result.data;
+                        stockCache = data; // Update cache
+                        renderStockList(data);
+                    }
+                } catch (e) {
+                    console.error('Search failed:', e);
+                }
             });
-            renderStockList(filtered);
-        });
+        }
+        
+        // Setup category filter
+        if (categoryFilter) {
+            categoryFilter.addEventListener('change', async function() {
+                const searchTerm = searchInput ? (searchInput.value ? searchInput.value.trim() : '') : '';
+                const categoryId = this.value ? this.value : '';
+                
+                try {
+                    let url = `/api/product-api?per_page=1000`;
+                    if (searchTerm) {
+                        url += `&search=${encodeURIComponent(searchTerm)}`;
+                    }
+                    if (categoryId) {
+                        url += `&category=${categoryId}`;
+                    }
+                    
+                    const res = await fetch(url);
+                    const result = await res.json();
+                    
+                    if (result.success) {
+                        const data = result.data.data || result.data;
+                        stockCache = data;
+                        renderStockList(data);
+                    }
+                } catch (e) {
+                    console.error('Filter failed:', e);
+                }
+            });
+        }
+    }
+
+    async function loadStockCategories() {
+        try {
+            const res = await fetch('/api/product-categories-api');
+            const result = await res.json();
+            
+            if (result.success) {
+                const categories = result.data.data || result.data;
+                const categoryFilter = document.getElementById('stockCategoryFilter');
+                
+                if (categoryFilter) {
+                    categoryFilter.innerHTML = '<option value="">Semua Kategori</option>';
+                    categories.forEach(cat => {
+                        categoryFilter.innerHTML += `<option value="${cat.id}">${cat.nama_kategori}</option>`;
+                    });
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load categories:', e);
+        }
+    }
+
+    function resetStockFilters() {
+        const searchInput = document.getElementById('stockSearchInput');
+        const categoryFilter = document.getElementById('stockCategoryFilter');
+        
+        if (searchInput) searchInput.value = '';
+        if (categoryFilter) categoryFilter.value = '';
+        
+        // Reload semua data
+        openStockModal();
+    }
+
+    // Panggil setup saat modal dibuka
+    document.addEventListener('DOMContentLoaded', function() {
+        setupStockSearch();
     });
 
     function addSelectedStocks() {
