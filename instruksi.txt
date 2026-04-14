@@ -1,0 +1,325 @@
+Sidebar Laporan
+Laporan Penjualan → Laporan Invoice
+Tab Rekap Umum
+Tab Rekap Pembayaran
+Tab Laporan Invoice Per Produk
+Tab Laporan Produk Terjual
+Hapus Simulasi Harga Average
+
+
+Laporan Invoice
+Tab Rekap Umum
+Menampilkan dua jenis grafik: grafik garis dan grafik lingkaran. Seluruh data bersumber dari tabel invoices dan payments sesuai struktur yang ada.
+Grafik Garis — Income vs Expenditure per Bulan
+Grafik ini menampilkan perbandingan Income dan Expenditure per bulan.
+Sumbu X: Bulan dari payments.tgl_pembayaran
+Sumbu Y: Total nominal uang
+Income
+Dihitung dari total payments.jumlah_bayar yang terhubung ke tabel invoices melalui relasi:
+payments.invoice_id = invoices.id
+
+Dengan filter:
+invoices.tipe_invoice = 'Sales'
+
+Data dikelompokkan berdasarkan bulan dari tgl_pembayaran.
+Expenditure
+Dihitung dari total payments.jumlah_bayar dengan relasi yang sama, tetapi dengan filter:
+invoices.tipe_invoice = 'Purchase'
+
+Data juga dikelompokkan berdasarkan bulan dari tgl_pembayaran.
+
+Grafik Lingkaran — Komposisi Piutang (Sales)
+Grafik lingkaran menampilkan komposisi piutang dari invoice Sales, yang terdiri dari:
+Outstanding Amount
+Total nilai tagihan yang belum dibayar.
+Perhitungan:
+SUM(invoices.total_akhir) 
+- SUM(payments.jumlah_bayar)
+
+Dengan filter:
+invoices.tipe_invoice = 'Sales'
+payments.invoice_id = invoices.id
+
+Amount Received
+Total pembayaran yang sudah diterima dari invoice Sales:
+SUM(payments.jumlah_bayar)
+
+Dengan filter:
+invoices.tipe_invoice = 'Sales'
+payments.invoice_id = invoices.id
+
+Semua perhitungan hanya menggunakan relasi antara payments dan invoices melalui invoice_id, tanpa mengubah struktur tabel.
+
+Tab Rekap Pembayaran
+Menampilkan tabel daftar pembayaran yang bersumber dari tabel payments, dengan relasi ke invoices dan mitras.
+Kolom Tabel
+Tanggal → payments.tgl_pembayaran
+No. Invoice → invoices.nomor_invoice
+Metode Pembayaran → payments.metode_pembayaran
+Nomor Mitra → mitras.nomor_mitra
+Nama Mitra → mitras.nama
+Jumlah → payments.jumlah_bayar
+Relasi yang digunakan:
+payments.invoice_id = invoices.id
+invoices.mitra_id = mitras.id
+
+Data yang ditampilkan adalah seluruh data pembayaran yang tidak terhapus (mengikuti soft delete jika digunakan).
+
+Fitur Filter
+Filter Mitra (Dropdown)
+Memfilter berdasarkan invoices.mitra_id
+Pencarian (Search)
+Mencakup:
+invoices.nomor_invoice
+mitras.nama
+mitras.nomor_mitra
+payments.nomor_pembayaran
+Filter Rentang Tanggal
+Berdasarkan payments.tgl_pembayaran
+
+Ringkasan (Summary)
+Mengikuti data yang sedang difilter:
+Total Nominal Pembayaran
+SUM(payments.jumlah_bayar)
+Total Jumlah Invoice Terlibat
+Jumlah unik invoices.id yang memiliki pembayaran sesuai filter.
+Semua perhitungan hanya menggunakan relasi antara payments, invoices, dan mitras tanpa perubahan struktur tabel.
+
+
+
+Tab Laporan Produk Terjual
+Menampilkan tabel daftar produk terjual  yang bersumber dari tabel products, dengan relasi ke product_categories, invoices dan invoice_items.
+Kolom Tabel
+Nama Produk → products.nama_produk
+Kode Produk (SKU) → products.sku_kode
+Kategori → product_categories.nama_kategori
+Satuan → product.satuan
+Kuantitas Terjual → sum(invoice_items.qty) group by produk_id
+
+Fitur Filter
+Pencarian (Search)
+Mencakup:
+invoices.nomor_invoice
+mitras.nama
+mitras.nomor_mitra
+payments.nomor_pembayaran
+Filter Rentang Tanggal
+Berdasarkan payments.tgl_pembayaran
+
+Ringkasan (Summary)
+Mengikuti data yang sedang difilter:
+Total Produk Terjual (Qty)
+SUM(invoice_items.qty)
+Semua perhitungan hanya menggunakan relasi antara products, product_categories, invoices dan invoice_items tanpa perubahan struktur tabel.
+
+
+Tab Laporan Invoice Per Produk
+Menampilkan tabel daftar item produk yang terdapat di dalam invoice, bersumber dari tabel invoice_items dengan relasi ke invoices, products, mitras, dan invoice_item_taxes.
+Kolom Tabel
+Status Invoice → invoices.status_pembayaran
+Tanggal Invoice → invoices.tgl_invoice
+Produk → products.nama_produk
+Pelanggan / Mitra → mitras.nama
+No. Invoice → invoices.nomor_invoice
+Kuantitas → invoice_items.qty
+Harga → invoice_items.harga_satuan
+Diskon Item → invoice_items.diskon_nilai
+Total Diskon → invoice_items.total_diskon
+Total → Total akhir per item setelah diskon
+
+Relasi yang digunakan:
+ invoice_items.invoice_id = invoices.id
+ invoice_items.product_id = products.id
+ invoices.mitra_id = mitras.id
+ invoice_item_taxes.invoice_item_id = invoice_items.id
+Data yang ditampilkan adalah seluruh item invoice yang tidak terhapus (mengikuti soft delete jika digunakan).
+
+Fitur Filter
+Filter Produk (Dropdown)
+ Memfilter berdasarkan invoice_items.product_id
+Filter Tipe Invoice
+ Berdasarkan invoices.tipe_invoice (Sales atau Purchase)
+Filter Status Pembayaran
+ Berdasarkan invoices.status_pembayaran
+Pencarian (Search)
+ Mencakup:
+ invoices.nomor_invoice
+ products.nama_produk
+ mitras.nama
+Filter Rentang Tanggal
+ Berdasarkan invoices.tgl_invoice
+
+Ringkasan (Summary)
+ Mengikuti data yang sedang difilter:
+Total Nilai Transaksi
+ Penjumlahan total per item:
+ (qty × harga) - total_diskon + total_pajak_item
+Total Jumlah Invoice Terlibat
+ Jumlah unik invoices.id yang muncul pada hasil filter.
+Semua perhitungan hanya menggunakan relasi antara invoice_items, invoices, products, mitras, dan invoice_item_taxes tanpa perubahan struktur tabel.
+
+
+Buku Besar
+Menampilkan tabel data masing-masing chart_of_accounts, data diambil dari table journals dan journal_details. Jadi setiap chart_of_accounts memiliki data masing masing. journals juga berelasi dengan invoices.nomor_invoice = journals.nomor_referensi.
+
+
+Fitur Filter
+Filter Rentang Tanggal
+Memfilter dari dan sampai berdasarkan journals.tgl_jurnal
+Filter Chart Of Accounts
+Memilih akun chart_of_aacounts.kode_akun dan chart_of_aacounts.nama_akun yang akan digunakan untuk grup akun apa saja yang akan tampil.
+Filter Status
+Berdasarkan invoices.status_dok
+
+Isi Setiap Tabel
+Tanggal → journals.tgl_jurnal
+No Journal Entry → journal_details.nomor_journal
+Status → invoices.status_dok
+Deskripsi → journals.keterangan
+Debit → journal_details.debit
+Kredit → journal_details.kredit
+Balane → Debit - Kredit
+Total Saldo → Total keseluruhan balance
+
+
+Umur Piutang
+
+SUMBER DATA
+Tabel Utama: invoices
+ Gunakan hanya data dengan kondisi:
+invoices.tipe_invoice = 'Sales'
+invoices.deleted_at IS NULL
+
+
+Tabel Pembayaran: payments
+ Relasi: payments.invoice_id = invoices.id
+ Gunakan hanya data pembayaran dengan kondisi:
+payments.deleted_at IS NULL
+
+
+PERHITUNGAN SISA PIUTANG
+Total pembayaran per invoice dihitung dari seluruh pembayaran terkait:
+total_pembayaran = SUM(payments.jumlah_bayar)
+Sisa piutang setiap invoice dihitung dengan rumus:
+sisa_piutang = invoices.total_akhir - COALESCE(total_pembayaran, 0)
+Hanya invoice dengan sisa piutang lebih dari 0 yang ditampilkan:
+sisa_piutang > 0
+FILTER YANG TERSEDIA
+a. Filter Pelanggan (Mitra)
+ Berdasarkan invoices.mitra_id
+b. Filter Rentang Tanggal Invoice
+ Berdasarkan:
+ invoices.tgl_invoice BETWEEN tanggal_dari AND tanggal_sampai
+PERHITUNGAN UMUR PIUTANG
+Umur piutang dihitung dari tanggal jatuh tempo:
+umur_hari = DATEDIFF(CURRENT_DATE, invoices.tgl_jatuh_tempo)
+Jika tgl_jatuh_tempo bernilai NULL, maka gunakan tgl_invoice sebagai pengganti.
+KATEGORI UMUR PIUTANG (AGING BUCKET)
+Belum Jatuh Tempo: umur_hari <= 0
+ 1–15 Hari: umur_hari BETWEEN 1 AND 15
+ 16–30 Hari: umur_hari BETWEEN 16 AND 30
+ 31–45 Hari: umur_hari BETWEEN 31 AND 45
+ 46–60 Hari: umur_hari BETWEEN 46 AND 60
+ 61+ Hari: umur_hari > 60
+Pengelompokan aging harus menggunakan nilai sisa_piutang, bukan total invoice.
+BAGIAN 1 — RINGKASAN (SUMMARY)
+Menampilkan ringkasan keseluruhan:
+Total Customers: jumlah mitra unik yang masih memiliki sisa piutang
+Avg. Day Past Due: rata-rata umur keterlambatan (hanya invoice yang sudah lewat jatuh tempo)
+Total Invoices: jumlah invoice yang masih memiliki sisa piutang
+Total Amount: total seluruh sisa piutang
+Belum Jatuh Tempo: total sisa piutang dengan umur <= 0
+1–15 Hari: total sisa piutang overdue 1–15 hari
+16–30 Hari: total sisa piutang overdue 16–30 hari
+31–45 Hari: total sisa piutang overdue 31–45 hari
+46–60 Hari: total sisa piutang overdue 46–60 hari
+61+ Hari: total sisa piutang overdue lebih dari 60 hari
+
+
+BAGIAN 2 — RINCIAN PER PELANGGAN
+Data dikelompokkan berdasarkan invoices.mitra_id.
+Kolom yang ditampilkan:
+Nama Pelanggan: nama mitra
+Avg. Day Past Due: rata-rata umur keterlambatan pelanggan
+Total Invoices: jumlah invoice pelanggan yang masih memiliki sisa piutang
+Total Piutang: total sisa piutang pelanggan
+Belum Jatuh Tempo: total sisa piutang pelanggan yang belum jatuh tempo
+1–15 Hari: total sisa piutang overdue 1–15 hari
+16–30 Hari: total sisa piutang overdue 16–30 hari
+31–45 Hari: total sisa piutang overdue 31–45 hari
+46–60 Hari: total sisa piutang overdue 46–60 hari
+61+ Hari: total sisa piutang overdue lebih dari 60 hari
+
+
+PENGURUTAN DATA
+Data pelanggan diurutkan berdasarkan Total Piutang dari terbesar ke terkecil.
+
+
+Laba Rugi
+Laporan ini menampilkan ringkasan pendapatan dan beban dalam periode tertentu. Data bersumber dari relasi tabel chart_of_accounts, coa_type, coa_group, invoices, dan payments.
+Hanya akun yang termasuk dalam kelompok berikut yang dihitung:
+4000 — Pendapatan (ditambahkan / positif)
+5000 — Beban Pokok (dikurangkan / negatif)
+6000 — Beban (dikurangkan / negatif)
+6800 — Beban Penyusutan (dikurangkan / negatif)
+7001 — Pendapatan Lain (ditambahkan / positif)
+8001 — Beban Lain (dikurangkan / negatif)
+9000 — Beban Pajak (dikurangkan / negatif)
+Relasi Data
+ chart_of_accounts.tipe_id = coa_type.id
+ coa_type.kelompok_id = coa_group.id
+Transaksi keuangan yang memengaruhi laporan berasal dari invoices dan payments sesuai pemetaan akun pada sistem.
+Filter Periode
+ Laporan dapat difilter berdasarkan rentang tanggal:
+ Dari tanggal — Sampai tanggal
+ Tanggal yang digunakan adalah tanggal transaksi keuangan (invoice atau pembayaran sesuai jenis akun).
+Struktur Tampilan
+Dikelompokkan berdasarkan Kelompok Akun (coa_group.kode_kelompok)
+Setiap kelompok menampilkan:
+ Nama Kelompok Akun
+ Daftar akun (chart_of_accounts.nama_akun) dalam kelompok tersebut
+ Saldo per akun dalam periode terpilih
+Aturan Perhitungan Saldo per Kelompok
+Kelompok 4000 — Pendapatan (Positif)
+ Mewakili pendapatan utama perusahaan.
+ Contoh akun: Penjualan, Pendapatan Jasa, Pendapatan Pengiriman.
+ Nilai saldo menambah laba.
+Kelompok 7001 — Pendapatan Lain (Positif)
+ Pendapatan di luar operasional utama.
+ Contoh: Pendapatan Bunga, Keuntungan Selisih Kurs.
+ Nilai saldo menambah laba.
+Kelompok 5000 — Beban Pokok (Negatif)
+ Contoh: Harga Pokok Penjualan.
+ Nilai saldo mengurangi laba.
+Kelompok 6000 — Beban Operasional (Negatif)
+ Contoh: Beban Gaji, Listrik, Sewa, dll.
+ Nilai saldo mengurangi laba.
+Kelompok 6800 — Beban Penyusutan (Negatif)
+ Contoh: Beban Penyusutan Bangunan, Kendaraan, Peralatan.
+ Nilai saldo mengurangi laba.
+Kelompok 8001 — Beban Lain (Negatif)
+ Beban di luar operasional utama.
+ Contoh: Biaya Administrasi Bank, Kerugian Selisih Kurs.
+ Nilai saldo mengurangi laba.
+Kelompok 9000 — Beban Pajak (Negatif)
+ Contoh: Beban Pajak Penghasilan.
+ Nilai saldo mengurangi laba.
+Total per Kelompok
+ Setiap kelompok menampilkan subtotal saldo seluruh akun di dalam kelompok tersebut.
+
+
+Ringkasan Laba Rugi
+Total Pendapatan
+ = Total saldo kelompok 4000 + 7001
+Total Beban
+ = Total saldo kelompok 5000 + 6000 + 6800 + 8001 + 9000
+Laba / Rugi Bersih
+ = Total Pendapatan - Total Beban
+Jika hasil positif → Laba
+ Jika hasil negatif → Rugi
+Catatan Teknis
+ Semua perhitungan hanya menggunakan relasi tabel yang ada tanpa perubahan struktur database.
+ Data yang dihitung hanya yang tidak terhapus (deleted_at IS NULL).
+ Semua data dibatasi berdasarkan office_id yang aktif.
+
+
