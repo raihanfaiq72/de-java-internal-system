@@ -830,7 +830,7 @@
         try {
             const [mRes, pRes, sRes] = await Promise.all([
                 fetch('/api/mitra-api?per_page=1000').then(r => r.json()),
-                fetch('/api/product-api').then(r => r.json()),
+                fetch('/api/product-api?per_page=1000').then(r => r.json()),
                 fetch('/api/user-api/staff-by-permission?permission=purchase').then(r => r.json())
             ]);
             

@@ -712,8 +712,8 @@
         async function initializeMasterData() {
             try {
                 const [mitraRes, productRes] = await Promise.all([
-                    fetch('/api/mitra-api').then(r => r.json()),
-                    fetch('/api/product-api').then(r => r.json()),
+                    fetch('/api/mitra-api?per_page=1000').then(r => r.json()),
+                    fetch('/api/product-api?per_page=1000').then(r => r.json()),
                 ]);
 
                 if (mitraRes.success) {

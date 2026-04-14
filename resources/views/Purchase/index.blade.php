@@ -674,7 +674,7 @@
         async function initializeMasterData() {
             try {
                 const [mitraRes, staffRes] = await Promise.all([
-                    fetch('/api/mitra-api').then(r => r.json()),
+                    fetch('/api/mitra-api?per_page=1000').then(r => r.json()),
                     fetch('/api/user-api/staff-by-permission?permission=purchase').then(r => r.json())
                 ]);
 

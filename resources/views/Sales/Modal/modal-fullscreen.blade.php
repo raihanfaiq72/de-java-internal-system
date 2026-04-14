@@ -492,7 +492,7 @@
 
     async function fetchMasterProduk() {
         try {
-            const res = await fetch('{{ route('product-api.index') }}');
+            const res = await fetch('{{ route('product-api.index') }}?per_page=1000');
             const result = await res.json();
             if (result.success) {
                 masterProduk = result.data.data || result.data;
