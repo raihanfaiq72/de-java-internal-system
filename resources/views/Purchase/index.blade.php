@@ -282,7 +282,7 @@
                                 <div style="min-width: 0; flex: 1.5;">
                                     <label class="f-label mb-1 fw-bold text-muted" style="font-size: 11px;">Mitra</label>
                                     <select id="filter-mitra-id" class="tom-select-init">
-                                        <option value="">Semua Pemasok...</option>
+                                        <option value="">Semua Mitra...</option>
                                     </select>
                                 </div>
 
@@ -333,7 +333,7 @@
                                         </th>
                                         <th width="40" class="text-center">#</th>
                                         <th width="150">Invoice No</th>
-                                        <th width="200">Pemasok</th>
+                                        <th width="200">Mitra</th>
                                         <th width="120" class="text-center">Status</th>
                                         <th width="150" class="text-end">Jumlah</th>
                                         <th width="150" class="text-end">Terhutang</th>

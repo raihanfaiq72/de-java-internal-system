@@ -38,17 +38,17 @@
                                     <div class="row g-4">
                                         {{-- Supplier --}}
                                         <div class="col-lg-6 border-end">
-                                            <label class="f-label mb-2">Supplier / Vendor <span
+                                            <label class="f-label mb-2">Mitra <span
                                                     class="text-danger">*</span></label>
                                             <select id="modal_mitra_id" class="form-select f-input-lg mb-3"
                                                 onchange="renderMitraDetail()">
-                                                <option value="">Cari Supplier...</option>
+                                                <option value="">Cari Mitra...</option>
                                             </select>
                                             <div class="text-end mb-3">
                                                 <button type="button"
                                                     class="btn btn-sm btn-link text-primary text-decoration-none fw-bold p-0"
                                                     onclick="openMitraModal()">
-                                                    <i class="fa fa-plus-circle me-1"></i> Tambah Supplier Baru
+                                                    <i class="fa fa-plus-circle me-1"></i> Tambah Mitra Baru
                                                 </button>
                                             </div>
                                             <div id="mitra_detail_display" class="d-none bg-light p-3 rounded border">
@@ -66,7 +66,7 @@
                                             <div id="mitra_empty_state"
                                                 class="text-center py-4 text-muted border border-dashed rounded bg-light">
                                                 <i class="fa fa-user-plus mb-2 fs-4 text-secondary"></i>
-                                                <div class="small">Pilih supplier untuk melihat detail</div>
+                                                <div class="small">Pilih mitra untuk melihat detail</div>
                                             </div>
                                         </div>
 
@@ -839,13 +839,11 @@
             productCollection = pRes.data.data || pRes.data;
             window.masterStaff = sRes.success ? sRes.data : [];
 
-            // Filter for suppliers only and assign to modalMasterMitra
-            modalMasterMitra = mitraCollection.filter(m => 
-                m.tipe_mitra === 'Supplier' || m.tipe_mitra === 'Both'
-            );
+            // Assign all mitra to modalMasterMitra (No filtering)
+            modalMasterMitra = mitraCollection;
 
             const select = document.getElementById('modal_mitra_id');
-            select.innerHTML = '<option value="">Cari dan pilih supplier...</option>';
+            select.innerHTML = '<option value="">Cari dan pilih mitra...</option>';
             modalMasterMitra.forEach(m => select.insertAdjacentHTML('beforeend',
                 `<option value="${m.id}">${m.nama}</option>`));
 
@@ -1104,7 +1102,7 @@
 
         // Basic Validation
         if (!payload.invoice.mitra_id) {
-            alert('Harap pilih Supplier/Mitra!');
+            alert('Harap pilih Mitra!');
             return;
         }
         if (!payload.invoice.tgl_invoice) {

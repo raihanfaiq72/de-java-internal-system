@@ -36,11 +36,11 @@
                                     <div class="row g-4">
                                         <!-- Customer Selection -->
                                         <div class="col-lg-6 border-end">
-                                            <label class="f-label mb-2">Pelanggan / Mitra <span
+                                            <label class="f-label mb-2">Mitra <span
                                                     class="text-danger">*</span></label>
                                             <select id="modal_mitra_id" class="form-select f-input-lg mb-2"
                                                 onchange="renderMitraDetail()">
-                                                <option value="">Cari Pelanggan...</option>
+                                                <option value="">Cari Mitra...</option>
                                             </select>
                                             <div class="text-end mb-3">
                                                 <button type="button"
@@ -1198,7 +1198,7 @@
 
         // Basic Validation
         if (!payload.invoice.mitra_id) {
-            alert('Harap pilih Pelanggan/Mitra!');
+            alert('Harap pilih Mitra!');
             return;
         }
         if (!payload.invoice.tgl_invoice) {
