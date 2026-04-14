@@ -220,7 +220,7 @@
             if (!tsSupplier) return;
 
             try {
-                const res = await fetch(SUPPLIER_URL);
+                const res = await fetch(SUPPLIER_URL + '?per_page=1000');
                 const result = await res.json();
 
                 if (!result.success) return;
