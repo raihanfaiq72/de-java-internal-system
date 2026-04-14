@@ -16,7 +16,7 @@ class COAType extends Model
 
     public function group()
     {
-        return $this->belongsTo(Coagroup::class, 'kelompok_id');
+        return $this->belongsTo(COAGroup::class, 'kelompok_id');
     }
 
     public function coas()

@@ -16,6 +16,6 @@ class COAGroup extends Model
 
     public function type()
     {
-        return $this->hasMany(CoaType::class, 'kelompok_id');
+        return $this->hasMany(COAType::class, 'kelompok_id');
     }
 }
