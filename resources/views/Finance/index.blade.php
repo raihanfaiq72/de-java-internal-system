@@ -86,39 +86,40 @@
                                                         <i class="iconoir-page-search"></i>
                                                     </button>
                                                     <div class="dropdown">
-                                                    <button class="btn btn-icon btn-sm btn-light rounded-circle"
-                                                        type="button" data-bs-toggle="dropdown">
-                                                        <i class="iconoir-more-vert"></i>
-                                                    </button>
-                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                                                        <li>
-                                                            <h6 class="dropdown-header">Aksi Cepat</h6>
-                                                        </li>
-                                                        <li><a class="dropdown-item" href="#"
-                                                                onclick="openTransferModal({{ $account->id }})"><i
-                                                                    class="iconoir-send-dollars me-2 text-primary"></i>
-                                                                Transfer Dana</a></li>
-                                                        <li><a class="dropdown-item" href="#"
-                                                                onclick="openIncomeModal({{ $account->id }})"><i
-                                                                    class="iconoir-coins me-2 text-success"></i> Catat
-                                                                Pemasukan</a></li>
-                                                        <li><a class="dropdown-item" href="#"
-                                                                onclick="openExpenseModal({{ $account->id }})"><i
-                                                                    class="iconoir-wallet me-2 text-danger"></i> Catat
-                                                                Pengeluaran</a></li>
-                                                        <li>
-                                                            <hr class="dropdown-divider">
-                                                        </li>
-                                                        <li><a class="dropdown-item" href="#"
-                                                                onclick='openEditModal(@json($account))'><i
-                                                                    class="iconoir-edit-pencil me-2"></i> Edit Akun</a></li>
-                                                        <li><a class="dropdown-item text-danger" href="#"
-                                                                onclick="deleteAccount({{ $account->id }})"><i
-                                                                    class="iconoir-trash me-2"></i> Hapus Akun</a></li>
-                                                    </ul>
+                                                        <button class="btn btn-icon btn-sm btn-light rounded-circle"
+                                                            type="button" data-bs-toggle="dropdown">
+                                                            <i class="iconoir-more-vert"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                                            <li>
+                                                                <h6 class="dropdown-header">Aksi Cepat</h6>
+                                                            </li>
+                                                            <li><a class="dropdown-item" href="#"
+                                                                    onclick="openTransferModal({{ $account->id }})"><i
+                                                                        class="iconoir-send-dollars me-2 text-primary"></i>
+                                                                    Transfer Dana</a></li>
+                                                            <li><a class="dropdown-item" href="#"
+                                                                    onclick="openIncomeModal({{ $account->id }})"><i
+                                                                        class="iconoir-coins me-2 text-success"></i> Catat
+                                                                    Pemasukan</a></li>
+                                                            <li><a class="dropdown-item" href="#"
+                                                                    onclick="openExpenseModal({{ $account->id }})"><i
+                                                                        class="iconoir-wallet me-2 text-danger"></i> Catat
+                                                                    Pengeluaran</a></li>
+                                                            <li>
+                                                                <hr class="dropdown-divider">
+                                                            </li>
+                                                            <li><a class="dropdown-item" href="#"
+                                                                    onclick='openEditModal(@json($account))'><i
+                                                                        class="iconoir-edit-pencil me-2"></i> Edit Akun</a>
+                                                            </li>
+                                                            <li><a class="dropdown-item text-danger" href="#"
+                                                                    onclick="deleteAccount({{ $account->id }})"><i
+                                                                        class="iconoir-trash me-2"></i> Hapus Akun</a></li>
+                                                        </ul>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
 
                                             <!-- Chart Container -->
                                             <div id="chart-{{ $account->id }}"
@@ -158,8 +159,9 @@
                                 <div class="col-12">
                                     <div class="card border-0 shadow-sm rounded-3 text-center py-5">
                                         <div class="card-body">
-                                            <img src="{{ asset('assets/images/no-data.svg') }}" alt="No Data"
-                                                style="height: 150px; opacity: 0.5" class="mb-3">
+                                            <i class="iconoir-bank"></i>
+                                            {{-- <img src="{{ asset('assets/images/no-data.svg') }}" alt="No Data"
+                                                style="height: 150px; opacity: 0.5" class="mb-3"> --}}
                                             <h5 class="text-muted">Belum ada akun keuangan</h5>
                                             <p class="text-muted mb-4">Silakan buat akun kas atau bank pertama Anda untuk
                                                 mulai mencatat transaksi.</p>
@@ -190,7 +192,8 @@
                                 <!-- Filters -->
                                 <div class="collapse mb-4" id="filterCollapse">
                                     <div class="card card-body bg-light border-0">
-                                        <form id="filterForm" action="{{ route('finance.index') }}" method="GET" class="row g-3">
+                                        <form id="filterForm" action="{{ route('finance.index') }}" method="GET"
+                                            class="row g-3">
                                             <div class="col-md-3">
                                                 <label class="form-label">Filter Akun</label>
                                                 <select class="form-select" name="account_id">
@@ -219,17 +222,20 @@
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label">Tanggal Mulai</label>
-                                                <input type="date" class="form-control" name="start_date" value="{{ request('start_date') }}">
+                                                <input type="date" class="form-control" name="start_date"
+                                                    value="{{ request('start_date') }}">
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label">Tanggal Akhir</label>
-                                                <input type="date" class="form-control" name="end_date" value="{{ request('end_date') }}">
+                                                <input type="date" class="form-control" name="end_date"
+                                                    value="{{ request('end_date') }}">
                                             </div>
                                             <div class="col-12 d-flex justify-content-end gap-2">
                                                 <button type="submit" class="btn btn-primary">
                                                     <i class="iconoir-filter me-1"></i> Terapkan Filter
                                                 </button>
-                                                <button type="submit" formaction="{{ route('finance.export') }}" class="btn btn-success text-white">
+                                                <button type="submit" formaction="{{ route('finance.export') }}"
+                                                    class="btn btn-success text-white">
                                                     <i class="iconoir-page-search me-1"></i> Export Excel
                                                 </button>
                                             </div>
@@ -336,7 +342,6 @@
 
         <!-- Modals -->
         @include('Finance.modals')
-
     @endsection
 
     @prepend('js')
@@ -615,7 +620,8 @@
             function downloadReport() {
                 const start = document.getElementById('preview-start-date').value;
                 const end = document.getElementById('preview-end-date').value;
-                const url = `{{ route('finance.export') }}?account_id=${currentPreviewAccountId}&start_date=${start}&end_date=${end}`;
+                const url =
+                    `{{ route('finance.export') }}?account_id=${currentPreviewAccountId}&start_date=${start}&end_date=${end}`;
                 window.location.href = url;
             }
 

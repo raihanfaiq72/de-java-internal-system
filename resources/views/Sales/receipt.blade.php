@@ -891,22 +891,23 @@
             try {
                 // Load Mitras
                 const resMitra = await fetch(API_MITRA);
+                if (!resMitra.ok) throw new Error("Gagal ambil data Mitra");
                 const jsonMitra = await resMitra.json();
 
                 let mitraData = [];
                 if (jsonMitra.success) {
-                    if (Array.isArray(jsonMitra.data)) {
-                        mitraData = jsonMitra.data;
-                    } else if (jsonMitra.data && Array.isArray(jsonMitra.data.data)) {
-                        mitraData = jsonMitra.data.data;
-                    }
+                    mitraData = jsonMitra.data?.data || jsonMitra.data || [];
                 }
 
                 const mitraSelect = document.getElementById('mitra_id');
-                // Ensure clear before rebuild
-                if (tomMitra) {
-                    tomMitra.destroy();
-                    tomMitra = null;
+                if (!mitraSelect) {
+                    console.warn("Element mitra_id tidak ditemukan");
+                    return;
+                }
+
+                // Destroy existing TomSelect if any
+                if (mitraSelect.tomselect) {
+                    mitraSelect.tomselect.destroy();
                 }
 
                 mitraSelect.innerHTML = '<option value="">Pilih Pelanggan...</option>';
@@ -931,29 +932,31 @@
 
                 // Load Financial Accounts
                 const resFin = await fetch(API_FIN_ACC);
+                if (!resFin.ok) throw new Error("Gagal ambil data Akun Keuangan");
                 const jsonFin = await resFin.json();
 
                 let finData = [];
                 if (jsonFin.success) {
-                    if (Array.isArray(jsonFin.data)) {
-                        finData = jsonFin.data;
-                    } else if (jsonFin.data && Array.isArray(jsonFin.data.data)) {
-                        finData = jsonFin.data.data;
-                    }
+                    finData = jsonFin.data?.data || jsonFin.data || [];
                 }
 
                 const coaSelect = document.getElementById('akun_keuangan_id');
-                // Destroy if already exists (check element property if needed, but for now just init)
+                if (!coaSelect) {
+                    return;
+                }
+
                 if (coaSelect.tomselect) {
                     coaSelect.tomselect.destroy();
                 }
 
                 coaSelect.innerHTML = '<option value="">Pilih Akun...</option>';
                 finData.forEach(acc => {
-                    coaSelect.innerHTML += `<option value="${acc.id}">${acc.name} (${acc.code})</option>`;
+                    const accName = acc.name || acc.nama_akun || 'Unnamed';
+                    const accCode = acc.code || acc.kode_akun || '';
+                    coaSelect.innerHTML +=
+                        `<option value="${acc.id}">${accName} ${accCode ? `(${accCode})` : ''}</option>`;
                 });
 
-                // Init TomSelect for Akun Keuangan
                 new TomSelect("#akun_keuangan_id", {
                     create: false,
                     sortField: {
@@ -963,7 +966,10 @@
                 });
 
             } catch (e) {
-                console.error("Failed to load dropdowns", e);
+                console.error("Critical error in loadDropdowns:", e);
+                // Fallback: Clear the loading state
+                const coaSelect = document.getElementById('akun_keuangan_id');
+                if (coaSelect) coaSelect.innerHTML = '<option value="">Gagal memuat akun</option>';
             }
         }
 

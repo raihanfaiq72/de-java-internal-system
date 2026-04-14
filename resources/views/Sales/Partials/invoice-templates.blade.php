@@ -39,18 +39,19 @@
                         <a class="dropdown-item btn-edit" href="javascript:void(0)"><i
                                 class="fa fa-pencil text-primary me-2"></i> Edit Data</a>
                     </li>
-                    <li>
+                    {{-- <li>
                         <a class="dropdown-item btn-send-invoice" href="javascript:void(0)">
                             <i class="fa fa-paper-plane text-success me-2"></i> Kirim Invoice
                         </a>
-                    </li>
+                    </li> --}}
                     <li>
                         <a class="dropdown-item btn-create-receipt" href="javascript:void(0)">
                             <i class="fa fa-receipt text-dark me-2"></i> Buat Kuitansi
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item btn-print" href=""><i class="fa fa-print text-dark me-2"></i> Cetak
+                        <a class="dropdown-item btn-print" href=""><i class="fa fa-print text-dark me-2"></i>
+                            Cetak
                             Nota</a>
                     </li>
                     <li>
@@ -60,7 +61,12 @@
                     </li>
                     <li>
                         <a class="dropdown-item btn-unarchive d-none" href="javascript:void(0)">
-                            <i class="fa fa-box-open text-success me-2"></i> Pulihkan
+                            <i class="iconoir-undo text-success me-2"></i> Pulihkan
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item btn-restore-trash d-none" href="javascript:void(0)">
+                            <i class="iconoir-undo text-success me-2"></i> Pulihkan
                         </a>
                     </li>
                     <li>

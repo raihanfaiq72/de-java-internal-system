@@ -525,26 +525,52 @@
         if (!window.TomSelect) return;
 
         if (tomSelectStaffModal) {
-            try { staffSelectStaffModal.destroy(); } catch (_) { }
+            try { tomSelectStaffModal.destroy(); } catch (_) { }
             tomSelectStaffModal = null;
         }
 
         const sel = document.getElementById('modal_sales_id');
-        sel.innerHTML = '<option value="">Pilih Staff...</option>';
+        if (!sel) return;
+
+        // ONLY initialize TomSelect if the element is a select
+        if (sel.tagName !== 'SELECT') {
+            if (selectedId) sel.value = selectedId;
+            return;
+        }
+
+        // Gather staff data
+        const options = [];
+        const finalStaffData = (staffData && staffData.length > 0) ? staffData : (window.masterStaff || []);
         
+        finalStaffData.forEach(s => {
+            options.push({ id: String(s.id), name: s.name });
+        });
+
+        // Clear select to let TomSelect handle it via the options array
+        if (sel.options) {
+            sel.innerHTML = '<option value="">Pilih Staff...</option>';
+        }
+
         tomSelectStaffModal = new TomSelect('#modal_sales_id', {
-            options: staffData.map(s => ({ id: s.id, name: s.name })),
+            options: options,
             valueField: 'id',
             labelField: 'name',
             searchField: ['name'],
-            allowEmptyOption: true,
             placeholder: 'Pilih Staff...',
+            allowEmptyOption: true,
             create: false,
-            dropdownParent: 'body'
+            dropdownParent: 'body',
+            maxOptions: 1000,
+            render: {
+                option: (data, escape) => `<div>${escape(data.name)}</div>`,
+                item: (data, escape) => `<div>${escape(data.name)}</div>`
+            }
         });
 
-        if (selectedId) {
+        if (selectedId && selectedId != "0" && selectedId != "null") {
             tomSelectStaffModal.setValue(String(selectedId), true);
+        } else {
+            tomSelectStaffModal.clear(true);
         }
     }
 
@@ -811,6 +837,7 @@
             // Handle both paginated and non-paginated responses
             mitraCollection = mRes.data.data || mRes.data;
             productCollection = pRes.data.data || pRes.data;
+            window.masterStaff = sRes.success ? sRes.data : [];
 
             // Filter for suppliers only and assign to modalMasterMitra
             modalMasterMitra = mitraCollection.filter(m => 
@@ -822,8 +849,7 @@
             modalMasterMitra.forEach(m => select.insertAdjacentHTML('beforeend',
                 `<option value="${m.id}">${m.nama}</option>`));
 
-            const staffData = sRes.success ? sRes.data : [];
-            initTomSelectStaffModal(staffData);
+            initTomSelectStaffModal(window.masterStaff);
         } catch (e) {
             console.error("Master data fail", e);
         }
@@ -846,6 +872,7 @@
         if (modalMasterMitra.length === 0) await initializeInvoiceData();
 
         initTomSelectMitraModal();
+        initTomSelectStaffModal(window.masterStaff || []);
 
         if (mode === 'edit' && id) {
             document.getElementById('modalTitle').innerText = 'Edit Invoice Pembelian';
@@ -872,6 +899,9 @@
                     } else {
                         initTomSelectMitraModal(inv.mitra_id || null);
                     }
+
+                    // Re-init staff with selectedId
+                    initTomSelectStaffModal(window.masterStaff || [], inv.sales_id || null);
 
                     renderMitraDetail();
 

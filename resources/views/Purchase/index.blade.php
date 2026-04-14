@@ -760,7 +760,7 @@
                 }
 
                 if (result.success) {
-                    renderInvoiceList(result.data.data);
+                    renderInvoiceList(result.data.data, currentTabStatus);
                     renderPagination(result.data);
                 }
             } catch (error) {
@@ -814,16 +814,31 @@
             document.getElementById('detailTotal').textContent = window.financeApp.formatIDR(item.total_akhir);
 
             // Action Buttons
-            document.getElementById('btnDetailEdit').onclick = () => {
-                bootstrap.Modal.getInstance(document.getElementById('detailInvoiceModal')).hide();
-                openInvoiceModal(item.id, null, 'edit');
-            };
-            document.getElementById('btnDetailDelete').onclick = async () => {
-                if (await macConfirm('Hapus invoice', 'Yakin ingin menghapus invoice ini?')) {
-                    bootstrap.Modal.getInstance(document.getElementById('detailInvoiceModal')).hide();
-                    deleteInvoice(item.id);
+            const btnDetailEdit = document.getElementById('btnDetailEdit');
+            const btnDetailDelete = document.getElementById('btnDetailDelete');
+            const isRestricted = item.status_pembayaran === 'Paid' || item.status_pembayaran === 'Partially Paid';
+
+            if (isRestricted) {
+                if (btnDetailEdit) btnDetailEdit.style.display = 'none';
+                if (btnDetailDelete) btnDetailDelete.style.display = 'none';
+            } else {
+                if (btnDetailEdit) {
+                    btnDetailEdit.style.display = 'block';
+                    btnDetailEdit.onclick = () => {
+                        bootstrap.Modal.getInstance(document.getElementById('detailInvoiceModal')).hide();
+                        openInvoiceModal(item.id, null, 'edit');
+                    };
                 }
-            };
+                if (btnDetailDelete) {
+                    btnDetailDelete.style.display = 'block';
+                    btnDetailDelete.onclick = async () => {
+                        if (await macConfirm('Hapus invoice', 'Yakin ingin menghapus invoice ini?')) {
+                            bootstrap.Modal.getInstance(document.getElementById('detailInvoiceModal')).hide();
+                            deleteInvoice(item.id);
+                        }
+                    };
+                }
+            }
             const btnDetailPrint = document.getElementById('btnDetailPrint');
             btnDetailPrint.href = 'javascript:void(0)';
             btnDetailPrint.onclick = () => openPrintPreview(item.id);
@@ -864,7 +879,7 @@
             }
         }
 
-        function renderInvoiceList(data) {
+        function renderInvoiceList(data, tab = 'active') {
             const tbody = document.getElementById('invoiceTableBody');
             const rowTpl = document.getElementById('row-template');
 
@@ -922,6 +937,16 @@
 
                 // Aksi
                 const btnShow = row.querySelector('.btn-show');
+                const btnReceipt = row.querySelector('.btn-create-receipt');
+                const btnEdit = row.querySelector('.btn-edit');
+                const btnDelete = row.querySelector('.btn-delete');
+                const btnPrint = row.querySelector('.btn-print');
+                const btnArchive = row.querySelector('.btn-archive');
+                const btnUnarchive = row.querySelector('.btn-unarchive');
+                const divider = row.querySelector('.dropdown-divider');
+                const btnRestoreTrash = row.querySelector('.btn-restore-trash');
+                const btnForceDelete = row.querySelector('.btn-force-delete');
+
                 if (btnShow) {
                     btnShow.onclick = (e) => {
                         e.preventDefault();
@@ -930,43 +955,86 @@
                     btnShow.removeAttribute('href');
                 }
 
-                const btnReceipt = row.querySelector('.btn-create-receipt');
-                if (btnReceipt) {
-                    // Hide if payment exists for this invoice
-                    if (paidInvoiceIds.includes(String(item.id))) {
-                        btnReceipt.closest('li').remove();
+                // Determine lifecycle state from tab
+                const isTrashed = tab === 'trash';
+                const isArchived = tab === 'archive';
+
+                if (isTrashed) {
+                    // Trashed State: Only Restore and Force Delete
+                    if (btnEdit) btnEdit.closest('li').remove();
+                    if (btnShow) btnShow.closest('li').remove();
+                    if (btnPrint) btnPrint.closest('li').remove();
+                    if (btnReceipt) btnReceipt.closest('li').remove();
+                    if (btnArchive) btnArchive.closest('li').remove();
+                    if (btnDelete) btnDelete.closest('li').remove();
+
+                    if (btnRestoreTrash) {
+                        btnRestoreTrash.classList.remove('d-none');
+                        btnRestoreTrash.onclick = () => restoreInvoice(item.id);
+                    }
+                    if (btnForceDelete) {
+                        btnForceDelete.classList.remove('d-none');
+                        btnForceDelete.onclick = () => forceDeleteInvoice(item.id, item.nomor_invoice);
+                    }
+                } else if (isArchived) {
+                    // Archived State: Only Restore (Unarchive) and Delete
+                    if (btnEdit) btnEdit.closest('li').remove();
+                    if (btnShow) btnShow.closest('li').remove();
+                    if (btnPrint) btnPrint.closest('li').remove();
+                    if (btnReceipt) btnReceipt.closest('li').remove();
+                    if (btnArchive) btnArchive.closest('li').remove();
+
+                    if (btnUnarchive) {
+                        btnUnarchive.classList.remove('d-none');
+                        btnUnarchive.onclick = () => unarchiveInvoice(item.id);
+                    }
+                    if (btnDelete) btnDelete.onclick = () => deleteInvoice(item.id);
+                } else {
+                    // Active State: Normal actions
+                    const isRestricted = item.status_pembayaran === 'Paid' || item.status_pembayaran ===
+                        'Partially Paid';
+
+                    if (isRestricted) {
+                        if (btnEdit) btnEdit.closest('li').remove();
+                        if (btnReceipt) btnReceipt.closest('li').remove();
+                        if (btnArchive) btnArchive.closest('li').remove();
+                        if (btnUnarchive) btnUnarchive.closest('li').remove();
+                        if (btnDelete) btnDelete.closest('li').remove();
+                        if (divider) divider.remove();
                     } else {
-                        btnReceipt.onclick = (e) => {
-                            e.preventDefault();
-                            // Redirect to receipt page with params
-                            window.location.href =
-                                `{{ route('purchase.receipt') }}?open_create=true&invoice_id=${item.id}&mitra_id=${item.mitra_id}`;
-                        };
+                        if (btnReceipt) {
+                            // Hide if payment exists for this invoice
+                            if (paidInvoiceIds.includes(String(item.id))) {
+                                btnReceipt.closest('li').remove();
+                            } else {
+                                btnReceipt.onclick = (e) => {
+                                    e.preventDefault();
+                                    // Redirect to receipt page with params
+                                    window.location.href =
+                                        `{{ route('purchase.receipt') }}?open_create=true&invoice_id=${item.id}&mitra_id=${item.mitra_id}`;
+                                };
+                            }
+                        }
+
+                        if (btnEdit) btnEdit.onclick = () => openInvoiceModal(item.id, null, 'edit');
+                        if (btnDelete) btnDelete.onclick = () => deleteInvoice(item.id);
+
+                        const hasPayment = parseFloat(item.payment_sum_jumlah_bayar || 0) > 0 ||
+                            item.status_pembayaran === 'Paid' ||
+                            item.status_pembayaran === 'Partially Paid';
+
+                        if (!hasPayment) {
+                            if (btnArchive) {
+                                btnArchive.classList.remove('d-none');
+                                btnArchive.onclick = () => archiveInvoice(item.id);
+                            }
+                        }
                     }
                 }
 
-                row.querySelector('.btn-edit').onclick = () => openInvoiceModal(item.id, null, 'edit');
-                row.querySelector('.btn-delete').onclick = () => deleteInvoice(item.id);
-                const btnPrint = row.querySelector('.btn-print');
-                btnPrint.href = 'javascript:void(0)';
-                btnPrint.onclick = () => openPrintPreview(item.id);
-
-                const archived = item.status_dok === 'Draft' && item.status_pembayaran === 'Draft';
-                const btnArchive = row.querySelector('.btn-archive');
-                const btnUnarchive = row.querySelector('.btn-unarchive');
-
-                const hasPayment = parseFloat(item.payment_sum_jumlah_bayar || 0) > 0 || 
-                                 item.status_pembayaran === 'Paid' || 
-                                 item.status_pembayaran === 'Partial';
-
-                if (archived) {
-                    btnUnarchive.classList.remove('d-none');
-                    btnUnarchive.onclick = () => unarchiveInvoice(item.id);
-                } else {
-                    if (!hasPayment) {
-                        btnArchive.classList.remove('d-none');
-                        btnArchive.onclick = () => archiveInvoice(item.id);
-                    }
+                if (btnPrint) {
+                    btnPrint.href = 'javascript:void(0)';
+                    btnPrint.onclick = () => openPrintPreview(item.id);
                 }
 
                 // Remove chevron
@@ -1146,6 +1214,61 @@
             } catch (e) {
                 console.error(e);
                 alert('Error sistem saat memulihkan.');
+            }
+        }
+
+        async function restoreInvoice(id) {
+            if (!confirm('Apakah Anda yakin ingin memulihkan invoice ini dari tempat sampah?')) return;
+
+            try {
+                const res = await fetch(`${window.financeApp.API_URL}/${id}/restore`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    }
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('Invoice berhasil dipulihkan.');
+                    loadInvoiceData(); // Refresh list
+                } else {
+                    alert('Gagal memulihkan invoice: ' + (result.message || 'Error tidak diketahui'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Terjadi kesalahan jaringan.');
+            }
+        }
+
+        async function forceDeleteInvoice(id, invNo) {
+            const confirmNo = prompt(
+                `PERINGATAN: Invoice akan dihapus secara PERMANEN dan tidak dapat dikembalikan.\nKetik nomor invoice "${invNo}" untuk mengonfirmasi:`
+                );
+
+            if (confirmNo !== invNo) {
+                if (confirmNo !== null) alert('Nomor invoice tidak cocok. Pembatalan penghapusan.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${window.financeApp.API_URL}/${id}/force-delete`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    }
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('Invoice berhasil dihapus permanen.');
+                    loadInvoiceData(); // Refresh list
+                } else {
+                    alert('Gagal menghapus permanen: ' + (result.message || 'Error tidak diketahui'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Terjadi kesalahan jaringan.');
             }
         }
 

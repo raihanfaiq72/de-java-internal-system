@@ -1,7 +1,66 @@
 @extends('Layout.main')
 
+@push('css')
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        .f-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 700;
+            color: #64748b;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .f-mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+
+        .ts-dropdown {
+            z-index: 9999 !important;
+        }
+
+        .ts-wrapper.form-control {
+            overflow: visible !important;
+        }
+
+        .f-input:focus,
+        .f-text:focus {
+            outline: none !important;
+            border-color: #3b82f6 !important;
+        }
+    </style>
+@endpush
+
 @section('main')
     <div class="page-wrapper" style="background-color: #f8fafc; min-height: 100vh; font-family: 'Inter', sans-serif;">
+        <script>
+            // Pre-initialize globals for modals included below
+            window.invoiceId = '{{ $id ?? $invoice->id }}';
+            window.API_URL = '{{ url('api/invoice-api') }}';
+            window.financeApp = window.financeApp || {
+                API_URL: window.API_URL,
+                formatIDR: (val) => new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0
+                }).format(val),
+                formatDate: (dateStr) => {
+                    if (!dateStr) return '-';
+                    const date = new Date(dateStr);
+                    return date.toLocaleDateString('id-ID', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+                }
+            };
+            window.masterProduk = window.masterProduk || [];
+            window.masterStaff = window.masterStaff || [];
+            window.modalMasterMitra = window.modalMasterMitra || [];
+        </script>
         <div class="page-content">
             <div class="container-fluid">
 
@@ -26,8 +85,8 @@
                             class="btn btn-white border fw-bold px-3 shadow-sm text-dark me-2 d-none">
                             <i class="fa fa-print me-1"></i> Cetak
                         </a>
-                        <button class="btn btn-primary fw-bold px-4 shadow-sm"
-                            onclick="alert('Fitur Edit akan segera hadir')">
+                        <button id="btn-edit-header" class="btn btn-primary fw-bold px-4 shadow-sm"
+                            onclick="openInvoiceModal(invoiceId, 'Purchase', 'edit')">
                             <i class="fa fa-pencil me-1"></i> Edit
                         </button>
                     </div>
@@ -247,13 +306,15 @@
             </div>
         </div>
     </div>
+    @include('Purchase.Modal.modal-fullscreen')
+    @include('Purchase.Modal.modal-bulk-edit')
+    @include('Purchase.Modal.detail-modal')
+    @include('Purchase.Partials.invoice-templates')
 @endsection
 
 @push('js')
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <script>
-        const invoiceId = '{{ $id ?? $invoice->id }}'; // Handle both transition cases
-        const API_URL = '{{ url('api/invoice-api') }}';
-
         async function loadInvoiceDetail() {
             try {
                 const response = await fetch(`${API_URL}/${invoiceId}`);
@@ -282,6 +343,12 @@
                 (data.status_pembayaran === 'Unpaid' ? 'bg-danger' : 'bg-warning')
                 } `;
 
+            const btnEdit = document.getElementById('btn-edit-header');
+            const isRestricted = data.status_pembayaran === 'Paid' || data.status_pembayaran === 'Partially Paid';
+            if (btnEdit) {
+                btnEdit.style.display = isRestricted ? 'none' : 'inline-block';
+            }
+
             const btnPrint = document.getElementById('btn-print');
             btnPrint.href = 'javascript:void(0)';
             btnPrint.onclick = () => openPrintPreview(data.id);
@@ -300,7 +367,7 @@
                 document.getElementById('mitra-name').textContent = 'Umum';
             }
 
-            document.getElementById('inv-ref').textContent = data.ref_no || '-';
+            document.getElementById('inv-ref').textContent = data.sales?.name || '-';
             document.getElementById('inv-due').textContent = formatDate(data.tgl_jatuh_tempo);
 
             // Items
@@ -316,7 +383,7 @@
                                     <div class="fw-bold text-dark">${item.product?.nama_produk || item.nama_produk_manual || '-'}</div>
                                     <div class="small text-muted">${item.product?.kode_produk || '-'}</div>
                                 </td>
-                                <td class="text-center py-3">${parseFloat(item.qty)} ${item.product?.unit?.nama_unit || ''}</td>
+                                <td class="text-center py-3">${parseFloat(item.qty)} ${item.product?.satuan || ''}</td>
                                 <td class="text-end py-3">${formatIDR(item.harga_satuan)}</td>
                                 <td class="text-end pe-4 py-3 fw-bold text-dark">${formatIDR(item.total_harga_item)}</td>
                             </tr>
@@ -385,43 +452,43 @@
 
                 let title = log.tindakan;
                 let color = 'bg-primary';
-                let icon = 'fa-info-circle';
+                let icon = 'iconoir-info-empty';
 
                 // Mapping user-friendly names
                 if (log.tindakan === 'Create') {
                     title = 'Invoice Dibuat';
                     color = 'bg-info';
-                    icon = 'fa-plus';
+                    icon = 'iconoir-plus';
                 } else if (log.tindakan === 'Update') {
                     title = 'Invoice Diperbarui';
                     color = 'bg-primary';
-                    icon = 'fa-edit';
+                    icon = 'iconoir-edit-pencil';
 
                     // Specific check for status changes
                     if (log.data_sesudah && log.data_sesudah.status_pembayaran) {
                         title = `Status: ${log.data_sesudah.status_pembayaran}`;
                         color = log.data_sesudah.status_pembayaran === 'Paid' ? 'bg-success' : 'bg-warning';
-                        icon = 'fa-wallet';
+                        icon = 'iconoir-wallet';
                     }
                     if (log.data_sesudah && log.data_sesudah.status_dok) {
                         title = `Dokumen: ${log.data_sesudah.status_dok}`;
                         color = log.data_sesudah.status_dok === 'Approved' ? 'bg-success' : (log.data_sesudah
                             .status_dok === 'Rejected' ? 'bg-danger' : 'bg-secondary');
-                        icon = 'fa-file-check';
+                        icon = 'iconoir-check';
                     }
                 } else if (log.tindakan === 'Soft Delete') {
                     title = 'Invoice Dihapus (Trash)';
                     color = 'bg-danger';
-                    icon = 'fa-trash';
+                    icon = 'iconoir-trash';
                 }
 
                 body.innerHTML += `
                     <div class="d-flex mb-3">
                         <div class="me-3 d-flex flex-column align-items-center">
-                            <div class="rounded-circle ${color} text-white d-flex align-items-center justify-content-center"
-                                style="width: 24px; height: 24px; font-size: 10px; flex-shrink: 0;">
-                                <i class="fa ${icon}"></i>
-                            </div>
+                             <div class="rounded-circle ${color} text-white d-flex align-items-center justify-content-center"
+                                 style="width: 24px; height: 24px; font-size: 14px; flex-shrink: 0;">
+                                 <i class="${icon}"></i>
+                             </div>
                             ${!isLast ? '<div class="h-100 border-start border-2 mt-1" style="border-color: #e2e8f0;"></div>' : ''}
                         </div>
                         <div>
@@ -483,15 +550,39 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             loadInvoiceDetail();
+
+            // Fetch master data for modal
+            try {
+                const [mRes, pRes, sRes] = await Promise.all([
+                    fetch('/api/mitra-api?per_page=1000').then(r => r.json()),
+                    fetch('/api/product-api').then(r => r.json()),
+                    fetch('/api/user-api/staff-by-permission?permission=purchase').then(r => r.json())
+                ]);
+
+                if (mRes.success) {
+                    window.modalMasterMitra = (mRes.data.data || mRes.data).filter(m =>
+                        m.tipe_mitra === 'Supplier' || m.tipe_mitra === 'Both'
+                    );
+                }
+                if (pRes.success) {
+                    window.masterProduk = pRes.data.data || pRes.data;
+                }
+                if (sRes.success) {
+                    window.masterStaff = sRes.data || [];
+                }
+            } catch (e) {
+                console.error("Gagal memuat data master", e);
+            }
 
             // Check for success flag
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('action') === 'created') {
                 alert('Invoice berhasil disimpan!');
                 // Optional: Clean URL
-                const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                const newUrl = window.location.protocol + "//" + window.location.host + window.location
+                    .pathname;
                 window.history.replaceState({
                     path: newUrl
                 }, '', newUrl);

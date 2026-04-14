@@ -97,22 +97,15 @@
 
                                                 <div class="col-12">
                                                     <label class="f-label">Salesperson</label>
-                                                    @if (isset($canSelectSales) && $canSelectSales)
-                                                        <select id="modal_sales_id" class="form-select f-input">
-                                                            <option value="0">Tanpa Sales Person</option>
-                                                            <option value="">Pilih Sales...</option>
-                                                            @foreach ($users ?? [] as $u)
-                                                                <option value="{{ $u->id }}"
-                                                                    @if ($u->id == auth()->id()) selected @endif>
-                                                                    {{ $u->name }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                    @else
-                                                        <input type="text" class="form-control f-input bg-light"
-                                                            value="{{ auth()->user()->name }}" readonly>
-                                                        <input type="hidden" id="modal_sales_id"
-                                                            value="{{ auth()->id() }}">
-                                                    @endif
+                                                    <select id="modal_sales_id" class="form-select f-input">
+                                                        <option value="0">Tanpa Sales Person</option>
+                                                        <option value="">Pilih Sales...</option>
+                                                        @foreach ($users ?? [] as $u)
+                                                            <option value="{{ $u->id }}"
+                                                                @if ($u->id == auth()->id()) selected @endif>
+                                                                {{ $u->name }}</option>
+                                                        @endforeach
+                                                    </select>
                                                 </div>
                                             </div>
                                         </div>
@@ -614,6 +607,75 @@
     };
 
     let tomSelectMitraModal = null;
+    let tomSelectSalesModal = null;
+
+    function initTomSelectSalesModal(selectedId = null) {
+        if (!window.TomSelect) return;
+
+        if (tomSelectSalesModal) {
+            try {
+                tomSelectSalesModal.destroy();
+            } catch (_) {}
+            tomSelectSalesModal = null;
+        }
+
+        const sel = document.getElementById('modal_sales_id');
+        if (!sel) return;
+
+        // ONLY initialize TomSelect if the element is a select
+        // If it's an input (hidden/text), we just set the value and return
+        if (sel.tagName !== 'SELECT') {
+            if (selectedId) sel.value = selectedId;
+            return;
+        }
+
+        // Gather all available options into a standard format
+        const options = [];
+        
+        // 1. Get existing options from Blade
+        if (sel.options) {
+            Array.from(sel.options).forEach(opt => {
+                if (opt.value !== '') {
+                    options.push({ id: opt.value, name: opt.textContent.trim() });
+                }
+            });
+        }
+
+        // 2. Add from masterUsers if missing (e.g. on detail page)
+        const staffData = Array.isArray(window.masterUsers) ? window.masterUsers : [];
+        if (staffData.length > 0) {
+            staffData.forEach(u => {
+                if (!options.find(o => o.id == u.id)) {
+                    options.push({ id: String(u.id), name: u.name });
+                }
+            });
+        }
+
+        // 3. Clear select to let TomSelect handle it via the options array
+        sel.innerHTML = '<option value="">Pilih Sales...</option>';
+        
+        tomSelectSalesModal = new TomSelect('#modal_sales_id', {
+            options: options,
+            valueField: 'id',
+            labelField: 'name',
+            searchField: ['name'],
+            placeholder: 'Pilih Sales...',
+            allowEmptyOption: true,
+            create: false,
+            dropdownParent: 'body',
+            maxOptions: 1000,
+            render: {
+                option: (data, escape) => `<div>${escape(data.name)}</div>`,
+                item: (data, escape) => `<div>${escape(data.name)}</div>`
+            }
+        });
+
+        if (selectedId && selectedId != "0" && selectedId != "null") {
+            tomSelectSalesModal.setValue(String(selectedId), true);
+        } else {
+            tomSelectSalesModal.clear(true);
+        }
+    }
 
     function initTomSelectMitraModal(selectedId = null) {
         if (!window.TomSelect) {
@@ -676,6 +738,12 @@
             } catch (_) {}
             tomSelectMitraModal = null;
         }
+        if (tomSelectSalesModal) {
+            try {
+                tomSelectSalesModal.destroy();
+            } catch (_) {}
+            tomSelectSalesModal = null;
+        }
     });
 
     // --- Modal Logic ---
@@ -693,8 +761,21 @@
         // Load Master Data if empty
         if (masterProduk.length === 0) await fetchMasterProduk();
         if (masterMitra.length === 0) await initializeMasterData();
+        
+        // Ensure masterUsers is loaded (part of initializeMasterData or separate fetch)
+        if (!window.masterUsers || window.masterUsers.length === 0) {
+            try {
+                const uRes = await fetch('/api/user-api/staff-by-permission?permission=sales');
+                const uData = await uRes.json();
+                window.masterUsers = (uData.success && uData.data) ? uData.data : (uData.data || uData || []);
+            } catch (e) {
+                console.error("Failed to fetch staff", e);
+                window.masterUsers = [];
+            }
+        }
 
         initTomSelectMitraModal();
+        initTomSelectSalesModal();
 
         if (mode === 'edit' && id) {
             document.getElementById('modalTitle').innerText = 'Edit Invoice Penjualan';
@@ -723,6 +804,9 @@
                         initTomSelectMitraModal(inv.mitra_id || null);
                     }
 
+                    // Re-init staff with selectedId
+                    initTomSelectSalesModal(inv.sales_id || null);
+
                     renderMitraDetail();
 
                     // Items
@@ -749,6 +833,9 @@
 
             if (tomSelectMitraModal) {
                 tomSelectMitraModal.clear(true);
+            }
+            if (tomSelectSalesModal) {
+                tomSelectSalesModal.clear(true);
             }
 
 
