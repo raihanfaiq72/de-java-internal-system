@@ -6,6 +6,12 @@
             <input type="text" id="filter-produk-search" class="form-control form-control-sm"
                 placeholder="Ketik pencarian...">
         </div>
+        <div class="col-md-3">
+            <label class="small fw-bold text-muted">Supplier</label>
+            <select id="filter-produk-supplier" class="form-select form-select-sm">
+                <option value="">Semua Supplier</option>
+            </select>
+        </div>
 
         <div class="col-md-auto">
             <button onclick="loadProductData()" class="btn btn-sm btn-dark px-3">
@@ -869,9 +875,11 @@
 
             try {
                 const search = document.getElementById('filter-produk-search').value;
+                const supplierId = document.getElementById('filter-produk-supplier').value;
 
                 const fetchUrl = new URL(url);
                 if (search) fetchUrl.searchParams.append('search', search);
+                if (supplierId) fetchUrl.searchParams.append('supplier_id', supplierId);
 
                 const res = await fetch(fetchUrl);
                 const result = await res.json();
@@ -893,8 +901,12 @@
 
         function exportProduk() {
             const search = document.getElementById('filter-produk-search').value;
+            const supplierId = document.getElementById('filter-produk-supplier').value;
             let url = '/barang/export?';
-            if (search) url += `search=${encodeURIComponent(search)}`;
+            const params = [];
+            if (search) params.push(`search=${encodeURIComponent(search)}`);
+            if (supplierId) params.push(`supplier_id=${supplierId}`);
+            url += params.join('&');
             window.location.href = url;
         }
 

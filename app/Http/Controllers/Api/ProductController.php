@@ -33,6 +33,10 @@ class ProductController extends Controller
             $query->where('product_category_id', $request->category);
         }
 
+        if ($request->supplier_id) {
+            $query->where('supplier_id', $request->supplier_id);
+        }
+
         $perPage = $request->get('per_page', 10);
         if ($perPage >= 1000) {
             $data = $query->latest()->get();

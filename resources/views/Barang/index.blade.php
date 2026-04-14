@@ -218,6 +218,25 @@
 
             document.getElementById('btnSaveBrand')
                 .addEventListener('click', saveBrand);
+
+            // Populate supplier filter dropdown with TomSelect
+            setTimeout(() => {
+                const supplierFilter = document.getElementById('filter-produk-supplier');
+                if (supplierFilter && masterSuppliers.length > 0) {
+                    supplierFilter.innerHTML = '<option value="">Semua Supplier</option>';
+                    masterSuppliers.forEach(supplier => {
+                        supplierFilter.innerHTML += `<option value="${supplier.id}">${supplier.nama}</option>`;
+                    });
+                    
+                    // Initialize TomSelect for supplier filter
+                    new TomSelect(supplierFilter, {
+                        create: false,
+                        allowEmptyOption: true,
+                        placeholder: 'Pilih Supplier...',
+                        dropdownParent: 'body'
+                    });
+                }
+            }, 1000);
         });
     </script>
 @endpush
