@@ -34,6 +34,15 @@ class InvoiceController extends Controller
 
     public function index(Request $request)
     {
+        if ($request->tipe_invoice === 'Sales') {
+            Invoice::where('tipe_invoice', 'Sales')
+                ->where('office_id', session('active_office_id'))
+                ->where('status_dok', 'Approved')
+                ->where('status_pembayaran', '!=', 'Paid')
+                ->whereDate('tgl_invoice', '<=', Carbon::now()->subDays(60)->toDateString())
+                ->update(['status_pembayaran' => 'Overdue']);
+        }
+
         $query = Invoice::with(['mitra', 'items.taxes', 'payment', 'items.product', 'approvals' => function ($q) {
             $q->latest();
         }])
@@ -45,6 +54,8 @@ class InvoiceController extends Controller
         } elseif ($request->tab_status === 'archive') {
             $query->where('status_dok', 'Draft')
                 ->where('status_pembayaran', 'Draft');
+        } elseif ($request->tab_status === 'overdue') {
+            $query->where('status_pembayaran', 'Overdue');
         } else {
             // Active Tab (Default)
             // Show Drafts that are NOT archived (Draft + non-Draft payment), and all non-Draft invoices
@@ -53,7 +64,7 @@ class InvoiceController extends Controller
                     $sub->where('status_dok', 'Draft')
                         ->where('status_pembayaran', '!=', 'Draft');
                 })->orWhere('status_dok', '!=', 'Draft');
-            });
+            })->where('status_pembayaran', '!=', 'Overdue');
         }
 
         if ($request->tipe_invoice) {
@@ -594,7 +605,7 @@ class InvoiceController extends Controller
             } elseif ($invoice->tipe_invoice === 'Sales') {
                 if (! $needsApproval) {
                     // Check if journal already exists to prevent duplicate entries
-                    $hasJournal = \App\Models\Journal::where('nomor_referensi', "Sales Invoice #{$invoice->nomor_invoice}")->exists();
+                    $hasJournal = Journal::where('nomor_referensi', "Sales Invoice #{$invoice->nomor_invoice}")->exists();
                     if (! $hasJournal) {
                         $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
                     }
@@ -989,5 +1000,96 @@ class InvoiceController extends Controller
         } catch (\Exception $e) {
             return apiResponse(false, 'Gagal menghapus invoice permanen', null, $e->getMessage(), 500);
         }
+    }
+
+    public function overdueAdmin(Request $request)
+    {
+        $officeId = session('active_office_id');
+
+        Invoice::where('tipe_invoice', 'Sales')
+            ->where('office_id', $officeId)
+            ->where('status_dok', 'Approved')
+            ->where('status_pembayaran', '!=', 'Paid')
+            ->whereDate('tgl_invoice', '<=', Carbon::now()->subDays(60)->toDateString())
+            ->update(['status_pembayaran' => 'Overdue']);
+
+        $query = Invoice::with(['mitra', 'items', 'approvals.requestedBy', 'approvals.processedBy'])
+            ->withSum('payment', 'jumlah_bayar')
+            ->where('tipe_invoice', 'Sales')
+            ->where('office_id', $officeId)
+            ->where('status_pembayaran', 'Overdue');
+
+        if ($request->mitra_id) {
+            $query->where('mitra_id', $request->mitra_id);
+        }
+
+        if ($request->date_from) {
+            $query->whereDate('tgl_invoice', '>=', $request->date_from);
+        }
+
+        if ($request->date_to) {
+            $query->whereDate('tgl_invoice', '<=', $request->date_to);
+        }
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nomor_invoice', 'LIKE', "%{$request->search}%")
+                    ->orWhere('ref_no', 'LIKE', "%{$request->search}%")
+                    ->orWhereHas('mitra', function ($qMitra) use ($request) {
+                        $qMitra->where('nama', 'LIKE', "%{$request->search}%");
+                    });
+            });
+        }
+
+        $perPage = $request->input('per_page', 10);
+        if ($perPage >= 1000) {
+            $data = $query->latest()->get();
+        } else {
+            $data = $query->latest()->paginate($perPage)->withQueryString();
+        }
+
+        return apiResponse(true, 'Data invoice overdue berhasil diambil', $data, null, 200);
+    }
+
+    public function approveOverdue($id)
+    {
+        return DB::transaction(function () use ($id) {
+            $invoice = Invoice::where('office_id', session('active_office_id'))->find($id);
+
+            if (! $invoice) {
+                return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
+            }
+
+            if ($invoice->status_pembayaran !== 'Overdue') {
+                return apiResponse(false, 'Invoice tidak berstatus Overdue', null, null, 422);
+            }
+
+            $invoice->update([
+                'status_pembayaran' => 'Unpaid',
+                'tgl_invoice' => Carbon::now()->toDateString(),
+                'tgl_jatuh_tempo' => Carbon::now()->addMonth()->toDateString(),
+            ]);
+
+            return apiResponse(true, 'Status Invoice Overdue berhasil diubah menjadi Unpaid dengan tempo 1 bulan.');
+        });
+    }
+
+    public function rejectOverdue($id)
+    {
+        return DB::transaction(function () use ($id) {
+            $invoice = Invoice::where('office_id', session('active_office_id'))->find($id);
+
+            if (! $invoice) {
+                return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
+            }
+
+            if ($invoice->status_pembayaran !== 'Overdue') {
+                return apiResponse(false, 'Invoice tidak berstatus Overdue', null, null, 422);
+            }
+
+            $invoice->update(['status_dok' => 'Rejected']);
+
+            return apiResponse(true, 'Invoice Overdue telah ditolak (Rejected).');
+        });
     }
 }

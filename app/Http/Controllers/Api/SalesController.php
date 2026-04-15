@@ -221,4 +221,18 @@ class SalesController extends Controller
         }
         return view($this->views . 'approval-detail', compact('invoice', 'id'));
     }
+
+    public function approvalOverdue()
+    {
+        return view($this->views . 'approval-overdue');
+    }
+
+    public function approvalOverdueDetail($id)
+    {
+        $invoice = Invoice::where('office_id', session('active_office_id'))->find($id);
+        if (!$invoice) {
+            abort(404);
+        }
+        return view($this->views . 'approval-overdue-detail', compact('invoice', 'id'));
+    }
 }

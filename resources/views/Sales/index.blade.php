@@ -217,6 +217,8 @@
                             <li class="nav-item"><a class="nav-link active fw-bold py-3" data-bs-toggle="tab"
                                     href="#invoice-active">Invoice Aktif</a></li>
                             <li class="nav-item"><a class="nav-link fw-bold py-3" data-bs-toggle="tab"
+                                    href="#invoice-overdue">Invoice Overdue</a></li>
+                            <li class="nav-item"><a class="nav-link fw-bold py-3" data-bs-toggle="tab"
                                     href="#invoice-archive">Arsip</a></li>
                             <li class="nav-item"><a class="nav-link fw-bold py-3" data-bs-toggle="tab"
                                     href="#invoice-in-trash">Invoice Terhapus</a></li>
@@ -360,6 +362,7 @@
 
                         <div class="tab-content">
                             <div class="tab-pane active" id="invoice-active"></div>
+                            <div class="tab-pane" id="invoice-overdue"></div>
                             <div class="tab-pane" id="invoice-archive"></div>
                             <div class="tab-pane" id="invoice-in-trash"></div>
                         </div>
@@ -698,6 +701,8 @@
                     currentTabStatus = 'archive';
                 } else if (targetId === '#invoice-in-trash') {
                     currentTabStatus = 'trash';
+                } else if (targetId === '#invoice-overdue') {
+                    currentTabStatus = 'overdue';
                 } else {
                     currentTabStatus = 'active';
                 }
@@ -988,8 +993,12 @@
                 // Determine lifecycle state from tab
                 const isTrashed = tab === 'trash';
                 const isArchived = tab === 'archive';
+                const isOverdue = tab === 'overdue';
 
-                if (isTrashed) {
+                if (isOverdue) {
+                    const dropdown = row.querySelector('.dropdown');
+                    if (dropdown) dropdown.remove();
+                } else if (isTrashed) {
                     // Trashed State: Only Restore and Force Delete
                     if (btnEdit) btnEdit.closest('li').remove();
                     if (btnShow) btnShow.closest('li').remove();

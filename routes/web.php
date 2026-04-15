@@ -61,7 +61,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('sales/export', [App\Http\Controllers\Api\SalesController::class, 'export'])->name('sales.export');
         Route::get('sales/mass-print', [App\Http\Controllers\Api\SalesController::class, 'massPrint'])->name('sales.mass-print');
         Route::get('sales/approval', [App\Http\Controllers\Api\SalesController::class, 'approval'])->name('sales.approval');
+        Route::get('sales/approval-overdue', [App\Http\Controllers\Api\SalesController::class, 'approvalOverdue'])->name('sales.approval.overdue');
         Route::get('sales/approval/{id}', [App\Http\Controllers\Api\SalesController::class, 'approvalDetail'])->name('sales.approval.show');
+        Route::get('sales/approval-overdue/{id}', [App\Http\Controllers\Api\SalesController::class, 'approvalOverdueDetail'])->name('sales.approval.overdue.show');
         Route::get('sales/{id}', [SalesController::class, 'show'])->name('sales.show');
         Route::get('sales/print/{id}', [SalesController::class, 'printInvoice'])->name('sales.print');
         Route::get('sales-receipt', [SalesController::class, 'receipt'])->name('sales.receipt');

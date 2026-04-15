@@ -107,6 +107,11 @@ return [
                 'route' => 'sales.approval',
                 'icon' => 'iconoir-check-circle',
             ],
+            [
+                'title' => 'Setujui Invoice Overdue',
+                'route' => 'sales.approval.overdue',
+                'icon' => 'iconoir-calendar',
+            ],
         ],
     ],
     [

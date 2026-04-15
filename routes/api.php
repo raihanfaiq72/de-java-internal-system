@@ -143,6 +143,9 @@ Route::middleware(['web', 'auth'])->group(function () {
         ->group(function () {
             Route::get('/', [InvoiceController::class, 'index'])->name('index');
             Route::get('/acc-admin', [InvoiceController::class, 'accAdmin'])->name('acc-admin');
+            Route::get('/overdue-admin', [InvoiceController::class, 'overdueAdmin'])->name('overdue-admin');
+            Route::post('/{id}/approve-overdue', [InvoiceController::class, 'approveOverdue'])->name('approve-overdue');
+            Route::post('/{id}/reject-overdue', [InvoiceController::class, 'rejectOverdue'])->name('reject-overdue');
             Route::post('/{id}/approve', [InvoiceController::class, 'approve'])->name('approve');
             Route::post('/{id}/reject', [InvoiceController::class, 'reject'])->name('reject');
             Route::post('/{id}/withdraw', [InvoiceController::class, 'withdraw'])->name('withdraw');
