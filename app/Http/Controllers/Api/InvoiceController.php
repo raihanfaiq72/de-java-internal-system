@@ -34,30 +34,25 @@ class InvoiceController extends Controller
 
     public function index(Request $request)
     {
-        $query = Invoice::with(['mitra', 'items.taxes', 'payment', 'items.product'])
+        $query = Invoice::with(['mitra', 'items.taxes', 'payment', 'items.product', 'approvals' => function ($q) {
+            $q->latest();
+        }])
             ->where('office_id', session('active_office_id'))
             ->withSum('payment', 'jumlah_bayar');
 
         if ($request->tab_status === 'trash') {
             $query->onlyTrashed();
         } elseif ($request->tab_status === 'archive') {
-            $query->where(function ($q) {
-                $q->where(function ($sub) {
-                    $sub->where('status_dok', 'Draft')
-                        ->where('status_pembayaran', 'Draft');
-                })->orWhere('tgl_invoice', '<=', now()->subDays(60));
-            });
+            $query->where('status_dok', 'Draft')
+                ->where('status_pembayaran', 'Draft');
         } else {
             // Active Tab (Default)
-            // Show Drafts that are NOT archived, and Approved/Rejected ones that are NOT > 60 days
+            // Show Drafts that are NOT archived (Draft + non-Draft payment), and all non-Draft invoices
             $query->where(function ($q) {
                 $q->where(function ($sub) {
                     $sub->where('status_dok', 'Draft')
                         ->where('status_pembayaran', '!=', 'Draft');
-                })->orWhere(function ($sub) {
-                    $sub->where('status_dok', '!=', 'Draft')
-                        ->where('tgl_invoice', '>', now()->subDays(60));
-                });
+                })->orWhere('status_dok', '!=', 'Draft');
             });
         }
 
@@ -161,21 +156,36 @@ class InvoiceController extends Controller
         $input = $request->all();
         $input['office_id'] = $officeId;
 
-        $invoice = Invoice::create($input);
+        // AR Aging Check - Determine if approval is needed
+        $needsApproval = false;
+        $maxOverdue = 0;
 
-        // AR Aging Check Approval Creation
         if ($request->tipe_invoice === 'Sales') {
             $maxOverdue = $this->getMaxOverdueDays($partner->id);
-            if ($maxOverdue > 60 && ! $this->isOwner(auth()->id(), $officeId)) {
-                InvoiceApprovalDetail::create([
-                    'invoice_id' => $invoice->id,
-                    'office_id' => $officeId,
-                    'requested_by' => auth()->id(),
-                    'status' => 'pending',
-                ]);
 
-                $warningMessage = "Harus ACC Owner, dikarenakan umur nota ($maxOverdue hari). Invoice masuk ke Arsip.";
+            if ($maxOverdue > 60 && ! $this->isOwner(auth()->id(), $officeId)) {
+                $needsApproval = true;
             }
+        }
+
+        // Force Draft status if approval is needed
+        if ($needsApproval) {
+            $input['status_dok'] = 'Draft';
+            $input['status_pembayaran'] = 'Draft';
+        }
+
+        $invoice = Invoice::create($input);
+
+        // Create approval request if needed
+        if ($needsApproval) {
+            InvoiceApprovalDetail::create([
+                'invoice_id' => $invoice->id,
+                'office_id' => $officeId,
+                'requested_by' => auth()->id(),
+                'status' => 'pending',
+            ]);
+
+            $warningMessage = "Harus ACC Owner, dikarenakan umur nota ($maxOverdue hari). Invoice masuk ke Arsip.";
         }
 
         $msg = 'Invoice berhasil dibuat';
@@ -405,6 +415,7 @@ class InvoiceController extends Controller
             }
 
             $invoice->delete();
+
             return apiResponse(true, 'Invoice berhasil dihapus (Archive)');
         });
     }
@@ -451,7 +462,6 @@ class InvoiceController extends Controller
             'invoice.tgl_invoice' => 'required|date',
             'invoice.mitra_id' => 'required|exists:mitras,id',
             'invoice.sales_id' => 'nullable|integer|min:0',
-
             'items' => 'required|array|min:1',
             'items.*.qty' => 'required|numeric|min:0.01',
             'items.*.tempo' => 'nullable|integer|min:0',
@@ -489,15 +499,21 @@ class InvoiceController extends Controller
         $warningMessage = '';
         $invoiceData = $request->invoice;
         $needsApproval = false;
+        $maxOverdue = 0;
+
         if (($invoiceData['tipe_invoice'] ?? '') === 'Sales') {
             $maxOverdue = $this->getMaxOverdueDays($mitra->id);
-            if ($maxOverdue > 60 && ! $this->isOwner(auth()->id(), session('active_office_id'))) {
-                $invoiceData['status_dok'] = 'Draft';
-                $invoiceData['keterangan'] = ($invoiceData['keterangan'] ?? '')."\nAuto-Archived: Umur nota > 60 hari ($maxOverdue hari). Perlu ACC Owner.";
-
-                $warningMessage = "Harus ACC Owner, dikarenakan umur nota ($maxOverdue hari). Invoice masuk ke Arsip.";
+            if ($maxOverdue > 60) {
                 $needsApproval = true;
             }
+        }
+
+        // Force Draft status if approval is needed
+        if ($needsApproval) {
+            $invoiceData['status_dok'] = 'Draft';
+            $invoiceData['status_pembayaran'] = 'Draft';
+            $invoiceData['keterangan'] = ($invoiceData['keterangan'] ?? '')."\nAuto-Archived: Umur nota > 60 hari ($maxOverdue hari). Perlu ACC Owner.";
+            $warningMessage = "Harus ACC Owner, dikarenakan umur nota ($maxOverdue hari). Invoice masuk ke Arsip.";
         }
 
         // Validate Stock Location if provided
@@ -533,7 +549,8 @@ class InvoiceController extends Controller
                 $item = InvoiceItem::create($itemData);
 
                 // FIFO Stock Tracking
-                if ($item->product && $item->product->track_stock) {
+                // Skip stock recording if approval is needed
+                if (! $needsApproval && $item->product && $item->product->track_stock) {
                     if ($invoice->tipe_invoice === 'Purchase') {
                         $this->stockService->recordIn(
                             $item->produk_id, // Fixed: use produk_id from InvoiceItem
@@ -576,7 +593,11 @@ class InvoiceController extends Controller
                 $this->journalService->recordPurchaseInvoice($invoice->fresh(['items.product']));
             } elseif ($invoice->tipe_invoice === 'Sales') {
                 if (! $needsApproval) {
-                    $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
+                    // Check if journal already exists to prevent duplicate entries
+                    $hasJournal = \App\Models\Journal::where('nomor_referensi', "Sales Invoice #{$invoice->nomor_invoice}")->exists();
+                    if (! $hasJournal) {
+                        $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
+                    }
                 }
             }
 
@@ -664,6 +685,22 @@ class InvoiceController extends Controller
             // Sync invoice status
             $invoice->update(['status_dok' => 'Approved']);
 
+            // Record Stock changes upon Approval (for Sales invoices that needed approval)
+            if ($invoice->tipe_invoice === 'Sales') {
+                foreach ($invoice->items as $item) {
+                    if ($item->product && $item->product->track_stock) {
+                        $this->stockService->recordOut(
+                            $item->produk_id,
+                            $item->qty,
+                            $invoice->stock_location_id,
+                            'Sales',
+                            $invoice->id,
+                            "Sales Invoice #{$invoice->nomor_invoice} (Approved)"
+                        );
+                    }
+                }
+            }
+
             // Record Journal Entry upon Approval (if not already recorded)
             if ($invoice->tipe_invoice === 'Sales') {
                 // To be safe, check if journal already exists (optional but good for idempotency)
@@ -703,31 +740,8 @@ class InvoiceController extends Controller
                 'processed_by' => auth()->id(),
             ]);
 
-            // Return stock since the invoice is rejected
-            foreach ($invoice->items as $item) {
-                if ($item->product && $item->product->track_stock) {
-                    if ($invoice->tipe_invoice === 'Sales') {
-                        $this->stockService->recordIn(
-                            $item->produk_id,
-                            $item->qty,
-                            $item->product->harga_beli,
-                            $invoice->stock_location_id,
-                            'Sales Return (Rejected)',
-                            $invoice->id,
-                            "Stock Return (Invoice Rejected): #{$invoice->nomor_invoice}"
-                        );
-                    } elseif ($invoice->tipe_invoice === 'Purchase') {
-                        $this->stockService->recordOut(
-                            $item->produk_id,
-                            $item->qty,
-                            $invoice->stock_location_id,
-                            'Purchase Cancel (Rejected)',
-                            $invoice->id,
-                            "Stock Deduct (Purchase Invoice Rejected): #{$invoice->nomor_invoice}"
-                        );
-                    }
-                }
-            }
+            // Do NOT change stock when rejected - rejected invoices are not valid purchases
+            // Only approved and withdrawn approved invoices should affect stock
 
             // Sync invoice status
             $invoice->update(['status_dok' => 'Rejected']);
@@ -765,33 +779,41 @@ class InvoiceController extends Controller
                 'processed_by' => null,
             ]);
 
-            // If withdrawing a rejection, we must re-deduct stock to return to "Draft" state (reservation)
-            if ($previousStatus === 'rejected') {
+            // Handle stock and journal based on previous status
+            if ($previousStatus === 'approved') {
+                // If withdrawing approval, reverse stock and journal
                 foreach ($invoice->items as $item) {
                     if ($item->product && $item->product->track_stock) {
                         if ($invoice->tipe_invoice === 'Sales') {
+                            // Stock was deducted when approved, now return it
+                            $this->stockService->recordIn(
+                                $item->produk_id,
+                                $item->qty,
+                                $item->product->harga_beli,
+                                $invoice->stock_location_id,
+                                'Sales Return (Approval Withdrawn)',
+                                $invoice->id,
+                                "Stock Return (Approval Withdrawn): #{$invoice->nomor_invoice}"
+                            );
+                        } elseif ($invoice->tipe_invoice === 'Purchase') {
+                            // Stock was added when approved, now deduct it
                             $this->stockService->recordOut(
                                 $item->produk_id,
                                 $item->qty,
                                 $invoice->stock_location_id,
-                                'Sales',
+                                'Purchase Cancel (Approval Withdrawn)',
                                 $invoice->id,
-                                "Re-reserve Stock (Rejection Withdrawn): #{$invoice->nomor_invoice}"
-                            );
-                        } elseif ($invoice->tipe_invoice === 'Purchase') {
-                            $this->stockService->recordIn(
-                                $item->produk_id,
-                                $item->qty,
-                                $item->harga_satuan,
-                                $invoice->stock_location_id,
-                                'Purchase',
-                                $invoice->id,
-                                "Re-add Stock (Purchase Rejection Withdrawn): #{$invoice->nomor_invoice}"
+                                "Stock Deduct (Purchase Approval Withdrawn): #{$invoice->nomor_invoice}"
                             );
                         }
                     }
                 }
+
+                // Reverse journal entry
+                $this->journalService->deleteInvoiceJournal($invoice);
             }
+            // If withdrawing rejection, do NOT touch stock (as per user requirement)
+            // Stock was already returned when rejected, and should stay that way
 
             $invoice->update(['status_dok' => 'Draft']);
 

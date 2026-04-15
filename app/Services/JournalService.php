@@ -312,7 +312,7 @@ class JournalService
         // 2. COGS Entry (Perpetual)
         // Check StockMutations for this invoice (Net Cost calculation)
         $mutations = StockMutation::where('reference_id', $invoice->id)
-            ->whereIn('reference_type', ['Sales', 'Sales Return (Archived)', 'Sales Return (Rejected)'])
+            ->whereIn('reference_type', ['Sales', 'Sales Return (Archived)', 'Sales Return (Rejected)', 'Sales Return (Approval Withdrawn)'])
             ->get();
 
         $totalCOGS = 0;
@@ -358,6 +358,12 @@ class JournalService
         $invoice = $payment->invoice;
 
         if (! $invoice) {
+            return;
+        }
+
+        // Check if journal already exists to prevent duplicate entries
+        $hasJournal = Journal::where('nomor_referensi', $payment->nomor_pembayaran)->exists();
+        if ($hasJournal) {
             return;
         }
 

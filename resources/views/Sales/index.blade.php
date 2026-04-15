@@ -1008,15 +1008,21 @@
                     }
                 } else if (isArchived) {
                     // Archived State: Only Restore (Unarchive) and Delete
+                    // BUT: If invoice has pending approval, only show Delete (no restore)
+                    const hasPendingApproval = item.approvals && item.approvals.some(a => a.status === 'pending');
+                    console.log(hasPendingApproval);
+
                     if (btnEdit) btnEdit.closest('li').remove();
                     if (btnShow) btnShow.closest('li').remove();
                     if (btnPrint) btnPrint.closest('li').remove();
                     if (btnReceipt) btnReceipt.closest('li').remove();
                     if (btnArchive) btnArchive.closest('li').remove();
 
-                    if (btnUnarchive) {
+                    if (!hasPendingApproval && btnUnarchive) {
                         btnUnarchive.classList.remove('d-none');
                         btnUnarchive.onclick = () => unarchiveInvoice(item.id);
+                    } else if (btnUnarchive) {
+                        btnUnarchive.closest('li').remove();
                     }
                     if (btnDelete) btnDelete.onclick = () => deleteInvoice(item.id);
                 } else {

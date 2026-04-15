@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\DeliveryOrderFleet;
+use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Office;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Models\UserOfficeRole;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class DashboardController extends Controller
@@ -93,61 +96,74 @@ class DashboardController extends Controller
                         return $inv->total_akhir - $inv->payment()->sum('jumlah_bayar');
                     });
 
-                $totalIncome = \App\Models\Payment::where('office_id', $officeId)
-                    ->whereHas('invoice', fn($q) => $q->where('tipe_invoice', 'Sales'))
+                $totalIncome = Payment::where('office_id', $officeId)
+                    ->whereHas('invoice', fn ($q) => $q->where('tipe_invoice', 'Sales'))
                     ->sum('jumlah_bayar');
-                $totalOutcome = \App\Models\Payment::where('office_id', $officeId)
-                    ->whereHas('invoice', fn($q) => $q->where('tipe_invoice', 'Purchase'))
+                $totalOutcome = Payment::where('office_id', $officeId)
+                    ->whereHas('invoice', fn ($q) => $q->where('tipe_invoice', 'Purchase'))
                     ->sum('jumlah_bayar');
-                $totalExpenses = \App\Models\Expense::where('office_id', $officeId)->sum('jumlah');
+                $totalExpenses = Expense::where('office_id', $officeId)->sum('jumlah');
 
                 $data['stats']['saldo_aktif'] = $totalIncome - $totalOutcome - $totalExpenses;
 
                 // Accurate Net Profit calculation based on GL (matching ReportController@profitAndLoss)
-                $firstDayOfMonth = date('Y-m-01');
-                $now = date('Y-m-d');
-                $movements = \Illuminate\Support\Facades\DB::table('journal_details')
+                // $firstDayOfMonth = date('2026-01-01');
+                // $now = date('Y-m-d');
+                $movements = DB::table('journal_details')
                     ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
                     ->where('journals.office_id', $officeId)
                     ->whereNull('journals.deleted_at')
                     ->whereNull('journal_details.deleted_at')
-                    ->whereBetween('journals.tgl_jurnal', [$firstDayOfMonth, $now])
+                    // ->whereBetween('journals.tgl_jurnal', [$firstDayOfMonth, $now])
                     ->select(
                         'journal_details.akun_id',
-                        \Illuminate\Support\Facades\DB::raw('SUM(journal_details.debit) as total_debit'),
-                        \Illuminate\Support\Facades\DB::raw('SUM(journal_details.kredit) as total_credit')
+                        DB::raw('SUM(journal_details.debit) as total_debit'),
+                        DB::raw('SUM(journal_details.kredit) as total_credit')
                     )
                     ->groupBy('journal_details.akun_id')
-                    ->get();
+                    ->get()
+                    ->keyBy('akun_id');
 
-                $incomeGroups = ['4000', '7001'];
-                $expenseGroups = ['5000', '6000', '6800', '8001', '9000'];
+                $targetGroups = [4000, 5000, 6000, 6800, 7001, 8001, 9000];
 
-                $allGroups = \Illuminate\Support\Facades\DB::table('coa_group')
+                $groups = DB::table('coa_group')
                     ->join('coa_type', 'coa_group.id', '=', 'coa_type.kelompok_id')
                     ->join('chart_of_accounts', 'coa_type.id', '=', 'chart_of_accounts.tipe_id')
                     ->where('coa_group.office_id', $officeId)
-                    ->whereIn('coa_group.kode_kelompok', array_merge($incomeGroups, $expenseGroups))
-                    ->select('chart_of_accounts.id', 'coa_group.kode_kelompok')
-                    ->get()
-                    ->groupBy('id');
+                    ->whereIn('coa_group.kode_kelompok', $targetGroups)
+                    ->whereNull('coa_group.deleted_at')
+                    ->whereNull('coa_type.deleted_at')
+                    ->whereNull('chart_of_accounts.deleted_at')
+                    ->select(
+                        'coa_group.kode_kelompok',
+                        'chart_of_accounts.id as coa_id'
+                    )
+                    ->get();
 
                 $totalRevenue = 0;
                 $totalExpense = 0;
 
-                foreach ($movements as $mov) {
-                    $groupInfo = $allGroups->get($mov->akun_id);
-                    if ($groupInfo) {
-                        $groupCode = $groupInfo->first()->kode_kelompok;
-                        if (in_array($groupCode, $incomeGroups)) {
-                            $totalRevenue += ($mov->total_credit - $mov->total_debit);
-                        } else {
-                            $totalExpense += ($mov->total_debit - $mov->total_credit);
-                        }
+                foreach ($groups as $row) {
+                    $groupId = $row->kode_kelompok;
+                    $coaId = $row->coa_id;
+
+                    $debit = 0;
+                    $credit = 0;
+                    if (isset($movements[$coaId])) {
+                        $debit = $movements[$coaId]->total_debit;
+                        $credit = $movements[$coaId]->total_credit;
+                    }
+
+                    if (in_array($groupId, [4000, 7001])) {
+                        $totalRevenue += ($credit - $debit);
+                    } else {
+                        $totalExpense += ($debit - $credit);
                     }
                 }
 
                 $data['stats']['laba_bersih'] = $totalRevenue - $totalExpense;
+
+                // dd($data['stats']['laba_bersih'], $totalRevenue, $totalExpense);
 
                 $data['stats']['new_orders'] = Invoice::where('office_id', $officeId)
                     ->where('tipe_invoice', 'Sales')
@@ -188,4 +204,3 @@ class DashboardController extends Controller
         }
     }
 }
-
