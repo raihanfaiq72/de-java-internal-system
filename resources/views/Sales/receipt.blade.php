@@ -77,8 +77,8 @@
                                 </div>
 
                                 <!-- Pagination -->
-                                <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-                                    <span id="pagination-info" class="text-muted small"></span>
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top">
+                                    <span id="pagination-info" class="text-muted small fw-medium"></span>
                                     <nav>
                                         <ul class="pagination pagination-sm mb-0 shadow-sm" id="pagination-container"></ul>
                                     </nav>
@@ -367,7 +367,7 @@
     <!-- Template for Pagination Item -->
     <template id="tpl-pagination-item">
         <li class="page-item">
-            <button class="page-link"></button>
+            <button class="page-link border-0 mx-1 rounded shadow-sm fw-bold"></button>
         </li>
     </template>
 @endsection
@@ -803,7 +803,9 @@
 
             if (!meta || !meta.links) return;
 
-            info.innerText = `Menampilkan ${meta.from || 0} sampai ${meta.to || 0} dari ${meta.total || 0} data`;
+            if (info) {
+                info.innerText = `${meta.from || 0}-${meta.to || 0} dari ${meta.total || 0}`;
+            }
             container.innerHTML = '';
 
             const template = document.getElementById('tpl-pagination-item');
@@ -1026,19 +1028,24 @@
             try {
                 const search = document.getElementById('filter-search').value;
                 const metode = document.getElementById('filter-metode').value;
+                
+                // If url is just a base path, we make it a URL object to append params
+                // If url already has params (from pagination links), URL object handles it
                 let fetchUrl = new URL(url);
-                fetchUrl.searchParams.append('tipe_receipt', 'Sales');
-                if (search) fetchUrl.searchParams.append('search', search);
-                if (metode) fetchUrl.searchParams.append('metode_pembayaran', metode);
+                
+                fetchUrl.searchParams.set('tipe_receipt', 'Sales');
+                if (search) fetchUrl.searchParams.set('search', search);
+                if (metode) fetchUrl.searchParams.set('metode_pembayaran', metode);
 
                 const res = await fetch(fetchUrl);
                 const result = await res.json();
                 if (result.success) {
-                    const filteredData = result.data.data.filter(item => item.invoice?.tipe_invoice === 'Sales');
-                    renderReceiptList(filteredData);
-                    renderPagination(filteredData);
+                    // result.data is the paginator object
+                    renderReceiptList(result.data.data);
+                    renderPagination(result.data);
                 }
             } catch (e) {
+                console.error("Error loading receipt data:", e);
                 accordion.innerHTML = '<div class="alert alert-danger">Gagal memuat data.</div>';
             }
         }

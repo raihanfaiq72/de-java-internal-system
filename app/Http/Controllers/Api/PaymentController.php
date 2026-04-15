@@ -30,6 +30,28 @@ class PaymentController extends Controller
         ])
             ->where('office_id', session('active_office_id'));
 
+        if ($request->tipe_receipt) {
+            $query->whereHas('invoice', function ($q) use ($request) {
+                $q->where('tipe_invoice', $request->tipe_receipt);
+            });
+        }
+
+        if ($request->metode_pembayaran) {
+            $query->where('metode_pembayaran', $request->metode_pembayaran);
+        }
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nomor_pembayaran', 'like', '%' . $request->search . '%')
+                    ->orWhereHas('invoice', function ($qi) use ($request) {
+                        $qi->where('nomor_invoice', 'like', '%' . $request->search . '%')
+                            ->orWhereHas('mitra', function ($qm) use ($request) {
+                                $qm->where('nama', 'like', '%' . $request->search . '%');
+                            });
+                    });
+            });
+        }
+
         if ($request->invoice_id) {
             $query->where('invoice_id', $request->invoice_id);
         }
