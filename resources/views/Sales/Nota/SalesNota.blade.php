@@ -1,296 +1,220 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nota Penjualan</title>
+    <title>Nota Penjualan - Konsisten & Tebal</title>
     <style>
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+        }
         body {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 12px;
-            color: #333;
-            margin: 20px;
+            font-size: 14px;
+            color: #000;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
         }
-
+        /* Container Utama dengan Border Tebal Konsisten */
         .nota-container {
-            width: 800px;
-            border: 1px solid #000;
-            padding: 15px;
-            margin: auto;
+            width: 210mm;
+            margin: 10px auto;
+            padding: 20px;
+            border: 2px solid #000;
+            background: #fff;
         }
-
-        .header {
-            display: flex;
-            justify-content: flex-end;
-            text-align: right;
-            margin-bottom: 10px;
-        }
-
-        .invoice-info {
-            line-height: 1.2;
-        }
-
-        .customer-section {
-            display: flex;
-            justify-content: flex-start;
-            margin-bottom: 15px;
-        }
-
-        .customer-details {
-            width: 50%;
-        }
-
-        .customer-details table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .customer-details td {
-            padding: 2px;
-            vertical-align: top;
-        }
-
-        .main-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 10px;
-        }
-
-        .main-table th,
-        .main-table td {
-            border: 1px solid #000;
-            padding: 5px;
-            text-align: center;
-        }
-
-        .main-table .text-left {
-            text-align: left;
-        }
-
-        .main-table .text-right {
-            text-align: right;
-        }
-
-        .footer-section {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .footer-left {
-            width: 60%;
-        }
-
-        .footer-right {
-            width: 35%;
-        }
-
-        .signature-grid {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        .signature-box {
-            width: 30%;
-        }
-
-        .total-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .total-table td {
-            padding: 5px;
-            border: 1px solid #000;
-        }
-
-        .note {
-            font-style: italic;
-            margin-top: 10px;
-            font-size: 10px;
-        }
-
-        .bank-info {
-            margin-top: 15px;
-            font-weight: bold;
-        }
-
-        #loading {
-            text-align: center;
-            padding: 50px;
-            font-size: 16px;
-        }
-
         .kop-header {
             text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #000;
+            margin-bottom: 15px;
+            border-bottom: 3px double #000;
             padding-bottom: 10px;
         }
         .kop-header img {
             max-width: 100%;
-            max-height: 100px;
-            object-fit: contain;
+            max-height: 80px;
+        }
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .customer-details td {
+            padding: 2px 0;
+            vertical-align: top;
+            font-weight: bold;
+        }
+        .invoice-meta {
+            text-align: right;
+            line-height: 1.4;
+        }
+        /* Tabel Utama - Border 2px Konsisten */
+        .main-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+        }
+        .main-table th, .main-table td {
+            border: 2px solid #000; /* Semua border disamakan 2px */
+            padding: 10px 5px;
+            font-weight: bold;
+        }
+        .main-table th {
+            background-color: #f2f2f2 !important;
+            text-transform: uppercase;
+        }
+        .text-left { text-align: left !important; }
+        .text-right { text-align: right !important; }
+        .text-center { text-align: center !important; }
+        
+        /* Bagian Bawah (Catatan & Total) */
+        .footer-wrapper {
+            display: flex;
+            width: 100%;
+            /* Menghilangkan border-top agar tidak double dengan bottom tabel */
+            margin-top: -2px; 
+        }
+        .footer-left {
+            width: 60%;
+            border: 2px solid #000;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .footer-right {
+            width: 40%;
+            margin-left: -2px; /* Agar border kiri menempel dengan border kanan footer-left */
+        }
+        .total-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .total-table td {
+            padding: 10px;
+            border: 2px solid #000;
+            font-weight: bold;
+            font-size: 15px;
+        }
+        .total-table tr:last-child td {
+            background-color: #f2f2f2 !important;
+        }
+        /* Tanda Tangan */
+        .signature-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            text-align: center;
+        }
+        .sig-box { width: 30%; font-size: 12px; }
+        .sig-space { height: 60px; }
+
+        .bank-info {
+            margin-top: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            border-top: 2px dashed #000;
+            padding-top: 10px;
         }
 
+        #loading { text-align: center; padding: 100px; font-weight: bold; }
+
         @media print {
-            html, body {
-                background: #fff;
-                color: #000;
+            body { padding: 0; background: none; }
+            .nota-container { 
+                margin: 0; 
+                width: 100%; 
+                border: 2px solid #000; 
             }
-
-            * {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-
-            body {
-                font-family: 'Courier New', Courier, monospace;
-                font-size: 12px;
-                color: #000;
-                margin: 0;
-            }
-
-            .nota-container {
-                border: 1px solid #000;
-                padding: 10px;
-            }
-
-            .main-table th,
-            .main-table td,
-            .invoice-info,
-            .customer-details td,
-            .total-table td,
-            .note,
-            .bank-info,
-            .signature-box {
-                color: #000;
-                font-weight: 700;
-            }
-
-            .main-table th,
-            .main-table td {
-                border-color: #000;
-            }
-
-            .signature-grid {
-                page-break-inside: avoid;
-            }
+            .no-print { display: none; }
+            @page { size: auto; margin: 10mm; }
         }
     </style>
 </head>
-
 <body>
 
-    <div id="loading">Memuat data invoice...</div>
+    <div id="loading">MENYIAPKAN DOKUMEN...</div>
 
     <div class="nota-container" id="nota-content" style="display: none;">
-        <div id="kop-section" class="kop-header" style="display: none;">
-            <!-- Logo will be injected here -->
-        </div>
+        <div id="kop-section" class="kop-header" style="display: none;"></div>
 
-        <div class="header">
-            <div class="invoice-info">
-                <strong id="tgl_invoice"></strong><br>
-                No. Invoice<br>
-                <strong id="nomor_invoice"></strong>
-            </div>
-        </div>
-
-        <div class="customer-section">
+        <div class="header-info">
             <div class="customer-details">
                 <table>
-                    <tr>
-                        <td width="30%">Kepada Yth</td>
-                        <td id="mitra_nama">: </td>
-                    </tr>
-                    <tr>
-                        <td>Alamat</td>
-                        <td id="mitra_alamat">: </td>
-                    </tr>
-                    <tr>
-                        <td>Salesman</td>
-                        <td id="ref_no">: </td>
-                    </tr>
+                    <tr><td>Kepada Yth</td><td id="mitra_nama"></td></tr>
+                    <tr><td>Alamat</td><td id="mitra_alamat"></td></tr>
+                    <tr><td>Salesman</td><td id="ref_no"></td></tr>
                 </table>
+            </div>
+            <div class="invoice-meta">
+                <span id="tgl_invoice" style="font-size: 18px; font-weight: bold;"></span><br>
+                NO. INV: <strong id="nomor_invoice"></strong><br>
+                PEMBAYARAN: <strong>CASH</strong>
             </div>
         </div>
 
         <table class="main-table">
             <thead>
                 <tr>
-                    <th width="5%">No.</th>
-                    <th width="10%">Kode</th>
-                    <th>Supplier</th>
-                    <th width="35%">Nama Barang</th>
-                    <th width="12%">Satuan</th>
-                    <th width="10%">Qty</th>
-                    <th width="15%">Harga Satuan</th>
-                    <th width="5%">Disc %</th>
-                    <th width="15%">Harga Total</th>
+                    <th width="5%">NO</th>
+                    <th width="15%">KODE</th>
+                    <th width="35%">NAMA BARANG</th>
+                    <th width="8%">QTY</th>
+                    <th width="15%">HARGA</th>
+                    <th width="7%">DISC</th>
+                    <th width="15%">TOTAL</th>
                 </tr>
             </thead>
-            <tbody id="items-body">
-                <!-- Items injected here -->
-            </tbody>
+            <tbody id="items-body"></tbody>
         </table>
 
-        <div class="footer-section">
+        <div class="footer-wrapper">
             <div class="footer-left">
-                <div class="note">
-                    Note : Barang yang sudah dibeli tidak dapat dikembalikan
+                <div style="font-style: italic; font-size: 12px;">
+                    Catatan: Barang yang sudah dibeli tidak dapat ditukar/dikembalikan.
                 </div>
-                <div class="signature-grid">
-                    <div class="signature-box">
-                        Penerima<br><br><br><br>
-                        (................)
-                    </div>
-                    <div class="signature-box">
-                        Pengirim<br><br><br><br>
-                        (................)
-                    </div>
-                    <div class="signature-box">
-                        Hormat Kami<br><br><br><br>
-                        (................)
-                    </div>
+                <div class="signature-section">
+                    <div class="sig-box">Penerima<div class="sig-space"></div>( ............ )</div>
+                    <div class="sig-box">Pengirim<div class="sig-space"></div>( ............ )</div>
+                    <div class="sig-box">Hormat Kami<div class="sig-space"></div>( ............ )</div>
                 </div>
             </div>
             <div class="footer-right">
                 <table class="total-table">
                     <tr>
-                        <td>Total</td>
+                        <td width="40%">TOTAL Rp</td>
                         <td class="text-right" id="total_akhir"></td>
                     </tr>
                     <tr>
-                        <td>DP / Bayar</td>
-                        <td class="text-right" id="total_bayar"></td>
+                        <td style="font-size: 13px;">Bayar</td>
+                        <td class="text-right" id="total_bayar" style="font-size: 13px;"></td>
                     </tr>
                     <tr>
-                        <td>Sisa</td>
-                        <td class="text-right" id="sisa_tagihan"></td>
+                        <td>SISA</td>
+                        <td class="text-right" id="sisa_tagihan" style="background-color: #eee;"></td>
                     </tr>
                 </table>
-                <div class="bank-info">
-                    BCA 1234567890<br>
-                    A/N PT. DE JAVA
-                </div>
             </div>
         </div>
+
+        <div class="bank-info">
+            PEMBAYARAN VIA TRANSFER: BCA 1234567890 - A/N PT. DE JAVA
+        </div>
+    </div>
+
+    <div class="no-print" style="margin: 20px; text-align: center;">
+        <button onclick="window.print()" style="padding: 10px 30px; font-weight: bold; cursor: pointer;">CETAK NOTA</button>
     </div>
 
     <template id="item-row-template">
         <tr>
-            <td class="col-no"></td>
-            <td class="col-kode"></td>
-            <td class="col-supplier text-left"></td>
-            <td class="col-nama text-left"></td>
-            <td class="col-satuan"></td>
-            <td class="col-qty"></td>
-            <td class="col-harga text-right"></td>
-            <td class="col-disc"></td>
-            <td class="col-total text-right"></td>
+            <td class="text-center col-no"></td>
+            <td class="text-center col-kode"></td>
+            <td class="text-left col-nama"></td>
+            <td class="text-center col-qty"></td>
+            <td class="text-right col-harga"></td>
+            <td class="text-center col-disc"></td>
+            <td class="text-right col-total"></td>
         </tr>
     </template>
 
@@ -305,9 +229,7 @@
         function formatDate(dateString) {
             const date = new Date(dateString);
             return date.toLocaleDateString('id-ID', {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric'
+                day: '2-digit', month: 'long', year: 'numeric'
             });
         }
 
@@ -318,76 +240,52 @@
 
                 if (result.success) {
                     const data = result.data;
-                    const template = document.getElementById('item-row-template');
                     const tbody = document.getElementById('items-body');
+                    const template = document.getElementById('item-row-template');
                     tbody.innerHTML = '';
 
-                    // Kop Handling
                     if (data.is_kop && data.logo_img) {
-                        const kopSection = document.getElementById('kop-section');
-                        kopSection.style.display = 'block';
-                        kopSection.innerHTML = `<img src="{{ asset('') }}${data.logo_img}" alt="Kop Surat">`;
+                        const kop = document.getElementById('kop-section');
+                        kop.style.display = 'block';
+                        kop.innerHTML = `<img src="{{ asset('') }}${data.logo_img}" alt="Logo">`;
                     }
 
-                    // Header
                     document.getElementById('tgl_invoice').innerText = formatDate(data.tgl_invoice);
                     document.getElementById('nomor_invoice').innerText = data.nomor_invoice;
                     document.getElementById('ref_no').innerText = ': ' + (data.ref_no || '-');
-                    document.getElementById('mitra_nama').innerText = ': ' + (data.mitra?.nama || 'N/A');
+                    document.getElementById('mitra_nama').innerText = ': ' + (data.mitra?.nama || '-');
                     document.getElementById('mitra_alamat').innerText = ': ' + (data.mitra?.alamat || '-');
 
                     data.items.forEach((item, index) => {
                         const clone = template.content.cloneNode(true);
                         const p = item.product || {};
-
                         clone.querySelector('.col-no').textContent = index + 1;
                         clone.querySelector('.col-kode').textContent = p.sku_kode || '-';
-                        clone.querySelector('.col-supplier').textContent = p.supplier?.nama || '-';
-                        clone.querySelector('.col-nama').textContent = p.nama_produk || item
-                            .nama_produk_manual || '-';
-                        clone.querySelector('.col-satuan').textContent = p.satuan || '-';
+                        clone.querySelector('.col-nama').textContent = p.nama_produk || item.nama_produk_manual || '-';
                         clone.querySelector('.col-qty').textContent = formatNumber(item.qty);
-                        clone.querySelector('.col-harga').textContent = formatNumber(item.harga_satuan || item.harga_jual || 0);
-                        clone.querySelector('.col-disc').textContent = item.diskon_nilai > 0 ?
-                            formatNumber(item.diskon_nilai) : '0';
-                        clone.querySelector('.col-total').textContent = formatNumber(item
-                            .total_harga_item);
-
+                        clone.querySelector('.col-harga').textContent = formatNumber(item.harga_satuan || 0);
+                        clone.querySelector('.col-disc').textContent = item.diskon_nilai > 0 ? formatNumber(item.diskon_nilai) : '-';
+                        clone.querySelector('.col-total').textContent = formatNumber(item.total_harga_item);
                         tbody.appendChild(clone);
                     });
 
-                    // Fill empty rows to 5
-                    const minRows = 5;
-                    for (let i = data.items.length; i < minRows; i++) {
-                        const emptyRow = `<tr>${'<td>&nbsp;</td>'.repeat(9)}</tr>`;
-                        tbody.insertAdjacentHTML('beforeend', emptyRow);
+                    // Baris kosong (minimal 5 baris)
+                    for (let i = data.items.length; i < 5; i++) {
+                        tbody.insertAdjacentHTML('beforeend', '<tr><td style="height:35px;"></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>');
                     }
 
-                    // Footer Totals
-                    const totalBayar = data.payment ? data.payment.reduce((sum, p) => sum + parseFloat(p
-                        .jumlah_bayar), 0) : 0;
-
+                    const totalBayar = data.payment ? data.payment.reduce((sum, p) => sum + parseFloat(p.jumlah_bayar), 0) : 0;
                     document.getElementById('total_akhir').innerText = formatNumber(data.total_akhir);
                     document.getElementById('total_bayar').innerText = formatNumber(totalBayar);
-                    document.getElementById('sisa_tagihan').innerText = formatNumber(data.total_akhir -
-                        totalBayar);
+                    document.getElementById('sisa_tagihan').innerText = formatNumber(data.total_akhir - totalBayar);
 
-                    // Show Content
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('nota-content').style.display = 'block';
-
-                    // Auto Print
-                    // setTimeout(() => window.print(), 1000);
-                } else {
-                    document.getElementById('loading').innerText = 'Gagal memuat data invoice.';
                 }
             } catch (error) {
-                console.error(error);
-                document.getElementById('loading').innerText = 'Terjadi kesalahan koneksi.';
+                document.getElementById('loading').innerText = 'GAGAL MEMUAT DATA.';
             }
         });
     </script>
-
 </body>
-
 </html>
