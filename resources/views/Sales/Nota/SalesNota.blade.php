@@ -84,7 +84,7 @@
         }
         .footer-right {
             width: 40%;
-            margin-left: -2px; /* Agar border kiri menempel dengan border kanan footer-left */
+            margin-left: -4px; /* Agar border kiri menempel dengan border kanan footer-left */
         }
         .total-table {
             width: 100%;
@@ -148,8 +148,8 @@
             </div>
             <div class="invoice-meta">
                 <span id="tgl_invoice" style="font-size: 18px; font-weight: bold;"></span><br>
-                NO. INV: <strong id="nomor_invoice"></strong><br>
-                PEMBAYARAN: <strong>CASH</strong>
+                <strong>NO. INV:</strong> <strong id="nomor_invoice"></strong><br>
+                <strong>PEMBAYARAN: <span id="status_pembayaran">CASH</span></strong>
             </div>
         </div>
 
@@ -157,26 +157,27 @@
             <thead>
                 <tr>
                     <th width="5%">NO</th>
-                    <th width="15%">KODE</th>
-                    <th width="35%">NAMA BARANG</th>
+                    <th width="15%">KODE SUPPLIER</th>
+                    <th width="30%">NAMA BARANG</th>
+                    <th width="10%">SATUAN</th>
                     <th width="8%">QTY</th>
-                    <th width="15%">HARGA</th>
+                    <th width="15%">HARGA SATUAN</th>
                     <th width="7%">DISC</th>
-                    <th width="15%">TOTAL</th>
+                    <th width="10%">TOTAL</th>
                 </tr>
             </thead>
             <tbody id="items-body"></tbody>
         </table>
 
         <div class="footer-wrapper">
-            <div class="footer-left">
-                <div style="font-style: italic; font-size: 12px;">
-                    Catatan: Barang yang sudah dibeli tidak dapat ditukar/dikembalikan.
+            <div class="">
+                <div style="font-style: italic; font-size: 12px;"><br>
+                    <strong>Catatan: Barang yang sudah dibeli tidak dapat ditukar/dikembalikan.</strong>
                 </div>
                 <div class="signature-section">
-                    <div class="sig-box">Penerima<div class="sig-space"></div>( ............ )</div>
-                    <div class="sig-box">Pengirim<div class="sig-space"></div>( ............ )</div>
-                    <div class="sig-box">Hormat Kami<div class="sig-space"></div>( ............ )</div>
+                    <div class="sig-box"><strong>Penerima</strong><div class="sig-space"></div><strong>( ............ )</strong></div>
+                    <div class="sig-box"><strong>Pengirim</strong><div class="sig-space"></div><strong>( ............ )</strong></div>
+                    <div class="sig-box"><strong>Hormat Kami</strong><div class="sig-space"></div><strong>( ............ )</strong></div>
                 </div>
             </div>
             <div class="footer-right">
@@ -202,15 +203,13 @@
         </div>
     </div>
 
-    <div class="no-print" style="margin: 20px; text-align: center;">
-        <button onclick="window.print()" style="padding: 10px 30px; font-weight: bold; cursor: pointer;">CETAK NOTA</button>
-    </div>
 
     <template id="item-row-template">
         <tr>
             <td class="text-center col-no"></td>
-            <td class="text-center col-kode"></td>
+            <td class="text-center col-supplier-code"></td>
             <td class="text-left col-nama"></td>
+            <td class="text-center col-satuan"></td>
             <td class="text-center col-qty"></td>
             <td class="text-right col-harga"></td>
             <td class="text-center col-disc"></td>
@@ -255,15 +254,17 @@
                     document.getElementById('ref_no').innerText = ': ' + (data.ref_no || '-');
                     document.getElementById('mitra_nama').innerText = ': ' + (data.mitra?.nama || '-');
                     document.getElementById('mitra_alamat').innerText = ': ' + (data.mitra?.alamat || '-');
+                    document.getElementById('status_pembayaran').innerText = data.status_pembayaran || 'CASH';
 
                     data.items.forEach((item, index) => {
                         const clone = template.content.cloneNode(true);
                         const p = item.product || {};
                         clone.querySelector('.col-no').textContent = index + 1;
-                        clone.querySelector('.col-kode').textContent = p.sku_kode || '-';
+                        clone.querySelector('.col-supplier-code').textContent = p.supplier?.nomor_mitra || '-';
                         clone.querySelector('.col-nama').textContent = p.nama_produk || item.nama_produk_manual || '-';
+                        clone.querySelector('.col-satuan').textContent = p.satuan || '-';
                         clone.querySelector('.col-qty').textContent = formatNumber(item.qty);
-                        clone.querySelector('.col-harga').textContent = formatNumber(item.harga_satuan || 0);
+                        clone.querySelector('.col-harga').textContent = formatNumber(item.harga_satuan || item.harga_jual || 0);
                         clone.querySelector('.col-disc').textContent = item.diskon_nilai > 0 ? formatNumber(item.diskon_nilai) : '-';
                         clone.querySelector('.col-total').textContent = formatNumber(item.total_harga_item);
                         tbody.appendChild(clone);
@@ -271,7 +272,7 @@
 
                     // Baris kosong (minimal 5 baris)
                     for (let i = data.items.length; i < 5; i++) {
-                        tbody.insertAdjacentHTML('beforeend', '<tr><td style="height:35px;"></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>');
+                        tbody.insertAdjacentHTML('beforeend', '<tr><td style="height:35px;"></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>');
                     }
 
                     const totalBayar = data.payment ? data.payment.reduce((sum, p) => sum + parseFloat(p.jumlah_bayar), 0) : 0;
