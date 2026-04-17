@@ -77,7 +77,8 @@
                                 </div>
 
                                 <!-- Pagination -->
-                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top">
+                                <div
+                                    class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top">
                                     <span id="pagination-info" class="text-muted small fw-medium"></span>
                                     <nav>
                                         <ul class="pagination pagination-sm mb-0 shadow-sm" id="pagination-container"></ul>
@@ -515,8 +516,12 @@
 
         async function loadDropdowns() {
             try {
+                const partnerParam = new URLSearchParams({
+                    per_page: 1000,
+                });
                 // Load Mitras (Suppliers)
-                const resMitra = await fetch(API_MITRA);
+                const resMitra = await fetch(`${API_MITRA}?${partnerParam.toString()}`);
+                if (!resMitra.ok) throw new Error("Gagal ambil data Mitra");
                 const jsonMitra = await resMitra.json();
 
                 let mitraData = [];
@@ -651,7 +656,7 @@
             try {
                 const search = document.getElementById('filter-search').value;
                 const metode = document.getElementById('filter-metode').value;
-                
+
                 let fetchUrl = new URL(url);
                 fetchUrl.searchParams.set('tipe_receipt', 'Purchase');
                 if (search) fetchUrl.searchParams.set('search', search);

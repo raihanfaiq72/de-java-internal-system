@@ -77,7 +77,8 @@
                                 </div>
 
                                 <!-- Pagination -->
-                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top">
+                                <div
+                                    class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top">
                                     <span id="pagination-info" class="text-muted small fw-medium"></span>
                                     <nav>
                                         <ul class="pagination pagination-sm mb-0 shadow-sm" id="pagination-container"></ul>
@@ -891,8 +892,11 @@
 
         async function loadDropdowns() {
             try {
+                const partnerParam = new URLSearchParams({
+                    per_page: 1000,
+                });
                 // Load Mitras
-                const resMitra = await fetch(API_MITRA);
+                const resMitra = await fetch(`${API_MITRA}?${partnerParam.toString()}`);
                 if (!resMitra.ok) throw new Error("Gagal ambil data Mitra");
                 const jsonMitra = await resMitra.json();
 
@@ -1028,11 +1032,11 @@
             try {
                 const search = document.getElementById('filter-search').value;
                 const metode = document.getElementById('filter-metode').value;
-                
+
                 // If url is just a base path, we make it a URL object to append params
                 // If url already has params (from pagination links), URL object handles it
                 let fetchUrl = new URL(url);
-                
+
                 fetchUrl.searchParams.set('tipe_receipt', 'Sales');
                 if (search) fetchUrl.searchParams.set('search', search);
                 if (metode) fetchUrl.searchParams.set('metode_pembayaran', metode);
