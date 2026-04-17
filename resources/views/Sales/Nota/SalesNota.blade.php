@@ -134,6 +134,51 @@
             max-height: 100px;
             object-fit: contain;
         }
+
+        @media print {
+            html, body {
+                background: #fff;
+                color: #000;
+            }
+
+            * {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            body {
+                font-family: 'Courier New', Courier, monospace;
+                font-size: 12px;
+                color: #000;
+                margin: 0;
+            }
+
+            .nota-container {
+                border: 1px solid #000;
+                padding: 10px;
+            }
+
+            .main-table th,
+            .main-table td,
+            .invoice-info,
+            .customer-details td,
+            .total-table td,
+            .note,
+            .bank-info,
+            .signature-box {
+                color: #000;
+                font-weight: 700;
+            }
+
+            .main-table th,
+            .main-table td {
+                border-color: #000;
+            }
+
+            .signature-grid {
+                page-break-inside: avoid;
+            }
+        }
     </style>
 </head>
 
