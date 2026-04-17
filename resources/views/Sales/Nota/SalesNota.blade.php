@@ -179,12 +179,10 @@
                     <th width="5%">No.</th>
                     <th width="10%">Kode</th>
                     <th>Supplier</th>
-                    <th>Brand</th>
                     <th width="35%">Nama Barang</th>
-                    <th width="10%">Kategori</th>
-                    <th width="5%">Kemasan</th>
-                    <th>Satuan</th>
-                    <th width="15%">Qty</th>
+                    <th width="12%">Satuan</th>
+                    <th width="10%">Qty</th>
+                    <th width="15%">Harga Satuan</th>
                     <th width="5%">Disc %</th>
                     <th width="15%">Harga Total</th>
                 </tr>
@@ -242,12 +240,10 @@
             <td class="col-no"></td>
             <td class="col-kode"></td>
             <td class="col-supplier text-left"></td>
-            <td class="col-brand text-left"></td>
             <td class="col-nama text-left"></td>
-            <td class="col-kategori"></td>
-            <td class="col-kemasan"></td>
             <td class="col-satuan"></td>
             <td class="col-qty"></td>
+            <td class="col-harga text-right"></td>
             <td class="col-disc"></td>
             <td class="col-total text-right"></td>
         </tr>
@@ -302,14 +298,11 @@
                         clone.querySelector('.col-no').textContent = index + 1;
                         clone.querySelector('.col-kode').textContent = p.sku_kode || '-';
                         clone.querySelector('.col-supplier').textContent = p.supplier?.nama || '-';
-                        clone.querySelector('.col-brand').textContent = p.brand?.nama_brand || '-';
                         clone.querySelector('.col-nama').textContent = p.nama_produk || item
                             .nama_produk_manual || '-';
-                        clone.querySelector('.col-kategori').textContent = p.category?.nama_kategori ||
-                            '-';
-                        clone.querySelector('.col-kemasan').textContent = p.kemasan || '-';
                         clone.querySelector('.col-satuan').textContent = p.satuan || '-';
                         clone.querySelector('.col-qty').textContent = formatNumber(item.qty);
+                        clone.querySelector('.col-harga').textContent = formatNumber(item.harga_satuan || item.harga_jual || 0);
                         clone.querySelector('.col-disc').textContent = item.diskon_nilai > 0 ?
                             formatNumber(item.diskon_nilai) : '0';
                         clone.querySelector('.col-total').textContent = formatNumber(item
@@ -321,7 +314,7 @@
                     // Fill empty rows to 5
                     const minRows = 5;
                     for (let i = data.items.length; i < minRows; i++) {
-                        const emptyRow = `<tr>${'<td>&nbsp;</td>'.repeat(11)}</tr>`;
+                        const emptyRow = `<tr>${'<td>&nbsp;</td>'.repeat(9)}</tr>`;
                         tbody.insertAdjacentHTML('beforeend', emptyRow);
                     }
 
