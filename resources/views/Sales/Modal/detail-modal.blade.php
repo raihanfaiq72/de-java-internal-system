@@ -50,10 +50,17 @@
                         </tbody>
                         <tfoot class="border-top">
                             <tr>
-                                <td colspan="3" class="text-end pe-3 py-3 small text-muted">Subtotal</td>
-                                <td class="text-end pe-3 py-3 fw-bold" id="detailSubtotal">0</td>
+                                <td colspan="3" class="text-end pe-3 py-2 small text-muted">Subtotal</td>
+                                <td class="text-end pe-3 py-2 fw-bold" id="detailSubtotal">0</td>
                             </tr>
-                            <!-- Tax row if needed -->
+                            <tr>
+                                <td colspan="3" class="text-end pe-3 py-2 small text-muted">Diskon Tambahan</td>
+                                <td class="text-end pe-3 py-2 fw-bold text-danger" id="detailDiskon">- 0</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end pe-3 py-2 small text-muted">Biaya Lain-lain</td>
+                                <td class="text-end pe-3 py-2 fw-bold text-success" id="detailBiayaLain">+ 0</td>
+                            </tr>
                             <tr class="bg-light">
                                 <td colspan="3" class="text-end pe-3 py-3 fw-bold text-dark">Total Akhir</td>
                                 <td class="text-end pe-3 py-3 fw-bold text-primary fs-6" id="detailTotal">0</td>

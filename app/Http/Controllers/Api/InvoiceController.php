@@ -283,94 +283,96 @@ class InvoiceController extends Controller
             // If items are provided, replace them (Full Sync)
             if ($request->has('items') && is_array($request->items)) {
 
-                // 1. Reverse Stock for old items
-                foreach ($invoice->items as $item) {
-                    if ($item->product && $item->product->track_stock) {
-                        if ($invoice->tipe_invoice === 'Sales') {
-                            $this->stockService->recordIn(
-                                $item->produk_id,
-                                $item->qty,
-                                $item->product->harga_beli,
-                                $invoice->stock_location_id,
-                                'Sales Return (Edited)',
-                                $invoice->id,
-                                "Stock Return (Invoice Edited): #{$invoice->nomor_invoice}"
-                            );
-                        } elseif ($invoice->tipe_invoice === 'Purchase') {
-                            $this->stockService->recordOut(
-                                $item->produk_id,
-                                $item->qty,
-                                $invoice->stock_location_id,
-                                'Purchase Cancel (Edited)',
-                                $invoice->id,
-                                "Stock Deduct (Purchase Edited): #{$invoice->nomor_invoice}"
-                            );
-                        }
-                    }
-                }
-
-                // 2. Reverse COA
-                $this->journalService->deleteInvoiceJournal($invoice);
-
-                // 3. Delete old items
-                $invoice->items()->each(function ($item) {
-                    $item->taxes()->delete();
-                    $item->delete();
-                });
-
-                // 4. Create new items and record new Stock
-                foreach ($request->items as $itemData) {
-                    $itemData['invoice_id'] = $invoice->id;
-                    $item = InvoiceItem::create($itemData);
-
-                    // FIFO Stock Tracking
-                    if ($item->product && $item->product->track_stock) {
-                        if ($invoice->tipe_invoice === 'Purchase') {
-                            $this->stockService->recordIn(
-                                $item->produk_id,
-                                $item->qty,
-                                $item->harga_satuan,
-                                $invoice->stock_location_id,
-                                'Purchase',
-                                $invoice->id,
-                                "Purchase Invoice #{$invoice->nomor_invoice} (Edited)"
-                            );
-                        } elseif ($invoice->tipe_invoice === 'Sales') {
-                            $this->stockService->recordOut(
-                                $item->produk_id,
-                                $item->qty,
-                                $invoice->stock_location_id,
-                                'Sales',
-                                $invoice->id,
-                                "Sales Invoice #{$invoice->nomor_invoice} (Edited)"
-                            );
+                // 1. Reverse Stock for old items (Only if already approved)
+                if ($invoice->status_dok === 'Approved') {
+                    foreach ($invoice->items as $item) {
+                        if ($item->product && $item->product->track_stock) {
+                            if ($invoice->tipe_invoice === 'Sales') {
+                                $this->stockService->recordIn(
+                                    $item->produk_id,
+                                    $item->qty,
+                                    $item->product->harga_beli,
+                                    $invoice->stock_location_id,
+                                    'Sales Return (Edited)',
+                                    $invoice->id,
+                                    "Stock Return (Invoice Edited): #{$invoice->nomor_invoice}"
+                                );
+                            } elseif ($invoice->tipe_invoice === 'Purchase') {
+                                $this->stockService->recordOut(
+                                    $item->produk_id,
+                                    $item->qty,
+                                    $invoice->stock_location_id,
+                                    'Purchase Cancel (Edited)',
+                                    $invoice->id,
+                                    "Stock Deduct (Purchase Edited): #{$invoice->nomor_invoice}"
+                                );
+                            }
                         }
                     }
 
-                    if (! empty($itemData['taxes'])) {
-                        foreach ($itemData['taxes'] as $taxData) {
-                            InvoiceItemTax::create([
-                                'invoice_item_id' => $item->id,
-                                'tax_id' => $taxData['tax_id'],
-                                'nilai_pajak_diterapkan' => $taxData['nilai_pajak_diterapkan'] ?? 0,
-                            ]);
+                    // 2. Reverse COA
+                    $this->journalService->deleteInvoiceJournal($invoice);
+
+                    // 3. Delete old items
+                    $invoice->items()->each(function ($item) {
+                        $item->taxes()->delete();
+                        $item->delete();
+                    });
+
+                    // 4. Create new items and record new Stock
+                    foreach ($request->items as $itemData) {
+                        $itemData['invoice_id'] = $invoice->id;
+                        $item = InvoiceItem::create($itemData);
+
+                        // FIFO Stock Tracking (Only if already approved)
+                        if ($invoice->status_dok === 'Approved' && $item->product && $item->product->track_stock) {
+                            if ($invoice->tipe_invoice === 'Purchase') {
+                                $this->stockService->recordIn(
+                                    $item->produk_id,
+                                    $item->qty,
+                                    $item->harga_satuan,
+                                    $invoice->stock_location_id,
+                                    'Purchase',
+                                    $invoice->id,
+                                    "Purchase Invoice #{$invoice->nomor_invoice} (Edited)"
+                                );
+                            } elseif ($invoice->tipe_invoice === 'Sales') {
+                                $this->stockService->recordOut(
+                                    $item->produk_id,
+                                    $item->qty,
+                                    $invoice->stock_location_id,
+                                    'Sales',
+                                    $invoice->id,
+                                    "Sales Invoice #{$invoice->nomor_invoice} (Edited)"
+                                );
+                            }
+                        }
+
+                        if (! empty($itemData['taxes'])) {
+                            foreach ($itemData['taxes'] as $taxData) {
+                                InvoiceItemTax::create([
+                                    'invoice_item_id' => $item->id,
+                                    'tax_id' => $taxData['tax_id'],
+                                    'nilai_pajak_diterapkan' => $taxData['nilai_pajak_diterapkan'] ?? 0,
+                                ]);
+                            }
                         }
                     }
-                }
 
-                // 5. Re-record Journal entries
-                if ($invoice->tipe_invoice === 'Purchase') {
-                    $this->journalService->recordPurchaseInvoice($invoice->fresh(['items.product']));
-                } elseif ($invoice->tipe_invoice === 'Sales') {
-                    // Only record if not pending approval
-                    $needsApproval = InvoiceApprovalDetail::where('invoice_id', $invoice->id)
-                        ->where('status', 'pending')
-                        ->exists();
+                    // 5. Re-record Journal entries
+                    if ($invoice->tipe_invoice === 'Purchase') {
+                        $this->journalService->recordPurchaseInvoice($invoice->fresh(['items.product']));
+                    } elseif ($invoice->tipe_invoice === 'Sales') {
+                        // Only record if not pending approval
+                        $needsApproval = InvoiceApprovalDetail::where('invoice_id', $invoice->id)
+                            ->where('status', 'pending')
+                            ->exists();
 
-                    if (! $needsApproval) {
-                        $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
-                    } else {
-                        $message .= '. Journal entry ditangguhkan (perlu ACC).';
+                        if (! $needsApproval) {
+                            $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
+                        } else {
+                            $message .= '. Journal entry ditangguhkan (perlu ACC).';
+                        }
                     }
                 }
             }

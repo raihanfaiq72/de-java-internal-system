@@ -156,6 +156,10 @@
                                                 <td class="text-end py-2 fw-bold pe-4" id="val-tax">Rp 0</td>
                                             </tr>
                                             <tr>
+                                                <td colspan="3" class="text-end py-2 text-muted">Biaya Lain-lain</td>
+                                                <td class="text-end py-2 fw-bold text-success pe-4" id="val-other-charges">Rp 0</td>
+                                            </tr>
+                                            <tr>
                                                 <td colspan="3" class="text-end py-3 fs-5 fw-bold text-dark">Total
                                                     Tagihan</td>
                                                 <td class="text-end py-3 fs-5 fw-bold text-primary pe-4" id="val-total">Rp 0
@@ -396,6 +400,7 @@
             document.getElementById('val-subtotal').textContent = formatIDR(subTotal);
             document.getElementById('val-discount').textContent = `- ${formatIDR(data.diskon_tambahan_nilai || 0)}`;
             document.getElementById('val-tax').textContent = formatIDR(data.pajak_ppn || 0);
+            document.getElementById('val-other-charges').textContent = `+ ${formatIDR(data.biaya_kirim || 0)}`;
             document.getElementById('val-total').textContent = formatIDR(data.total_akhir);
 
             document.getElementById('inv-notes').textContent = data.catatan || 'Tidak ada catatan.';
@@ -519,7 +524,7 @@
         }
 
         function openPrintPreview(id) {
-            const printUrl = `{{ url('purchase/print') }}/${id}`;
+            const printUrl = `{{ url('purchase/print') }}/${id}?no_print=1`;
 
             const modalContainer = document.getElementById('modalPrintPreview');
 

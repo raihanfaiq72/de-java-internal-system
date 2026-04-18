@@ -22,7 +22,8 @@
 
         /* Container Utama dengan Border Tebal Konsisten */
         .nota-container {
-            width: 210mm;
+            width: 190mm;
+            /* Reduced from 210mm to avoid cutting */
             margin: 10px auto;
             padding: 10px;
             border: 2px solid #000;
@@ -198,7 +199,8 @@
 
             @page {
                 size: auto;
-                margin: 5mm;
+                margin: 15mm 15mm 10mm 5mm;
+                /* Top Right Bottom Left - Moved Down and Left */
             }
         }
     </style>
@@ -239,7 +241,7 @@
             <thead>
                 <tr>
                     <th width="5%">NO</th>
-                    <th width="15%">KODE SUPPLIER</th>
+                    <th width="15%">KODE BARANG</th>
                     <th width="30%">NAMA BARANG</th>
                     <th width="10%">SATUAN</th>
                     <th width="8%">QTY</th>
@@ -251,7 +253,7 @@
             <tbody id="items-body"></tbody>
             <tfoot>
                 <tr>
-                    <td colspan="5" rowspan="3"
+                    <td colspan="5" rowspan="4"
                         style="border: none !important; vertical-align: top; padding-top: 5px !important;">
                         <div style="font-style: italic; font-size: 11px;">
                             <strong>Catatan: Barang yang sudah dibeli tidak dapat ditukar/dikembalikan.</strong>
@@ -268,6 +270,13 @@
                             </div>
                         </div>
                     </td>
+                    <td class="text-left" style="border: 2px solid #000 !important; padding: 2px !important;">Biaya
+                        Lain
+                    </td>
+                    <td colspan="2" class="text-right" id="biaya_lain_display"
+                        style="border: 2px solid #000 !important; padding: 2px !important;">0</td>
+                </tr>
+                <tr>
                     <td class="text-left" style="border: 2px solid #000 !important; padding: 2px !important;">TOTAL Rp
                     </td>
                     <td colspan="2" class="text-right" id="total_akhir"
@@ -376,6 +385,8 @@
                     const totalBayar = data.payment ? data.payment.reduce((sum, p) => sum + parseFloat(p
                         .jumlah_bayar), 0) : 0;
                     document.getElementById('total_akhir').innerText = formatNumber(data.total_akhir);
+                    document.getElementById('biaya_lain_display').innerText = formatNumber(data.biaya_kirim ||
+                        0);
                     document.getElementById('total_bayar').innerText = formatNumber(totalBayar);
                     document.getElementById('sisa_tagihan').innerText = formatNumber(data.total_akhir -
                         totalBayar);
@@ -384,9 +395,12 @@
                     document.getElementById('nota-content').style.display = 'block';
 
                     // Auto Print
-                    setTimeout(() => {
-                        window.print();
-                    }, 500);
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (!urlParams.get('no_print')) {
+                        setTimeout(() => {
+                            window.print();
+                        }, 500);
+                    }
                 }
             } catch (error) {
                 document.getElementById('loading').innerText = 'GAGAL MEMUAT DATA.';

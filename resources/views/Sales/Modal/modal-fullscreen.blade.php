@@ -36,8 +36,7 @@
                                     <div class="row g-4">
                                         <!-- Customer Selection -->
                                         <div class="col-lg-6 border-end">
-                                            <label class="f-label mb-2">Mitra <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="f-label mb-2">Mitra <span class="text-danger">*</span></label>
                                             <select id="modal_mitra_id" class="form-select f-input-lg mb-2"
                                                 onchange="renderMitraDetail()">
                                                 <option value="">Cari Mitra...</option>
@@ -77,7 +76,7 @@
                                                     <label class="f-label">Nomor Invoice</label>
                                                     <input type="text" id="modal_nomor_invoice"
                                                         class="form-control f-input fw-bold bg-light text-primary"
-                                                         placeholder="Auto Generated">
+                                                        placeholder="Auto Generated">
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="f-label">Referensi / PO</label>
@@ -195,6 +194,13 @@
                                         <span class="text-muted">Diskon Tambahan</span>
                                         <div style="width: 100px;">
                                             <input type="text" id="modal_diskon_tambahan"
+                                                class="form-control form-control-sm text-end" value="0">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2 align-items-center">
+                                        <span class="text-muted">Biaya Lain-lain</span>
+                                        <div style="width: 100px;">
+                                            <input type="text" id="modal_biaya_lain"
                                                 class="form-control form-control-sm text-end" value="0">
                                         </div>
                                     </div>
@@ -455,39 +461,29 @@
     let masterProduk = [];
 
     function formatRupiah(angka) {
-        if (!angka) return '';
-
-        let number_string = String(angka).replace(/[^,\d]/g, '').toString();
-        let split = number_string.split(',');
-        let sisa = split[0].length % 3;
-        let rupiah = split[0].substr(0, sisa);
-        let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
-        if (ribuan) {
-            let separator = sisa ? '.' : '';
-            rupiah += separator + ribuan.join('.');
-        }
-
-        return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+        if (angka === null || angka === undefined || angka === '') return '0';
+        let value = String(angka).replace(/[^0-9]/g, '');
+        let num = parseInt(value) || 0;
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     }
-
 
     function cleanNumber(angka) {
         if (!angka) return 0;
-
-        return parseFloat(String(angka).replace(/\./g, '').replace(',', '.')) || 0;
+        if (typeof angka === 'number') return angka;
+        // Buang semua kecuali angka
+        return parseInt(String(angka).replace(/[^0-9]/g, '')) || 0;
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        const discInput = document.getElementById('modal_diskon_tambahan');
-        if (discInput) {
-            discInput.addEventListener('keyup', function(e) {
-                // 1. Format tampilan (tambah titik)
-                this.value = formatRupiah(this.value);
-                // 2. Hitung ulang total invoice
-                calculateInvoiceTotal();
-            });
-        }
+        ['modal_diskon_tambahan', 'modal_biaya_lain'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('keyup', function(e) {
+                    this.value = formatRupiah(this.value);
+                    calculateInvoiceTotal();
+                });
+            }
+        });
     });
 
     async function fetchMasterProduk() {
@@ -631,12 +627,15 @@
 
         // Gather all available options into a standard format
         const options = [];
-        
+
         // 1. Get existing options from Blade
         if (sel.options) {
             Array.from(sel.options).forEach(opt => {
                 if (opt.value !== '') {
-                    options.push({ id: opt.value, name: opt.textContent.trim() });
+                    options.push({
+                        id: opt.value,
+                        name: opt.textContent.trim()
+                    });
                 }
             });
         }
@@ -646,14 +645,17 @@
         if (staffData.length > 0) {
             staffData.forEach(u => {
                 if (!options.find(o => o.id == u.id)) {
-                    options.push({ id: String(u.id), name: u.name });
+                    options.push({
+                        id: String(u.id),
+                        name: u.name
+                    });
                 }
             });
         }
 
         // 3. Clear select to let TomSelect handle it via the options array
         sel.innerHTML = '<option value="">Pilih Sales...</option>';
-        
+
         tomSelectSalesModal = new TomSelect('#modal_sales_id', {
             options: options,
             valueField: 'id',
@@ -761,7 +763,7 @@
         // Load Master Data if empty
         if (masterProduk.length === 0) await fetchMasterProduk();
         if (masterMitra.length === 0) await initializeMasterData();
-        
+
         // Ensure masterUsers is loaded (part of initializeMasterData or separate fetch)
         if (!window.masterUsers || window.masterUsers.length === 0) {
             try {
@@ -794,9 +796,8 @@
                     document.getElementById('modal_mitra_id').value = inv.mitra_id;
                     document.getElementById('modal_keterangan').value = inv.keterangan || '';
                     document.getElementById('modal_syarat').value = inv.syarat_ketentuan || '';
-                    document.getElementById('modal_diskon_tambahan').value = formatRupiah(Math.round(parseFloat(inv
-                        .diskon_tambahan_nilai || 0)));
-
+                    document.getElementById('modal_diskon_tambahan').value = formatRupiah(Math.round(inv.diskon_tambahan_nilai || 0));
+                    document.getElementById('modal_biaya_lain').value = formatRupiah(Math.round(inv.biaya_kirim || 0));
 
                     if (inv.mitra_id && tomSelectMitraModal) {
                         tomSelectMitraModal.setValue(String(inv.mitra_id), true);
@@ -1108,7 +1109,8 @@
         });
 
         const extraDisc = cleanNumber(document.getElementById('modal_diskon_tambahan').value);
-        const grandTotal = Math.max(0, subtotal - extraDisc);
+        const biayaLain = cleanNumber(document.getElementById('modal_biaya_lain').value);
+        const grandTotal = Math.max(0, subtotal - extraDisc + biayaLain);
 
         document.getElementById('summary_subtotal').innerText = window.financeApp.formatIDR(subtotal);
         document.getElementById('summary_grand_total').innerText = window.financeApp.formatIDR(grandTotal);
@@ -1190,7 +1192,7 @@
                     /[^0-9,-]+/g, '').replace(',', '.')) || 0,
                 status_dok: 'Approved',
                 status_pembayaran: 'Unpaid',
-                biaya_kirim: 0,
+                biaya_kirim: cleanNumber(document.getElementById('modal_biaya_lain').value),
                 uang_muka: 0
             },
             items: items
@@ -1259,22 +1261,24 @@
             const res = await fetch('/api/product-api');
             const result = await res.json();
             console.log('Product API Response:', result); // Debug log
-            
+
             if (result.success) {
                 stockCache = result.data.data || result.data; // Handle pagination structure
                 console.log('Stock Cache:', stockCache); // Debug log
                 renderStockList(stockCache);
-                
+
                 // Setup search functionality
                 setupStockSearch();
             } else {
                 document.getElementById('stockBodyList').innerHTML =
-                    '<tr><td colspan="6" class="text-center text-danger p-4">API Error: ' + (result.message || 'Unknown error') + '</td></tr>';
+                    '<tr><td colspan="6" class="text-center text-danger p-4">API Error: ' + (result.message ||
+                        'Unknown error') + '</td></tr>';
             }
         } catch (e) {
             console.error('Product API Error:', e); // Debug log
             document.getElementById('stockBodyList').innerHTML =
-                '<tr><td colspan="6" class="text-center text-danger p-4">Gagal load produk: ' + e.message + '</td></tr>';
+                '<tr><td colspan="6" class="text-center text-danger p-4">Gagal load produk: ' + e.message +
+                '</td></tr>';
         }
     }
 
@@ -1282,17 +1286,20 @@
         // Setup search input untuk pencarian real-time
         const searchInput = document.getElementById('stockSearchInput');
         const categoryFilter = document.getElementById('stockCategoryFilter');
-        
+
         // Load kategori options
         loadStockCategories();
-        
+
         if (searchInput) {
             searchInput.addEventListener('input', async function() {
                 const searchTerm = this.value ? this.value.trim() : '';
                 const categoryId = categoryFilter ? categoryFilter.value : '';
-                
-                console.log('Search triggered:', { searchTerm, categoryId }); // Debug log
-                
+
+                console.log('Search triggered:', {
+                    searchTerm,
+                    categoryId
+                }); // Debug log
+
                 // Search langsung tanpa delay dan minimal karakter
                 try {
                     let url = `/api/product-api`;
@@ -1302,12 +1309,12 @@
                     if (categoryId) {
                         url += searchTerm ? `&category=${categoryId}` : `?category=${categoryId}`;
                     }
-                    
+
                     console.log('Search URL:', url); // Debug log
                     const res = await fetch(url);
                     const result = await res.json();
                     console.log('Search Response:', result); // Debug log
-                    
+
                     if (result.success) {
                         const data = result.data.data || result.data;
                         console.log('Search Data:', data); // Debug log
@@ -1318,13 +1325,13 @@
                 }
             });
         }
-        
+
         // Setup category filter
         if (categoryFilter) {
             categoryFilter.addEventListener('change', function() {
                 const searchTerm = searchInput ? (searchInput.value ? searchInput.value.trim() : '') : '';
                 const categoryId = this.value ? this.value : '';
-                
+
                 // Filter tanpa minimal karakter
                 let url = `/api/product-api`;
                 if (searchTerm) {
@@ -1333,7 +1340,7 @@
                 if (categoryId) {
                     url += searchTerm ? `&category=${categoryId}` : `?category=${categoryId}`;
                 }
-                
+
                 fetch(url)
                     .then(res => res.json())
                     .then(result => {
@@ -1352,15 +1359,16 @@
             const res = await fetch('/api/product-categories-api');
             const result = await res.json();
             console.log('Categories API Response:', result); // Debug log
-            
+
             if (result.success) {
                 const categories = result.data.data || result.data;
                 const categoryFilter = document.getElementById('stockCategoryFilter');
-                
+
                 if (categoryFilter) {
                     categoryFilter.innerHTML = '<option value="">Semua Kategori</option>';
                     categories.forEach(cat => {
-                        categoryFilter.innerHTML += `<option value="${cat.id}">${cat.nama_kategori}</option>`;
+                        categoryFilter.innerHTML +=
+                            `<option value="${cat.id}">${cat.nama_kategori}</option>`;
                     });
                 }
             } else {
@@ -1374,10 +1382,10 @@
     function resetStockFilters() {
         const searchInput = document.getElementById('stockSearchInput');
         const categoryFilter = document.getElementById('stockCategoryFilter');
-        
+
         if (searchInput) searchInput.value = '';
         if (categoryFilter) categoryFilter.value = '';
-        
+
         // Kembali ke cache saat reset
         renderStockList(stockCache);
         console.log('Reset to cache - showing all products');

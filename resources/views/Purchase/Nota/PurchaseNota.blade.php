@@ -15,7 +15,8 @@
         }
 
         .nota-container {
-            width: 800px;
+            width: 190mm;
+            /* Adjusted to standard width */
             border: 1px solid #000;
             padding: 5px;
             margin: auto;
@@ -65,6 +66,7 @@
             text-align: center;
             font-weight: bold;
         }
+
         .main-table tbody td {
             border-left: 1px solid #000;
             border-right: 1px solid #000;
@@ -72,6 +74,7 @@
             border-bottom: none !important;
             padding: 2px 5px !important;
         }
+
         .main-table tbody tr:last-child td {
             border-bottom: 1px solid #000 !important;
         }
@@ -92,6 +95,7 @@
         .footer-left {
             width: 65%;
         }
+
         .footer-right {
             width: 35%;
         }
@@ -116,17 +120,23 @@
             padding: 5px;
             border: 1px solid #000;
         }
+
         .total-table td:first-child {
-            width: 42.857%; /* Aligns with Qty (15/35) */
+            width: 42.857%;
+            /* Aligns with Qty (15/35) */
         }
+
         .total-table td:last-child {
-            width: 57.143%; /* Aligns with Disc + Total (20/35) */
+            width: 57.143%;
+            /* Aligns with Disc + Total (20/35) */
         }
+
         .note {
             font-style: italic;
             margin-top: 5px;
             font-size: 10px;
         }
+
         .bank-info {
             margin-top: 5px;
             font-size: 10px;
@@ -135,8 +145,9 @@
 
         @media print {
             @page {
-                size: landscape;
-                margin: 5mm;
+                size: auto;
+                margin: 15mm 15mm 10mm 5mm;
+                /* Moved Down and Left */
             }
         }
     </style>
@@ -179,7 +190,7 @@
                 <tr>
                     <th width="5%">No.</th>
                     <th width="10%">Kode</th>
-                    <th>Supplier</th>
+                    <th>Barang</th>
                     <th>Brand</th>
                     <th width="35%">Nama Barang</th>
                     <th width="10%">Kategori</th>
@@ -195,7 +206,8 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="8" rowspan="3" style="border: none !important; vertical-align: top; padding-top: 5px !important; text-align: left !important;">
+                    <td colspan="8" rowspan="4"
+                        style="border: none !important; vertical-align: top; padding-top: 5px !important; text-align: left !important;">
                         <div class="note">
                             Note : Barang yang sudah diterima sesuai dengan invoice.
                         </div>
@@ -205,16 +217,27 @@
                             <div class="signature-box">Supplier<br><br><br><br>(................)</div>
                         </div>
                     </td>
-                    <td class="text-left" style="border: 1px solid #000 !important; padding: 2px !important;">Total</td>
-                    <td colspan="2" class="text-right" id="total_akhir" style="border: 1px solid #000 !important; padding: 2px !important;"></td>
+                    <td class="text-left" style="border: 1px solid #000 !important; padding: 2px !important;">Biaya Lain
+                    </td>
+                    <td colspan="2" class="text-right" id="biaya_lain_display"
+                        style="border: 1px solid #000 !important; padding: 2px !important;">0</td>
                 </tr>
                 <tr>
-                    <td class="text-left" style="border: 1px solid #000 !important; padding: 2px !important;">DP / Bayar</td>
-                    <td colspan="2" class="text-right" id="total_bayar" style="border: 1px solid #000 !important; padding: 2px !important;"></td>
+                    <td class="text-left" style="border: 1px solid #000 !important; padding: 2px !important;">Total</td>
+                    <td colspan="2" class="text-right" id="total_akhir"
+                        style="border: 1px solid #000 !important; padding: 2px !important;"></td>
+                </tr>
+                <tr>
+                    <td class="text-left" style="border: 1px solid #000 !important; padding: 2px !important;">DP / Bayar
+                    </td>
+                    <td colspan="2" class="text-right" id="total_bayar"
+                        style="border: 1px solid #000 !important; padding: 2px !important;"></td>
                 </tr>
                 <tr>
                     <td class="text-left" style="border: 1px solid #000 !important; padding: 2px !important;">Sisa</td>
-                    <td colspan="2" class="text-right" id="sisa_tagihan" style="border: 1px solid #000 !important; padding: 2px !important; background-color: #f2f2f2 !important;"></td>
+                    <td colspan="2" class="text-right" id="sisa_tagihan"
+                        style="border: 1px solid #000 !important; padding: 2px !important; background-color: #f2f2f2 !important;">
+                    </td>
                 </tr>
             </tfoot>
         </table>
@@ -310,6 +333,8 @@
                         .jumlah_bayar), 0) : 0;
 
                     document.getElementById('total_akhir').innerText = formatNumber(data.total_akhir);
+                    document.getElementById('biaya_lain_display').innerText = formatNumber(data.biaya_kirim ||
+                        0);
                     document.getElementById('total_bayar').innerText = formatNumber(totalBayar);
                     document.getElementById('sisa_tagihan').innerText = formatNumber(data.total_akhir -
                         totalBayar);
@@ -319,9 +344,12 @@
                     document.getElementById('nota-content').style.display = 'block';
 
                     // Auto Print
-                    setTimeout(() => {
-                        window.print();
-                    }, 500);
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (!urlParams.get('no_print')) {
+                        setTimeout(() => {
+                            window.print();
+                        }, 500);
+                    }
                 } else {
                     document.getElementById('loading').innerText = 'Gagal memuat data invoice.';
                 }

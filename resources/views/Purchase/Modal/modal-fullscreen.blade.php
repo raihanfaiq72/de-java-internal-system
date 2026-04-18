@@ -188,9 +188,14 @@
                                         <span class="text-muted">Potongan Lumpsum</span>
                                         <div style="width: 120px;">
                                             <input type="text" id="modal_diskon_tambahan"
-                                                class="form-control form-control-sm text-end fw-bold" value="0"
-                                                onkeyup="this.value=formatRupiah(this.value); calculateInvoiceTotal()"
-                                                oninput="calculateInvoiceTotal()">
+                                                class="form-control form-control-sm text-end fw-bold" value="0">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2 align-items-center">
+                                        <span class="text-muted">Biaya Lain-lain</span>
+                                        <div style="width: 120px;">
+                                            <input type="text" id="modal_biaya_lain"
+                                                class="form-control form-control-sm text-end fw-bold" value="0">
                                         </div>
                                     </div>
                                 </div>
@@ -399,6 +404,19 @@
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        ['modal_diskon_tambahan', 'modal_biaya_lain'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('keyup', function(e) {
+                    this.value = formatRupiah(this.value);
+                    calculateInvoiceTotal();
+                });
+            }
+        });
+    });
 
 <script>
     let fpInvoice = null,
@@ -771,24 +789,16 @@
     }
 
     function formatRupiah(angka) {
-        if (!angka) return '';
-        let number_string = String(angka).replace(/[^,\d]/g, '').toString();
-        let split = number_string.split(',');
-        let sisa = split[0].length % 3;
-        let rupiah = split[0].substr(0, sisa);
-        let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
-        if (ribuan) {
-            let separator = sisa ? '.' : '';
-            rupiah += separator + ribuan.join('.');
-        }
-
-        return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+        if (angka === null || angka === undefined || angka === '') return '0';
+        let value = String(angka).replace(/[^0-9]/g, '');
+        let num = parseInt(value) || 0;
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     }
 
     function cleanNumber(angka) {
         if (!angka) return 0;
-        return parseFloat(String(angka).replace(/\./g, '').replace(',', '.')) || 0;
+        if (typeof angka === 'number') return angka;
+        return parseInt(String(angka).replace(/[^0-9]/g, '')) || 0;
     }
 
     const _origOpenModal = openInvoiceModal;
@@ -889,7 +899,8 @@
                     document.getElementById('modal_mitra_id').value = inv.mitra_id;
                     document.getElementById('modal_keterangan').value = inv.keterangan || '';
                     document.getElementById('modal_syarat').value = inv.syarat_ketentuan || '';
-                    document.getElementById('modal_diskon_tambahan').value = inv.diskon_tambahan_nilai || 0;
+                    document.getElementById('modal_diskon_tambahan').value = formatRupiah(Math.round(inv.diskon_tambahan_nilai || 0));
+                    document.getElementById('modal_biaya_lain').value = formatRupiah(Math.round(inv.biaya_kirim || 0));
 
 
                     if (inv.mitra_id && tomSelectMitraModal) {
@@ -977,7 +988,8 @@
         });
 
         const extraDisc = cleanNumber(document.getElementById('modal_diskon_tambahan').value);
-        const grandTotal = Math.max(0, subtotal - extraDisc);
+        const biayaLain = cleanNumber(document.getElementById('modal_biaya_lain').value);
+        const grandTotal = Math.max(0, subtotal - extraDisc + biayaLain);
 
         document.getElementById('summary_subtotal').innerText = window.financeApp.formatIDR(subtotal);
         document.getElementById('summary_grand_total').innerText = window.financeApp.formatIDR(grandTotal);
@@ -1094,7 +1106,7 @@
                     /[^0-9,-]+/g, '').replace(',', '.')) || 0,
                 status_dok: 'Approved',
                 status_pembayaran: 'Unpaid',
-                biaya_kirim: 0,
+                biaya_kirim: cleanNumber(document.getElementById('modal_biaya_lain').value),
                 uang_muka: 0
             },
             items: items

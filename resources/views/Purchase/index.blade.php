@@ -813,7 +813,9 @@
             });
 
             // Totals
-            document.getElementById('detailSubtotal').textContent = window.financeApp.formatIDR(item.total_akhir);
+            document.getElementById('detailSubtotal').textContent = window.financeApp.formatIDR(item.subtotal);
+            document.getElementById('detailDiskon').textContent = `- ${window.financeApp.formatIDR(item.diskon_tambahan_nilai || 0)}`;
+            document.getElementById('detailBiayaLain').textContent = `+ ${window.financeApp.formatIDR(item.biaya_kirim || 0)}`;
             document.getElementById('detailTotal').textContent = window.financeApp.formatIDR(item.total_akhir);
 
             // Action Buttons
@@ -851,7 +853,7 @@
         }
 
         function openPrintPreview(id) {
-            const printUrl = `{{ url('purchase/print') }}/${id}`;
+            const printUrl = `{{ url('purchase/print') }}/${id}?no_print=1`;
 
             const modalContainer = document.getElementById('modalPrintPreview');
 
