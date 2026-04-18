@@ -204,4 +204,10 @@ class PurchaseController extends Controller
             'monthlyData'
         ));
     }
+
+    public function bulkPrintInvoice(Request $request)
+    {
+        $ids = explode(',', $request->ids);
+        return view($this->views . 'Nota.PurchaseBulkNota', compact('ids'));
+    }
 }

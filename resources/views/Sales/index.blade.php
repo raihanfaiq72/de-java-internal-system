@@ -120,6 +120,11 @@
             background-color: #f1f5f9;
             color: #3b82f6;
         }
+
+        /* Checkbox Border */
+        .form-check-input {
+            border: 2px solid #64748b !important;
+        }
     </style>
 
     <style>
@@ -318,11 +323,15 @@
                             </div>
                             <div id="bulk-action-area" class="d-none border-top pt-2 mt-2">
                                 <button class="btn btn-outline-primary fw-bold btn-sm px-3 me-1" onclick="initBulkEdit()">
-                                    <i class="fa fa-pencil"></i>
+                                    <i class="fa fa-pencil-alt me-1"></i> Edit
+                                </button>
+                                <button class="btn btn-outline-info fw-bold btn-sm px-3 me-1" onclick="bulkPrint()">
+                                    <i class="fa fa-print me-1"></i> Cetak Massal
                                 </button>
                                 <button class="btn btn-outline-danger fw-bold btn-sm px-3" onclick="bulkDelete()">
                                     <i class="fa fa-trash-can"></i>
                                 </button>
+                                <span class="selected-count ms-2 small text-muted"></span>
                             </div>
                         </div>
 
@@ -1182,6 +1191,22 @@
                     btn.disabled = false;
                 }
             }
+        }
+
+        function bulkPrint() {
+            const ids = window.financeApp.selectedIds.join(',');
+            if (!ids) return;
+
+            const printUrl = `{{ url('sales/bulk-print') }}?ids=${ids}`;
+            const modalContainer = document.getElementById('modalPrintPreview');
+            if (!modalContainer) return;
+
+            const iframe = modalContainer.querySelector('iframe');
+            if (!iframe) return;
+
+            iframe.src = printUrl;
+            const bModal = bootstrap.Modal.getOrCreateInstance(modalContainer);
+            bModal.show();
         }
 
         function renderPagination(meta) {
