@@ -10,9 +10,13 @@
             -webkit-print-color-adjust: exact;
         }
 
+        table {
+            border-collapse: collapse !important;
+        }
+
         body {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 14px;
+            font-size: 12px;
             color: #000;
             margin: 0;
             padding: 0;
@@ -130,20 +134,43 @@
         }
 
         .total-table td {
-            padding: 5px;
+            padding: 0px 5px !important;
+            /* Minimized padding */
             border: 2px solid #000;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 11px;
         }
 
+        /* Remove all internal horizontal borders */
+        .total-table tr td {
+            border-top: none !important;
+            border-bottom: none !important;
+        }
+
+        /* Remove middle vertical border */
         .total-table td:first-child {
-            width: 46.875%;
-            /* Aligns with Harga Satuan (15/32) */
+            border-right: none !important;
         }
 
         .total-table td:last-child {
-            width: 53.125%;
-            /* Aligns with Disc + Total (17/32) */
+            border-left: none !important;
+        }
+
+        /* Restore outer top and bottom only */
+        .total-table tr:first-child td {
+            border-top: 2px solid #000 !important;
+        }
+
+        .total-table tr:last-child td {
+            border-bottom: 2px solid #000 !important;
+        }
+
+        .total-table td:first-child {
+            width: 45%;
+        }
+
+        .total-table td:last-child {
+            width: 55%;
         }
 
         .total-table tr:last-child td {
@@ -173,6 +200,7 @@
             font-weight: bold;
             border-top: 2px dashed #000;
             padding-top: 5px;
+            font-size: 14px;
         }
 
         #loading {
@@ -253,56 +281,48 @@
             <tbody id="items-body"></tbody>
             <tfoot>
                 <tr>
-                    <td colspan="5" rowspan="4"
+                    <td colspan="5" rowspan="6"
                         style="border: none !important; vertical-align: top; padding-top: 5px !important;">
                         <div style="font-style: italic; font-size: 11px;">
                             <strong>Catatan: Barang yang sudah dibeli tidak dapat ditukar/dikembalikan.</strong>
                         </div>
-                        <div class="signature-section">
-                            <div class="sig-box"><strong>Penerima</strong>
-                                <div class="sig-space"></div><strong>( ............ )</strong>
-                            </div>
-                            <div class="sig-box"><strong>Pengirim</strong>
-                                <div class="sig-space"></div><strong>( ............ )</strong>
-                            </div>
-                            <div class="sig-box"><strong>Hormat Kami</strong>
-                                <div class="sig-space"></div><strong>( ............ )</strong>
-                            </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+                            <div class="sig-box text-center"><strong>Penerima</strong><br><br><br>( . . . . .)</div>
+                            <div class="sig-box text-center"><strong>Pengirim</strong><br><br><br>( . . . . . .)</div>
+                            <div class="sig-box text-center"><strong>Hormat Kami</strong><br><br><br>( . . . . .)</div>
+                        </div>
+                        <div
+                            style="margin-top: 60px; border: 2px solid #000; padding: 2px; min-height: 20px; font-weight: bold;">
+                            TERBILANG: <span id="terbilang_display"
+                                style="font-style: italic; text-transform: uppercase;"></span>
                         </div>
                     </td>
-                    <td class="text-left" style="border: 2px solid #000 !important; padding: 2px !important;">Biaya Lain
-                    </td>
-                    <td colspan="2" class="text-right" id="biaya_lain_display"
-                        style="border: 2px solid #000 !important; padding: 2px !important;">0</td>
                 </tr>
                 <tr>
-                    <td class="text-left" style="border: 2px solid #000 !important; padding: 2px !important;">Cashback
-                    </td>
-                    <td colspan="2" class="text-right" id="cashback_display"
-                        style="border: 2px solid #000 !important; padding: 2px !important;">0</td>
+                    <td class="text-left">Diskon</td>
+                    <td colspan="2" class="text-right" id="diskon_display">0</td>
+                </tr>
+                <tr style="border-top: 0px; border-bottom: 0px;">
+                    <td class="text-left">Pajak (PPN)</td>
+                    <td colspan="2" class="text-right" id="pajak_display">0</td>
                 </tr>
                 <tr>
-                    <td class="text-left" style="border: 2px solid #000 !important; padding: 2px !important;">TOTAL Rp
-                    </td>
-                    <td colspan="2" class="text-right" id="total_akhir"
-                        style="border: 2px solid #000 !important; padding: 2px !important;"></td>
+                    <td class="text-left">Biaya Lain</td>
+                    <td colspan="2" class="text-right" id="biaya_lain_display">0</td>
                 </tr>
                 <tr>
-                    <td class="text-left" style="border: 2px solid #000 !important; padding: 2px !important;">Bayar</td>
-                    <td colspan="2" class="text-right" id="total_bayar"
-                        style="border: 2px solid #000 !important; padding: 2px !important;"></td>
+                    <td class="text-left">Cashback</td>
+                    <td colspan="2" class="text-right" id="cashback_display">0</td>
                 </tr>
-                <tr>
-                    <td class="text-left" style="border: 2px solid #000 !important; padding: 2px !important;">SISA</td>
-                    <td colspan="2" class="text-right" id="sisa_tagihan"
-                        style="border: 2px solid #000 !important; padding: 2px !important; background-color: #f2f2f2 !important;">
-                    </td>
+                <tr style="background-color: #f2f2f2 !important;">
+                    <td class="text-left">TOTAL Rp</td>
+                    <td colspan="2" class="text-right" id="total_akhir"></td>
                 </tr>
             </tfoot>
         </table>
 
         <div class="bank-info">
-            PEMBAYARAN VIA TRANSFER: BCA 1234567890 - A/N PT. DE JAVA
+            PEMBAYARAN VIA TRANSFER: BCA 2220330641 - A/N WILDAN RAHMASYAH PUTRA
         </div>
     </div>
 
@@ -388,7 +408,7 @@
                     });
 
                     // Baris kosong (minimal 5 baris)
-                    for (let i = data.items.length; i < 5; i++) {
+                    for (let i = data.items.length; i < 3; i++) {
                         tbody.insertAdjacentHTML('beforeend',
                             '<tr><td style="height:35px;"></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'
                         );
@@ -396,18 +416,35 @@
 
                     const totalBayar = data.payment ? data.payment.reduce((sum, p) => sum + parseFloat(p
                         .jumlah_bayar), 0) : 0;
-                    document.getElementById('total_akhir').innerText = formatNumber(data.total_akhir);
+
+                    const subtotalItems = data.items.reduce((sum, item) => sum + parseFloat(item
+                        .total_harga_item), 0);
+                    // document.getElementById('subtotal_display').innerText = formatNumber(subtotalItems);
+
+                    let discVal = parseFloat(data.diskon_tambahan_nilai || 0);
+                    let discText = formatNumber(discVal);
+                    if (data.diskon_tambahan_tipe === 'Percentage') {
+                        let nominal = (subtotalItems * discVal / 100);
+                        discText = `${discVal}% (${formatNumber(nominal)})`;
+                    }
+                    document.getElementById('diskon_display').innerText = discText;
+
+                    document.getElementById('pajak_display').innerText = formatNumber(data.pajak_ppn || 0);
                     document.getElementById('biaya_lain_display').innerText = formatNumber(data.other_fee ||
                         data.biaya_kirim || 0);
                     document.getElementById('cashback_display').innerText = formatNumber(data.cashback || 0);
-                    document.getElementById('total_bayar').innerText = formatNumber(totalBayar);
-                    document.getElementById('sisa_tagihan').innerText = formatNumber(data.total_akhir -
-                        totalBayar);
+
+                    document.getElementById('total_akhir').innerText = formatNumber(data.total_akhir);
+                    // document.getElementById('total_bayar').innerText = formatNumber(totalBayar);
+                    // document.getElementById('sisa_tagihan').innerText = formatNumber(data.total_akhir -
+                    //     totalBayar);
+
+                    document.getElementById('terbilang_display').innerText = terbilang(data.total_akhir) +
+                        " RUPIAH";
 
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('nota-content').style.display = 'block';
 
-                    // Auto Print
                     const urlParams = new URLSearchParams(window.location.search);
                     if (!urlParams.get('no_print')) {
                         setTimeout(() => {
@@ -416,9 +453,30 @@
                     }
                 }
             } catch (error) {
-                document.getElementById('loading').innerText = 'GAGAL MEMUAT DATA.';
+                console.error(error);
+                document.getElementById('loading').innerText = 'TERJADI KESALAHAN.';
             }
         });
+
+        function terbilang(n) {
+            if (n < 0) return "MINUS " + terbilang(-n);
+            if (n === 0) return "";
+            const satuan = ["", "SATU", "DUA", "TIGA", "EMPAT", "LIMA", "ENAM", "TUJUH", "DELAPAN", "SEMBILAN", "SEPULUH",
+                "SEBELAS"
+            ];
+            let res = "";
+            if (n < 12) res = satuan[n];
+            else if (n < 20) res = terbilang(n - 10) + " BELAS";
+            else if (n < 100) res = terbilang(Math.floor(n / 10)) + " PULUH " + terbilang(n % 10);
+            else if (n < 200) res = "SERATUS " + terbilang(n - 100);
+            else if (n < 1000) res = terbilang(Math.floor(n / 100)) + " RATUS " + terbilang(n % 100);
+            else if (n < 2000) res = "SERIBU " + terbilang(n - 1000);
+            else if (n < 1000000) res = terbilang(Math.floor(n / 1000)) + " RIBU " + terbilang(n % 1000);
+            else if (n < 1000000000) res = terbilang(Math.floor(n / 1000000)) + " JUTA " + terbilang(n % 1000000);
+            else if (n < 1000000000000) res = terbilang(Math.floor(n / 1000000000)) + " MILIAR " + terbilang(n %
+                1000000000);
+            return res.trim();
+        }
     </script>
 </body>
 
