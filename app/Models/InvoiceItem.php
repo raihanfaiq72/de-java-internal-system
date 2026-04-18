@@ -21,6 +21,7 @@ class InvoiceItem extends Model
         'tempo',
         'harga_satuan',
         'diskon_nilai',
+        'diskon_tipe',
         'total_harga_item',
     ];
 

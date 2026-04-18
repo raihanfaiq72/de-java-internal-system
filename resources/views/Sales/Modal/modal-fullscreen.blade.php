@@ -136,21 +136,22 @@
                                     <table class="table align-middle mb-0 table-hover" id="mainItemTable">
                                         <thead class="bg-light text-secondary small fw-bold text-uppercase">
                                             <tr>
-                                                <th class="ps-4 py-3" width="24%">Produk / Deskripsi</th>
-                                                <th class="text-center" width="10%">Qty</th>
+                                                <th class="ps-4 py-3" width="22%">Produk / Deskripsi</th>
+                                                <th class="text-center" width="8%">Qty</th>
                                                 <th class="text-center" width="6%">Tempo</th>
-                                                <th class="text-center" width="9%">X Tempo</th>
-                                                <th class="text-center" width="7%">Satuan</th>
-                                                <th class="text-end" width="13%">Harga</th>
-                                                <th class="text-end" width="10%">Disc (Rp)</th>
-                                                <th class="text-end pe-4" width="17%">Total</th>
+                                                <th class="text-center" width="8%">X Tempo</th>
+                                                <th class="text-center" width="6%">Satuan</th>
+                                                <th class="text-end" width="12%">Harga</th>
+                                                <th class="text-center" width="10%">Tipe Disc</th>
+                                                <th class="text-end" width="11%">Disc</th>
+                                                <th class="text-end pe-4" width="13%">Total</th>
                                                 <th width="4%"></th>
                                             </tr>
                                         </thead>
                                         <tbody id="itemBodyList" class="border-top-0"></tbody>
                                         <tfoot class="bg-light">
                                             <tr>
-                                                <td colspan="9"
+                                                <td colspan="10"
                                                     class="text-center py-2 text-muted small fst-italic">
                                                     Klik tombol tambah untuk memasukkan item
                                                 </td>
@@ -190,36 +191,44 @@
                                         <span class="text-muted">Subtotal</span>
                                         <span class="fw-bold text-dark" id="summary_subtotal">Rp 0</span>
                                     </div>
-                                    <div class="d-flex justify-content-between mb-2 align-items-center">
-                                        <span class="text-muted">Diskon Tambahan</span>
-                                        <div style="width: 100px;">
+                                    <div class="mb-3">
+                                        <label class="text-muted small d-block mb-1">Diskon Tambahan</label>
+                                        <div class="input-group input-group-sm">
+                                            <select id="modal_diskon_tambahan_tipe"
+                                                class="form-select border-end-0 text-dark" style="max-width: 85px;"
+                                                onchange="calculateInvoiceTotal()">
+                                                <option value="Fixed">Rp</option>
+                                                <option value="Percentage">%</option>
+                                            </select>
                                             <input type="text" id="modal_diskon_tambahan"
-                                                class="form-control form-control-sm text-end" value="0">
+                                                class="form-control text-end" value="0">
                                         </div>
                                     </div>
-                                    <div class="d-flex justify-content-between mb-2 align-items-center">
-                                        <span class="text-muted">Biaya Lain-lain</span>
-                                        <div style="width: 100px;">
-                                            <input type="text" id="modal_biaya_lain"
-                                                class="form-control form-control-sm text-end" value="0">
-                                        </div>
+                                    <div class="mb-3">
+                                        <label class="text-muted small d-block mb-1">Biaya Lain-lain</label>
+                                        <input type="text" id="modal_biaya_lain"
+                                            class="form-control form-control-sm text-end" value="0">
                                     </div>
-                                    <!-- Tax could go here -->
+                                    <div class="mb-3">
+                                        <label class="text-muted small d-block mb-1">Cashback</label>
+                                        <input type="text" id="modal_cashback"
+                                            class="form-control form-control-sm text-end" value="0">
+                                    </div>
                                 </div>
-                                <div
-                                    class="p-3 rounded bg-primary bg-opacity-10 border border-primary border-opacity-25">
-                                    <div class="text-center">
-                                        <div class="small text-primary fw-bold text-uppercase mb-1">Total Tagihan</div>
-                                        <h3 class="fw-bold text-primary mb-0" id="summary_grand_total">Rp 0</h3>
-                                    </div>
+                            </div>
+                            <div class="p-3 rounded bg-primary bg-opacity-10 border border-primary border-opacity-25">
+                                <div class="text-center">
+                                    <div class="small text-primary fw-bold text-uppercase mb-1">Total Tagihan</div>
+                                    <h3 class="fw-bold text-primary mb-0" id="summary_grand_total">Rp 0</h3>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </form>
             </div>
+            </form>
         </div>
     </div>
+</div>
 </div>
 
 <!-- Stock Modal remains largely the same, just refined styling -->
@@ -316,6 +325,12 @@
         <td class="py-3">
             <input type="text" class="form-control form-control-sm text-end prod-price rupiah-input"
                 value="0">
+        </td>
+        <td class="py-3">
+            <select class="form-select form-select-sm prod-disc-tipe" onchange="calculateInvoiceTotal()">
+                <option value="Fixed">Rp</option>
+                <option value="Percentage">%</option>
+            </select>
         </td>
         <td class="py-3">
             <input type="text" class="form-control form-control-sm text-end prod-disc rupiah-input"
@@ -475,7 +490,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        ['modal_diskon_tambahan', 'modal_biaya_lain'].forEach(id => {
+        ['modal_diskon_tambahan', 'modal_biaya_lain', 'modal_cashback'].forEach(id => {
             const input = document.getElementById(id);
             if (input) {
                 input.addEventListener('keyup', function(e) {
@@ -796,8 +811,13 @@
                     document.getElementById('modal_mitra_id').value = inv.mitra_id;
                     document.getElementById('modal_keterangan').value = inv.keterangan || '';
                     document.getElementById('modal_syarat').value = inv.syarat_ketentuan || '';
-                    document.getElementById('modal_diskon_tambahan').value = formatRupiah(Math.round(inv.diskon_tambahan_nilai || 0));
-                    document.getElementById('modal_biaya_lain').value = formatRupiah(Math.round(inv.biaya_kirim || 0));
+                    document.getElementById('modal_diskon_tambahan').value = formatRupiah(Math.round(inv
+                        .diskon_tambahan_nilai || 0));
+                    document.getElementById('modal_diskon_tambahan_tipe').value = inv.diskon_tambahan_tipe ||
+                        'fixed';
+                    document.getElementById('modal_biaya_lain').value = formatRupiah(Math.round(inv.other_fee || inv
+                        .biaya_kirim || 0));
+                    document.getElementById('modal_cashback').value = formatRupiah(Math.round(inv.cashback || 0));
 
                     if (inv.mitra_id && tomSelectMitraModal) {
                         tomSelectMitraModal.setValue(String(inv.mitra_id), true);
@@ -1018,6 +1038,9 @@
 
                 priceInput.value = formatRupiah(rawPrice);
                 discInput.value = formatRupiah(rawDisc);
+                if (data.diskon_tipe) {
+                    tr.querySelector('.prod-disc-tipe').value = data.diskon_tipe;
+                }
                 descInput.value = data.deskripsi_item || data.deskripsi_produk || '';
 
                 if (data.tempo && data.tempo > 0) {
@@ -1104,27 +1127,44 @@
             const qtyEl = row.querySelector('.prod-qty');
             const priceEl = row.querySelector('.prod-price');
             const discEl = row.querySelector('.prod-disc');
+            const discTipeEl = row.querySelector('.prod-disc-tipe');
             const subtotalDisplay = row.querySelector('.prod-subtotal');
 
             if (!qtyEl || !priceEl || !discEl) return;
 
             const qty = parseFloat(qtyEl.value) || 0;
             const price = cleanNumber(priceEl.value);
-            const disc = cleanNumber(discEl.value);
+            const discValue = cleanNumber(discEl.value);
+            const discTipe = discTipeEl ? discTipeEl.value : 'Fixed';
 
-            // Tempo is metadata, not a multiplier
-            let lineTotal = (qty * price) - disc;
-            if (lineTotal < 0) lineTotal = 0;
+            let rowDisc = 0;
+            if (discTipe === 'Percentage') {
+                rowDisc = (price * discValue / 100);
+            } else {
+                rowDisc = discValue;
+            }
+
+            const rowTotal = Math.max(0, (price - rowDisc) * qty);
+            subtotal += rowTotal;
 
             if (subtotalDisplay) {
-                subtotalDisplay.innerText = window.financeApp.formatIDR(lineTotal);
+                subtotalDisplay.innerText = window.financeApp.formatIDR(rowTotal);
             }
-            subtotal += lineTotal;
         });
 
-        const extraDisc = cleanNumber(document.getElementById('modal_diskon_tambahan').value);
-        const biayaLain = cleanNumber(document.getElementById('modal_biaya_lain').value);
-        const grandTotal = Math.max(0, subtotal - extraDisc + biayaLain);
+        const extraDiscValue = cleanNumber(document.getElementById('modal_diskon_tambahan').value);
+        const extraDiscTipe = document.getElementById('modal_diskon_tambahan_tipe').value;
+        const otherFee = cleanNumber(document.getElementById('modal_biaya_lain').value);
+        const cashback = cleanNumber(document.getElementById('modal_cashback').value);
+
+        let extraDisc = 0;
+        if (extraDiscTipe === 'Percentage') {
+            extraDisc = (subtotal * extraDiscValue / 100);
+        } else {
+            extraDisc = extraDiscValue;
+        }
+
+        const grandTotal = Math.max(0, subtotal - extraDisc + otherFee - cashback);
 
         document.getElementById('summary_subtotal').innerText = window.financeApp.formatIDR(subtotal);
         document.getElementById('summary_grand_total').innerText = window.financeApp.formatIDR(grandTotal);
@@ -1185,7 +1225,8 @@
                         '.prod-tempo-val').value) || 0) : 0,
                     harga_satuan: price,
                     diskon_nilai: disc,
-                    total_harga_item: Math.max(0, (qty * price) - disc)
+                    diskon_tipe: row.querySelector('.prod-disc-tipe').value,
+                    total_harga_item: cleanNumber(row.querySelector('.prod-subtotal').innerText)
                 });
             }
         }
@@ -1202,11 +1243,13 @@
                 keterangan: document.getElementById('modal_keterangan').value,
                 syarat_ketentuan: document.getElementById('modal_syarat').value,
                 diskon_tambahan_nilai: cleanNumber(document.getElementById('modal_diskon_tambahan').value),
-                total_akhir: parseFloat(document.getElementById('summary_grand_total').innerText.replace(
-                    /[^0-9,-]+/g, '').replace(',', '.')) || 0,
+                diskon_tambahan_tipe: document.getElementById('modal_diskon_tambahan_tipe').value,
+                total_akhir: cleanNumber(document.getElementById('summary_grand_total').innerText),
                 status_dok: 'Approved',
                 status_pembayaran: 'Unpaid',
                 biaya_kirim: cleanNumber(document.getElementById('modal_biaya_lain').value),
+                other_fee: cleanNumber(document.getElementById('modal_biaya_lain').value),
+                cashback: cleanNumber(document.getElementById('modal_cashback').value),
                 uang_muka: 0
             },
             items: items

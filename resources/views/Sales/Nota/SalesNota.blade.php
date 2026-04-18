@@ -270,10 +270,15 @@
                             </div>
                         </div>
                     </td>
-                    <td class="text-left" style="border: 2px solid #000 !important; padding: 2px !important;">Biaya
-                        Lain
+                    <td class="text-left" style="border: 2px solid #000 !important; padding: 2px !important;">Biaya Lain
                     </td>
                     <td colspan="2" class="text-right" id="biaya_lain_display"
+                        style="border: 2px solid #000 !important; padding: 2px !important;">0</td>
+                </tr>
+                <tr>
+                    <td class="text-left" style="border: 2px solid #000 !important; padding: 2px !important;">Cashback
+                    </td>
+                    <td colspan="2" class="text-right" id="cashback_display"
                         style="border: 2px solid #000 !important; padding: 2px !important;">0</td>
                 </tr>
                 <tr>
@@ -368,8 +373,15 @@
                         clone.querySelector('.col-qty').textContent = formatNumber(item.qty);
                         clone.querySelector('.col-harga').textContent = formatNumber(item
                             .harga_satuan || item.harga_jual || 0);
-                        clone.querySelector('.col-disc').textContent = item.diskon_nilai > 0 ?
-                            formatNumber(item.diskon_nilai) : '-';
+                        let discText = '-';
+                        if (item.diskon_nilai > 0) {
+                            if (item.diskon_tipe === 'Percentage') {
+                                discText = formatNumber(item.diskon_nilai) + '%';
+                            } else {
+                                discText = formatNumber(item.diskon_nilai);
+                            }
+                        }
+                        clone.querySelector('.col-disc').textContent = discText;
                         clone.querySelector('.col-total').textContent = formatNumber(item
                             .total_harga_item);
                         tbody.appendChild(clone);
@@ -385,8 +397,9 @@
                     const totalBayar = data.payment ? data.payment.reduce((sum, p) => sum + parseFloat(p
                         .jumlah_bayar), 0) : 0;
                     document.getElementById('total_akhir').innerText = formatNumber(data.total_akhir);
-                    document.getElementById('biaya_lain_display').innerText = formatNumber(data.biaya_kirim ||
-                        0);
+                    document.getElementById('biaya_lain_display').innerText = formatNumber(data.other_fee ||
+                        data.biaya_kirim || 0);
+                    document.getElementById('cashback_display').innerText = formatNumber(data.cashback || 0);
                     document.getElementById('total_bayar').innerText = formatNumber(totalBayar);
                     document.getElementById('sisa_tagihan').innerText = formatNumber(data.total_akhir -
                         totalBayar);

@@ -223,6 +223,12 @@
                         style="border: 1px solid #000 !important; padding: 2px !important;">0</td>
                 </tr>
                 <tr>
+                    <td class="text-left" style="border: 1px solid #000 !important; padding: 2px !important;">Cashback
+                    </td>
+                    <td colspan="2" class="text-right" id="cashback_display"
+                        style="border: 1px solid #000 !important; padding: 2px !important;">0</td>
+                </tr>
+                <tr>
                     <td class="text-left" style="border: 1px solid #000 !important; padding: 2px !important;">Total</td>
                     <td colspan="2" class="text-right" id="total_akhir"
                         style="border: 1px solid #000 !important; padding: 2px !important;"></td>
@@ -313,8 +319,15 @@
                         clone.querySelector('.col-kemasan').textContent = p.kemasan || '-';
                         clone.querySelector('.col-satuan').textContent = p.satuan || '-';
                         clone.querySelector('.col-qty').textContent = formatNumber(item.qty);
-                        clone.querySelector('.col-disc').textContent = item.diskon_nilai > 0 ?
-                            formatNumber(item.diskon_nilai) : '0';
+                        let discText = '0';
+                        if (item.diskon_nilai > 0) {
+                            if (item.diskon_tipe === 'Percentage') {
+                                discText = formatNumber(item.diskon_nilai) + '%';
+                            } else {
+                                discText = formatNumber(item.diskon_nilai);
+                            }
+                        }
+                        clone.querySelector('.col-disc').textContent = discText;
                         clone.querySelector('.col-total').textContent = formatNumber(item
                             .total_harga_item);
 
@@ -333,8 +346,9 @@
                         .jumlah_bayar), 0) : 0;
 
                     document.getElementById('total_akhir').innerText = formatNumber(data.total_akhir);
-                    document.getElementById('biaya_lain_display').innerText = formatNumber(data.biaya_kirim ||
-                        0);
+                    document.getElementById('biaya_lain_display').innerText = formatNumber(data.other_fee ||
+                        data.biaya_kirim || 0);
+                    document.getElementById('cashback_display').innerText = formatNumber(data.cashback || 0);
                     document.getElementById('total_bayar').innerText = formatNumber(totalBayar);
                     document.getElementById('sisa_tagihan').innerText = formatNumber(data.total_akhir -
                         totalBayar);

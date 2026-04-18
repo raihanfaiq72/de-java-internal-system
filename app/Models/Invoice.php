@@ -35,6 +35,8 @@ class Invoice extends Model
         'diskon_tambahan_nilai',
         'diskon_tambahan_tipe',
         'biaya_kirim',
+        'cashback',
+        'other_fee',
         'uang_muka',
         'total_akhir',
         'keterangan',
