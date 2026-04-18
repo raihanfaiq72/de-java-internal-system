@@ -97,9 +97,10 @@
                                 <thead>
                                     <tr>
                                         <th width="50" class="ps-4 text-center">#</th>
-                                        <th width="25%">Nama User</th>
-                                        <th width="30%">Kantor / Outlet</th>
-                                        <th width="25%">Role / Jabatan</th>
+                                        <th width="20%">Nama User</th>
+                                        <th width="25%">Kantor / Outlet</th>
+                                        <th width="20%">Role / Jabatan</th>
+                                        <th width="15%" class="text-center">Salesperson</th>
                                         <th width="20%" class="text-end pe-4">Aksi</th>
                                     </tr>
                                 </thead>
@@ -123,6 +124,17 @@
                                             <td>
                                                 <span class="badge-role">{{ $p->role_name }}</span>
                                             </td>
+                                            <td class="text-center">
+                                                @if($p->is_sales)
+                                                    <span class="badge bg-success text-white">
+                                                        <i class="fa fa-user-tie me-1"></i>Sales
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-secondary text-white">
+                                                        <i class="fa fa-user me-1"></i>Staff
+                                                    </span>
+                                                @endif
+                                            </td>
                                             <td class="text-end pe-4">
                                                 <button onclick="openPlotModal({{ $p->id }})"
                                                     class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-primary me-1"
@@ -144,7 +156,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="5" class="text-center py-5">
+                                            <td colspan="6" class="text-center py-5">
                                                 <i class="fa fa-link fa-3x mb-3 opacity-25"></i>
                                                 <p class="text-muted small">Belum ada plotting user.</p>
                                             </td>
@@ -180,9 +192,18 @@
                         <label class="f-label">Pilih User</label>
                         <select name="user_id" id="select-user" class="form-control" required placeholder="Cari User...">
                             @foreach ($users as $u)
-                                <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                <option value="{{ $u->id }}" data-is-sales="{{ $u->is_sales ? 'true' : 'false' }}">{{ $u->name }}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="plot_is_sales" name="is_sales">
+                            <label class="form-check-label" for="plot_is_sales">
+                                <strong>Salesperson</strong>
+                                <div class="form-text small text-muted">Aktifkan jika user ini adalah salesperson</div>
+                            </label>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="f-label">Pilih Kantor</label>
@@ -238,6 +259,13 @@
                         direction: "asc"
                     }
                 });
+
+                // Auto-set is_sales when user is selected
+                tomUser.on('change', function(value) {
+                    const option = tomUser.getOption(value);
+                    const isSales = option ? option.dataset.isSales === 'true' : false;
+                    document.getElementById('plot_is_sales').checked = isSales;
+                });
             });
 
             async function openPlotModal(id = null) {
@@ -248,6 +276,7 @@
                 tomUser.clear();
                 tomOffice.clear();
                 tomRole.clear();
+                document.getElementById('plot_is_sales').checked = false;
 
                 if (id) {
                     modalTitle.innerText = 'Edit Plotting User';
@@ -261,6 +290,9 @@
                             tomUser.setValue(json.data.user_id);
                             tomOffice.setValue(json.data.office_id);
                             tomRole.setValue(json.data.role_id);
+                            
+                            // Set is_sales checkbox
+                            document.getElementById('plot_is_sales').checked = json.data.is_sales ? true : false;
                         }
                     } catch (e) {
                         console.error(e);

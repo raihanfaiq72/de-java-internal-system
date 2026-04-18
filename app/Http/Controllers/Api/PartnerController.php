@@ -13,7 +13,7 @@ class PartnerController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Partner::with(['akunHutang', 'akunPiutang'])
+            $query = Partner::with(['akunHutang', 'akunPiutang', 'salesperson'])
                 ->where('office_id', session('active_office_id'));
 
             if ($request->has('trashed') && $request->trashed == '1') {
@@ -52,7 +52,7 @@ class PartnerController extends Controller
     public function show($id)
     {
         try {
-            $partner = Partner::with(['akunHutang', 'akunPiutang'])
+            $partner = Partner::with(['akunHutang', 'akunPiutang', 'salesperson'])
                 ->where('office_id', session('active_office_id'))
                 ->find($id);
 
@@ -76,6 +76,7 @@ class PartnerController extends Controller
                 'nomor_mitra' => 'nullable|unique:mitras,nomor_mitra',
                 'payment_terms' => 'nullable|string|max:50',
                 'identity_card' => 'nullable|string|max:50',
+                'salesperson_id' => 'nullable|exists:users,id',
                 'latitude' => 'nullable|numeric|between:-90,90',
                 'longitude' => 'nullable|numeric|between:-180,180',
             ]);
@@ -122,6 +123,7 @@ class PartnerController extends Controller
                 'nomor_mitra' => 'nullable|unique:mitras,nomor_mitra,'.$id,
                 'payment_terms' => 'nullable|string|max:50',
                 'identity_card' => 'nullable|string|max:50',
+                'salesperson_id' => 'nullable|exists:users,id',
                 'latitude' => 'nullable|numeric|between:-90,90',
                 'longitude' => 'nullable|numeric|between:-180,180',
             ]);
@@ -169,7 +171,7 @@ class PartnerController extends Controller
     public function search(Request $request, $value)
     {
         try {
-            $data = Partner::with(['akunHutang', 'akunPiutang'])
+            $data = Partner::with(['akunHutang', 'akunPiutang', 'salesperson'])
                 ->where('office_id', session('active_office_id'))
                 ->where(function ($q) use ($value) {
                     $q->where('nama', 'LIKE', "%{$value}%")

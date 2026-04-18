@@ -40,6 +40,7 @@ class UserController extends Controller
             'username' => 'required|string|max:150',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
+            'is_sales' => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -52,6 +53,7 @@ class UserController extends Controller
                 'username' => $request->username,
                 'email' => $request->email,
                 'password' => $request->password,
+                'is_sales' => $request->is_sales ?? false,
             ]);
 
             return apiResponse(true, 'User berhasil dibuat', $user, null, 201);
@@ -74,6 +76,7 @@ class UserController extends Controller
             'username' => 'sometimes|required|string|max:150',
             'email' => 'sometimes|required|email|unique:users,email,'.$id,
             'password' => 'nullable|string|min:6',
+            'is_sales' => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -83,7 +86,7 @@ class UserController extends Controller
         try {
             $before = $user->toArray();
 
-            $data = $request->only(['name', 'email', 'username']);
+            $data = $request->only(['name', 'email', 'username', 'is_sales']);
 
             if ($request->filled('password')) {
                 $data['password'] = $request->password;

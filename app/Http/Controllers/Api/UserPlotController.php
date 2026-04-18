@@ -20,7 +20,7 @@ class UserPlotController extends Controller
             ->join('users', 'user_office_roles.user_id', '=', 'users.id')
             ->join('offices', 'user_office_roles.office_id', '=', 'offices.id')
             ->join('roles', 'user_office_roles.role_id', '=', 'roles.id')
-            ->select('user_office_roles.*', 'users.name as user_name', 'offices.name as office_name', 'roles.name as role_name')
+            ->select('user_office_roles.*', 'users.name as user_name', 'offices.name as office_name', 'roles.name as role_name', 'users.is_sales')
             ->get();
 
         return view('UserPlot.index', compact('users', 'offices', 'roles', 'plots'));
@@ -28,6 +28,11 @@ class UserPlotController extends Controller
 
     public function store(Request $request)
     {
+        // Update user's is_sales status
+        User::where('id', $request->user_id)->update([
+            'is_sales' => $request->has('is_sales') ? true : false,
+        ]);
+
         DB::table('user_office_roles')->insert([
             'user_id' => $request->user_id,
             'office_id' => $request->office_id,
@@ -41,7 +46,11 @@ class UserPlotController extends Controller
 
     public function show($id)
     {
-        $plot = DB::table('user_office_roles')->where('id', $id)->first();
+        $plot = DB::table('user_office_roles')
+            ->join('users', 'user_office_roles.user_id', '=', 'users.id')
+            ->where('user_office_roles.id', $id)
+            ->select('user_office_roles.*', 'users.is_sales')
+            ->first();
 
         if (! $plot) {
             return response()->json([
@@ -58,6 +67,11 @@ class UserPlotController extends Controller
 
     public function update(Request $request, $id)
     {
+        // Update user's is_sales status
+        User::where('id', $request->user_id)->update([
+            'is_sales' => $request->has('is_sales') ? true : false,
+        ]);
+
         DB::table('user_office_roles')
             ->where('id', $id)
             ->update([
