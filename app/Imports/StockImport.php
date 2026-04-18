@@ -159,8 +159,8 @@ class StockImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
                 }
 
                 // 1. Category
-                $categoryName = $row['kategori'] ?? $row['category'] ?? 'Uncategorized';
-                if (strtolower($categoryName) === 'belum di set') $categoryName = 'Uncategorized';
+                $categoryName = $row['kategori'] ?? $row['category'] ?? 'TANPA KATEGORI';
+                if (strtolower($categoryName) === 'belum di set') $categoryName = 'TANPA KATEGORI';
                 
                 $category = ProductCategory::firstOrCreate(
                     ['nama_kategori' => $categoryName, 'office_id' => $officeId],
@@ -168,8 +168,8 @@ class StockImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
                 );
 
                 // 2. Brand
-                $brandName = $row['brand'] ?? $row['merk'] ?? 'Generic';
-                if (strtolower($brandName) === 'belum di set') $brandName = 'Generic';
+                $brandName = $row['brand'] ?? $row['merk'] ?? 'TANPA BRAND';
+                if (strtolower($brandName) === 'belum di set') $brandName = 'TANPA BRAND';
 
                 $brand = Brand::firstOrCreate(
                     ['nama_brand' => $brandName, 'office_id' => $officeId],
@@ -177,8 +177,8 @@ class StockImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChun
                 );
 
                 // 3. Supplier
-                $supplierName = $row['supplier'] ?? $row['pemasok'] ?? 'General Supplier';
-                if (strtolower($supplierName) === 'belum di set') $supplierName = 'General Supplier';
+                $supplierName = $row['supplier'] ?? $row['pemasok'] ?? 'TANPA SUPLIER';
+                if (strtolower($supplierName) === 'belum di set') $supplierName = 'TANPA SUPLIER';
 
                 $supplier = Partner::firstOrCreate(
                     ['nama' => $supplierName, 'office_id' => $officeId],
