@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+
 class MitraController extends Controller
 {
     private $views = 'Mitra.';
 
     public function index()
     {
-        return view($this->views.'index');
+        $salesUsers = User::where('is_sales', true)->get();
+        return view($this->views.'index', compact('salesUsers'));
     }
 }
