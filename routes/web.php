@@ -86,7 +86,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('sales/approval-overdue', [App\Http\Controllers\Api\SalesController::class, 'approvalOverdue'])->name('sales.approval.overdue');
         Route::get('sales/approval/{id}', [App\Http\Controllers\Api\SalesController::class, 'approvalDetail'])->name('sales.approval.show');
         Route::get('sales/approval-overdue/{id}', [App\Http\Controllers\Api\SalesController::class, 'approvalOverdueDetail'])->name('sales.approval.overdue.show');
-        Route::get('sales/bulk-print', [SalesController::class, 'bulkPrintInvoice'])->name('sales.bulk-print');
         Route::get('sales/print/{id}', [SalesController::class, 'printInvoice'])->name('sales.print');
         Route::get('sales/{id}', [SalesController::class, 'show'])->name('sales.show');
         Route::get('sales-receipt', [SalesController::class, 'receipt'])->name('sales.receipt');
@@ -96,7 +95,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('purchase', [PurchaseController::class, 'index'])->name('purchase');
         Route::get('purchase/export', [App\Http\Controllers\Api\PurchaseController::class, 'export'])->name('purchase.export');
         Route::get('purchase/mass-print', [App\Http\Controllers\Api\PurchaseController::class, 'massPrint'])->name('purchase.mass-print');
-        Route::get('purchase/bulk-print', [App\Http\Controllers\Api\PurchaseController::class, 'bulkPrintInvoice'])->name('purchase.bulk-print');
         Route::get('purchase/print/{id}', [App\Http\Controllers\Api\PurchaseController::class, 'printInvoice'])->name('purchase.print');
         Route::get('purchase/{id}', [PurchaseController::class, 'show'])->name('purchase.show');
         Route::get('purchase-receipt', [App\Http\Controllers\Api\PurchaseController::class, 'receipt'])->name('purchase.receipt');

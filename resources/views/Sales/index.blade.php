@@ -231,7 +231,7 @@
                         <div class="text-end">
                             <button onclick="openMassPrintModal()"
                                 class="btn btn-danger border fw-bold px-3 me-2 shadow-sm text-white">
-                                <i class="fa fa-print me-1"></i> Cetak Massal
+                                <i class="fa fa-print me-1"></i> Cetak Laporan
                             </button>
                             <button onclick="exportSales()"
                                 class="btn btn-white border fw-bold px-3 me-2 shadow-sm text-dark">
@@ -355,7 +355,12 @@
                                     </tr>
                                 </thead>
                                 <tbody id="invoiceTableBody" class="border-top-0">
-                                    <!-- Rows injected by JS -->
+                                    <tr>
+                                        <td colspan="10" class="text-center p-5">
+                                            <div class="spinner-border spinner-border-sm text-primary"></div>
+                                            <p class="mt-2 text-muted small mb-0">Memuat data...</p>
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1194,19 +1199,28 @@
         }
 
         function bulkPrint() {
-            const ids = window.financeApp.selectedIds.join(',');
-            if (!ids) return;
+            const ids = window.financeApp.selectedIds;
+            if (ids.length === 0) {
+                alert('Pilih invoice terlebih dahulu');
+                return;
+            }
 
-            const printUrl = `{{ url('sales/bulk-print') }}?ids=${ids}`;
-            const modalContainer = document.getElementById('modalPrintPreview');
-            if (!modalContainer) return;
+            if (ids.length > 1) {
+                alert(
+                    `Akan membuka ${ids.length} tab. Jika hanya 1 tab yang terbuka, silakan klik ikon "Pop-up blocked" di bar alamat browser Anda (pojok kanan atas) dan pilih "Selalu izinkan".`
+                );
+            }
 
-            const iframe = modalContainer.querySelector('iframe');
-            if (!iframe) return;
+            ids.forEach((id, index) => {
+                const url = `{{ url('sales/print') }}/${id}`;
+                const win = window.open(url, '_blank_' + id);
 
-            iframe.src = printUrl;
-            const bModal = bootstrap.Modal.getOrCreateInstance(modalContainer);
-            bModal.show();
+                if (index === 0 && (!win || win.closed || typeof win.closed == 'undefined')) {
+                    alert(
+                        'Jendela diblokir! Silakan klik ikon di bar alamat browser Anda untuk mengizinkan popup agar semua invoice bisa terbuka.'
+                    );
+                }
+            });
         }
 
         function renderPagination(meta) {

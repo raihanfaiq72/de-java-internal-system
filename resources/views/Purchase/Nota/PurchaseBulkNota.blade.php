@@ -15,6 +15,7 @@
             margin: 0;
             padding: 0;
             background-color: #fff;
+            font-weight: bold;
         }
         .page-break {
             page-break-before: always;
@@ -60,6 +61,17 @@
             border: 1px solid #000;
             padding: 5px;
             text-align: center;
+            font-weight: bold;
+        }
+        .main-table tbody td {
+            border-left: 1px solid #000;
+            border-right: 1px solid #000;
+            border-top: none !important;
+            border-bottom: none !important;
+            padding: 2px 5px !important;
+        }
+        .main-table tbody tr:last-child td {
+            border-bottom: 1px solid #000 !important;
         }
         .main-table .text-left { text-align: left; }
         .main-table .text-right { text-align: right; }
@@ -67,7 +79,7 @@
             display: flex;
             justify-content: space-between;
         }
-        .footer-left { width: 60%; }
+        .footer-left { width: 65%; }
         .footer-right { width: 35%; }
         .signature-grid {
             display: flex;
@@ -84,13 +96,20 @@
             padding: 5px;
             border: 1px solid #000;
         }
+        .total-table td:first-child {
+            width: 42.857%; /* Aligns with Qty (15/35) */
+        }
+        .total-table td:last-child {
+            width: 57.143%; /* Aligns with Disc + Total (20/35) */
+        }
         .note {
             font-style: italic;
-            margin-top: 10px;
+            margin-top: 5px;
             font-size: 10px;
         }
         .bank-info {
-            margin-top: 15px;
+            margin-top: 5px;
+            font-size: 10px;
             font-weight: bold;
         }
         #loading { text-align: center; padding: 100px; font-weight: bold; }
@@ -146,25 +165,30 @@
                     </tr>
                 </thead>
                 <tbody class="items-body"></tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="8" rowspan="3" style="border: none !important; vertical-align: top; padding-top: 5px !important; text-align: left !important;">
+                            <div class="note">Note : Barang yang sudah diterima sesuai dengan invoice.</div>
+                            <div class="signature-grid">
+                                <div class="signature-box">Penerima<br><br><br><br>(................)</div>
+                                <div class="signature-box">Gudang<br><br><br><br>(................)</div>
+                                <div class="signature-box">Supplier<br><br><br><br>(................)</div>
+                            </div>
+                        </td>
+                        <td class="text-left" style="border: 1px solid #000 !important; padding: 5px !important;">Total</td>
+                        <td colspan="2" class="text-right total_akhir" style="border: 1px solid #000 !important; padding: 5px !important;"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left" style="border: 1px solid #000 !important; padding: 5px !important;">DP / Bayar</td>
+                        <td colspan="2" class="text-right total_bayar" style="border: 1px solid #000 !important; padding: 5px !important;"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left" style="border: 1px solid #000 !important; padding: 5px !important;">Sisa</td>
+                        <td colspan="2" class="text-right sisa_tagihan" style="border: 1px solid #000 !important; padding: 5px !important; background-color: #f2f2f2 !important;"></td>
+                    </tr>
+                </tfoot>
             </table>
-            <div class="footer-section">
-                <div class="footer-left">
-                    <div class="note">Note : Barang yang sudah diterima sesuai dengan invoice.</div>
-                    <div class="signature-grid">
-                        <div class="signature-box">Penerima<br><br><br><br>(................)</div>
-                        <div class="signature-box">Gudang<br><br><br><br>(................)</div>
-                        <div class="signature-box">Supplier<br><br><br><br>(................)</div>
-                    </div>
-                </div>
-                <div class="footer-right">
-                    <table class="total-table">
-                        <tr><td>Total</td><td class="text-right total_akhir"></td></tr>
-                        <tr><td>DP / Bayar</td><td class="text-right total_bayar"></td></tr>
-                        <tr><td>Sisa</td><td class="text-right sisa_tagihan"></td></tr>
-                    </table>
-                    <div class="bank-info">BCA 1234567890<br>A/N PT. DE JAVA</div>
-                </div>
-            </div>
+            <div class="bank-info">BCA 1234567890 - A/N PT. DE JAVA</div>
         </div>
     </template>
 

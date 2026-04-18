@@ -15,6 +15,7 @@
             margin: 0;
             padding: 0;
             background-color: #fff;
+            font-weight: bold;
         }
         .page-break {
             page-break-before: always;
@@ -57,8 +58,19 @@
         }
         .main-table th, .main-table td {
             border: 2px solid #000;
-            padding: 10px 5px;
+            padding: 5px;
             font-weight: bold;
+        }
+        .main-table tbody td {
+            border-left: 2px solid #000;
+            border-right: 2px solid #000;
+            border-top: none !important;
+            border-bottom: none !important;
+            padding: 2px 5px !important;
+        }
+
+        .main-table tbody tr:last-child td {
+            border-bottom: 2px solid #000 !important;
         }
         .main-table th {
             background-color: #f2f2f2 !important;
@@ -74,12 +86,11 @@
             margin-top: -2px; 
         }
         .footer-content {
-            width: 60%;
-            border: 2px solid #000;
+            width: 68%;
             padding: 10px;
         }
         .footer-right {
-            width: 40%;
+            width: 32%;
             margin-left: -2px;
         }
         .total-table {
@@ -87,10 +98,16 @@
             border-collapse: collapse;
         }
         .total-table td {
-            padding: 10px;
+            padding: 5px;
             border: 2px solid #000;
             font-weight: bold;
-            font-size: 15px;
+            font-size: 14px;
+        }
+        .total-table td:first-child {
+            width: 46.875%; /* Aligns with Harga Satuan (15/32) */
+        }
+        .total-table td:last-child {
+            width: 53.125%; /* Aligns with Disc + Total (17/32) */
         }
         .total-table tr:last-child td {
             background-color: #f2f2f2 !important;
@@ -104,11 +121,11 @@
         .sig-box { width: 33%; font-size: 12px; }
         .sig-space { height: 60px; }
         .bank-info {
-            margin-top: 15px;
-            font-size: 12px;
+            margin-top: 5px;
+            font-size: 10px;
             font-weight: bold;
             border-top: 2px dashed #000;
-            padding-top: 10px;
+            padding-top: 5px;
         }
         #loading { text-align: center; padding: 100px; font-weight: bold; }
 
@@ -159,35 +176,31 @@
                     </tr>
                 </thead>
                 <tbody class="items-body"></tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="5" rowspan="3" style="border: none !important; vertical-align: top; padding-top: 5px !important;">
+                            <div style="font-style: italic; font-size: 11px;">
+                                <strong>Catatan: Barang yang sudah dibeli tidak dapat ditukar/dikembalikan.</strong>
+                            </div>
+                            <div class="signature-section">
+                                <div class="sig-box"><strong>Penerima</strong><div class="sig-space"></div><strong>( ............ )</strong></div>
+                                <div class="sig-box"><strong>Pengirim</strong><div class="sig-space"></div><strong>( ............ )</strong></div>
+                                <div class="sig-box"><strong>Hormat Kami</strong><div class="sig-space"></div><strong>( ............ )</strong></div>
+                            </div>
+                        </td>
+                        <td class="text-left" style="border: 2px solid #000 !important; padding: 5px !important;">TOTAL Rp</td>
+                        <td colspan="2" class="text-right total_akhir" style="border: 2px solid #000 !important; padding: 5px !important;"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left" style="border: 2px solid #000 !important; padding: 5px !important;">Bayar</td>
+                        <td colspan="2" class="text-right total_bayar" style="border: 2px solid #000 !important; padding: 5px !important;"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left" style="border: 2px solid #000 !important; padding: 5px !important;">SISA</td>
+                        <td colspan="2" class="text-right sisa_tagihan" style="border: 2px solid #000 !important; padding: 5px !important; background-color: #f2f2f2 !important;"></td>
+                    </tr>
+                </tfoot>
             </table>
-            <div class="footer-wrapper">
-                <div class="footer-content">
-                    <div style="font-style: italic; font-size: 12px;"><br>
-                        <strong>Catatan: Barang yang sudah dibeli tidak dapat ditukar/dikembalikan.</strong>
-                    </div>
-                    <div class="signature-section">
-                        <div class="sig-box"><strong>Penerima</strong><div class="sig-space"></div><strong>( ............ )</strong></div>
-                        <div class="sig-box"><strong>Pengirim</strong><div class="sig-space"></div><strong>( ............ )</strong></div>
-                        <div class="sig-box"><strong>Hormat Kami</strong><div class="sig-space"></div><strong>( ............ )</strong></div>
-                    </div>
-                </div>
-                <div class="footer-right">
-                    <table class="total-table">
-                        <tr>
-                            <td width="40%">TOTAL Rp</td>
-                            <td class="text-right total_akhir"></td>
-                        </tr>
-                        <tr>
-                            <td style="font-size: 13px;">Bayar</td>
-                            <td class="text-right total_bayar" style="font-size: 13px;"></td>
-                        </tr>
-                        <tr>
-                            <td>SISA</td>
-                            <td class="text-right sisa_tagihan" style="background-color: #eee;"></td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
             <div class="bank-info">
                 PEMBAYARAN VIA TRANSFER: BCA 1234567890 - A/N PT. DE JAVA
             </div>

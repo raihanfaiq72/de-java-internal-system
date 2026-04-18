@@ -10,13 +10,14 @@
             font-family: 'Courier New', Courier, monospace;
             font-size: 12px;
             color: #333;
-            margin: 20px;
+            margin: 5px;
+            font-weight: bold;
         }
 
         .nota-container {
             width: 800px;
             border: 1px solid #000;
-            padding: 15px;
+            padding: 5px;
             margin: auto;
         }
 
@@ -24,7 +25,7 @@
             display: flex;
             justify-content: flex-end;
             text-align: right;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
         .invoice-info {
@@ -62,6 +63,17 @@
             border: 1px solid #000;
             padding: 5px;
             text-align: center;
+            font-weight: bold;
+        }
+        .main-table tbody td {
+            border-left: 1px solid #000;
+            border-right: 1px solid #000;
+            border-top: none !important;
+            border-bottom: none !important;
+            padding: 2px 5px !important;
+        }
+        .main-table tbody tr:last-child td {
+            border-bottom: 1px solid #000 !important;
         }
 
         .main-table .text-left {
@@ -78,9 +90,8 @@
         }
 
         .footer-left {
-            width: 60%;
+            width: 65%;
         }
-
         .footer-right {
             width: 35%;
         }
@@ -105,16 +116,28 @@
             padding: 5px;
             border: 1px solid #000;
         }
-
+        .total-table td:first-child {
+            width: 42.857%; /* Aligns with Qty (15/35) */
+        }
+        .total-table td:last-child {
+            width: 57.143%; /* Aligns with Disc + Total (20/35) */
+        }
         .note {
             font-style: italic;
-            margin-top: 10px;
+            margin-top: 5px;
             font-size: 10px;
         }
-
         .bank-info {
-            margin-top: 15px;
+            margin-top: 5px;
+            font-size: 10px;
             font-weight: bold;
+        }
+
+        @media print {
+            @page {
+                size: landscape;
+                margin: 5mm;
+            }
         }
     </style>
 </head>
@@ -170,48 +193,34 @@
             <tbody id="items-body">
                 <!-- Items injected here -->
             </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="8" rowspan="3" style="border: none !important; vertical-align: top; padding-top: 5px !important; text-align: left !important;">
+                        <div class="note">
+                            Note : Barang yang sudah diterima sesuai dengan invoice.
+                        </div>
+                        <div class="signature-grid">
+                            <div class="signature-box">Penerima<br><br><br><br>(................)</div>
+                            <div class="signature-box">Gudang<br><br><br><br>(................)</div>
+                            <div class="signature-box">Supplier<br><br><br><br>(................)</div>
+                        </div>
+                    </td>
+                    <td class="text-left" style="border: 1px solid #000 !important; padding: 2px !important;">Total</td>
+                    <td colspan="2" class="text-right" id="total_akhir" style="border: 1px solid #000 !important; padding: 2px !important;"></td>
+                </tr>
+                <tr>
+                    <td class="text-left" style="border: 1px solid #000 !important; padding: 2px !important;">DP / Bayar</td>
+                    <td colspan="2" class="text-right" id="total_bayar" style="border: 1px solid #000 !important; padding: 2px !important;"></td>
+                </tr>
+                <tr>
+                    <td class="text-left" style="border: 1px solid #000 !important; padding: 2px !important;">Sisa</td>
+                    <td colspan="2" class="text-right" id="sisa_tagihan" style="border: 1px solid #000 !important; padding: 2px !important; background-color: #f2f2f2 !important;"></td>
+                </tr>
+            </tfoot>
         </table>
-
-        <div class="footer-section">
-            <div class="footer-left">
-                <div class="note">
-                    Note : Barang yang sudah diterima sesuai dengan invoice.
-                </div>
-                <div class="signature-grid">
-                    <div class="signature-box">
-                        Penerima<br><br><br><br>
-                        (................)
-                    </div>
-                    <div class="signature-box">
-                        Gudang<br><br><br><br>
-                        (................)
-                    </div>
-                    <div class="signature-box">
-                        Supplier<br><br><br><br>
-                        (................)
-                    </div>
-                </div>
-            </div>
-            <div class="footer-right">
-                <table class="total-table">
-                    <tr>
-                        <td>Total</td>
-                        <td class="text-right" id="total_akhir"></td>
-                    </tr>
-                    <tr>
-                        <td>DP / Bayar</td>
-                        <td class="text-right" id="total_bayar"></td>
-                    </tr>
-                    <tr>
-                        <td>Sisa</td>
-                        <td class="text-right" id="sisa_tagihan"></td>
-                    </tr>
-                </table>
-                <div class="bank-info">
-                    BCA 1234567890<br>
-                    A/N PT. DE JAVA
-                </div>
-            </div>
+        <div class="bank-info">
+            BCA 1234567890<br>
+            A/N PT. DE JAVA
         </div>
     </div>
 
@@ -310,7 +319,9 @@
                     document.getElementById('nota-content').style.display = 'block';
 
                     // Auto Print
-                    // setTimeout(() => window.print(), 1000);
+                    setTimeout(() => {
+                        window.print();
+                    }, 500);
                 } else {
                     document.getElementById('loading').innerText = 'Gagal memuat data invoice.';
                 }

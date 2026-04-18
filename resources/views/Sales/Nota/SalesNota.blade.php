@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
-    <title>Nota Penjualan - Konsisten & Tebal</title>
+    <title>Nota Penjualan</title>
     <style>
         * {
             box-sizing: border-box;
             -webkit-print-color-adjust: exact;
         }
+
         body {
             font-family: 'Courier New', Courier, monospace;
             font-size: 14px;
@@ -15,90 +17,138 @@
             margin: 0;
             padding: 0;
             background-color: #fff;
+            font-weight: bold;
         }
+
         /* Container Utama dengan Border Tebal Konsisten */
         .nota-container {
             width: 210mm;
             margin: 10px auto;
-            padding: 20px;
+            padding: 10px;
             border: 2px solid #000;
             background: #fff;
         }
+
         .kop-header {
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 5px;
             border-bottom: 3px double #000;
-            padding-bottom: 10px;
+            padding-bottom: 5px;
         }
+
         .kop-header img {
             max-width: 100%;
             max-height: 80px;
         }
+
         .header-info {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 15px;
+            margin-bottom: 5px;
         }
+
         .customer-details td {
             padding: 2px 0;
             vertical-align: top;
             font-weight: bold;
         }
+
         .invoice-meta {
             text-align: right;
             line-height: 1.4;
         }
+
         /* Tabel Utama - Border 2px Konsisten */
         .main-table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 0;
         }
-        .main-table th, .main-table td {
-            border: 2px solid #000; /* Semua border disamakan 2px */
-            padding: 10px 5px;
+
+        .main-table th,
+        .main-table td {
+            border: 2px solid #000;
+            /* Semua border disamakan 2px */
+            padding: 5px;
             font-weight: bold;
         }
+
+        .main-table tbody td {
+            border-left: 2px solid #000;
+            border-right: 2px solid #000;
+            border-top: none !important;
+            border-bottom: none !important;
+            padding: 2px 5px !important;
+        }
+
+        .main-table tbody tr:last-child td {
+            border-bottom: 2px solid #000 !important;
+        }
+
         .main-table th {
             background-color: #f2f2f2 !important;
             text-transform: uppercase;
         }
-        .text-left { text-align: left !important; }
-        .text-right { text-align: right !important; }
-        .text-center { text-align: center !important; }
-        
+
+        .text-left {
+            text-align: left !important;
+        }
+
+        .text-right {
+            text-align: right !important;
+        }
+
+        .text-center {
+            text-align: center !important;
+        }
+
         /* Bagian Bawah (Catatan & Total) */
         .footer-wrapper {
             display: flex;
             width: 100%;
             /* Menghilangkan border-top agar tidak double dengan bottom tabel */
-            margin-top: -2px; 
+            margin-top: -2px;
         }
+
         .footer-left {
-            width: 60%;
-            border: 2px solid #000;
-            padding: 10px;
+            width: 68%;
+            padding: 5px 0;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
+
         .footer-right {
-            width: 40%;
-            margin-left: -4px; /* Agar border kiri menempel dengan border kanan footer-left */
+            width: 32%;
+            margin-left: -2px;
         }
+
         .total-table {
             width: 100%;
             border-collapse: collapse;
         }
+
         .total-table td {
-            padding: 10px;
+            padding: 5px;
             border: 2px solid #000;
             font-weight: bold;
-            font-size: 15px;
+            font-size: 14px;
         }
+
+        .total-table td:first-child {
+            width: 46.875%;
+            /* Aligns with Harga Satuan (15/32) */
+        }
+
+        .total-table td:last-child {
+            width: 53.125%;
+            /* Aligns with Disc + Total (17/32) */
+        }
+
         .total-table tr:last-child td {
             background-color: #f2f2f2 !important;
         }
+
         /* Tanda Tangan */
         .signature-section {
             display: flex;
@@ -106,31 +156,54 @@
             margin-top: 15px;
             text-align: center;
         }
-        .sig-box { width: 30%; font-size: 12px; }
-        .sig-space { height: 60px; }
 
-        .bank-info {
-            margin-top: 15px;
+        .sig-box {
+            width: 30%;
             font-size: 12px;
-            font-weight: bold;
-            border-top: 2px dashed #000;
-            padding-top: 10px;
         }
 
-        #loading { text-align: center; padding: 100px; font-weight: bold; }
+        .sig-space {
+            height: 60px;
+        }
+
+        .bank-info {
+            margin-top: 5px;
+            font-size: 10px;
+            font-weight: bold;
+            border-top: 2px dashed #000;
+            padding-top: 5px;
+        }
+
+        #loading {
+            text-align: center;
+            padding: 100px;
+            font-weight: bold;
+        }
 
         @media print {
-            body { padding: 0; background: none; }
-            .nota-container { 
-                margin: 0; 
-                width: 100%; 
-                border: 2px solid #000; 
+            body {
+                padding: 0;
+                background: none;
             }
-            .no-print { display: none; }
-            @page { size: auto; margin: 10mm; }
+
+            .nota-container {
+                margin: 0;
+                width: 100%;
+                border: 2px solid #000;
+            }
+
+            .no-print {
+                display: none;
+            }
+
+            @page {
+                size: auto;
+                margin: 5mm;
+            }
         }
     </style>
 </head>
+
 <body>
 
     <div id="loading">MENYIAPKAN DOKUMEN...</div>
@@ -141,9 +214,18 @@
         <div class="header-info">
             <div class="customer-details">
                 <table>
-                    <tr><td>Kepada Yth</td><td id="mitra_nama"></td></tr>
-                    <tr><td>Alamat</td><td id="mitra_alamat"></td></tr>
-                    <tr><td>Salesman</td><td id="ref_no"></td></tr>
+                    <tr>
+                        <td>Kepada Yth</td>
+                        <td id="mitra_nama"></td>
+                    </tr>
+                    <tr>
+                        <td>Alamat</td>
+                        <td id="mitra_alamat"></td>
+                    </tr>
+                    <tr>
+                        <td>Salesman</td>
+                        <td id="ref_no"></td>
+                    </tr>
                 </table>
             </div>
             <div class="invoice-meta">
@@ -167,36 +249,43 @@
                 </tr>
             </thead>
             <tbody id="items-body"></tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="5" rowspan="3"
+                        style="border: none !important; vertical-align: top; padding-top: 5px !important;">
+                        <div style="font-style: italic; font-size: 11px;">
+                            <strong>Catatan: Barang yang sudah dibeli tidak dapat ditukar/dikembalikan.</strong>
+                        </div>
+                        <div class="signature-section">
+                            <div class="sig-box"><strong>Penerima</strong>
+                                <div class="sig-space"></div><strong>( ............ )</strong>
+                            </div>
+                            <div class="sig-box"><strong>Pengirim</strong>
+                                <div class="sig-space"></div><strong>( ............ )</strong>
+                            </div>
+                            <div class="sig-box"><strong>Hormat Kami</strong>
+                                <div class="sig-space"></div><strong>( ............ )</strong>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-left" style="border: 2px solid #000 !important; padding: 2px !important;">TOTAL Rp
+                    </td>
+                    <td colspan="2" class="text-right" id="total_akhir"
+                        style="border: 2px solid #000 !important; padding: 2px !important;"></td>
+                </tr>
+                <tr>
+                    <td class="text-left" style="border: 2px solid #000 !important; padding: 2px !important;">Bayar</td>
+                    <td colspan="2" class="text-right" id="total_bayar"
+                        style="border: 2px solid #000 !important; padding: 2px !important;"></td>
+                </tr>
+                <tr>
+                    <td class="text-left" style="border: 2px solid #000 !important; padding: 2px !important;">SISA</td>
+                    <td colspan="2" class="text-right" id="sisa_tagihan"
+                        style="border: 2px solid #000 !important; padding: 2px !important; background-color: #f2f2f2 !important;">
+                    </td>
+                </tr>
+            </tfoot>
         </table>
-
-        <div class="footer-wrapper">
-            <div class="">
-                <div style="font-style: italic; font-size: 12px;"><br>
-                    <strong>Catatan: Barang yang sudah dibeli tidak dapat ditukar/dikembalikan.</strong>
-                </div>
-                <div class="signature-section">
-                    <div class="sig-box"><strong>Penerima</strong><div class="sig-space"></div><strong>( ............ )</strong></div>
-                    <div class="sig-box"><strong>Pengirim</strong><div class="sig-space"></div><strong>( ............ )</strong></div>
-                    <div class="sig-box"><strong>Hormat Kami</strong><div class="sig-space"></div><strong>( ............ )</strong></div>
-                </div>
-            </div>
-            <div class="footer-right">
-                <table class="total-table">
-                    <tr>
-                        <td width="40%">TOTAL Rp</td>
-                        <td class="text-right" id="total_akhir"></td>
-                    </tr>
-                    <tr>
-                        <td style="font-size: 13px;">Bayar</td>
-                        <td class="text-right" id="total_bayar" style="font-size: 13px;"></td>
-                    </tr>
-                    <tr>
-                        <td>SISA</td>
-                        <td class="text-right" id="sisa_tagihan" style="background-color: #eee;"></td>
-                    </tr>
-                </table>
-            </div>
-        </div>
 
         <div class="bank-info">
             PEMBAYARAN VIA TRANSFER: BCA 1234567890 - A/N PT. DE JAVA
@@ -228,7 +317,9 @@
         function formatDate(dateString) {
             const date = new Date(dateString);
             return date.toLocaleDateString('id-ID', {
-                day: '2-digit', month: 'long', year: 'numeric'
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric'
             });
         }
 
@@ -260,28 +351,42 @@
                         const clone = template.content.cloneNode(true);
                         const p = item.product || {};
                         clone.querySelector('.col-no').textContent = index + 1;
-                        clone.querySelector('.col-supplier-code').textContent = p.supplier?.nomor_mitra || '-';
-                        clone.querySelector('.col-nama').textContent = p.nama_produk || item.nama_produk_manual || '-';
+                        clone.querySelector('.col-supplier-code').textContent = p.supplier
+                            ?.nomor_mitra || '-';
+                        clone.querySelector('.col-nama').textContent = p.nama_produk || item
+                            .nama_produk_manual || '-';
                         clone.querySelector('.col-satuan').textContent = p.satuan || '-';
                         clone.querySelector('.col-qty').textContent = formatNumber(item.qty);
-                        clone.querySelector('.col-harga').textContent = formatNumber(item.harga_satuan || item.harga_jual || 0);
-                        clone.querySelector('.col-disc').textContent = item.diskon_nilai > 0 ? formatNumber(item.diskon_nilai) : '-';
-                        clone.querySelector('.col-total').textContent = formatNumber(item.total_harga_item);
+                        clone.querySelector('.col-harga').textContent = formatNumber(item
+                            .harga_satuan || item.harga_jual || 0);
+                        clone.querySelector('.col-disc').textContent = item.diskon_nilai > 0 ?
+                            formatNumber(item.diskon_nilai) : '-';
+                        clone.querySelector('.col-total').textContent = formatNumber(item
+                            .total_harga_item);
                         tbody.appendChild(clone);
                     });
 
                     // Baris kosong (minimal 5 baris)
                     for (let i = data.items.length; i < 5; i++) {
-                        tbody.insertAdjacentHTML('beforeend', '<tr><td style="height:35px;"></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>');
+                        tbody.insertAdjacentHTML('beforeend',
+                            '<tr><td style="height:35px;"></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'
+                        );
                     }
 
-                    const totalBayar = data.payment ? data.payment.reduce((sum, p) => sum + parseFloat(p.jumlah_bayar), 0) : 0;
+                    const totalBayar = data.payment ? data.payment.reduce((sum, p) => sum + parseFloat(p
+                        .jumlah_bayar), 0) : 0;
                     document.getElementById('total_akhir').innerText = formatNumber(data.total_akhir);
                     document.getElementById('total_bayar').innerText = formatNumber(totalBayar);
-                    document.getElementById('sisa_tagihan').innerText = formatNumber(data.total_akhir - totalBayar);
+                    document.getElementById('sisa_tagihan').innerText = formatNumber(data.total_akhir -
+                        totalBayar);
 
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('nota-content').style.display = 'block';
+
+                    // Auto Print
+                    setTimeout(() => {
+                        window.print();
+                    }, 500);
                 }
             } catch (error) {
                 document.getElementById('loading').innerText = 'GAGAL MEMUAT DATA.';
@@ -289,4 +394,5 @@
         });
     </script>
 </body>
+
 </html>

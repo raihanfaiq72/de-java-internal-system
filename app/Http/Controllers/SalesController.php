@@ -26,11 +26,6 @@ class SalesController extends Controller
         return view($this->views.'Nota.SalesNota', compact('id'));
     }
 
-    public function bulkPrintInvoice(\Illuminate\Http\Request $request)
-    {
-        $ids = explode(',', $request->ids);
-        return view($this->views . 'Nota.SalesBulkNota', compact('ids'));
-    }
 
     public function printReceipt($id)
     {
