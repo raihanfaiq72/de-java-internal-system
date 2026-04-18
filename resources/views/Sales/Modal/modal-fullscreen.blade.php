@@ -940,19 +940,33 @@
                 nama: p.nama_produk,
                 sku: p.sku_kode,
                 harga: parseFloat(p.harga_jual),
-                unit: p.unit?.nama_unit || 'Pcs'
+                unit: p.unit?.nama_unit || 'Pcs',
+                qty: Number(p.qty || 0)
             })),
             valueField: 'id',
             labelField: 'nama',
             searchField: ['nama', 'sku'],
             placeholder: 'Cari barang...',
             render: {
-                option: (d, esc) =>
-                    `<div><div class="fw-bold">${esc(d.nama)}</div><small class="text-muted">${esc(d.sku)}</small></div>`,
+                option: (d, esc) => {
+                    const style = d.qty <= 0 ? 'opacity: 0.5; background: #f8fafc;' : '';
+                    const badge = d.qty <= 0 ?
+                        '<span class="badge bg-danger float-end">Stok Habis</span>' :
+                        `<span class="badge bg-light text-dark border float-end">${d.qty} ${esc(d.unit)}</span>`;
+                    return `<div style="${style}">
+                                <div class="fw-bold">${esc(d.nama)} ${badge}</div>
+                                <small class="text-muted">${esc(d.sku)}</small>
+                            </div>`;
+                },
                 item: (d, esc) => `<div>${esc(d.nama)}</div>`
             },
             onChange: function(val) {
                 const selected = this.options[val];
+                if (selected && selected.qty <= 0) {
+                    alert('Stok Habis! Produk ini tidak dapat dipilih.');
+                    this.clear();
+                    return;
+                }
                 if (selected) {
                     const isTempo = tr.querySelector('.prod-is-tempo').checked;
                     const product = masterProduk.find(p => String(p.id) === String(val));
@@ -1420,6 +1434,14 @@
             chk.value = item.id;
             chk.dataset.raw = JSON.stringify(item);
 
+            const qty = Number(item.qty || 0);
+            if (qty <= 0) {
+                tr.style.opacity = '0.5';
+                tr.style.backgroundColor = '#f8fafc';
+                tr.style.cursor = 'not-allowed';
+                chk.disabled = true;
+            }
+
             if (existingIds.includes(String(item.id))) {
                 chk.checked = true;
             }
@@ -1429,7 +1451,7 @@
             clone.querySelector('.col-stock-sku').textContent = item.sku_kode || item.kode_produk || '-';
             clone.querySelector('.col-stock-kategori').textContent = item.category?.nama_kategori || '-';
             clone.querySelector('.col-stock-qty').textContent =
-                `${Number(item.qty || 0)} ${item.unit?.nama_unit || ''}`;
+                `${qty} ${item.unit?.nama_unit || ''}`;
             clone.querySelector('.col-stock-harga').textContent = window.financeApp.formatIDR(item.harga_jual);
 
             const trackBadge = clone.querySelector('.col-stock-track');
