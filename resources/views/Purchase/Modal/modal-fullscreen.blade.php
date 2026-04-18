@@ -38,8 +38,7 @@
                                     <div class="row g-4">
                                         {{-- Supplier --}}
                                         <div class="col-lg-6 border-end">
-                                            <label class="f-label mb-2">Mitra <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="f-label mb-2">Mitra <span class="text-danger">*</span></label>
                                             <select id="modal_mitra_id" class="form-select f-input-lg mb-3"
                                                 onchange="renderMitraDetail()">
                                                 <option value="">Cari Mitra...</option>
@@ -77,7 +76,7 @@
                                                     <label class="f-label">Nomor Invoice</label>
                                                     <input type="text" id="modal_nomor_invoice"
                                                         class="form-control f-input fw-bold bg-light text-primary"
-                                                         placeholder="Auto Generated">
+                                                        placeholder="Auto Generated">
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="f-label">Referensi / PO</label>
@@ -95,7 +94,8 @@
                                                         class="form-control f-input">
                                                 </div>
                                                 <div class="col-12">
-                                                    <label class="f-label">Purchasing Staff <span class="text-danger">*</span></label>
+                                                    <label class="f-label">Purchasing Staff <span
+                                                            class="text-danger">*</span></label>
                                                     <select id="modal_sales_id" class="form-select f-input">
                                                         <option value="">Pilih Staff...</option>
                                                     </select>
@@ -120,7 +120,8 @@
                                             onclick="openStockModal()">
                                             <i class="fa fa-search me-1"></i> Cari Stok
                                         </button>
-                                        <button type="button" class="btn btn-primary btn-sm fw-bold px-3 rounded-pill"
+                                        <button type="button"
+                                            class="btn btn-primary btn-sm fw-bold px-3 rounded-pill"
                                             onclick="addNewProductRow()">
                                             <i class="fa fa-plus me-1"></i> Tambah Baris
                                         </button>
@@ -131,11 +132,12 @@
                                     <table class="table align-middle mb-0 table-hover" id="mainItemTable">
                                         <thead class="bg-light text-secondary small fw-bold text-uppercase">
                                             <tr>
-                                                <th class="ps-4 py-3" width="35%">Produk / Deskripsi</th>
-                                                <th class="text-center" width="10%">Qty</th>
-                                                <th class="text-center" width="10%">Satuan</th>
-                                                <th class="text-end" width="15%">Harga Beli</th>
-                                                <th class="text-end" width="10%">Disc (Rp)</th>
+                                                <th class="ps-4 py-3" width="28%">Produk / Deskripsi</th>
+                                                <th class="text-center" width="8%">Qty</th>
+                                                <th class="text-center" width="8%">Satuan</th>
+                                                <th class="text-end" width="12%">Harga Beli</th>
+                                                <th class="text-center" width="10%">Tipe Disc</th>
+                                                <th class="text-end" width="12%">Disc</th>
                                                 <th class="text-end pe-4" width="15%">Total</th>
                                                 <th width="5%"></th>
                                             </tr>
@@ -143,7 +145,8 @@
                                         <tbody id="itemBodyList" class="border-top-0"></tbody>
                                         <tfoot class="bg-light">
                                             <tr>
-                                                <td colspan="7" class="text-center py-2 text-muted small fst-italic">
+                                                <td colspan="8"
+                                                    class="text-center py-2 text-muted small fst-italic">
                                                     Klik tombol tambah untuk memasukkan item
                                                 </td>
                                             </tr>
@@ -158,14 +161,12 @@
                                     <div class="row g-4">
                                         <div class="col-md-6">
                                             <label class="f-label mb-2">Catatan Internal</label>
-                                            <textarea id="modal_keterangan"
-                                                class="form-control f-text bg-light border-0" rows="3"
+                                            <textarea id="modal_keterangan" class="form-control f-text bg-light border-0" rows="3"
                                                 placeholder="Catatan untuk tim internal..."></textarea>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="f-label mb-2">Syarat & Ketentuan</label>
-                                            <textarea id="modal_syarat" class="form-control f-text bg-light border-0"
-                                                rows="3">1. Pastikan barang yang di-input sudah benar</textarea>
+                                            <textarea id="modal_syarat" class="form-control f-text bg-light border-0" rows="3">1. Pastikan barang yang di-input sudah benar</textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -184,35 +185,43 @@
                                         <span class="text-muted">Subtotal</span>
                                         <span class="fw-bold text-dark" id="summary_subtotal">Rp 0</span>
                                     </div>
-                                    <div class="d-flex justify-content-between mb-2 align-items-center">
-                                        <span class="text-muted">Potongan Lumpsum</span>
-                                        <div style="width: 120px;">
-                                            <input type="text" id="modal_diskon_tambahan"
-                                                class="form-control form-control-sm text-end fw-bold" value="0">
+                                        <div class="mb-3">
+                                            <label class="text-muted small d-block mb-1">Potongan Lumpsum</label>
+                                            <div class="input-group input-group-sm">
+                                                <select id="modal_diskon_tambahan_tipe" class="form-select border-end-0"
+                                                    style="max-width: 85px;" onchange="calculateInvoiceTotal()">
+                                                    <option value="Fixed">Rp</option>
+                                                    <option value="Percentage">%</option>
+                                                </select>
+                                                <input type="text" id="modal_diskon_tambahan"
+                                                    class="form-control text-end" value="0">
+                                            </div>
                                         </div>
+                                    <div class="mb-3">
+                                        <label class="text-muted small d-block mb-1">Biaya Lain-lain</label>
+                                        <input type="text" id="modal_biaya_lain"
+                                            class="form-control form-control-sm text-end" value="0">
                                     </div>
-                                    <div class="d-flex justify-content-between mb-2 align-items-center">
-                                        <span class="text-muted">Biaya Lain-lain</span>
-                                        <div style="width: 120px;">
-                                            <input type="text" id="modal_biaya_lain"
-                                                class="form-control form-control-sm text-end fw-bold" value="0">
-                                        </div>
+                                    <div class="mb-3">
+                                        <label class="text-muted small d-block mb-1">Cashback</label>
+                                        <input type="text" id="modal_cashback"
+                                            class="form-control form-control-sm text-end" value="0">
                                     </div>
                                 </div>
-                                <div
-                                    class="p-3 rounded bg-primary bg-opacity-10 border border-primary border-opacity-25">
-                                    <div class="text-center">
-                                        <div class="small opacity-75 fw-bold text-uppercase mb-1">Total Tagihan</div>
-                                        <h3 class="fw-bold text-primary mb-0" id="summary_grand_total">Rp 0</h3>
-                                    </div>
+                            </div>
+                            <div class="p-3 rounded bg-primary bg-opacity-10 border border-primary border-opacity-25">
+                                <div class="text-center">
+                                    <div class="small opacity-75 fw-bold text-uppercase mb-1">Total Tagihan</div>
+                                    <h3 class="fw-bold text-primary mb-0" id="summary_grand_total">Rp 0</h3>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </form>
             </div>
+            </form>
         </div>
     </div>
+</div>
 </div>
 
 <div class="modal fade" id="stockModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
@@ -246,8 +255,8 @@
                     <table class="table table-hover align-middle mb-0" id="stockTable">
                         <thead class="bg-light sticky-top">
                             <tr>
-                                <th width="5%" class="text-center py-3"><input type="checkbox" class="form-check-input"
-                                        id="checkAllStock" onclick="toggleAllStock(this)">
+                                <th width="5%" class="text-center py-3"><input type="checkbox"
+                                        class="form-check-input" id="checkAllStock" onclick="toggleAllStock(this)">
                                 </th>
                                 <th class="py-3">Produk</th>
                                 <th class="py-3">Kategori</th>
@@ -286,8 +295,8 @@
                 placeholder="Deskripsi (Opsional)">
         </td>
         <td class="py-3">
-            <input type="number" class="form-control form-control-sm text-center prod-qty" value="1" min="1"
-                oninput="calculateInvoiceTotal()">
+            <input type="number" class="form-control form-control-sm text-center prod-qty" value="1"
+                min="1" oninput="calculateInvoiceTotal()">
         </td>
         <td class="py-3 text-center">
             <span class="badge bg-light text-secondary border prod-unit-label">-</span>
@@ -297,8 +306,14 @@
                 oninput="calculateInvoiceTotal()">
         </td>
         <td class="py-3">
-            <input type="text" class="form-control form-control-sm text-end prod-disc" value="0"
-                oninput="calculateInvoiceTotal()">
+            <select class="form-select form-select-sm prod-disc-tipe" onchange="calculateInvoiceTotal()">
+                <option value="Fixed">Rp</option>
+                <option value="Percentage">%</option>
+            </select>
+        </td>
+        <td class="py-3">
+            <input type="text" class="form-control form-control-sm text-end prod-disc rupiah-input"
+                value="0">
         </td>
         <td class="py-3 text-end pe-4 fw-bold text-dark prod-subtotal">Rp 0</td>
         <td class="py-3 text-center">
@@ -407,7 +422,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        ['modal_diskon_tambahan', 'modal_biaya_lain'].forEach(id => {
+        ['modal_diskon_tambahan', 'modal_biaya_lain', 'modal_cashback'].forEach(id => {
             const input = document.getElementById(id);
             if (input) {
                 input.addEventListener('keyup', function(e) {
@@ -418,9 +433,10 @@
         });
     });
 
-<script>
-    let fpInvoice = null,
-        fpDue = null;
+    <
+    script >
+        let fpInvoice = null,
+            fpDue = null;
 
     let masterProduk = [];
 
@@ -488,29 +504,29 @@
         sidebar.innerHTML = '<div class="fp-title">Tempo</div>';
 
         const options = [{
-            l: 'Hari Ini',
-            d: 0
-        },
-        {
-            l: '+7 Hari',
-            d: 7
-        },
-        {
-            l: '+14 Hari',
-            d: 14
-        },
-        {
-            l: '+30 Hari',
-            d: 30
-        },
-        {
-            l: '+45 Hari',
-            d: 45
-        },
-        {
-            l: '+60 Hari',
-            d: 60
-        }
+                l: 'Hari Ini',
+                d: 0
+            },
+            {
+                l: '+7 Hari',
+                d: 7
+            },
+            {
+                l: '+14 Hari',
+                d: 14
+            },
+            {
+                l: '+30 Hari',
+                d: 30
+            },
+            {
+                l: '+45 Hari',
+                d: 45
+            },
+            {
+                l: '+60 Hari',
+                d: 60
+            }
         ];
 
         options.forEach(opt => {
@@ -531,7 +547,7 @@
     }
 
     const originalOpenInvoiceModal = openInvoiceModal;
-    openInvoiceModal = async function (id = null, type = null, mode = 'create') {
+    openInvoiceModal = async function(id = null, type = null, mode = 'create') {
         await originalOpenInvoiceModal(id, type, mode);
         initInvoiceDatePickers();
     };
@@ -543,7 +559,9 @@
         if (!window.TomSelect) return;
 
         if (tomSelectStaffModal) {
-            try { tomSelectStaffModal.destroy(); } catch (_) { }
+            try {
+                tomSelectStaffModal.destroy();
+            } catch (_) {}
             tomSelectStaffModal = null;
         }
 
@@ -559,9 +577,12 @@
         // Gather staff data
         const options = [];
         const finalStaffData = (staffData && staffData.length > 0) ? staffData : (window.masterStaff || []);
-        
+
         finalStaffData.forEach(s => {
-            options.push({ id: String(s.id), name: s.name });
+            options.push({
+                id: String(s.id),
+                name: s.name
+            });
         });
 
         // Clear select to let TomSelect handle it via the options array
@@ -596,7 +617,8 @@
         if (!window.TomSelect) {
             const sel = document.getElementById('modal_mitra_id');
             sel.innerHTML = '<option value="">Cari Supplier...</option>';
-            modalMasterMitra.forEach(m => sel.insertAdjacentHTML('beforeend', `<option value="${m.id}">${m.nama}</option>`));
+            modalMasterMitra.forEach(m => sel.insertAdjacentHTML('beforeend',
+                `<option value="${m.id}">${m.nama}</option>`));
             if (selectedId) sel.value = selectedId;
             return;
         }
@@ -604,7 +626,7 @@
         if (tomSelectMitraModal) {
             try {
                 tomSelectMitraModal.destroy();
-            } catch (_) { }
+            } catch (_) {}
             tomSelectMitraModal = null;
         }
 
@@ -636,7 +658,7 @@
             `,
                 item: (data, escape) => `<div>${escape(data.nama || '')}</div>`
             },
-            onChange: function (val) {
+            onChange: function(val) {
                 renderMitraDetail();
             }
         });
@@ -650,13 +672,13 @@
         if (tomSelectMitraModal) {
             try {
                 tomSelectMitraModal.destroy();
-            } catch (_) { }
+            } catch (_) {}
             tomSelectMitraModal = null;
         }
         if (tomSelectStaffModal) {
             try {
                 tomSelectStaffModal.destroy();
-            } catch (_) { }
+            } catch (_) {}
             tomSelectStaffModal = null;
         }
     });
@@ -680,7 +702,7 @@
 
         // Event Listeners for Calculation
         [priceInput, discInput].forEach(el => {
-            el.addEventListener('keyup', function (e) {
+            el.addEventListener('keyup', function(e) {
                 this.value = formatRupiah(this.value);
                 calculateInvoiceTotal();
             });
@@ -714,7 +736,7 @@
                 },
                 item: (d, esc) => `<div>${esc(d.nama)}</div>`
             },
-            onChange: function (val) {
+            onChange: function(val) {
                 const selected = this.options[val];
                 if (selected && selected.qty <= 0) {
                     alert('Stok Habis! Produk ini tidak dapat dipilih.');
@@ -765,6 +787,9 @@
 
                 priceInput.value = formatRupiah(rawPrice);
                 discInput.value = formatRupiah(rawDisc);
+                if (data.diskon_tipe) {
+                    tr.querySelector('.prod-disc-tipe').value = data.diskon_tipe;
+                }
                 descInput.value = data.deskripsi_item || data.deskripsi_produk || '';
 
                 let unitName = 'Pcs';
@@ -816,7 +841,7 @@
     }
 
     const _origOpenModal = openInvoiceModal;
-    openInvoiceModal = async function (id = null, type = null, mode = 'create') {
+    openInvoiceModal = async function(id = null, type = null, mode = 'create') {
         await _origOpenModal(id, type, mode);
         initInvoiceDatePickers();
     };
@@ -841,7 +866,11 @@
         formatDate: (date) => {
             if (!date) return '-';
             const d = new Date(date);
-            return d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            return d.toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
         }
     };
 
@@ -857,7 +886,7 @@
                 fetch('/api/product-api?per_page=1000').then(r => r.json()),
                 fetch('/api/user-api/staff-by-permission?permission=purchase').then(r => r.json())
             ]);
-            
+
             // Handle both paginated and non-paginated responses
             mitraCollection = mRes.data.data || mRes.data;
             productCollection = pRes.data.data || pRes.data;
@@ -913,8 +942,13 @@
                     document.getElementById('modal_mitra_id').value = inv.mitra_id;
                     document.getElementById('modal_keterangan').value = inv.keterangan || '';
                     document.getElementById('modal_syarat').value = inv.syarat_ketentuan || '';
-                    document.getElementById('modal_diskon_tambahan').value = formatRupiah(Math.round(inv.diskon_tambahan_nilai || 0));
-                    document.getElementById('modal_biaya_lain').value = formatRupiah(Math.round(inv.biaya_kirim || 0));
+                    document.getElementById('modal_diskon_tambahan').value = formatRupiah(Math.round(inv
+                        .diskon_tambahan_nilai || 0));
+                    document.getElementById('modal_diskon_tambahan_tipe').value = inv.diskon_tambahan_tipe ||
+                        'fixed';
+                    document.getElementById('modal_biaya_lain').value = formatRupiah(Math.round(inv.other_fee || inv
+                        .biaya_kirim || 0));
+                    document.getElementById('modal_cashback').value = formatRupiah(Math.round(inv.cashback || 0));
 
 
                     if (inv.mitra_id && tomSelectMitraModal) {
@@ -984,26 +1018,44 @@
             const qtyEl = row.querySelector('.prod-qty');
             const priceEl = row.querySelector('.prod-price');
             const discEl = row.querySelector('.prod-disc');
+            const discTipeEl = row.querySelector('.prod-disc-tipe');
             const subtotalDisplay = row.querySelector('.prod-subtotal');
 
             if (!qtyEl || !priceEl || !discEl) return;
 
             const qty = parseFloat(qtyEl.value) || 0;
             const price = cleanNumber(priceEl.value);
-            const disc = cleanNumber(discEl.value);
+            const discValue = cleanNumber(discEl.value);
+            const discTipe = discTipeEl ? discTipeEl.value : 'Fixed';
 
-            let lineTotal = (qty * price) - disc;
-            if (lineTotal < 0) lineTotal = 0;
+            let rowDisc = 0;
+            if (discTipe === 'Percentage') {
+                rowDisc = (price * discValue / 100);
+            } else {
+                rowDisc = discValue;
+            }
+
+            const rowTotal = Math.max(0, (price - rowDisc) * qty);
+            subtotal += rowTotal;
 
             if (subtotalDisplay) {
-                subtotalDisplay.innerText = window.financeApp.formatIDR(lineTotal);
+                subtotalDisplay.innerText = window.financeApp.formatIDR(rowTotal);
             }
-            subtotal += lineTotal;
         });
 
-        const extraDisc = cleanNumber(document.getElementById('modal_diskon_tambahan').value);
-        const biayaLain = cleanNumber(document.getElementById('modal_biaya_lain').value);
-        const grandTotal = Math.max(0, subtotal - extraDisc + biayaLain);
+        const extraDiscValue = cleanNumber(document.getElementById('modal_diskon_tambahan').value);
+        const extraDiscTipe = document.getElementById('modal_diskon_tambahan_tipe').value;
+        const otherFee = cleanNumber(document.getElementById('modal_biaya_lain').value);
+        const cashback = cleanNumber(document.getElementById('modal_cashback').value);
+
+        let extraDisc = 0;
+        if (extraDiscTipe === 'Percentage') {
+            extraDisc = (subtotal * extraDiscValue / 100);
+        } else {
+            extraDisc = extraDiscValue;
+        }
+
+        const grandTotal = Math.max(0, subtotal - extraDisc + otherFee - cashback);
 
         document.getElementById('summary_subtotal').innerText = window.financeApp.formatIDR(subtotal);
         document.getElementById('summary_grand_total').innerText = window.financeApp.formatIDR(grandTotal);
@@ -1095,11 +1147,12 @@
                 items.push({
                     produk_id: productId || null,
                     nama_produk_manual: namaProduk,
-                    deskripsi_produk: descInput.value,
+                    deskripsi_produk: row.querySelector('.prod-desc').value,
                     qty: qty,
                     harga_satuan: price,
                     diskon_nilai: disc,
-                    total_harga_item: Math.max(0, (qty * price) - disc)
+                    diskon_tipe: row.querySelector('.prod-disc-tipe').value,
+                    total_harga_item: cleanNumber(row.querySelector('.prod-subtotal').innerText)
                 });
             }
         }
@@ -1114,13 +1167,15 @@
                 ref_no: document.getElementById('modal_ref_no').value,
                 keterangan: document.getElementById('modal_keterangan').value,
                 syarat_ketentuan: document.getElementById('modal_syarat').value,
-                sales_id: document.getElementById('modal_sales_id').value,
+                sales_id: document.getElementById('modal_sales_id').value || 0,
                 diskon_tambahan_nilai: cleanNumber(document.getElementById('modal_diskon_tambahan').value),
-                total_akhir: parseFloat(document.getElementById('summary_grand_total').innerText.replace(
-                    /[^0-9,-]+/g, '').replace(',', '.')) || 0,
+                diskon_tambahan_tipe: document.getElementById('modal_diskon_tambahan_tipe').value,
+                total_akhir: cleanNumber(document.getElementById('summary_grand_total').innerText),
                 status_dok: 'Approved',
                 status_pembayaran: 'Unpaid',
                 biaya_kirim: cleanNumber(document.getElementById('modal_biaya_lain').value),
+                other_fee: cleanNumber(document.getElementById('modal_biaya_lain').value),
+                cashback: cleanNumber(document.getElementById('modal_cashback').value),
                 uang_muka: 0
             },
             items: items
@@ -1192,22 +1247,24 @@
             const res = await fetch('/api/product-api?per_page=1000');
             const result = await res.json();
             console.log('Product API Response:', result); // Debug log
-            
+
             if (result.success) {
                 stockCache = result.data.data || result.data; // Handle pagination structure
                 console.log('Stock Cache:', stockCache); // Debug log
                 renderStockList(stockCache);
-                
+
                 // Load kategori saat modal dibuka
                 loadStockCategories();
             } else {
                 document.getElementById('stockBodyList').innerHTML =
-                    '<tr><td colspan="6" class="text-center text-danger p-4">API Error: ' + (result.message || 'Unknown error') + '</td></tr>';
+                    '<tr><td colspan="6" class="text-center text-danger p-4">API Error: ' + (result.message ||
+                        'Unknown error') + '</td></tr>';
             }
         } catch (e) {
             console.error('Product API Error:', e); // Debug log
             document.getElementById('stockBodyList').innerHTML =
-                '<tr><td colspan="6" class="text-center text-danger p-4">Gagal load produk: ' + e.message + '</td></tr>';
+                '<tr><td colspan="6" class="text-center text-danger p-4">Gagal load produk: ' + e.message +
+                '</td></tr>';
         }
     }
 
@@ -1263,15 +1320,15 @@
     function setupStockSearch() {
         const searchInput = document.getElementById('stockSearchInput');
         const categoryFilter = document.getElementById('stockCategoryFilter');
-        
+
         // Load kategori options
         loadStockCategories();
-        
+
         if (searchInput) {
             searchInput.addEventListener('input', async function() {
                 const searchTerm = this.value ? this.value.trim() : '';
                 const categoryId = categoryFilter ? categoryFilter.value : '';
-                
+
                 try {
                     let url = `/api/product-api?per_page=1000`;
                     if (searchTerm) {
@@ -1280,10 +1337,10 @@
                     if (categoryId) {
                         url += `&category=${categoryId}`;
                     }
-                    
+
                     const res = await fetch(url);
                     const result = await res.json();
-                    
+
                     if (result.success) {
                         const data = result.data.data || result.data;
                         stockCache = data; // Update cache
@@ -1294,13 +1351,13 @@
                 }
             });
         }
-        
+
         // Setup category filter
         if (categoryFilter) {
             categoryFilter.addEventListener('change', async function() {
                 const searchTerm = searchInput ? (searchInput.value ? searchInput.value.trim() : '') : '';
                 const categoryId = this.value ? this.value : '';
-                
+
                 try {
                     let url = `/api/product-api?per_page=1000`;
                     if (searchTerm) {
@@ -1309,10 +1366,10 @@
                     if (categoryId) {
                         url += `&category=${categoryId}`;
                     }
-                    
+
                     const res = await fetch(url);
                     const result = await res.json();
-                    
+
                     if (result.success) {
                         const data = result.data.data || result.data;
                         stockCache = data;
@@ -1329,15 +1386,16 @@
         try {
             const res = await fetch('/api/product-categories-api');
             const result = await res.json();
-            
+
             if (result.success) {
                 const categories = result.data.data || result.data;
                 const categoryFilter = document.getElementById('stockCategoryFilter');
-                
+
                 if (categoryFilter) {
                     categoryFilter.innerHTML = '<option value="">Semua Kategori</option>';
                     categories.forEach(cat => {
-                        categoryFilter.innerHTML += `<option value="${cat.id}">${cat.nama_kategori}</option>`;
+                        categoryFilter.innerHTML +=
+                            `<option value="${cat.id}">${cat.nama_kategori}</option>`;
                     });
                 }
             }
@@ -1349,10 +1407,10 @@
     function resetStockFilters() {
         const searchInput = document.getElementById('stockSearchInput');
         const categoryFilter = document.getElementById('stockCategoryFilter');
-        
+
         if (searchInput) searchInput.value = '';
         if (categoryFilter) categoryFilter.value = '';
-        
+
         // Reload semua data
         openStockModal();
     }

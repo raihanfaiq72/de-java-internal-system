@@ -135,6 +135,7 @@
                                                 <th class="py-3 ps-4 rounded-start">Item Produk</th>
                                                 <th class="py-3 text-center">Qty</th>
                                                 <th class="py-3 text-end">Harga</th>
+                                                <th class="py-3 text-center">Diskon</th>
                                                 <th class="py-3 text-end pe-4 rounded-end">Total</th>
                                             </tr>
                                         </thead>
@@ -143,24 +144,28 @@
                                         </tbody>
                                         <tfoot class="border-top">
                                             <tr>
-                                                <td colspan="3" class="text-end pt-4 pb-2 text-muted">Subtotal</td>
+                                                <td colspan="4" class="text-end pt-4 pb-2 text-muted">Subtotal</td>
                                                 <td class="text-end pt-4 pb-2 fw-bold pe-4" id="val-subtotal">Rp 0</td>
                                             </tr>
                                             <tr>
-                                                <td colspan="3" class="text-end py-2 text-muted">Diskon</td>
+                                                <td colspan="4" class="text-end py-2 text-muted">Diskon</td>
                                                 <td class="text-end py-2 fw-bold text-danger pe-4" id="val-discount">- Rp 0
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td colspan="3" class="text-end py-2 text-muted">Pajak (PPN)</td>
+                                                <td colspan="4" class="text-end py-2 text-muted">Pajak (PPN)</td>
                                                 <td class="text-end py-2 fw-bold pe-4" id="val-tax">Rp 0</td>
                                             </tr>
                                             <tr>
-                                                <td colspan="3" class="text-end py-2 text-muted">Biaya Lain-lain</td>
+                                                <td colspan="4" class="text-end py-2 text-muted">Biaya Lain</td>
                                                 <td class="text-end py-2 fw-bold text-success pe-4" id="val-other-charges">Rp 0</td>
                                             </tr>
                                             <tr>
-                                                <td colspan="3" class="text-end py-3 fs-5 fw-bold text-dark">Total
+                                                <td colspan="4" class="text-end py-2 text-muted">Cashback</td>
+                                                <td class="text-end py-2 fw-bold text-info pe-4" id="val-cashback">Rp 0</td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="4" class="text-end py-3 fs-5 fw-bold text-dark">Total
                                                     Tagihan</td>
                                                 <td class="text-end py-3 fs-5 fw-bold text-primary pe-4" id="val-total">Rp 0
                                                 </td>
@@ -381,6 +386,15 @@
             tbody.innerHTML = '';
             if (data.items) {
                 data.items.forEach(item => {
+                    let discDisplay = '-';
+                    if (item.diskon_nilai > 0) {
+                        if (item.diskon_tipe === 'Percentage') {
+                            discDisplay = `${parseFloat(item.diskon_nilai)}%`;
+                        } else {
+                            discDisplay = formatIDR(item.diskon_nilai);
+                        }
+                    }
+
                     tbody.innerHTML += `
                             <tr class="border-bottom border-light">
                                 <td class="ps-4 py-3">
@@ -389,6 +403,7 @@
                                 </td>
                                 <td class="text-center py-3">${parseFloat(item.qty)} ${item.product?.satuan || ''}</td>
                                 <td class="text-end py-3">${formatIDR(item.harga_satuan)}</td>
+                                <td class="text-center py-3 text-danger fw-medium">${discDisplay}</td>
                                 <td class="text-end pe-4 py-3 fw-bold text-dark">${formatIDR(item.total_harga_item)}</td>
                             </tr>
                         `;
@@ -398,9 +413,20 @@
 
             // Totals
             document.getElementById('val-subtotal').textContent = formatIDR(subTotal);
-            document.getElementById('val-discount').textContent = `- ${formatIDR(data.diskon_tambahan_nilai || 0)}`;
+            
+            let extraDiscDisplay = '- Rp 0';
+            if (data.diskon_tambahan_nilai > 0) {
+                if (data.diskon_tambahan_tipe === 'Percentage') {
+                    extraDiscDisplay = `- ${parseFloat(data.diskon_tambahan_nilai)}%`;
+                } else {
+                    extraDiscDisplay = `- ${formatIDR(data.diskon_tambahan_nilai)}`;
+                }
+            }
+            document.getElementById('val-discount').textContent = extraDiscDisplay;
+
             document.getElementById('val-tax').textContent = formatIDR(data.pajak_ppn || 0);
-            document.getElementById('val-other-charges').textContent = `+ ${formatIDR(data.biaya_kirim || 0)}`;
+            document.getElementById('val-other-charges').textContent = `+ ${formatIDR(data.other_fee || data.biaya_kirim || 0)}`;
+            document.getElementById('val-cashback').textContent = `- ${formatIDR(data.cashback || 0)}`;
             document.getElementById('val-total').textContent = formatIDR(data.total_akhir);
 
             document.getElementById('inv-notes').textContent = data.catatan || 'Tidak ada catatan.';
