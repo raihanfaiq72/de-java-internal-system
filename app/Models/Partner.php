@@ -31,6 +31,7 @@ class Partner extends Model
         'kontak_email',
         'akun_hutang_id',
         'akun_piutang_id',
+        'salesperson_id',
         'latitude',
         'longitude',
     ];
@@ -47,6 +48,11 @@ class Partner extends Model
     public function akunPiutang()
     {
         return $this->belongsTo(COA::class, 'akun_piutang_id');
+    }
+
+    public function salesperson()
+    {
+        return $this->belongsTo(User::class, 'salesperson_id');
     }
 
     public function brands()

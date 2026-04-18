@@ -46,7 +46,7 @@
                                     <label class="f-label">Password</label>
                                     <input type="password" id="modal_user_password" class="form-control f-input" placeholder="Password...">
                                 </div>
-                            </div>
+                                                            </div>
                         </div>
                     </div>
                 </form>
