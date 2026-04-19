@@ -438,23 +438,23 @@
                 const tr = `
                                             <tr class="clickable-row">
                                                 <td class="text-center ps-3 text-muted small">${index + 1}</td>
-                                                <td class="fw-bold text-dark font-monospace" style="font-size:12px;">${item.nomor_mitra || '-'}</td>
-                                                <td class="font-monospace small text-muted">${item.ktp_npwp || '-'}</td>
+                                                <td class="fw-bold text-dark font-monospace" style="font-size:12px;">${item.nomor_mitra || 'Belum diset'}</td>
+                                                <td class="font-monospace small text-muted">${item.ktp_npwp || 'Belum diset'}</td>
                                                 <td>
                                                     <div class="fw-bold text-dark mb-0">${item.nama}</div>
-                                                    <div class="small text-muted">${item.badan_usaha || 'Perorangan'}</div>
+                                                    <div class="small text-muted">${item.badan_usaha || 'Belum diset'}</div>
                                                 </td>
                                                 <td class="text-center">
                                                     <span class="f-badge ${typeClass}">${item.tipe_mitra}</span>
                                                     ${item.is_cash_customer ? '<div class="mt-1"><span class="badge bg-success text-white" style="font-size:9px;">CASH</span></div>' : ''}
                                                 </td>
                                                 <td>
-                                                    <div class="fw-bold text-dark small">${item.kontak_nama || '-'}</div>
+                                                    <div class="fw-bold text-dark small">${item.kontak_nama || 'Belum diset'}</div>
                                                     <div class="small text-muted">${item.kontak_jabatan || ''}</div>
                                                 </td>
                                                 <td>
-                                                    <div class="text-dark small"><i class="fa fa-envelope me-1 text-muted"></i> ${item.email || '-'}</div>
-                                                    <div class="text-dark small mt-1"><i class="fa fa-phone me-1 text-muted"></i> ${item.no_hp || '-'}</div>
+                                                    <div class="text-dark small"><i class="fa fa-envelope me-1 text-muted"></i> ${item.email || 'Belum diset'}</div>
+                                                    <div class="text-dark small mt-1"><i class="fa fa-phone me-1 text-muted"></i> ${item.no_hp || 'Belum diset'}</div>
                                                 </td>
                                                 <td class="text-end pe-3">
                                                     ${actionButtons}

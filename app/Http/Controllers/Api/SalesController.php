@@ -79,7 +79,6 @@ class SalesController extends Controller
         $dateFrom = $request->date_from;
         $dateTo = $request->date_to;
 
-        // Validate input
         if (! $period) {
             return response()->json(['error' => 'Sales ID and Period are required'], 400);
         }
@@ -88,7 +87,6 @@ class SalesController extends Controller
             return response()->json(['error' => 'Date from and Date to are required for custom period'], 400);
         }
 
-        // Calculate date range based on period
         $now = now();
         switch ($period) {
             case 'this_month':
@@ -110,13 +108,11 @@ class SalesController extends Controller
                 break;
         }
 
-        // Get sales person info
         $salesPerson = null;
         if ($salesId != 0) {
             $salesPerson = DB::table('users')->where('id', $salesId)->first();
         }
 
-        // Get invoices with payments
         $invoices = DB::table('invoices as i')
             ->leftJoin('mitras as m', 'i.mitra_id', '=', 'm.id')
             ->leftJoin('payments as p', 'i.id', '=', 'p.invoice_id')
@@ -139,12 +135,10 @@ class SalesController extends Controller
             ->orderBy('i.tgl_invoice')
             ->get();
 
-        // Calculate totals
         $totalInvoices = $invoices->sum('total_akhir');
         $totalPayments = $invoices->sum('payment_amount');
         $totalRemaining = $totalInvoices - $totalPayments;
 
-        // Group payments by date for Step 1
         $paymentsByDate = $invoices
             ->whereNotNull('payment_date')
             ->groupBy('payment_date')
@@ -158,7 +152,6 @@ class SalesController extends Controller
             })
             ->sortBy('date');
 
-        // Get monthly data for charts
         $monthlyData = [];
         for ($i = 1; $i <= 12; $i++) {
             $monthInvoices = $invoices->filter(function ($inv) use ($i) {
