@@ -58,8 +58,9 @@
                 }
             };
             window.masterProduk = window.masterProduk || [];
+            window.masterMitra = window.masterMitra || [];
             window.masterStaff = window.masterStaff || [];
-            window.modalMasterMitra = window.modalMasterMitra || [];
+            window.modalMasterMitra = window.masterMitra;
         </script>
         <div class="page-content">
             <div class="container-fluid">
@@ -593,9 +594,10 @@
                 ]);
 
                 if (mRes.success) {
-                    window.modalMasterMitra = (mRes.data.data || mRes.data).filter(m =>
+                    window.masterMitra = (mRes.data.data || mRes.data).filter(m =>
                         m.tipe_mitra === 'Supplier' || m.tipe_mitra === 'Both'
                     );
+                    window.modalMasterMitra = window.masterMitra;
                 }
                 if (pRes.success) {
                     window.masterProduk = pRes.data.data || pRes.data;

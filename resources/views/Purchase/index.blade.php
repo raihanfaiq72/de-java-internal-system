@@ -671,7 +671,7 @@
 
         });
 
-        let masterMitra = [];
+        window.masterMitra = window.masterMitra || [];
         let paidInvoiceIds = [];
 
         async function initializeMasterData() {
