@@ -390,7 +390,8 @@
                     let discDisplay = '-';
                     if (item.diskon_nilai > 0) {
                         if (item.diskon_tipe === 'Percentage') {
-                            discDisplay = `${parseFloat(item.diskon_nilai)}%`;
+                            const itemDiscRupiah = (parseFloat(item.harga_satuan) * parseFloat(item.diskon_nilai) / 100);
+                            discDisplay = `${parseFloat(item.diskon_nilai)}% (${formatIDR(itemDiscRupiah)})`;
                         } else {
                             discDisplay = formatIDR(item.diskon_nilai);
                         }
@@ -418,7 +419,8 @@
             let extraDiscDisplay = '- Rp 0';
             if (data.diskon_tambahan_nilai > 0) {
                 if (data.diskon_tambahan_tipe === 'Percentage') {
-                    extraDiscDisplay = `- ${parseFloat(data.diskon_tambahan_nilai)}%`;
+                    const discRupiah = (subTotal * parseFloat(data.diskon_tambahan_nilai) / 100);
+                    extraDiscDisplay = `- ${parseFloat(data.diskon_tambahan_nilai)}% (${formatIDR(discRupiah)})`;
                 } else {
                     extraDiscDisplay = `- ${formatIDR(data.diskon_tambahan_nilai)}`;
                 }

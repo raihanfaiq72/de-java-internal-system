@@ -814,7 +814,13 @@
 
             // Totals
             document.getElementById('detailSubtotal').textContent = window.financeApp.formatIDR(item.subtotal);
-            document.getElementById('detailDiskon').textContent = `- ${window.financeApp.formatIDR(item.diskon_tambahan_nilai || 0)}`;
+            let discVal = item.diskon_tambahan_nilai || 0;
+            let discDisplay = window.financeApp.formatIDR(discVal);
+            if (item.diskon_tambahan_tipe === 'Percentage') {
+                const discRupiah = (item.subtotal * discVal / 100);
+                discDisplay = `${discVal}% (${window.financeApp.formatIDR(discRupiah)})`;
+            }
+            document.getElementById('detailDiskon').textContent = `- ${discDisplay}`;
             document.getElementById('detailBiayaLain').textContent = `+ ${window.financeApp.formatIDR(item.biaya_kirim || 0)}`;
             document.getElementById('detailTotal').textContent = window.financeApp.formatIDR(item.total_akhir);
 
