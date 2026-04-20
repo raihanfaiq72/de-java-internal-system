@@ -57,6 +57,18 @@ class SalesController extends Controller
             $query->where('status_pembayaran', $request->status_pembayaran);
         }
 
+        if ($request->mitra_id) {
+            $query->where('mitra_id', $request->mitra_id);
+        }
+
+        if ($request->tgl_invoice) {
+            $query->whereDate('tgl_invoice', $request->tgl_invoice);
+        }
+
+        if ($request->tgl_jatuh_tempo) {
+            $query->whereDate('tgl_jatuh_tempo', $request->tgl_jatuh_tempo);
+        }
+
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('nomor_invoice', 'LIKE', "%{$request->search}%")

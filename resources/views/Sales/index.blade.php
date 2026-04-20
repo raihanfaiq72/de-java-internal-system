@@ -533,6 +533,9 @@
             if (search) params.append('search', search);
             if (statusDok) params.append('status_dok', statusDok);
             if (statusBayar) params.append('status_pembayaran', statusBayar);
+            if (mitraId) params.append('mitra_id', mitraId);
+            if (tglInvoice) params.append('tgl_invoice', tglInvoice);
+            if (tglJatuhTempo) params.append('tgl_jatuh_tempo', tglJatuhTempo);
             // activeTab logic is handled in controller via tab_status or similar if needed
             // For now assuming default active tab or passing it
 
