@@ -100,9 +100,7 @@
                                                         <option value="0">Tanpa Sales Person</option>
                                                         <option value="">Pilih Sales...</option>
                                                         @foreach ($users ?? [] as $u)
-                                                            <option value="{{ $u->id }}"
-                                                                @if ($u->id == auth()->id()) selected @endif>
-                                                                {{ $u->name }}</option>
+                                                            <option value="{{ $u->id }}">{{ $u->name }}</option>
                                                         @endforeach
                                                     </select>
                                                 </div>
@@ -876,6 +874,10 @@
         if (!id) {
             disp.classList.add('d-none');
             empty.classList.remove('d-none');
+            // Clear salesperson when no partner selected
+            if (tomSelectSalesModal) {
+                tomSelectSalesModal.clear(true);
+            }
             return;
         }
 
@@ -885,6 +887,16 @@
             document.getElementById('disp_mitra_tipe').innerText = m.tipe_mitra;
             document.getElementById('disp_mitra_alamat').innerText = m.alamat || '-';
             document.getElementById('disp_mitra_telp').innerText = m.no_hp || '-';
+
+            // Auto-fill salesperson if partner has assigned salesperson
+            if (m.salesperson_id && tomSelectSalesModal) {
+                tomSelectSalesModal.setValue(String(m.salesperson_id), true);
+            } else {
+                // Clear salesperson if partner has no salesperson
+                if (tomSelectSalesModal) {
+                    tomSelectSalesModal.clear(true);
+                }
+            }
 
             disp.classList.remove('d-none');
             empty.classList.add('d-none');

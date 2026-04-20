@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -13,49 +14,21 @@ class SalesController extends Controller
 
     public function index()
     {
-        $user = auth()->user();
         $officeId = session('active_office_id');
-
-        $canSelectSales = false;
-        if ($user && $user->id == 1) {
-            $canSelectSales = true;
-        } elseif ($user && $officeId) {
-            $roleRow = DB::table('user_office_roles')
-                ->join('roles', 'user_office_roles.role_id', '=', 'roles.id')
-                ->where('user_office_roles.user_id', $user->id)
-                ->where('user_office_roles.office_id', $officeId)
-                ->select('roles.id as role_id', 'roles.name as role_name')
-                ->first();
-
-            if ($roleRow && strtolower($roleRow->role_name) === 'superadmin') {
-                $canSelectSales = true;
-            } elseif ($roleRow) {
-                $rolePermCount = DB::table('role_permissions')->where('role_id', $roleRow->role_id)->count();
-                $totalPermCount = DB::table('permissions')->count();
-                if ($totalPermCount > 0 && $rolePermCount >= $totalPermCount) {
-                    $canSelectSales = true;
-                }
-            }
-        }
 
         $users = collect();
         if ($officeId) {
             $users = DB::table('users')
-                ->join('user_office_roles', 'users.id', '=', 'user_office_roles.user_id')
-                ->join('role_permissions', 'user_office_roles.role_id', '=', 'role_permissions.role_id')
-                ->join('permissions', 'role_permissions.permission_id', '=', 'permissions.id')
+                ->where('users.is_sales', 1)
                 ->where('user_office_roles.office_id', $officeId)
-                ->where(function ($q) {
-                    $q->where('permissions.name', 'sales')
-                        ->orWhere('permissions.name', 'like', 'sales.%');
-                })
+                ->leftJoin('user_office_roles', 'users.id', '=', 'user_office_roles.user_id')
                 ->select('users.id', 'users.name')
                 ->distinct()
                 ->orderBy('users.name')
                 ->get();
         }
 
-        return view($this->views.'index', compact('users', 'canSelectSales'));
+        return view($this->views.'index', compact('users'));
     }
 
     public function export(Request $request)
@@ -106,7 +79,6 @@ class SalesController extends Controller
         $dateFrom = $request->date_from;
         $dateTo = $request->date_to;
 
-        // Validate input
         if (! $period) {
             return response()->json(['error' => 'Sales ID and Period are required'], 400);
         }
@@ -115,7 +87,6 @@ class SalesController extends Controller
             return response()->json(['error' => 'Date from and Date to are required for custom period'], 400);
         }
 
-        // Calculate date range based on period
         $now = now();
         switch ($period) {
             case 'this_month':
@@ -137,13 +108,11 @@ class SalesController extends Controller
                 break;
         }
 
-        // Get sales person info
         $salesPerson = null;
         if ($salesId != 0) {
             $salesPerson = DB::table('users')->where('id', $salesId)->first();
         }
 
-        // Get invoices with payments
         $invoices = DB::table('invoices as i')
             ->leftJoin('mitras as m', 'i.mitra_id', '=', 'm.id')
             ->leftJoin('payments as p', 'i.id', '=', 'p.invoice_id')
@@ -166,12 +135,10 @@ class SalesController extends Controller
             ->orderBy('i.tgl_invoice')
             ->get();
 
-        // Calculate totals
         $totalInvoices = $invoices->sum('total_akhir');
         $totalPayments = $invoices->sum('payment_amount');
         $totalRemaining = $totalInvoices - $totalPayments;
 
-        // Group payments by date for Step 1
         $paymentsByDate = $invoices
             ->whereNotNull('payment_date')
             ->groupBy('payment_date')
@@ -185,7 +152,6 @@ class SalesController extends Controller
             })
             ->sortBy('date');
 
-        // Get monthly data for charts
         $monthlyData = [];
         for ($i = 1; $i <= 12; $i++) {
             $monthInvoices = $invoices->filter(function ($inv) use ($i) {

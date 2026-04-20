@@ -64,9 +64,9 @@
     }
 </style>
 
-<div id="simple-promo-modal" class="simple-promo-modal">
+<div id="simple-promo-modal" class="simple-promo-modal" style="display: none;">
     <div class="simple-promo-content">
-        <h3 class="simple-promo-title">📱 DeJava Mobile App</h3>
+        <h3 class="simple-promo-title">DeJava Mobile App</h3>
         <p class="simple-promo-message">
             Dapatkan pengalaman terbaik mengelola bisnis Anda dengan aplikasi mobile DeJava. 
             Download sekarang dan akses laporan kapan saja, di mana saja!
@@ -84,7 +84,30 @@
 </div>
 
 <script>
+    // Check if promo has been shown before
+    function showDeJavaPromoOnce() {
+        // Check if promo has been shown in this session
+        const promoShown = localStorage.getItem('dejava_promo_shown');
+        
+        if (!promoShown) {
+            // Show the promo modal
+            document.getElementById('simple-promo-modal').style.display = 'flex';
+            
+            // Mark as shown in localStorage
+            localStorage.setItem('dejava_promo_shown', 'true');
+        }
+    }
+
     function closeSimplePromo() {
         document.getElementById('simple-promo-modal').style.display = 'none';
+        // Also mark as shown when manually closed
+        localStorage.setItem('dejava_promo_shown', 'true');
     }
+
+    // Show promo when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            showDeJavaPromoOnce();
+        }, 1000); // Show after 1 second delay for better UX
+    });
 </script>
