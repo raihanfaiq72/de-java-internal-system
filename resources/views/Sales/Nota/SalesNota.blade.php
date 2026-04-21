@@ -289,7 +289,7 @@
                         <div style="display: flex; justify-content: space-between; margin-top: 5px;">
                             <div class="sig-box text-center"><strong>Penerima</strong><br><br><br>( . . . . .)</div>
                             <div class="sig-box text-center"><strong>Pengirim</strong><br><br><br>( . . . . . .)</div>
-                            <div class="sig-box text-center"><strong>Hormat Kami</strong><br><br><br>( . . . . .)</div>
+                            <div class="sig-box text-center"><strong>Gudang</strong><br><br><br>( . . . . .)</div>
                         </div>
                         <div
                             style="margin-top: 60px; border: 2px solid #000; padding: 2px; min-height: 20px; font-weight: bold;">
