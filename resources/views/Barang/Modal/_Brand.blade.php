@@ -30,10 +30,10 @@
 
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
-                    Batal
+                    <i class="fa fa-times me-2"></i>Batal
                 </button>
-                <button type="button" class="btn btn-primary px-4 fw-bold" id="btnSaveBrand">
-                    <i class="fa fa-save me-1"></i> Simpan Brand
+                <button type="button" class="btn btn-primary px-4 fw-bold shadow-sm" id="btnSaveBrand" onclick="saveBrand()">
+                    <i class="fa fa-save me-2"></i>Simpan Brand
                 </button>
             </div>
 

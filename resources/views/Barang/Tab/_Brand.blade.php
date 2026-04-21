@@ -1,22 +1,27 @@
 <div class="tab-pane fade show" id="tab-brand" role="tabpanel">
 
-    <div class="row g-2 mb-3 align-items-end">
-        <div class="col-md-3">
-            <label class="small fw-bold text-muted">Cari</label>
-            <input type="text" id="filter-brand-search" class="form-control form-control-sm"
-                placeholder="Ketik pencarian...">
+    <div class="row g-2 mb-3">
+        <!-- Filter Controls -->
+        <div class="col-md-4">
+            <label class="small fw-bold text-muted">Cari Brand</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="fa fa-search"></i></span>
+                <input type="text" id="filter-brand-search" class="form-control"
+                    placeholder="Nama Brand...">
+            </div>
         </div>
-
-        <div class="col-md-auto">
-            <button onclick="loadBrandData()" class="btn btn-sm btn-dark px-3">
-                <i class="fa fa-filter me-1"></i> Filter
-            </button>
-        </div>
-
-        <div class="col text-end">
-            <button class="btn btn-sm btn-primary px-3 shadow-sm" onclick="openBrandModal()">
-                <i class="fa fa-plus me-1"></i> TAMBAH BRAND
-            </button>
+        
+        <!-- Action Buttons -->
+        <div class="col text-end align-self-end">
+            <div class="d-flex gap-2 justify-content-end">
+                <button onclick="resetFilterBrand()" class="btn btn-outline-secondary" title="Reset Filter">
+                    <i class="fa fa-undo"></i>
+                </button>
+                <div class="vr"></div>
+                <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openBrandModal()">
+                    <i class="fa fa-plus me-1"></i> TAMBAH BRAND
+                </button>
+            </div>
         </div>
     </div>
 
@@ -49,23 +54,13 @@
     <tr>
         <td class="brand-name"></td>
         <td class="text-center">
-            <div class="dropdown">
-                <button class="btn btn-sm btn-light border dropdown-toggle" data-bs-toggle="dropdown">Aksi</button>
-                <ul class="dropdown-menu">
-                    <li>
-                        <a class="dropdown-item btn-edit" href="javascript:void(0)">
-                            <i class="fa fa-edit me-2 text-warning"></i> Edit
-                        </a>
-                    </li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-                    <li>
-                        <a class="dropdown-item text-danger btn-delete" href="javascript:void(0)">
-                            <i class="fa fa-trash me-2"></i> Hapus
-                        </a>
-                    </li>
-                </ul>
+            <div class="d-flex gap-2 justify-content-center">
+                <button class="btn-premium btn-premium-edit btn-edit shadow-sm">
+                    <i class="fa fa-edit"></i> Edit
+                </button>
+                <button class="btn-premium btn-premium-delete btn-delete shadow-sm">
+                    <i class="fa fa-trash"></i> Hapus
+                </button>
             </div>
         </td>
     </tr>
@@ -77,7 +72,21 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             loadBrandData(BRAND_URL);
+            
+            // Auto-filter with debounce
+            let brandSearchTimeout = null;
+            document.getElementById('filter-brand-search').addEventListener('input', function() {
+                clearTimeout(brandSearchTimeout);
+                brandSearchTimeout = setTimeout(() => {
+                    loadBrandData();
+                }, 500);
+            });
         });
+
+        function resetFilterBrand() {
+            document.getElementById('filter-brand-search').value = '';
+            loadBrandData();
+        }
 
         function syncSupplierOptions() {
             if (!tsSupplier) return;
@@ -126,12 +135,20 @@
             data.forEach(item => {
                 const clone = template.content.cloneNode(true);
                 clone.querySelector('.brand-name').textContent = item.nama_brand;
-
-                clone.querySelector('.btn-edit').onclick = () => editBrand(item.id);
-                clone.querySelector('.btn-delete').onclick = () => deleteBrand(item.id);
-
+ 
+                const btnEdit = clone.querySelector('.btn-edit');
+                const btnDelete = clone.querySelector('.btn-delete');
+                
+                if(btnEdit) btnEdit.onclick = () => editBrand(item.id);
+                if(btnDelete) btnDelete.onclick = () => deleteBrand(item.id);
+ 
                 tbody.appendChild(clone);
             });
+
+            // Initialize Draggable Columns for Brand Table
+            if (typeof initResizableTable === 'function') {
+                initResizableTable();
+            }
         }
 
         function renderBrandPagination(meta) {

@@ -100,11 +100,11 @@
         <td class="col-tempo text-end"></td>
         <td class="col-coa text-start"></td>
         <td class="text-center">
-            <div class="d-flex gap-1 justify-content-center">
-                <button class="btn btn-sm btn-warning btn-edit text-dark fw-bold">
+            <div class="d-flex gap-2 justify-content-center">
+                <button class="btn-premium btn-premium-edit btn-edit shadow-sm">
                     <i class="fa fa-edit"></i> Edit
                 </button>
-                <button class="btn btn-sm btn-danger btn-delete fw-bold">
+                <button class="btn-premium btn-premium-delete btn-delete shadow-sm">
                     <i class="fa fa-trash"></i> Hapus
                 </button>
             </div>
@@ -142,6 +142,49 @@
             }
 
             el.value = new Intl.NumberFormat('id-ID').format(val);
+        }
+
+        // Resizable Column Logic
+        function initResizableTable() {
+            const table = document.querySelector('.table');
+            const cols = table.querySelectorAll('th');
+            
+            cols.forEach((col) => {
+                // Add resizer element if not exists
+                if (!col.querySelector('.resizer')) {
+                    const resizer = document.createElement('div');
+                    resizer.classList.add('resizer');
+                    col.appendChild(resizer);
+                    
+                    createResizableColumn(col, resizer);
+                }
+            });
+        }
+
+        function createResizableColumn(col, resizer) {
+            let x = 0;
+            let w = 0;
+
+            const onMouseMove = (e) => {
+                const dx = e.clientX - x;
+                col.style.width = `${w + dx}px`;
+                resizer.classList.add('resizing');
+            };
+
+            const onMouseUp = () => {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                resizer.classList.remove('resizing');
+            };
+
+            resizer.addEventListener('mousedown', (e) => {
+                x = e.clientX;
+                const styles = window.getComputedStyle(col);
+                w = parseInt(styles.width, 10);
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
         }
 
         let pCurrentSort = 'created_at';
@@ -496,8 +539,18 @@
 
                 // Mengisi Konten Baris
                 clone.querySelector('.col-sku').textContent = item.sku_kode || '-';
-                clone.querySelector('.col-supplier').textContent = item.supplier?.nama || '-';
-                clone.querySelector('.col-brand').textContent = item.brand?.nama_brand || '-';
+                
+                const supplierLabel = item.supplier?.nama || 'TANPA SUPLIER';
+                const brandLabel = item.brand?.nama_brand || 'TANPA BRAND';
+                
+                const supplierEl = clone.querySelector('.col-supplier');
+                supplierEl.textContent = supplierLabel;
+                if (!item.supplier) supplierEl.classList.add('text-faint');
+                
+                const brandEl = clone.querySelector('.col-brand');
+                brandEl.textContent = brandLabel;
+                if (!item.brand) brandEl.classList.add('text-faint');
+
                 clone.querySelector('.col-nama').textContent = item.nama_produk || '-';
                 clone.querySelector('.col-kategori').textContent = item.category?.nama_kategori || '-';
                 clone.querySelector('.col-kemasan').textContent = item.kemasan || '-';

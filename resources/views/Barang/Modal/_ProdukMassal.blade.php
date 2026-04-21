@@ -20,12 +20,12 @@
                 <!-- Controls -->
                 <div class="row align-items-center mb-4">
                     <div class="col-md-8">
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-success" onclick="addProductRow()">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-primary px-4 fw-bold shadow-sm" onclick="addProductRow()">
                                 <i class="fa fa-plus me-2"></i> Tambah Baris
                             </button>
-                            <button type="button" class="btn btn-outline-warning" onclick="clearAllRows()">
-                                <i class="fa fa-trash-alt me-2"></i> Hapus Semua
+                            <button type="button" class="btn btn-outline-danger px-4 fw-bold" onclick="clearAllRows()">
+                                <i class="fa fa-trash-alt me-2"></i> Hapus Semua Baris
                             </button>
                         </div>
                     </div>
@@ -245,8 +245,6 @@
     // Add new product row
     function addProductRow() {
         productRowCount++;
-        updateRowCount();
-        updateEmptyState();
         
         console.log('Adding row with data:', {
             suppliers: suppliers.length,
@@ -325,7 +323,7 @@
                 </select>
             </td>
             <td class="text-center align-middle">
-                <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" onclick="removeProductRow(${productRowCount})" title="Hapus Baris">
+                <button type="button" class="btn-premium btn-premium-delete" onclick="removeProductRow(${productRowCount})" title="Hapus Baris">
                     <i class="fa fa-times"></i>
                 </button>
             </td>
@@ -429,6 +427,8 @@
         }, 100);
         
         tbody.appendChild(row);
+        updateRowCount();
+        updateEmptyState();
     }
 
     // Remove product row
