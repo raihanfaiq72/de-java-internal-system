@@ -21,6 +21,15 @@
             border-bottom: 3px solid #0d6efd !important;
             background-color: transparent !important;
         }
+
+        .form-check-input {
+            border: 2px solid #6c757d !important;
+        }
+
+        .form-check-input:checked {
+            background-color: #0d6efd !important;
+            border-color: #0d6efd !important;
+        }
     </style>
 @endpush
 

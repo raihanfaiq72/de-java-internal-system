@@ -8,6 +8,12 @@ use App\Models\Partner;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+
 
 class InvoiceReportController extends Controller
 {
@@ -123,30 +129,17 @@ class InvoiceReportController extends Controller
 
         switch ($tab) {
             case 'general':
-                extract($this->getGeneralStats($startDate, $officeId));
-
-                return view('Report.Invoice.export_general', compact('year', 'chartLabels', 'chartIncome', 'chartExpense', 'totalSales', 'totalReceived', 'outstanding'));
-
+                return $this->exportGeneralSpreadsheet($startDate, $officeId);
             case 'payments':
-                extract($this->getPaymentsData($request, $startDate, $endDate, $officeId, $mitraId, $search));
-
-                return view('Report.Invoice.export_payments', compact('startDate', 'endDate', 'payments', 'totalPaymentAmount', 'hiddenColumns'));
-
-            case 'payments_with_details':
-                extract($this->getPaymentsWithDetailsData($request, $startDate, $endDate, $officeId, $mitraId, $search));
-
-                return view('Report.Invoice.export_payments_with_details', compact('startDate', 'endDate', 'payments', 'totalPaymentAmount', 'hiddenColumns'));
-
+                return $this->exportPaymentsSpreadsheet($request, $startDate, $endDate, $officeId, $mitraId, $search, $hiddenColumns);
             case 'sold_products':
-                extract($this->getSoldProductsData($request, $startDate, $endDate, $officeId, $mitraId, $search));
-
-                return view('Report.Invoice.export_sold_products', compact('startDate', 'endDate', 'soldProducts', 'totalSoldQty', 'hiddenColumns'));
-
+                return $this->exportSoldProductsSpreadsheet($request, $startDate, $endDate, $officeId, $mitraId, $search, $hiddenColumns);
             case 'invoice_items':
-                extract($this->getInvoiceItemsData($request, $startDate, $endDate, $officeId, $mitraId, $search));
-
-                return view('Report.Invoice.export_invoice_items', compact('startDate', 'endDate', 'invoiceItems', 'summaryTotalTransaction', 'hiddenColumns'));
+                return $this->exportInvoiceItemsSpreadsheet($request, $startDate, $endDate, $officeId, $mitraId, $search, $hiddenColumns);
+            default:
+                return back()->with('error', 'Tab tidak dikenali');
         }
+
     }
 
     // =========================================================================
@@ -506,6 +499,400 @@ class InvoiceReportController extends Controller
         return compact('invoiceItems', 'summaryTotalTransaction', 'summaryTotalInvoices');
     }
 
+    // =========================================================================
+    // EXPORT SPREADSHEET METHODS
+    // =========================================================================
+
+    private function exportGeneralSpreadsheet($startDate, $officeId)
+    {
+        extract($this->getGeneralStats($startDate, $officeId));
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Rekap Umum');
+
+        // Header
+        $sheet->setCellValue('A1', 'Laporan Invoice - Rekap Umum');
+        $sheet->setCellValue('A2', 'Periode: ' . $year);
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+
+        // Section 1: Income vs Expenditure
+        $sheet->setCellValue('A4', 'Income vs Expenditure (Per Bulan)');
+        $sheet->getStyle('A4')->getFont()->setBold(true);
+
+        $row = 5;
+        $headers = ['Bulan', 'Income (Pemasukan)', 'Expenditure (Pengeluaran)', 'Profit/Loss'];
+        $this->writeHeader($sheet, $headers, $row);
+        
+        $row++;
+        $startDataRow = $row;
+        foreach ($chartLabels as $index => $label) {
+            $sheet->setCellValue('A' . $row, $label);
+            $sheet->setCellValue('B' . $row, $chartIncome[$index]);
+            $sheet->setCellValue('C' . $row, $chartExpense[$index]);
+            $sheet->setCellValue('D' . $row, $chartIncome[$index] - $chartExpense[$index]);
+            $row++;
+        }
+
+        // Totals
+        $sheet->setCellValue('A' . $row, 'Total');
+        $sheet->setCellValue('B' . $row, "=SUM(B$startDataRow:B" . ($row - 1) . ")");
+        $sheet->setCellValue('C' . $row, "=SUM(C$startDataRow:C" . ($row - 1) . ")");
+        $sheet->setCellValue('D' . $row, "=SUM(D$startDataRow:D" . ($row - 1) . ")");
+        $this->applyBodyStyle($sheet, 'A5', 'D' . $row);
+        $sheet->getStyle('A' . $row . ':D' . $row)->getFont()->setBold(true);
+
+        // Section 2: Composition
+        $row += 2;
+        $sheet->setCellValue('A' . $row, 'Komposisi Piutang (Sales)');
+        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+        
+        $row++;
+        $this->writeHeader($sheet, ['Kategori', 'Nilai'], $row);
+        
+        $row++;
+        $sheet->setCellValue('A' . $row, 'Total Penjualan (Sales)');
+        $sheet->setCellValue('B' . $row, $totalSales);
+        $row++;
+        $sheet->setCellValue('A' . $row, 'Total Diterima (Received)');
+        $sheet->setCellValue('B' . $row, $totalReceived);
+        $row++;
+        $sheet->setCellValue('A' . $row, 'Belum Dibayar (Outstanding)');
+        $sheet->setCellValue('B' . $row, $outstanding);
+        
+        $this->applyBodyStyle($sheet, 'A' . ($row - 3), 'B' . $row);
+        $sheet->getStyle('B4:B' . $row)->getNumberFormat()->setFormatCode('#,##0');
+        $sheet->getStyle('C4:C' . $row)->getNumberFormat()->setFormatCode('#,##0');
+        $sheet->getStyle('D4:D' . $row)->getNumberFormat()->setFormatCode('#,##0');
+
+        return $this->streamSpreadsheet($spreadsheet, 'Laporan_Invoice_General_' . date('Y-m-d') . '.xlsx');
+    }
+
+    private function exportPaymentsSpreadsheet($request, $startDate, $endDate, $officeId, $mitraId, $search, $hiddenColumns)
+    {
+        // Force get all data for export (no pagination)
+        $itemsSubQuery = DB::table('invoice_items')->whereNull('deleted_at')->select('invoice_id', DB::raw('SUM(qty) as total_qty'))->groupBy('invoice_id');
+        $totalPaidSubQuery = DB::table('payments')->whereNull('deleted_at')->select('invoice_id', DB::raw('SUM(jumlah_bayar) as total_paid_all'))->groupBy('invoice_id');
+        $latestPaymentSubQuery = DB::table('payments')->whereNull('deleted_at')->select('invoice_id', 'metode_pembayaran')->whereIn('id', function($q) {
+            $q->select(DB::raw('MAX(id)'))->from('payments')->whereNull('deleted_at')->groupBy('invoice_id');
+        });
+
+        $query = DB::table('invoices')
+            ->leftJoinSub($totalPaidSubQuery, 'paid_summary', 'invoices.id', '=', 'paid_summary.invoice_id')
+            ->leftJoinSub($latestPaymentSubQuery, 'latest_pay', 'invoices.id', '=', 'latest_pay.invoice_id')
+            ->leftJoin('mitras', 'invoices.mitra_id', '=', 'mitras.id')
+            ->leftJoinSub($itemsSubQuery, 'items', 'invoices.id', '=', 'items.invoice_id')
+            ->where('invoices.office_id', $officeId)
+            ->whereBetween('invoices.tgl_invoice', [$startDate, $endDate])
+            ->select(
+                'invoices.status_pembayaran',
+                'invoices.tgl_invoice',
+                'invoices.nomor_invoice',
+                DB::raw('COALESCE(latest_pay.metode_pembayaran, "Belum Bayar") as metode_pembayaran'),
+                'mitras.nomor_mitra',
+                'mitras.nama as nama_mitra',
+                'items.total_qty',
+                'invoices.total_akhir',
+                DB::raw('COALESCE(paid_summary.total_paid_all, 0) as jumlah_bayar')
+            );
+        
+        $this->applyCommonFilters($query, $request, $mitraId, $search, true);
+        $this->applySorting($query, $request, 'invoices.tgl_invoice', 'desc');
+        $data = $query->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Daftar Nota');
+
+        // Headers mapping
+        $allHeaders = [
+            0 => 'Status',
+            1 => 'Tanggal',
+            2 => 'No. Nota',
+            3 => 'Metode',
+            4 => 'No. Mitra',
+            5 => 'Nama Mitra',
+            6 => 'Qty',
+            7 => 'Total Nota',
+            8 => 'Terbayar',
+            9 => 'Sisa Piutang'
+        ];
+
+        $visibleHeaders = ['No'];
+        $mapping = [];
+        foreach ($allHeaders as $idx => $name) {
+            if (!in_array($idx, $hiddenColumns)) {
+                $visibleHeaders[] = $name;
+                $mapping[] = $idx;
+            }
+        }
+
+        $row = 1;
+        $this->writeHeader($sheet, $visibleHeaders, $row);
+        
+        $row++;
+        foreach ($data as $i => $item) {
+            $colIdx = 1;
+            $sheet->setCellValueByColumnAndRow($colIdx++, $row, $i + 1);
+            
+            foreach ($mapping as $mIdx) {
+                $val = match($mIdx) {
+                    0 => $item->status_pembayaran,
+                    1 => Carbon::parse($item->tgl_invoice)->format('d-m-Y'),
+                    2 => $item->nomor_invoice,
+                    3 => $item->metode_pembayaran,
+                    4 => $item->nomor_mitra,
+                    5 => $item->nama_mitra,
+                    6 => (float) $item->total_qty,
+                    7 => (float) $item->total_akhir,
+                    8 => (float) $item->jumlah_bayar,
+                    9 => (float) ($item->total_akhir - $item->jumlah_bayar),
+                    default => ''
+                };
+                $sheet->setCellValueByColumnAndRow($colIdx++, $row, $val);
+            }
+            $row++;
+        }
+
+        $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($visibleHeaders));
+        $this->applyBodyStyle($sheet, 'A1', $lastCol . ($row - 1));
+        
+        // Format currencies
+        foreach ($mapping as $index => $mIdx) {
+            if (in_array($mIdx, [7, 8, 9])) {
+                $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 2);
+                $sheet->getStyle($colLetter . '2:' . $colLetter . ($row - 1))->getNumberFormat()->setFormatCode('#,##0');
+            }
+        }
+
+        return $this->streamSpreadsheet($spreadsheet, 'Laporan_Pembayaran_' . date('Y-m-d') . '.xlsx');
+    }
+
+    private function exportSoldProductsSpreadsheet($request, $startDate, $endDate, $officeId, $mitraId, $search, $hiddenColumns)
+    {
+        $metric = $request->input('product_metric', 'both');
+        
+        // Re-use logic to get ALL data
+        $invoiceIdsQuery = DB::table('invoices')->join('payments', 'invoices.id', '=', 'payments.invoice_id')->where('invoices.office_id', $officeId)->where('invoices.tipe_invoice', 'Sales')->whereNull('payments.deleted_at')->whereNull('invoices.deleted_at')->whereBetween('payments.tgl_pembayaran', [$startDate, $endDate])->select('invoices.id');
+        $this->applyCommonFilters($invoiceIdsQuery, $request, $mitraId, $search, false);
+        $invoiceIds = $invoiceIdsQuery->pluck('id')->unique();
+
+        $taxSumSub = DB::table('invoice_item_taxes')->whereNull('deleted_at')->select('invoice_item_id', DB::raw('SUM(nilai_pajak_diterapkan) as total_tax'))->groupBy('invoice_item_id');
+        $query = DB::table('invoice_items')
+            ->join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
+            ->join('products', 'invoice_items.produk_id', '=', 'products.id')
+            ->leftJoin('product_categories', 'products.product_category_id', '=', 'product_categories.id')
+            ->leftJoinSub($taxSumSub, 'tax_sum', function ($join) { $join->on('invoice_items.id', '=', 'tax_sum.invoice_item_id'); })
+            ->whereIn('invoice_items.invoice_id', $invoiceIds)
+            ->select(
+                'products.nama_produk',
+                'products.sku_kode',
+                'product_categories.nama_kategori',
+                'products.satuan',
+                DB::raw('SUM(invoice_items.qty) as total_qty'),
+                DB::raw('SUM(invoice_items.total_harga_item + COALESCE(tax_sum.total_tax, 0)) as total_value')
+            )
+            ->groupBy('products.id', 'products.nama_produk', 'products.sku_kode', 'products.satuan', 'product_categories.nama_kategori');
+
+        $prodIdFilter = $this->extractProductFilter($request);
+        if (! empty($prodIdFilter)) { $query->whereIn('invoice_items.produk_id', $prodIdFilter); }
+        $this->applySorting($query, $request, 'products.nama_produk', 'asc');
+        $data = $query->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Produk Terjual');
+
+        // Dynamic Header Mapping based on metric
+        $allHeaders = [
+            0 => 'Nama Produk',
+            1 => 'Kode (SKU)',
+            2 => 'Kategori',
+            3 => 'Satuan',
+        ];
+        
+        if ($metric === 'qty') {
+            $allHeaders[4] = 'Kuantitas';
+        } elseif ($metric === 'value') {
+            $allHeaders[4] = 'Value (Rp)';
+        } else {
+            $allHeaders[4] = 'Kuantitas';
+            $allHeaders[5] = 'Value (Rp)';
+        }
+
+        $visibleHeaders = ['No'];
+        $mapping = [];
+        foreach ($allHeaders as $idx => $name) {
+            if (!in_array($idx, $hiddenColumns)) {
+                $visibleHeaders[] = $name;
+                $mapping[] = $idx;
+            }
+        }
+
+        $row = 1;
+        $this->writeHeader($sheet, $visibleHeaders, $row);
+        $row++;
+        foreach ($data as $i => $item) {
+            $colIdx = 1;
+            $sheet->setCellValueByColumnAndRow($colIdx++, $row, $i + 1);
+            foreach ($mapping as $mIdx) {
+                $val = match($mIdx) {
+                    0 => $item->nama_produk,
+                    1 => $item->sku_kode,
+                    2 => $item->nama_kategori,
+                    3 => $item->satuan,
+                    4 => ($metric === 'value' ? (float)$item->total_value : (float)$item->total_qty),
+                    5 => (float)$item->total_value,
+                    default => ''
+                };
+                $sheet->setCellValueByColumnAndRow($colIdx++, $row, $val);
+            }
+            $row++;
+        }
+
+        $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($visibleHeaders));
+        $this->applyBodyStyle($sheet, 'A1', $lastCol . ($row - 1));
+
+        return $this->streamSpreadsheet($spreadsheet, 'Laporan_Produk_Terjual_' . date('Y-m-d') . '.xlsx');
+    }
+
+    private function exportInvoiceItemsSpreadsheet($request, $startDate, $endDate, $officeId, $mitraId, $search, $hiddenColumns)
+    {
+        $query = DB::table('invoice_items')
+            ->join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
+            ->join('products', 'invoice_items.produk_id', '=', 'products.id')
+            ->leftJoin('mitras', 'invoices.mitra_id', '=', 'mitras.id')
+            ->where('invoices.office_id', $officeId)
+            ->whereBetween('invoices.tgl_invoice', [$startDate, $endDate])
+            ->select(
+                'invoices.status_pembayaran',
+                'invoices.tgl_invoice',
+                'invoices.nomor_invoice',
+                'products.nama_produk',
+                'mitras.nama as nama_mitra',
+                'invoice_items.qty',
+                'invoice_items.harga_satuan',
+                'invoice_items.diskon_nilai',
+                DB::raw('(invoice_items.diskon_nilai * invoice_items.qty) as total_diskon'),
+                'invoice_items.id as item_id',
+                'invoice_items.total_harga_item'
+            );
+
+        $this->applyCommonFilters($query, $request, $mitraId, $search, true, true);
+        $this->applySorting($query, $request, 'invoices.tgl_invoice', 'desc');
+        $data = $query->get();
+
+        // Add tax manually as we did in index
+        $itemIds = $data->pluck('item_id')->toArray();
+        $taxSums = [];
+        if (!empty($itemIds)) {
+            $taxSums = DB::table('invoice_item_taxes')->whereIn('invoice_item_id', $itemIds)->whereNull('deleted_at')->select('invoice_item_id', DB::raw('SUM(nilai_pajak_diterapkan) as total_tax'))->groupBy('invoice_item_id')->pluck('total_tax', 'invoice_item_id')->toArray();
+        }
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Laporan Per Produk');
+
+        $allHeaders = [
+            0 => 'Status', 1 => 'Tanggal', 2 => 'No. Nota', 3 => 'Produk', 4 => 'Mitra',
+            5 => 'Qty', 6 => 'Harga', 7 => 'Disc. Item', 8 => 'Tot. Disc', 9 => 'Total Akhir'
+        ];
+
+        $visibleHeaders = ['No'];
+        $mapping = [];
+        foreach ($allHeaders as $idx => $name) {
+            if (!in_array($idx, $hiddenColumns)) {
+                $visibleHeaders[] = $name;
+                $mapping[] = $idx;
+            }
+        }
+
+        $row = 1;
+        $this->writeHeader($sheet, $visibleHeaders, $row);
+        $row++;
+        foreach ($data as $i => $item) {
+            $colIdx = 1;
+            $sheet->setCellValueByColumnAndRow($colIdx++, $row, $i + 1);
+            $tax = $taxSums[$item->item_id] ?? 0;
+            $totalAkhir = $item->total_harga_item + $tax;
+
+            foreach ($mapping as $mIdx) {
+                $val = match($mIdx) {
+                    0 => $item->status_pembayaran,
+                    1 => Carbon::parse($item->tgl_invoice)->format('d-m-Y'),
+                    2 => $item->nomor_invoice,
+                    3 => $item->nama_produk,
+                    4 => $item->nama_mitra,
+                    5 => (float) $item->qty,
+                    6 => (float) $item->harga_satuan,
+                    7 => (float) $item->diskon_nilai,
+                    8 => (float) $item->total_diskon,
+                    9 => (float) $totalAkhir,
+                    default => ''
+                };
+                $sheet->setCellValueByColumnAndRow($colIdx++, $row, $val);
+            }
+            $row++;
+        }
+
+        $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($visibleHeaders));
+        $this->applyBodyStyle($sheet, 'A1', $lastCol . ($row - 1));
+
+        return $this->streamSpreadsheet($spreadsheet, 'Laporan_Nota_Per_Produk_' . date('Y-m-d') . '.xlsx');
+    }
+
+    // --- Core Spreadsheet Helpers ---
+
+    private function writeHeader($sheet, $headers, $row)
+    {
+        foreach ($headers as $index => $header) {
+            $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
+            $sheet->setCellValue($col . $row, $header);
+        }
+        $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers));
+        $sheet->getStyle('A' . $row . ':' . $lastCol . $row)->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4472C4']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
+        ]);
+    }
+
+    private function applyBodyStyle($sheet, $start, $end)
+    {
+        $sheet->getStyle($start . ':' . $end)->applyFromArray([
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => '000000'],
+                ],
+            ],
+            'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
+        ]);
+        
+        // Auto size columns
+        $lastCol = $sheet->getHighestColumn();
+        $lastColIdx = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($lastCol);
+        for ($i = 1; $i <= $lastColIdx; $i++) {
+            $sheet->getColumnDimension(\PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i))->setAutoSize(true);
+        }
+    }
+
+    private function streamSpreadsheet($spreadsheet, $filename)
+    {
+        $writer = new Xlsx($spreadsheet);
+        return response()->stream(
+            function () use ($writer) {
+                $writer->save('php://output');
+            },
+            200,
+            [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Cache-Control' => 'max-age=0',
+            ]
+        );
+    }
+
     private function extractProductFilter(Request $request)
     {
         $prodIdFilter = $request->input('product_id', []);
@@ -614,3 +1001,4 @@ class InvoiceReportController extends Controller
         }
     }
 }
+
