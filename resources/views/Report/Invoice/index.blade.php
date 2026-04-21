@@ -32,10 +32,10 @@
                 <div class="row">
                     <div class="col-sm-12">
                         <div class="page-title-box d-md-flex justify-content-between align-items-center">
-                            <h4 class="page-title">Laporan Invoice</h4>
+                            <h4 class="page-title">Laporan Nota</h4>
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
-                                <li class="breadcrumb-item active">Report: Invoice</li>
+                                <li class="breadcrumb-item active">Report: Nota</li>
                             </ol>
                         </div>
                     </div>
@@ -45,25 +45,32 @@
                 <div class="card border-0 shadow-sm rounded-3 mb-4">
                     <div class="card-body p-4">
                         <form action="{{ route('report.invoice') }}" method="GET" id="filterForm">
+                            <input type="hidden" name="sort_by" value="{{ request('sort_by', 'invoices.tgl_invoice') }}">
+                            <input type="hidden" name="sort_dir" value="{{ request('sort_dir', 'desc') }}">
                             <div class="row align-items-end g-3">
                                 <div class="col-md-3">
-                                    <h4 class="fw-bold text-dark mb-1">Laporan Invoice</h4>
+                                    <h4 class="fw-bold text-dark mb-1">Laporan Nota</h4>
                                     <p class="text-muted small mb-0">Rekapitulasi penjualan, pembayaran, dan produk.</p>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label fw-bold small text-muted">Periode Pembayaran</label>
                                     <div class="input-group">
-                                        <input type="date" class="form-control" name="start_date" value="{{ $startDate }}">
+                                        <input type="date" class="form-control" name="start_date"
+                                            value="{{ $startDate }}">
                                         <span class="input-group-text bg-white border-start-0 border-end-0">s/d</span>
-                                        <input type="date" class="form-control" name="end_date" value="{{ $endDate }}">
+                                        <input type="date" class="form-control" name="end_date"
+                                            value="{{ $endDate }}">
                                     </div>
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label fw-bold small text-muted">Mitra</label>
-                                    <select class="form-select" name="mitra_id">
-                                        <option value="">Semua Mitra</option>
-                                        @foreach($mitras as $m)
-                                            <option value="{{ $m->id }}" {{ request('mitra_id') == $m->id ? 'selected' : '' }}>
+                                    <select class="form-select" name="mitra_id[]" multiple>
+                                        @php
+                                            $selectedMitras = (array) request('mitra_id', []);
+                                        @endphp
+                                        @foreach ($mitras as $m)
+                                            <option value="{{ $m->id }}"
+                                                {{ in_array($m->id, $selectedMitras) ? 'selected' : '' }}>
                                                 {{ $m->nama }}
                                             </option>
                                         @endforeach
@@ -71,8 +78,8 @@
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label fw-bold small text-muted">Pencarian</label>
-                                    <input type="text" class="form-control" name="search" placeholder="No Invoice/Mitra..."
-                                        value="{{ request('search') }}">
+                                    <input type="text" class="form-control" name="search"
+                                        placeholder="No. Nota/Mitra..." value="{{ request('search') }}">
                                 </div>
                             </div>
                             <!-- Extended Filters -->
@@ -83,33 +90,51 @@
                                         $selectedProducts = (array) request('product_id', []);
                                     @endphp
                                     <select class="form-select" name="product_id[]" multiple>
-                                        @foreach($products as $p)
-                                            <option value="{{ $p->id }}" {{ in_array($p->id, $selectedProducts) ? 'selected' : '' }}>
+                                        @foreach ($products as $p)
+                                            <option value="{{ $p->id }}"
+                                                {{ in_array($p->id, $selectedProducts) ? 'selected' : '' }}>
                                                 {{ $p->nama_produk }}
                                             </option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <label class="form-label fw-bold small text-muted">Tipe Invoice</label>
+                                    <label class="form-label fw-bold small text-muted">Tipe Nota</label>
                                     <select class="form-select" name="invoice_type">
                                         <option value="">Semua</option>
-                                        <option value="Sales" {{ request('invoice_type') == 'Sales' ? 'selected' : '' }}>Sales
+                                        <option value="Sales" {{ request('invoice_type') == 'Sales' ? 'selected' : '' }}>
+                                            Sales
                                         </option>
-                                        <option value="Purchase" {{ request('invoice_type') == 'Purchase' ? 'selected' : '' }}>Purchase</option>
+                                        <option value="Purchase"
+                                            {{ request('invoice_type') == 'Purchase' ? 'selected' : '' }}>Purchase</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label fw-bold small text-muted">Status Pembayaran</label>
                                     <select class="form-select" name="payment_status">
                                         <option value="">Semua</option>
-                                        <option value="Paid" {{ request('payment_status') == 'Paid' ? 'selected' : '' }}>Lunas
+                                        <option value="Paid" {{ request('payment_status') == 'Paid' ? 'selected' : '' }}>
+                                            Lunas
                                             (Paid)</option>
-                                        <option value="Unpaid" {{ request('payment_status') == 'Unpaid' ? 'selected' : '' }}>
+                                        <option value="Unpaid"
+                                            {{ request('payment_status') == 'Unpaid' ? 'selected' : '' }}>
                                             Belum Lunas (Unpaid)</option>
-                                        <option value="Partially Paid" {{ request('payment_status') == 'Partially Paid' ? 'selected' : '' }}>Sebagian (Partial)</option>
-                                        <option value="Overdue" {{ request('payment_status') == 'Overdue' ? 'selected' : '' }}>Jatuh Tempo (Overdue)</option>
+                                        <option value="Partially Paid"
+                                            {{ request('payment_status') == 'Partially Paid' ? 'selected' : '' }}>Sebagian
+                                            (Partial)</option>
+                                        <option value="Overdue"
+                                            {{ request('payment_status') == 'Overdue' ? 'selected' : '' }}>Jatuh Tempo
+                                            (Overdue)</option>
                                     </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check form-switch pt-4">
+                                        <input class="form-check-input" type="checkbox" name="show_deleted" id="showDeleted" 
+                                            {{ request('show_deleted') ? 'checked' : '' }} value="1">
+                                        <label class="form-check-label fw-bold small text-muted" for="showDeleted">
+                                            Tampilkan Invoice Terhapus
+                                        </label>
+                                    </div>
                                 </div>
                                 <div class="col-md-2">
                                     <div class="d-grid gap-2">
@@ -147,7 +172,7 @@
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active fw-bold py-3 rounded-top-3" id="payments-tab"
                                     data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab">
-                                    <i class="iconoir-wallet me-2"></i>Rekap Pembayaran
+                                    <i class="iconoir-wallet me-2"></i>Rekap Nota
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
@@ -158,8 +183,9 @@
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link fw-bold py-3 rounded-top-3" id="invoice-products-tab"
-                                    data-bs-toggle="tab" data-bs-target="#invoice-products" type="button" role="tab">
-                                    <i class="iconoir-list me-2"></i>Laporan Invoice Per Produk
+                                    data-bs-toggle="tab" data-bs-target="#invoice-products" type="button"
+                                    role="tab">
+                                    <i class="iconoir-list me-2"></i>Laporan Nota Per Produk
                                 </button>
                             </li>
                         </ul>
@@ -219,330 +245,17 @@
 
                             <!-- Tab 2: Rekap Pembayaran -->
                             <div class="tab-pane fade show active" id="payments" role="tabpanel">
-                                <div class="card border-0 shadow-sm rounded-3">
-                                    <div
-                                        class="card-header bg-white border-bottom py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
-                                        <div>
-                                            <h6 class="mb-0 fw-bold text-dark">Daftar Pembayaran</h6>
-                                            <small class="text-muted">
-                                                Total: <span class="fw-bold text-primary">Rp
-                                                    {{ number_format($totalPaymentAmount, 0, ',', '.') }}</span>
-                                                ({{ $totalUniqueInvoices }} Invoice)
-                                            </small>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="dropdown">
-                                                <button
-                                                    class="btn btn-light border btn-sm shadow-sm fw-bold dropdown-toggle text-dark"
-                                                    type="button" data-bs-toggle="dropdown" aria-expanded="false"
-                                                    data-bs-auto-close="outside">
-                                                    <i class="iconoir-view-columns-3 me-1"></i> Kolom
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-end shadow p-2 colToggleMenu z-100000"
-                                                    data-target="#table-payments"
-                                                    style="min-width: 200px; max-height: 450px; overflow-y: auto;">
-                                                    <!-- Column toggles via JS -->
-                                                </ul>
-                                            </div>
-                                            <div class="btn-group shadow-sm">
-                                                <button class="btn btn-white border btn-sm fw-bold text-dark"
-                                                    onclick="printTable('payments')">
-                                                    <i class="fa fa-print me-1"></i> Print
-                                                </button>
-                                                <button class="btn btn-white border btn-sm fw-bold text-dark"
-                                                    onclick="exportReport('payments')">
-                                                    <i class="fa fa-file-excel me-1 text-success"></i> Export
-                                                </button>
-                                                <button class="btn btn-success border btn-sm fw-bold text-white"
-                                                    onclick="exportReport('payments_with_details')">
-                                                    <i class="fa fa-file-excel me-1"></i> Export Detail
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="table-responsive">
-                                        <table class="table table-hover align-middle mb-0" id="table-payments">
-                                            <thead class="bg-light">
-                                                <tr>
-                                                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase">Tanggal
-                                                    </th>
-                                                    <th class="py-3 text-muted small fw-bold text-uppercase">No. Invoice
-                                                    </th>
-                                                    <th class="py-3 text-muted small fw-bold text-uppercase">Metode</th>
-                                                    <th class="py-3 text-muted small fw-bold text-uppercase">No. Mitra</th>
-                                                    <th class="py-3 text-muted small fw-bold text-uppercase">Nama Mitra</th>
-                                                    <th class="py-3 text-muted small fw-bold text-uppercase">Qty</th>
-                                                    <th class="py-3 text-muted small fw-bold text-uppercase">Harga Total
-                                                    </th>
-                                                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end">
-                                                        Jumlah Terbayar</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @forelse($payments as $payment)
-                                                    <tr>
-                                                        <td class="px-4">
-                                                            {{ \Carbon\Carbon::parse($payment->tgl_pembayaran)->format('d M Y') }}
-                                                        </td>
-                                                        <td class="fw-bold text-primary">{{ $payment->nomor_invoice }}</td>
-                                                        <td>
-                                                            <span
-                                                                class="badge bg-soft-info text-info border border-info border-opacity-25 rounded-pill px-2">
-                                                                {{ $payment->metode_pembayaran }}
-                                                            </span>
-                                                        </td>
-                                                        <td>{{ $payment->nomor_mitra }}</td>
-                                                        <td>{{ $payment->nama_mitra }}</td>
-                                                        <td>{{ (int) $payment->total_qty ?? '-' }}</td>
-                                                        <td>Rp {{ number_format($payment->harga_satuan, 0, ',', '.') }}</td>
-                                                        <td class="px-4 text-end fw-bold">Rp
-                                                            {{ number_format($payment->jumlah_bayar, 0, ',', '.') }}
-                                                        </td>
-                                                    </tr>
-                                                @empty
-                                                    <tr>
-                                                        <td colspan="8" class="text-center py-5">
-                                                            <div class="mb-3"><i
-                                                                    class="iconoir-file-not-found fs-1 text-muted opacity-50"></i>
-                                                            </div>
-                                                            <h6 class="fw-bold text-dark">Tidak ada data pembayaran</h6>
-                                                            <p class="text-muted small mb-0">Sesuaikan filter periode atau
-                                                                pencarian.</p>
-                                                        </td>
-                                                    </tr>
-                                                @endforelse
-                                            </tbody>
-                                            <tfoot class="bg-light fw-bold">
-                                                <tr>
-                                                    <td colspan="7" class="px-4 text-end text-uppercase text-muted small">
-                                                        Total Pembayaran</td>
-                                                    <td class="px-4 text-end text-dark">Rp
-                                                        {{ number_format($totalPaymentAmount, 0, ',', '.') }}
-                                                    </td>
-                                                </tr>
-                                            </tfoot>
-                                        </table>
-                                    </div>
-                                </div>
+                                @include('Report.Invoice._tab_payments')
                             </div>
 
                             <!-- Tab 3: Laporan Produk Terjual -->
                             <div class="tab-pane fade" id="products" role="tabpanel">
-                                <div class="card border-0 shadow-sm rounded-3">
-                                    <div
-                                        class="card-header bg-white border-bottom py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
-                                        <div>
-                                            <h6 class="mb-0 fw-bold text-dark">Daftar Produk Terjual</h6>
-                                            <small class="text-muted">
-                                                Total Qty: <span
-                                                    class="fw-bold text-success">{{ number_format($totalSoldQty, 0, ',', '.') }}</span>
-                                                (Berdasarkan pembayaran periode ini)
-                                            </small>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="dropdown">
-                                                <button
-                                                    class="btn btn-light border btn-sm shadow-sm fw-bold dropdown-toggle text-dark"
-                                                    type="button" data-bs-toggle="dropdown" aria-expanded="false"
-                                                    data-bs-auto-close="outside">
-                                                    <i class="iconoir-view-columns-3 me-1"></i> Kolom
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-end shadow p-2 colToggleMenu"
-                                                    data-target="#table-products"
-                                                    style="min-width: 200px; max-height: 450px; overflow-y: auto;">
-                                                    <!-- Column toggles via JS -->
-                                                </ul>
-                                            </div>
-                                            <div class="btn-group shadow-sm">
-                                                <button class="btn btn-white border btn-sm fw-bold text-dark"
-                                                    onclick="printTable('products')">
-                                                    <i class="fa fa-print me-1"></i> Print
-                                                </button>
-                                                <button class="btn btn-white border btn-sm fw-bold text-dark"
-                                                    onclick="exportReport('sold_products')">
-                                                    <i class="fa fa-file-excel me-1 text-success"></i> Export
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="table-responsive">
-                                        <table class="table table-hover align-middle mb-0" id="table-products">
-                                            <thead class="bg-light">
-                                                <tr>
-                                                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase">Nama
-                                                        Produk</th>
-                                                    <th class="py-3 text-muted small fw-bold text-uppercase">Kode (SKU)</th>
-                                                    <th class="py-3 text-muted small fw-bold text-uppercase">Kategori</th>
-                                                    <th class="py-3 text-muted small fw-bold text-uppercase">Satuan</th>
-                                                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end">
-                                                        Kuantitas Terjual</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @forelse($soldProducts as $product)
-                                                    <tr>
-                                                        <td class="px-4 fw-bold text-dark">{{ $product->nama_produk }}</td>
-                                                        <td class="text-muted font-monospace small">{{ $product->sku_kode }}
-                                                        </td>
-                                                        <td>{{ $product->nama_kategori ?? '-' }}</td>
-                                                        <td>{{ $product->satuan }}</td>
-                                                        <td class="px-4 text-end fw-bold text-success">
-                                                            {{ number_format($product->total_qty, 0, ',', '.') }}
-                                                        </td>
-                                                    </tr>
-                                                @empty
-                                                    <tr>
-                                                        <td colspan="5" class="text-center py-5">
-                                                            <div class="mb-3"><i
-                                                                    class="iconoir-box-iso fs-1 text-muted opacity-50"></i>
-                                                            </div>
-                                                            <h6 class="fw-bold text-dark">Tidak ada produk terjual</h6>
-                                                            <p class="text-muted small mb-0">Belum ada invoice lunas/terbayar
-                                                                pada periode ini.</p>
-                                                        </td>
-                                                    </tr>
-                                                @endforelse
-                                            </tbody>
-                                            <tfoot class="bg-light fw-bold">
-                                                <tr>
-                                                    <td colspan="4" class="px-4 text-end text-uppercase text-muted small">
-                                                        Total Kuantitas</td>
-                                                    <td class="px-4 text-end text-success">
-                                                        {{ number_format($totalSoldQty, 0, ',', '.') }}
-                                                    </td>
-                                                </tr>
-                                            </tfoot>
-                                        </table>
-                                    </div>
-                                </div>
+                                @include('Report.Invoice._tab_products')
                             </div>
 
                             <!-- Tab 4: Laporan Invoice Per Produk -->
                             <div class="tab-pane fade" id="invoice-products" role="tabpanel">
-                                <div class="card border-0 shadow-sm rounded-3">
-                                    <div
-                                        class="card-header bg-white border-bottom py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
-                                        <div>
-                                            <h6 class="mb-0 fw-bold text-dark">Laporan Invoice Per Produk</h6>
-                                            <small class="text-muted me-3">
-                                                Total Nilai: <span class="fw-bold text-primary">Rp
-                                                    {{ number_format($summaryTotalTransaction, 0, ',', '.') }}</span>
-                                            </small>
-                                            <small class="text-muted">
-                                                Invoice Terlibat: <span
-                                                    class="fw-bold text-dark">{{ $summaryTotalInvoices }}</span>
-                                            </small>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="dropdown">
-                                                <button
-                                                    class="btn btn-light border btn-sm shadow-sm fw-bold dropdown-toggle text-dark"
-                                                    type="button" data-bs-toggle="dropdown" aria-expanded="false"
-                                                    data-bs-auto-close="outside">
-                                                    <i class="iconoir-view-columns-3 me-1"></i> Kolom
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-end shadow p-2 colToggleMenu"
-                                                    data-target="#table-invoice-products"
-                                                    style="min-width: 200px; max-height: 450px; overflow-y: auto;">
-                                                    <!-- Column toggles via JS -->
-                                                </ul>
-                                            </div>
-                                            <div class="btn-group shadow-sm">
-                                                <button class="btn btn-white border btn-sm fw-bold text-dark"
-                                                    onclick="printTable('invoice-products')">
-                                                    <i class="fa fa-print me-1"></i> Print
-                                                </button>
-                                                <button class="btn btn-white border btn-sm fw-bold text-dark"
-                                                    onclick="exportReport('invoice_items')">
-                                                    <i class="fa fa-file-excel me-1 text-success"></i> Export
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="table-responsive">
-                                        <table class="table table-hover align-middle mb-0" id="table-invoice-products">
-                                            <thead class="bg-light">
-                                                <tr>
-                                                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase">Status
-                                                    </th>
-                                                    <th class="py-3 text-muted small fw-bold text-uppercase">Tanggal</th>
-                                                    <th class="py-3 text-muted small fw-bold text-uppercase">Produk</th>
-                                                    <th class="py-3 text-muted small fw-bold text-uppercase">Mitra</th>
-                                                    <th class="py-3 text-muted small fw-bold text-uppercase">No. Invoice
-                                                    </th>
-                                                    <th class="text-end py-3 text-muted small fw-bold text-uppercase">Qty
-                                                    </th>
-                                                    <th class="text-end py-3 text-muted small fw-bold text-uppercase">Harga
-                                                    </th>
-                                                    <th class="text-end py-3 text-muted small fw-bold text-uppercase">Disc.
-                                                        Item</th>
-                                                    <th class="text-end py-3 text-muted small fw-bold text-uppercase">Tot.
-                                                        Disc</th>
-                                                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end">
-                                                        Total Akhir</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @forelse($invoiceItems as $item)
-                                                    <tr>
-                                                        <td class="px-4">
-                                                            @php
-                                                                $statusClass = match ($item->status_pembayaran) {
-                                                                    'Paid' => 'success',
-                                                                    'Unpaid' => 'danger',
-                                                                    'Partially Paid' => 'warning',
-                                                                    'Overdue' => 'dark',
-                                                                    default => 'secondary'
-                                                                };
-                                                            @endphp
-                                                            <span
-                                                                class="badge bg-soft-{{ $statusClass }} text-{{ $statusClass }} border border-{{ $statusClass }} border-opacity-25 rounded-pill px-2">
-                                                                {{ $item->status_pembayaran }}
-                                                            </span>
-                                                        </td>
-                                                        <td>{{ \Carbon\Carbon::parse($item->tgl_invoice)->format('d M Y') }}
-                                                        </td>
-                                                        <td class="fw-bold text-dark">{{ $item->nama_produk }}</td>
-                                                        <td>{{ $item->nama_mitra }}</td>
-                                                        <td class="text-primary fw-bold">{{ $item->nomor_invoice }}</td>
-                                                        <td class="text-end">{{ number_format($item->qty, 0, ',', '.') }}</td>
-                                                        <td class="text-end">Rp
-                                                            {{ number_format($item->harga_satuan, 0, ',', '.') }}
-                                                        </td>
-                                                        <td class="text-end text-danger">
-                                                            {{ number_format($item->diskon_nilai, 0, ',', '.') }}
-                                                        </td>
-                                                        <td class="text-end text-danger">Rp
-                                                            {{ number_format($item->total_diskon, 0, ',', '.') }}
-                                                        </td>
-                                                        <td class="px-4 text-end fw-bold">Rp
-                                                            {{ number_format($item->total_akhir, 0, ',', '.') }}
-                                                        </td>
-                                                    </tr>
-                                                @empty
-                                                    <tr>
-                                                        <td colspan="10" class="text-center py-5">
-                                                            <div class="mb-3"><i
-                                                                    class="iconoir-list fs-1 text-muted opacity-50"></i></div>
-                                                            <h6 class="fw-bold text-dark">Tidak ada data item invoice</h6>
-                                                            <p class="text-muted small mb-0">Sesuaikan filter untuk melihat
-                                                                data.</p>
-                                                        </td>
-                                                    </tr>
-                                                @endforelse
-                                            </tbody>
-                                            <tfoot class="bg-light fw-bold">
-                                                <tr>
-                                                    <td colspan="9" class="px-4 text-end text-uppercase text-muted small">
-                                                        Total Transaksi</td>
-                                                    <td class="px-4 text-end text-primary">Rp
-                                                        {{ number_format($summaryTotalTransaction, 0, ',', '.') }}
-                                                    </td>
-                                                </tr>
-                                            </tfoot>
-                                        </table>
-                                    </div>
-                                </div>
+                                @include('Report.Invoice._tab_invoice_items')
                             </div>
 
                         </div>
@@ -568,7 +281,8 @@
                     <iframe id="printFrame" style="width: 100%; height: 75vh; border: none;"></iframe>
                 </div>
                 <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary shadow-sm fw-bold" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-secondary shadow-sm fw-bold"
+                        data-bs-dismiss="modal">Batal</button>
                     <button type="button" class="btn btn-primary shadow-sm fw-bold" onclick="executePrint()">
                         <i class="fa fa-print me-1"></i> Cetak Sekarang
                     </button>
@@ -665,19 +379,21 @@
                 iframe.contentWindow.print();
             }
 
-            function loadReportData() {
+            function loadReportData(url = null) {
                 const form = document.getElementById('filterForm');
                 const formData = new FormData(form);
                 const params = new URLSearchParams(formData);
 
-                // Show loading state (optional: add spinners to tab contents)
+                let fetchUrl = url || ("{{ route('report.invoice') }}?" + params.toString());
+
+                // Show loading state
                 document.body.style.cursor = 'wait';
 
-                fetch("{{ route('report.invoice') }}?" + params.toString(), {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
+                fetch(fetchUrl, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
                     .then(response => response.json())
                     .then(data => {
                         // Update Charts
@@ -716,7 +432,8 @@
                         // Re-initialize column visibility toggles after AJAX load
                         initColumnToggle('.colToggleMenu[data-target="#table-payments"]', '#table-payments', 'payments');
                         initColumnToggle('.colToggleMenu[data-target="#table-products"]', '#table-products', 'products');
-                        initColumnToggle('.colToggleMenu[data-target="#table-invoice-products"]', '#table-invoice-products', 'invoice-products');
+                        initColumnToggle('.colToggleMenu[data-target="#table-invoice-products"]', '#table-invoice-products',
+                            'invoice-products');
 
                         document.body.style.cursor = 'default';
                         if (window.PageLoader) window.PageLoader.hide();
@@ -755,7 +472,7 @@
 
                     // Add event listener
                     const cb = li.querySelector('.toggle-col-cb');
-                    cb.addEventListener('change', function () {
+                    cb.addEventListener('change', function() {
                         const colIdx = parseInt(this.value);
                         const isChecked = this.checked;
 
@@ -771,26 +488,29 @@
                                 hiddenColumnsData[tabName].push(colIdx);
                             }
                         } else {
-                            hiddenColumnsData[tabName] = hiddenColumnsData[tabName].filter(idx => idx !== colIdx);
+                            hiddenColumnsData[tabName] = hiddenColumnsData[tabName].filter(idx => idx !==
+                                colIdx);
                         }
                     });
                 });
             }
 
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 // 1. Income vs Expenditure Chart
                 var incomeExpenseOptions = {
                     series: [{
                         name: 'Income',
                         data: @json($chartIncome)
-                                    }, {
+                    }, {
                         name: 'Expenditure',
                         data: @json($chartExpense)
-                                    }],
+                    }],
                     chart: {
                         type: 'line',
                         height: 350,
-                        toolbar: { show: false },
+                        toolbar: {
+                            show: false
+                        },
                         fontFamily: 'Inter, sans-serif'
                     },
                     colors: ['#0d6efd', '#dc3545'], // Blue for Income, Red for Expense
@@ -798,83 +518,125 @@
                         curve: 'smooth',
                         width: 3
                     },
-                    dataLabels: { enabled: false },
+                    dataLabels: {
+                        enabled: false
+                    },
                     xaxis: {
                         categories: @json($chartLabels),
-                            axisBorder: { show: false },
-                    axisTicks: { show: false }
-            },
-                yaxis: {
-                labels: {
-                    formatter: function (value) {
-                        return "Rp " + new Intl.NumberFormat('id-ID').format(value);
+                        axisBorder: {
+                            show: false
+                        },
+                        axisTicks: {
+                            show: false
+                        }
+                    },
+                    yaxis: {
+                        labels: {
+                            formatter: function(value) {
+                                return "Rp " + new Intl.NumberFormat('id-ID').format(value);
+                            }
+                        }
+                    },
+                    grid: {
+                        borderColor: '#f1f1f1',
+                    },
+                    tooltip: {
+                        y: {
+                            formatter: function(value) {
+                                return "Rp " + new Intl.NumberFormat('id-ID').format(value);
+                            }
+                        }
                     }
+                };
+                var incomeEl = document.querySelector("#incomeExpenseChart");
+                if (incomeEl && window.ApexCharts) {
+                    incomeExpenseChart = new ApexCharts(incomeEl, incomeExpenseOptions);
+                    incomeExpenseChart.render();
                 }
-            },
-                grid: {
-                borderColor: '#f1f1f1',
-            },
-                tooltip: {
-                y: {
-                    formatter: function (value) {
-                        return "Rp " + new Intl.NumberFormat('id-ID').format(value);
-                    }
-                }
-            }
-                                };
-            var incomeEl = document.querySelector("#incomeExpenseChart");
-            if (incomeEl && window.ApexCharts) {
-                incomeExpenseChart = new ApexCharts(incomeEl, incomeExpenseOptions);
-                incomeExpenseChart.render();
-            }
 
-            // 2. Receivables Composition Pie Chart
-            var pieOptions = {
-                series: @json($pieSeries),
+                // 2. Receivables Composition Pie Chart
+                var pieOptions = {
+                    series: @json($pieSeries),
                     labels: @json($pieLabels),
-                        chart: {
-                            type: 'pie',
-                            height: 350,
-                            fontFamily: 'Inter, sans-serif'
-                                    },
-                colors: ['#ffc107', '#198754'], // Warning (Outstanding), Success (Received)
-                dataLabels: {
-                    enabled: true,
-                    formatter: function (val, opts) {
-                        return opts.w.globals.series[opts.seriesIndex] > 0 ? val.toFixed(1) + "%" : "";
-                                        }
-                                    },
-            legend: {
-                position: 'bottom'
-            },
-            tooltip: {
-                y: {
-                    formatter: function (value) {
-                        return "Rp " + new Intl.NumberFormat('id-ID').format(value);
+                    chart: {
+                        type: 'pie',
+                        height: 350,
+                        fontFamily: 'Inter, sans-serif'
+                    },
+                    colors: ['#ffc107', '#198754'], // Warning (Outstanding), Success (Received)
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function(val, opts) {
+                            return opts.w.globals.series[opts.seriesIndex] > 0 ? val.toFixed(1) + "%" : "";
+                        }
+                    },
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        y: {
+                            formatter: function(value) {
+                                return "Rp " + new Intl.NumberFormat('id-ID').format(value);
+                            }
+                        }
                     }
+                };
+                var pieEl = document.querySelector("#receivablesPieChart");
+                if (pieEl && window.ApexCharts) {
+                    pieChart = new ApexCharts(pieEl, pieOptions);
+                    pieChart.render();
                 }
-            }
-                                };
-            var pieEl = document.querySelector("#receivablesPieChart");
-            if (pieEl && window.ApexCharts) {
-                pieChart = new ApexCharts(pieEl, pieOptions);
-                pieChart.render();
-            }
 
-            // Initialize Column Visibility
-            initColumnToggle('.colToggleMenu[data-target="#table-payments"]', '#table-payments', 'payments');
-            initColumnToggle('.colToggleMenu[data-target="#table-products"]', '#table-products', 'products');
-            initColumnToggle('.colToggleMenu[data-target="#table-invoice-products"]', '#table-invoice-products', 'invoice-products');
+                // Initialize Column Visibility
+                initColumnToggle('.colToggleMenu[data-target="#table-payments"]', '#table-payments', 'payments');
+                initColumnToggle('.colToggleMenu[data-target="#table-products"]', '#table-products', 'products');
+                initColumnToggle('.colToggleMenu[data-target="#table-invoice-products"]', '#table-invoice-products',
+                    'invoice-products');
 
-            // Override Form Submit
-            const filterForm = document.getElementById('filterForm');
-            if (filterForm) {
-                filterForm.addEventListener('submit', function (e) {
-                    e.preventDefault();
-                    loadReportData();
+                // Override Form Submit
+                const filterForm = document.getElementById('filterForm');
+                if (filterForm) {
+                    filterForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        loadReportData();
+                    });
+                }
+
+                // Handle Pagination Link Clicks
+                document.addEventListener('click', function(e) {
+                    const paginationLink = e.target.closest('.pagination a');
+                    if (paginationLink) {
+                        e.preventDefault();
+                        const url = paginationLink.getAttribute('href');
+                        if (url) {
+                            loadReportData(url);
+                            // Scroll to tabs top for better UX
+                            const tabs = document.getElementById('reportTabs');
+                            if (tabs) tabs.scrollIntoView({ behavior: 'smooth' });
+                        }
+                    }
+
+                    // Handle Sortable Header Clicks
+                    const sortableHeader = e.target.closest('.sortable');
+                    if (sortableHeader) {
+                        const sortBy = sortableHeader.getAttribute('data-sort');
+                        const sortByInput = document.querySelector('input[name="sort_by"]');
+                        const sortDirInput = document.querySelector('input[name="sort_dir"]');
+                        
+                        if (sortByInput && sortDirInput) {
+                            if (sortByInput.value === sortBy) {
+                                // Toggle direction if same column
+                                sortDirInput.value = sortDirInput.value === 'asc' ? 'desc' : 'asc';
+                            } else {
+                                // Set new column and default to asc
+                                sortByInput.value = sortBy;
+                                sortDirInput.value = 'asc';
+                            }
+                            loadReportData();
+                        }
+                    }
                 });
-            }
-                            });
+            });
         </script>
     @endpush
 @endsection
@@ -882,7 +644,7 @@
 @push('js')
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const productSelect = document.querySelector('select[name="product_id[]"]');
             if (productSelect) {
                 new TomSelect(productSelect, {
@@ -890,6 +652,16 @@
                     create: false,
                     persist: false,
                     placeholder: 'Pilih Produk...',
+                });
+            }
+
+            const mitraSelect = document.querySelector('select[name="mitra_id[]"]');
+            if (mitraSelect) {
+                new TomSelect(mitraSelect, {
+                    plugins: ['remove_button'],
+                    create: false,
+                    persist: false,
+                    placeholder: 'Pilih Mitra...',
                 });
             }
         });

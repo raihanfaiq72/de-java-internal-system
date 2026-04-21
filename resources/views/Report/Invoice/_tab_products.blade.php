@@ -28,7 +28,7 @@
                     <i class="iconoir-view-columns-3 me-1"></i> Kolom
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow p-2 colToggleMenu" data-target="#table-products"
-                    style="min-width: 200px; max-height: 450px; overflow-y: auto;">
+                    style="min-width: 200px; max-height: 450px; overflow-y: auto; z-index: 100000;">
                     <!-- Column toggles via JS -->
                 </ul>
             </div>
@@ -37,7 +37,7 @@
                     <i class="fa fa-print me-1"></i> Print
                 </button>
                 <button class="btn btn-white border btn-sm fw-bold text-dark" onclick="exportReport('sold_products')">
-                    <i class="fa fa-file-excel me-1 text-success"></i> Export
+                    <i class="fa fa-file-excel me-1 text-success"></i> Export Excel
                 </button>
             </div>
         </div>
@@ -45,18 +45,68 @@
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0" id="table-products">
             <thead class="bg-light">
+                @php
+                    $sortBy = request('sort_by', 'products.nama_produk');
+                    $sortDir = request('sort_dir', 'asc');
+                @endphp
                 <tr>
-                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase">Nama Produk</th>
-                    <th class="py-3 text-muted small fw-bold text-uppercase">Kode (SKU)</th>
-                    <th class="py-3 text-muted small fw-bold text-uppercase">Kategori</th>
-                    <th class="py-3 text-muted small fw-bold text-uppercase">Satuan</th>
+                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable" data-sort="products.nama_produk">
+                        Nama Produk
+                        @if($sortBy === 'products.nama_produk')
+                            <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                        @else
+                            <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
+                        @endif
+                    </th>
+                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable" data-sort="products.sku_kode">
+                        Kode (SKU)
+                        @if($sortBy === 'products.sku_kode')
+                            <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                        @else
+                            <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
+                        @endif
+                    </th>
+                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable" data-sort="product_categories.nama_kategori">
+                        Kategori
+                        @if($sortBy === 'product_categories.nama_kategori')
+                            <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                        @else
+                            <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
+                        @endif
+                    </th>
+                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable" data-sort="products.satuan">
+                        Satuan
+                        @if($sortBy === 'products.satuan')
+                            <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                        @else
+                            <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
+                        @endif
+                    </th>
                     @if($metric === 'qty')
-                        <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end">Kuantitas</th>
+                        <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end">
+                            Kuantitas
+                        </th>
                     @elseif($metric === 'value')
-                        <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end">Value (Rp)</th>
+                        <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end cursor-pointer sortable" data-sort="total_value">
+                            Value (Rp)
+                            @if($sortBy === 'total_value')
+                                <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                            @else
+                                <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
+                            @endif
+                        </th>
                     @else
-                        <th class="py-3 text-muted small fw-bold text-uppercase text-end">Kuantitas</th>
-                        <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end">Value (Rp)</th>
+                        <th class="py-3 text-muted small fw-bold text-uppercase text-end">
+                            Kuantitas
+                        </th>
+                        <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end cursor-pointer sortable" data-sort="total_value">
+                            Value (Rp)
+                            @if($sortBy === 'total_value')
+                                <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                            @else
+                                <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
+                            @endif
+                        </th>
                     @endif
                 </tr>
             </thead>
@@ -107,5 +157,8 @@
                 </tr>
             </tfoot>
         </table>
+    </div>
+    <div class="card-footer bg-white border-top py-3 px-4">
+        {{ $soldProducts->links('pagination::bootstrap-5') }}
     </div>
 </div>

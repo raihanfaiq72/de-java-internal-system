@@ -167,7 +167,7 @@ return [
         'id' => 'sidebarLaporan',
         'submenu' => [
             [
-                'title' => 'Laporan Invoice',
+                'title' => 'Laporan Nota',
                 'route' => 'report.invoice',
                 'icon' => 'iconoir-graph-up',
             ],
