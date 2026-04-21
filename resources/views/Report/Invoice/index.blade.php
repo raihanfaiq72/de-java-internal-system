@@ -47,102 +47,113 @@
                         <form action="{{ route('report.invoice') }}" method="GET" id="filterForm">
                             <input type="hidden" name="sort_by" value="{{ request('sort_by', 'invoices.tgl_invoice') }}">
                             <input type="hidden" name="sort_dir" value="{{ request('sort_dir', 'desc') }}">
-                            <div class="row align-items-end g-3">
-                                <div class="col-md-3">
-                                    <h4 class="fw-bold text-dark mb-1">Laporan Nota</h4>
-                                    <p class="text-muted small mb-0">Rekapitulasi penjualan, pembayaran, dan produk.</p>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold small text-muted">Periode Pembayaran</label>
-                                    <div class="input-group">
-                                        <input type="date" class="form-control" name="start_date"
-                                            value="{{ $startDate }}">
-                                        <span class="input-group-text bg-white border-start-0 border-end-0">s/d</span>
-                                        <input type="date" class="form-control" name="end_date"
-                                            value="{{ $endDate }}">
+                            <div class="row g-3">
+                                <!-- Left Column: Primary Filters -->
+                                <div class="col-md-10">
+                                    <!-- Row 1: Periode, Mitra, Pencarian -->
+                                    <div class="row g-3 align-items-end">
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold small text-muted">Periode Pembayaran</label>
+                                            <div class="input-group input-group-sm">
+                                                <input type="date" class="form-control" name="start_date"
+                                                    value="{{ $startDate }}">
+                                                <span class="input-group-text bg-white border-start-0 border-end-0">s/d</span>
+                                                <input type="date" class="form-control" name="end_date"
+                                                    value="{{ $endDate }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold small text-muted">Mitra</label>
+                                            <select class="form-select form-select-sm" name="mitra_id[]" multiple>
+                                                @php
+                                                    $selectedMitras = (array) request('mitra_id', []);
+                                                @endphp
+                                                @foreach ($mitras as $m)
+                                                    <option value="{{ $m->id }}"
+                                                        {{ in_array($m->id, $selectedMitras) ? 'selected' : '' }}>
+                                                        {{ $m->nama }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold small text-muted">Pencarian</label>
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-white border-end-0">
+                                                    <i class="fa fa-search text-muted small"></i>
+                                                </span>
+                                                <input type="text" class="form-control border-start-0" name="search"
+                                                    placeholder="No. Nota/Mitra..." value="{{ request('search') }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Row 2: Produk, Tipe Nota, Status Pembayaran -->
+                                    <div class="row g-3 align-items-end mt-1">
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold small text-muted">Produk</label>
+                                            @php
+                                                $selectedProducts = (array) request('product_id', []);
+                                            @endphp
+                                            <select class="form-select form-select-sm" name="product_id[]" multiple>
+                                                @foreach ($products as $p)
+                                                    <option value="{{ $p->id }}"
+                                                        {{ in_array($p->id, $selectedProducts) ? 'selected' : '' }}>
+                                                        {{ $p->nama_produk }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold small text-muted">Tipe Nota</label>
+                                            <select class="form-select form-select-sm" name="invoice_type">
+                                                <option value="">Semua</option>
+                                                <option value="Sales" {{ request('invoice_type') == 'Sales' ? 'selected' : '' }}>
+                                                    Sales
+                                                </option>
+                                                <option value="Purchase"
+                                                    {{ request('invoice_type') == 'Purchase' ? 'selected' : '' }}>Purchase</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold small text-muted">Status Pembayaran</label>
+                                            <select class="form-select form-select-sm" name="payment_status">
+                                                <option value="">Semua</option>
+                                                <option value="Paid" {{ request('payment_status') == 'Paid' ? 'selected' : '' }}>
+                                                    Lunas (Paid)
+                                                </option>
+                                                <option value="Unpaid"
+                                                    {{ request('payment_status') == 'Unpaid' ? 'selected' : '' }}>
+                                                    Belum Lunas (Unpaid)</option>
+                                                <option value="Partially Paid"
+                                                    {{ request('payment_status') == 'Partially Paid' ? 'selected' : '' }}>Sebagian
+                                                    (Partial)</option>
+                                                <option value="Overdue"
+                                                    {{ request('payment_status') == 'Overdue' ? 'selected' : '' }}>Jatuh Tempo
+                                                    (Overdue)</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold small text-muted">Mitra</label>
-                                    <select class="form-select" name="mitra_id[]" multiple>
-                                        @php
-                                            $selectedMitras = (array) request('mitra_id', []);
-                                        @endphp
-                                        @foreach ($mitras as $m)
-                                            <option value="{{ $m->id }}"
-                                                {{ in_array($m->id, $selectedMitras) ? 'selected' : '' }}>
-                                                {{ $m->nama }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold small text-muted">Pencarian</label>
-                                    <input type="text" class="form-control" name="search"
-                                        placeholder="No. Nota/Mitra..." value="{{ request('search') }}">
-                                </div>
-                            </div>
-                            <!-- Extended Filters -->
-                            <div class="row align-items-end g-3 mt-2">
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold small text-muted">Produk</label>
-                                    @php
-                                        $selectedProducts = (array) request('product_id', []);
-                                    @endphp
-                                    <select class="form-select" name="product_id[]" multiple>
-                                        @foreach ($products as $p)
-                                            <option value="{{ $p->id }}"
-                                                {{ in_array($p->id, $selectedProducts) ? 'selected' : '' }}>
-                                                {{ $p->nama_produk }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold small text-muted">Tipe Nota</label>
-                                    <select class="form-select" name="invoice_type">
-                                        <option value="">Semua</option>
-                                        <option value="Sales" {{ request('invoice_type') == 'Sales' ? 'selected' : '' }}>
-                                            Sales
-                                        </option>
-                                        <option value="Purchase"
-                                            {{ request('invoice_type') == 'Purchase' ? 'selected' : '' }}>Purchase</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold small text-muted">Status Pembayaran</label>
-                                    <select class="form-select" name="payment_status">
-                                        <option value="">Semua</option>
-                                        <option value="Paid" {{ request('payment_status') == 'Paid' ? 'selected' : '' }}>
-                                            Lunas
-                                            (Paid)</option>
-                                        <option value="Unpaid"
-                                            {{ request('payment_status') == 'Unpaid' ? 'selected' : '' }}>
-                                            Belum Lunas (Unpaid)</option>
-                                        <option value="Partially Paid"
-                                            {{ request('payment_status') == 'Partially Paid' ? 'selected' : '' }}>Sebagian
-                                            (Partial)</option>
-                                        <option value="Overdue"
-                                            {{ request('payment_status') == 'Overdue' ? 'selected' : '' }}>Jatuh Tempo
-                                            (Overdue)</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-check form-switch pt-4">
-                                        <input class="form-check-input" type="checkbox" name="show_deleted" id="showDeleted" 
-                                            {{ request('show_deleted') ? 'checked' : '' }} value="1">
-                                        <label class="form-check-label fw-bold small text-muted" for="showDeleted">
-                                            Tampilkan Invoice Terhapus
-                                        </label>
+
+                                <!-- Right Column: Options & Actions -->
+                                <div class="col-md-2 border-start ps-3 d-flex flex-column">
+                                    <div class="mb-auto">
+                                        <label class="form-label fw-bold small text-muted mb-2">Opsi Lanjutan</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" name="show_deleted" id="showDeleted"
+                                                {{ request('show_deleted') ? 'checked' : '' }} value="1">
+                                            <label class="form-check-label fw-bold small text-muted" for="showDeleted" style="font-size: 11px;">
+                                                Invoice Terhapus
+                                            </label>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="d-grid gap-2">
-                                        <button type="submit" class="btn btn-primary fw-bold shadow-sm">
+                                    <div class="d-grid mt-3">
+                                        <button type="submit" class="btn btn-primary btn-sm fw-bold shadow-sm">
                                             <i class="fa fa-filter me-1"></i> Terapkan
                                         </button>
                                     </div>
                                 </div>
+                            </div>
                                 {{-- <div class="col-md-2">
                                     <label class="form-label fw-bold small text-muted">Tampilkan</label>
                                     <select class="form-select" name="product_metric">
@@ -176,8 +187,8 @@
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link fw-bold py-3 rounded-top-3" id="products-tab" data-bs-toggle="tab"
-                                    data-bs-target="#products" type="button" role="tab">
+                                <button class="nav-link fw-bold py-3 rounded-top-3" id="products-tab"
+                                    data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab">
                                     <i class="iconoir-box-iso me-2"></i>Laporan Produk Terjual
                                 </button>
                             </li>
@@ -612,7 +623,9 @@
                             loadReportData(url);
                             // Scroll to tabs top for better UX
                             const tabs = document.getElementById('reportTabs');
-                            if (tabs) tabs.scrollIntoView({ behavior: 'smooth' });
+                            if (tabs) tabs.scrollIntoView({
+                                behavior: 'smooth'
+                            });
                         }
                     }
 
@@ -622,7 +635,7 @@
                         const sortBy = sortableHeader.getAttribute('data-sort');
                         const sortByInput = document.querySelector('input[name="sort_by"]');
                         const sortDirInput = document.querySelector('input[name="sort_dir"]');
-                        
+
                         if (sortByInput && sortDirInput) {
                             if (sortByInput.value === sortBy) {
                                 // Toggle direction if same column

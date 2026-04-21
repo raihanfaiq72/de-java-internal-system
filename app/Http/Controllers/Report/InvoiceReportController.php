@@ -395,7 +395,7 @@ class InvoiceReportController extends Controller
                 'products.satuan',
                 'product_categories.nama_kategori',
                 DB::raw('SUM(invoice_items.qty) as total_qty'),
-                DB::raw('SUM((invoice_items.total_harga_item - (invoice_items.diskon_nilai * invoice_items.qty)) + COALESCE(tax_sum.total_tax, 0)) as total_value'),
+                DB::raw('SUM(invoice_items.total_harga_item + COALESCE(tax_sum.total_tax, 0)) as total_value'),
                 'invoices.total_akhir' // Needed for sisa_piutang sort
             )
             ->groupBy('products.id', 'products.nama_produk', 'products.sku_kode', 'products.satuan', 'product_categories.nama_kategori', 'invoices.total_akhir');
@@ -476,7 +476,7 @@ class InvoiceReportController extends Controller
         foreach ($allItems as $item) {
             $tax = $allTaxSums[$item->item_id] ?? 0;
             $item_total_diskon = ($item->diskon_nilai * $item->qty);
-            $item_total_akhir = ($item->total_harga_item - $item_total_diskon) + $tax;
+            $item_total_akhir = $item->total_harga_item + $tax;
             $summaryTotalTransaction += $item_total_akhir;
         }
 
@@ -500,7 +500,7 @@ class InvoiceReportController extends Controller
         foreach ($invoiceItems as $item) {
             $tax = $pageTaxSums[$item->item_id] ?? 0;
             $item->total_diskon = ($item->diskon_nilai * $item->qty);
-            $item->total_akhir = ($item->total_harga_item - $item->total_diskon) + $tax;
+            $item->total_akhir = $item->total_harga_item + $tax;
         }
 
         return compact('invoiceItems', 'summaryTotalTransaction', 'summaryTotalInvoices');
