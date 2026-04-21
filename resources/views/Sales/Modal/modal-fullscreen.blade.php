@@ -1,3 +1,19 @@
+<style>
+    /* Overlay Hitam untuk Modal Berlapis */
+    .modal-backdrop-custom {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.6);
+        z-index: 1065;
+        display: none;
+    }
+    #modalMitraHistory, #stockModal, #mitraModal {
+        z-index: 1070 !important;
+    }
+</style>
 <div class="modal fade" id="invoiceModal" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen">
         <div class="modal-content border-0" style="background-color: #f8fafc;">
@@ -53,7 +69,13 @@
                                             <div id="mitra_detail_display" class="d-none bg-light p-3 rounded border">
                                                 <div class="d-flex align-items-center mb-2">
                                                     <div class="fw-bold text-dark" id="disp_mitra_nama">-</div>
-                                                    <span class="badge bg-primary ms-auto" id="disp_mitra_tipe">-</span>
+                                                    <div class="ms-auto d-flex align-items-center gap-2">
+                                                        <button type="button" class="btn btn-xs btn-outline-primary fw-bold py-1 px-2" 
+                                                            style="font-size: 10px;" onclick="showMitraHistoryFromModal()">
+                                                            <i class="fa fa-history me-1"></i> Riwayat
+                                                        </button>
+                                                        <span class="badge bg-primary" id="disp_mitra_tipe">-</span>
+                                                    </div>
                                                 </div>
                                                 <div class="small text-muted mb-1"><i
                                                         class="fa fa-map-marker-alt me-2 text-secondary"></i><span
@@ -291,10 +313,60 @@
     </div>
 </div>
 
+<!-- Modal Riwayat Invoice Mitra -->
+<div class="modal fade" id="modalMitraHistory" tabindex="-1" aria-hidden="true" style="z-index: 1070;">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold">
+                    <i class="fa fa-history text-primary me-2"></i> Riwayat Nota: <span id="history-mitra-name">-</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" style="min-height: 500px;">
+                <!-- Search Bar -->
+                <div class="mb-3">
+                    <div class="input-group input-group-sm shadow-sm border rounded">
+                        <span class="input-group-text bg-white border-0"><i class="fa fa-search text-muted"></i></span>
+                        <input type="text" id="mitra-history-search" class="form-control border-0 ps-0 shadow-none" 
+                            placeholder="Cari No. Nota / Tanggal (YYYY-MM-DD)..." onkeyup="debounceMitraHistorySearch()">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="bg-light small fw-bold text-muted text-uppercase">
+                            <tr>
+                                <th class="py-3 ps-3 sortable-history" onclick="sortMitraHistory('nomor_invoice')" style="cursor:pointer;">
+                                    No. Nota <i class="fa fa-sort ms-1 opacity-50"></i>
+                                </th>
+                                <th class="py-3 sortable-history" onclick="sortMitraHistory('tgl_invoice')" style="cursor:pointer;">
+                                    Tgl Nota <i class="fa fa-sort ms-1 opacity-50"></i>
+                                </th>
+                                <th class="py-3">Umur Nota</th>
+                                <th class="py-3 text-end pe-3 sortable-history" onclick="sortMitraHistory('total_akhir')" style="cursor:pointer;">
+                                    Total Tagihan <i class="fa fa-sort ms-1 opacity-50"></i>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="mitra-history-body">
+                            <!-- populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="mitra-history-pagination" class="mt-3 d-flex justify-content-center">
+                    <!-- pagination controls -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <template id="productRowTemplate">
     <tr class="border-bottom border-light product-row">
         <td class="ps-4 py-3">
             <input type="hidden" class="prod-id">
+            <input type="hidden" class="prod-max-stok" value="0">
             <div class="mb-1">
                 <select class="prod-select-item"></select>
             </div>
@@ -468,6 +540,205 @@
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+
+<script>
+    let historySortBy = 'tgl_invoice';
+    let historySortDir = 'desc';
+    let historySearch = '';
+    let historyDebounceTimer = null;
+
+    function debounceMitraHistorySearch() {
+        clearTimeout(historyDebounceTimer);
+        historyDebounceTimer = setTimeout(() => {
+            historySearch = document.getElementById('mitra-history-search').value;
+            const mitraId = document.getElementById('modal_mitra_id').value;
+            fetchMitraHistory(mitraId, 1);
+        }, 500);
+    }
+
+    function sortMitraHistory(column) {
+        if (historySortBy === column) {
+            historySortDir = historySortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            historySortBy = column;
+            historySortDir = 'asc';
+        }
+        
+        // Update icons
+        updateHistorySortIcons();
+        
+        const mitraId = document.getElementById('modal_mitra_id').value;
+        fetchMitraHistory(mitraId, 1);
+    }
+
+    function updateHistorySortIcons() {
+        document.querySelectorAll('.sortable-history i').forEach(i => {
+            i.className = 'fa fa-sort ms-1 opacity-50';
+        });
+        
+        const headers = document.querySelectorAll('.sortable-history');
+        headers.forEach(th => {
+            if (th.getAttribute('onclick').includes(`'${historySortBy}'`)) {
+                const icon = th.querySelector('i');
+                icon.className = `fa fa-sort-${historySortDir === 'asc' ? 'up' : 'down'} ms-1 text-primary`;
+            }
+        });
+    }
+
+    function showMitraHistoryFromModal(page = 1) {
+        const mitraId = document.getElementById('modal_mitra_id').value;
+        if (!mitraId) return;
+
+        // Reset state on open
+        historySortBy = 'tgl_invoice';
+        historySortDir = 'desc';
+        historySearch = '';
+        const searchInput = document.getElementById('mitra-history-search');
+        if (searchInput) searchInput.value = '';
+        updateHistorySortIcons();
+
+        const mitraName = document.getElementById('disp_mitra_nama').textContent;
+        document.getElementById('history-mitra-name').textContent = mitraName;
+
+        const modalEl = document.getElementById('modalMitraHistory');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        
+        // Show custom backdrop
+        showCustomBackdrop();
+        
+        modal.show();
+
+        fetchMitraHistory(mitraId, page);
+        
+        // Hide custom backdrop when modal hidden
+        modalEl.addEventListener('hidden.bs.modal', function() {
+            hideCustomBackdrop();
+        }, { once: true });
+    }
+
+    function showCustomBackdrop() {
+        let backdrop = document.querySelector('.modal-backdrop-custom');
+        if (!backdrop) {
+            backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop-custom';
+            document.body.appendChild(backdrop);
+        }
+        backdrop.style.display = 'block';
+    }
+
+    function hideCustomBackdrop() {
+        const backdrop = document.querySelector('.modal-backdrop-custom');
+        if (backdrop) {
+            backdrop.style.display = 'none';
+        }
+    }
+
+    async function fetchMitraHistory(mitraId, page = 1) {
+        const body = document.getElementById('mitra-history-body');
+        body.innerHTML = '<tr><td colspan="4" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div></td></tr>';
+
+        try {
+            const api_url = window.financeApp ? window.financeApp.API_URL : '/api/invoice-api';
+            const params = new URLSearchParams({
+                mitra_id: mitraId,
+                tipe_invoice: 'Sales',
+                per_page: 5,
+                page: page,
+                sort_by: historySortBy,
+                sort_dir: historySortDir,
+                search: historySearch
+            });
+            const response = await fetch(`${api_url}?${params.toString()}`);
+            const result = await response.json();
+
+            if (result.success) {
+                renderMitraHistory(result.data, mitraId);
+            }
+        } catch (e) {
+            console.error(e);
+            body.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Gagal memuat data</td></tr>';
+        }
+    }
+
+    function renderMitraHistory(data, mitraId) {
+        const body = document.getElementById('mitra-history-body');
+        const pagination = document.getElementById('mitra-history-pagination');
+
+        body.innerHTML = '';
+
+        const items = data.data || [];
+        if (items.length === 0) {
+            body.innerHTML = '<tr><td colspan="4" class="text-center py-4">Belum ada riwayat nota</td></tr>';
+            pagination.innerHTML = '';
+            return;
+        }
+
+        items.forEach(inv => {
+            let ageDisplay = '';
+            if (inv.status_pembayaran === 'Paid') {
+                ageDisplay = '<span class="badge bg-soft-success text-success" style="background-color: rgba(25, 135, 84, 0.1); color: #198754 !important;">Lunas</span>';
+            } else {
+                const age = calculateAge(inv.tgl_invoice);
+                ageDisplay = `<span class="badge bg-soft-secondary text-secondary" style="background-color: rgba(108, 117, 125, 0.1); color: #6c757d !important;">${age} Hari</span>`;
+            }
+            
+            const total = window.financeApp ? window.financeApp.formatIDR(inv.total_akhir) : inv.total_akhir;
+            const date = window.financeApp ? window.financeApp.formatDate(inv.tgl_invoice) : inv.tgl_invoice;
+
+            body.innerHTML += `
+                <tr>
+                    <td class="ps-3 fw-bold">
+                        <a href="/sales/${inv.id}" target="_blank" class="text-primary text-decoration-none">${inv.nomor_invoice}</a>
+                    </td>
+                    <td>${date}</td>
+                    <td>${ageDisplay}</td>
+                    <td class="text-end pe-3 fw-bold">${total}</td>
+                </tr>
+            `;
+        });
+
+        renderPaginationControls(data, 'mitra-history-pagination', fetchMitraHistory, mitraId);
+    }
+
+    function calculateAge(dateStr) {
+        if (!dateStr) return 0;
+        const start = new Date(dateStr);
+        start.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const diffTime = Math.abs(today - start);
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
+
+    function renderPaginationControls(data, containerId, fetchFn, arg) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+
+        if (data.last_page <= 1) return;
+
+        let html = '<ul class="pagination pagination-sm mb-0">';
+        html += `<li class="page-item ${data.current_page === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="javascript:void(0)" onclick="${fetchFn.name}(${arg}, ${data.current_page - 1})">Prev</a>
+        </li>`;
+
+        for (let i = 1; i <= data.last_page; i++) {
+            if (i === 1 || i === data.last_page || (i >= data.current_page - 1 && i <= data.current_page + 1)) {
+                html += `<li class="page-item ${data.current_page === i ? 'active' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="${fetchFn.name}(${arg}, ${i})">${i}</a>
+                </li>`;
+            } else if (i === data.current_page - 2 || i === data.current_page + 2) {
+                html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+            }
+        }
+
+        html += `<li class="page-item ${data.current_page === data.last_page ? 'disabled' : ''}">
+            <a class="page-link" href="javascript:void(0)" onclick="${fetchFn.name}(${arg}, ${data.current_page + 1})">Next</a>
+        </li>`;
+
+        html += '</ul>';
+        container.innerHTML = html;
+    }
+</script>
 
 <script>
     let fpInvoice = null,
@@ -958,6 +1229,7 @@
         const qtyInput = tr.querySelector('.prod-qty');
         const discInput = tr.querySelector('.prod-disc');
         const idInput = tr.querySelector('.prod-id');
+        const maxStokInput = tr.querySelector('.prod-max-stok');
         const unitLabel = tr.querySelector('.prod-unit-label');
         const descInput = tr.querySelector('.prod-desc');
 
@@ -966,6 +1238,19 @@
                 this.value = formatRupiah(this.value);
                 calculateInvoiceTotal();
             });
+        });
+
+        qtyInput.addEventListener('input', function() {
+            const maxVal = parseFloat(maxStokInput.value) || 0;
+            let currentVal = parseFloat(this.value) || 0;
+
+            if (currentVal > maxVal) {
+                alert(`Stok tidak mencukupi! Maksimum stok tersedia adalah ${maxVal}.`);
+                this.value = maxVal;
+                calculateInvoiceTotal();
+            } else {
+                calculateInvoiceTotal();
+            }
         });
 
         const ts = new TomSelect(selectEl, {
@@ -1006,12 +1291,22 @@
                     const product = masterProduk.find(p => String(p.id) === String(val));
 
                     idInput.value = selected.id;
+                    maxStokInput.value = selected.qty;
 
                     const price = isTempo ? (product?.harga_tempo || 0) : (product?.harga_jual || selected
                         .harga);
                     priceInput.value = formatRupiah(Math.round(price));
 
                     unitLabel.innerText = selected.unit;
+                    
+                    // Check if current qty (default 1) > stock
+                    if (parseFloat(qtyInput.value) > selected.qty) {
+                        qtyInput.value = selected.qty;
+                        if (selected.qty > 0) {
+                            alert(`Stok terbatas! Qty disesuaikan ke ${selected.qty}.`);
+                        }
+                    }
+                    
                     calculateInvoiceTotal();
                 }
             }
@@ -1044,6 +1339,7 @@
                 }
 
                 idInput.value = prodId;
+                maxStokInput.value = masterItem ? (masterItem.qty || 0) : 999999;
 
                 qtyInput.value = parseFloat(data.qty) || 1;
 
@@ -1322,10 +1618,17 @@
     let stockCache = [];
 
     async function openStockModal() {
-        const modal = new bootstrap.Modal(document.getElementById('stockModal'));
+        const modalEl = document.getElementById('stockModal');
+        const modal = new bootstrap.Modal(modalEl);
         document.getElementById('stockBodyList').innerHTML =
             '<tr><td colspan="6" class="text-center p-4"><div class="spinner-border text-primary"></div></td></tr>';
+        
+        showCustomBackdrop();
         modal.show();
+
+        modalEl.addEventListener('hidden.bs.modal', function() {
+            hideCustomBackdrop();
+        }, { once: true });
 
         try {
             // Gunakan product-api seperti di halaman barang
@@ -1361,39 +1664,34 @@
         // Load kategori options
         loadStockCategories();
 
+        let stockSearchTimer = null;
         if (searchInput) {
-            searchInput.addEventListener('input', async function() {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(stockSearchTimer);
                 const searchTerm = this.value ? this.value.trim() : '';
                 const categoryId = categoryFilter ? categoryFilter.value : '';
 
-                console.log('Search triggered:', {
-                    searchTerm,
-                    categoryId
-                }); // Debug log
-
-                // Search langsung tanpa delay dan minimal karakter
-                try {
-                    let url = `/api/product-api`;
-                    if (searchTerm) {
-                        url += `?search=${encodeURIComponent(searchTerm)}`;
+                stockSearchTimer = setTimeout(async () => {
+                    console.log('Search triggered after debounce:', { searchTerm, categoryId });
+                    try {
+                        let url = `/api/product-api`;
+                        let params = new URLSearchParams();
+                        if (searchTerm) params.append('search', searchTerm);
+                        if (categoryId) params.append('category', categoryId);
+                        
+                        const fullUrl = url + (params.toString() ? '?' + params.toString() : '');
+                        console.log('Search URL:', fullUrl);
+                        
+                        const res = await fetch(fullUrl);
+                        const result = await res.json();
+                        if (result.success) {
+                            const data = result.data.data || result.data;
+                            renderStockList(data);
+                        }
+                    } catch (e) {
+                        console.error('Search failed:', e);
                     }
-                    if (categoryId) {
-                        url += searchTerm ? `&category=${categoryId}` : `?category=${categoryId}`;
-                    }
-
-                    console.log('Search URL:', url); // Debug log
-                    const res = await fetch(url);
-                    const result = await res.json();
-                    console.log('Search Response:', result); // Debug log
-
-                    if (result.success) {
-                        const data = result.data.data || result.data;
-                        console.log('Search Data:', data); // Debug log
-                        renderStockList(data);
-                    }
-                } catch (e) {
-                    console.error('Search failed:', e);
-                }
+                }, 500); // 500ms debounce
             });
         }
 
