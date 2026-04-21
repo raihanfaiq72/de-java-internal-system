@@ -173,11 +173,16 @@
             transition: margin-left 0.3s ease;
         }
 
-        /* Hide Toggle Button on Desktop to prevent auto-close confusion */
-        @media (min-width: 992px) {
-            #togglemenu {
-                display: none !important;
-            }
+        body.sidebar-desktop-collapsed .startbar {
+            transform: translateX(-100%);
+        }
+
+        body.sidebar-desktop-collapsed .topbar {
+            width: 100%;
+        }
+
+        body.sidebar-desktop-collapsed .page-content {
+            margin-left: 0 !important;
         }
 
         /* Mobile Hamburger - Better touch target */
@@ -305,6 +310,10 @@
             .page-content,
             .topbar {
                 margin-left: 0 !important;
+            }
+
+            .topbar {
+                width: 100%;
             }
         }
 
@@ -549,7 +558,8 @@
 
                     <ul class="topbar-item list-unstyled d-inline-flex align-items-center mb-0">
                         <li>
-                            <button class="nav-link mobile-menu-btn nav-icon" id="togglemenu">
+                            <button class="nav-link mobile-menu-btn nav-icon" id="togglemenu" type="button"
+                                aria-label="Toggle sidebar" aria-expanded="true">
                                 <i class="iconoir-menu"></i>
                             </button>
                         </li>
@@ -694,66 +704,111 @@
     <script src="{{ url('') }}/assets/js/app.js"></script>
     @yield('scripts')
 
-    <!-- Force Sidebar Open Script -->
+    <!-- Sidebar Toggle Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const BODY = document.body;
-
-            function enforceSidebar() {
-                if (window.innerWidth >= 992) {
-                    if (document.body.getAttribute('data-sidebar-size') === 'collapsed') {
-                        document.body.setAttribute('data-sidebar-size', 'default');
-                    }
-                    document.body.classList.remove('vertical-collapsed');
-                    document.querySelector('.startbar')?.classList.remove('show');
-                    document.querySelector('.startbar-overlay')?.classList.remove('show');
-                    BODY.classList.remove('sidebar-open');
-                }
-            }
-
-            // Initial check
-            enforceSidebar();
-
-            // Check on resize
-            window.addEventListener('resize', enforceSidebar);
-
-            // Observe changes to body attributes to fight app.js auto-collapse
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    if (mutation.attributeName === 'data-sidebar-size') {
-                        enforceSidebar();
-                    }
-                });
-            });
-
-            observer.observe(document.body, {
-                attributes: true
-            });
-
-            // Mobile Sidebar Toggle Logic
+            const DESKTOP_BREAKPOINT = 992;
+            const STORAGE_KEY = 'sidebar-desktop-collapsed';
             const toggleBtn = document.getElementById('togglemenu');
             const startbar = document.querySelector('.startbar');
             const overlay = document.querySelector('.startbar-overlay');
             const pageLoader = document.getElementById('pageLoader');
 
+            function isDesktop() {
+                return window.innerWidth >= DESKTOP_BREAKPOINT;
+            }
+
+            function syncSidebarState() {
+                if (!toggleBtn || !startbar) return;
+
+                if (isDesktop()) {
+                    const isCollapsed = BODY.classList.contains('sidebar-desktop-collapsed');
+                    BODY.classList.remove('sidebar-open');
+                    startbar.classList.remove('show');
+                    overlay?.classList.remove('show');
+                    startbar.setAttribute('aria-hidden', isCollapsed ? 'true' : 'false');
+                    toggleBtn.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+                    BODY.setAttribute('data-sidebar-size', 'default');
+                    BODY.classList.remove('vertical-collapsed');
+                    return;
+                }
+
+                const isOpen = startbar.classList.contains('show');
+                startbar.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+                toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            }
+
+            function openMobileSidebar() {
+                if (!startbar) return;
+                startbar.classList.add('show');
+                overlay?.classList.add('show');
+                BODY.classList.add('sidebar-open');
+                syncSidebarState();
+            }
+
+            function closeMobileSidebar() {
+                if (!startbar) return;
+                startbar.classList.remove('show');
+                overlay?.classList.remove('show');
+                BODY.classList.remove('sidebar-open');
+                syncSidebarState();
+            }
+
+            function toggleDesktopSidebar() {
+                const willCollapse = !BODY.classList.contains('sidebar-desktop-collapsed');
+                BODY.classList.toggle('sidebar-desktop-collapsed', willCollapse);
+                BODY.setAttribute('data-sidebar-size', 'default');
+                BODY.classList.remove('vertical-collapsed');
+                try {
+                    window.localStorage.setItem(STORAGE_KEY, willCollapse ? '1' : '0');
+                } catch (e) {}
+                syncSidebarState();
+            }
+
+            function applyDesktopPreference() {
+                if (!isDesktop()) {
+                    BODY.classList.remove('sidebar-desktop-collapsed');
+                    syncSidebarState();
+                    return;
+                }
+
+                let shouldCollapse = false;
+                try {
+                    shouldCollapse = window.localStorage.getItem(STORAGE_KEY) === '1';
+                } catch (e) {}
+                BODY.classList.toggle('sidebar-desktop-collapsed', shouldCollapse);
+                syncSidebarState();
+            }
+
+            applyDesktopPreference();
+
+            window.addEventListener('resize', function() {
+                applyDesktopPreference();
+                if (isDesktop()) {
+                    closeMobileSidebar();
+                }
+            });
+
             if (toggleBtn && startbar && overlay) {
                 toggleBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    startbar.classList.toggle('show');
-                    overlay.classList.toggle('show');
-                    const isOpen = startbar.classList.contains('show');
-                    BODY.classList.toggle('sidebar-open', isOpen);
-                    startbar.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
-                    toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+                    if (isDesktop()) {
+                        toggleDesktopSidebar();
+                        return;
+                    }
+
+                    if (startbar.classList.contains('show')) {
+                        closeMobileSidebar();
+                    } else {
+                        openMobileSidebar();
+                    }
                 });
 
                 overlay.addEventListener('click', function() {
-                    startbar.classList.remove('show');
-                    overlay.classList.remove('show');
-                    BODY.classList.remove('sidebar-open');
-                    startbar.setAttribute('aria-hidden', 'true');
-                    toggleBtn.setAttribute('aria-expanded', 'false');
+                    closeMobileSidebar();
                 });
 
                 startbar.addEventListener('click', function(ev) {
@@ -771,22 +826,14 @@
                             pageLoader.classList.add('active');
                         }
                         BODY.classList.add('page-transition-start');
-                        startbar.classList.remove('show');
-                        overlay.classList.remove('show');
-                        BODY.classList.remove('sidebar-open');
-                        startbar.setAttribute('aria-hidden', 'true');
-                        toggleBtn.setAttribute('aria-expanded', 'false');
+                        closeMobileSidebar();
                     }
                 });
 
                 // ESC to close
                 document.addEventListener('keydown', function(ev) {
                     if (ev.key === 'Escape' && startbar.classList.contains('show')) {
-                        startbar.classList.remove('show');
-                        overlay.classList.remove('show');
-                        BODY.classList.remove('sidebar-open');
-                        startbar.setAttribute('aria-hidden', 'true');
-                        toggleBtn.setAttribute('aria-expanded', 'false');
+                        closeMobileSidebar();
                     }
                 });
             }
