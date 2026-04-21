@@ -189,6 +189,43 @@
                 margin-top: .5rem;
             }
         }
+
+        /* Fix TomSelect height inconsistencies */
+        .ts-wrapper.tom-select-init {
+            height: 33px !important;
+        }
+        .ts-wrapper.tom-select-init .ts-control {
+            height: 33px !important;
+            min-height: 33px !important;
+            padding: 0 12px !important;
+            border-radius: 6px !important;
+            font-size: 13px !important;
+            display: flex !important;
+            align-items: center !important;
+            background-color: #fff !important;
+            border: 1px solid #dee2e6 !important;
+            box-shadow: none !important;
+        }
+        .ts-wrapper.tom-select-init .ts-control .item {
+            display: flex !important;
+            align-items: center !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            line-height: 31px !important;
+            height: 31px !important;
+        }
+        .ts-wrapper.tom-select-init .ts-control input {
+            display: flex !important;
+            align-items: center !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-size: 13px !important;
+            height: 31px !important;
+        }
+        .ts-wrapper.tom-select-init.focus .ts-control {
+            border-color: #86b7fe !important;
+            outline: 0 !important;
+        }
     </style>
 @endpush
 
