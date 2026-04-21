@@ -232,7 +232,7 @@
 <!-- Stock Modal remains largely the same, just refined styling -->
 <div class="modal fade" id="stockModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-content border-0 shadow-lg rounded-4" style="height: 90vh;">
             <div class="modal-header bg-dark border-bottom py-3">
                 <h5 class="modal-title fw-bold">Pilih Produk</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
@@ -265,6 +265,7 @@
                                         class="form-check-input" id="checkAllStock" onclick="toggleAllStock(this)">
                                 </th>
                                 <th class="py-3">Produk</th>
+                                <th class="py-3">Supplier</th>
                                 <th class="py-3">Kategori</th>
                                 <th class="text-center py-3">Stok</th>
                                 <th class="text-end py-3">Harga Jual</th>
@@ -352,6 +353,7 @@
             <div class="fw-bold text-dark col-stock-nama"></div>
             <div class="small text-muted col-stock-sku"></div>
         </td>
+        <td class="text-start col-stock-supplier"></td>
         <td><span class="badge bg-light text-dark border col-stock-kategori"></span></td>
         <td class="text-center fw-bold col-stock-qty"></td>
         <td class="text-end font-monospace col-stock-harga"></td>
@@ -1504,6 +1506,7 @@
             // Isi Konten
             clone.querySelector('.col-stock-nama').textContent = item.nama_produk;
             clone.querySelector('.col-stock-sku').textContent = item.sku_kode || item.kode_produk || '-';
+            clone.querySelector('.col-stock-supplier').textContent = item.supplier?.nama || '-';
             clone.querySelector('.col-stock-kategori').textContent = item.category?.nama_kategori || '-';
             clone.querySelector('.col-stock-qty').textContent =
                 `${qty} ${item.unit?.nama_unit || ''}`;
