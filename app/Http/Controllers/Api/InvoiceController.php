@@ -108,10 +108,15 @@ class InvoiceController extends Controller
         }
 
         $perPage = $request->get('per_page', 10);
+        $sortBy = $request->get('sort_by', 'tgl_invoice');
+        $sortDir = $request->get('sort_dir', 'desc');
+
+        $query->orderBy($sortBy, $sortDir);
+
         if ($perPage >= 1000) {
-            $data = $query->latest()->get();
+            $data = $query->get();
         } else {
-            $data = $query->latest()->paginate($perPage)->withQueryString();
+            $data = $query->paginate($perPage)->withQueryString();
         }
 
         return apiResponse(true, 'Data invoice', $data);

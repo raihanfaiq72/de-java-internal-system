@@ -158,7 +158,8 @@
                                             </tr>
                                             <tr>
                                                 <td colspan="4" class="text-end py-2 text-muted">Biaya Lain</td>
-                                                <td class="text-end py-2 fw-bold text-success pe-4" id="val-other-charges">Rp 0</td>
+                                                <td class="text-end py-2 fw-bold text-success pe-4" id="val-other-charges">
+                                                    Rp 0</td>
                                             </tr>
                                             <tr>
                                                 <td colspan="4" class="text-end py-2 text-muted">Cashback</td>
@@ -360,6 +361,7 @@
             </div>
         </div>
     </div>
+
     @include('Sales.Modal.modal-fullscreen')
     @include('Sales.Modal.detail-modal')
     @include('Sales.Partials.invoice-templates')
@@ -478,7 +480,8 @@
                     let discDisplay = '-';
                     if (item.diskon_nilai > 0) {
                         if (item.diskon_tipe === 'Percentage') {
-                            const itemDiscRupiah = (parseFloat(item.harga_satuan) * parseFloat(item.diskon_nilai) / 100);
+                            const itemDiscRupiah = (parseFloat(item.harga_satuan) * parseFloat(item.diskon_nilai) /
+                                100);
                             discDisplay = `${parseFloat(item.diskon_nilai)}% (${formatIDR(itemDiscRupiah)})`;
                         } else {
                             discDisplay = formatIDR(item.diskon_nilai);
@@ -506,7 +509,7 @@
             // Totals
 
             document.getElementById('val-subtotal').textContent = formatIDR(subTotal);
-            
+
             let extraDiscDisplay = '- Rp 0';
             if (data.diskon_tambahan_nilai > 0) {
                 if (data.diskon_tambahan_tipe === 'Percentage') {
@@ -519,7 +522,8 @@
             document.getElementById('val-discount').textContent = extraDiscDisplay;
 
             document.getElementById('val-tax').textContent = formatIDR(data.pajak_ppn || 0);
-            document.getElementById('val-other-charges').textContent = `+ ${formatIDR(data.other_fee || data.biaya_kirim || 0)}`;
+            document.getElementById('val-other-charges').textContent =
+                `+ ${formatIDR(data.other_fee || data.biaya_kirim || 0)}`;
             document.getElementById('val-cashback').textContent = `- ${formatIDR(data.cashback || 0)}`;
             document.getElementById('val-total').textContent = formatIDR(data.total_akhir);
 

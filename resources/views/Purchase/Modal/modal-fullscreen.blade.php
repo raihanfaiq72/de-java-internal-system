@@ -1,3 +1,19 @@
+<style>
+    /* Overlay Hitam untuk Modal Berlapis */
+    .modal-backdrop-custom {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.6);
+        z-index: 1065;
+        display: none;
+    }
+    #stockModal, #mitraModal {
+        z-index: 1070 !important;
+    }
+</style>
 <div class="modal fade" id="invoiceModal" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen">
         <div class="modal-content border-0" style="background-color: #f8fafc;">
@@ -722,11 +738,8 @@
             placeholder: 'Cari barang...',
             render: {
                 option: (d, esc) => {
-                    const style = d.qty <= 0 ? 'opacity: 0.5; background: #f8fafc;' : '';
-                    const badge = d.qty <= 0 ?
-                        '<span class="badge bg-danger float-end">Stok Habis</span>' :
-                        `<span class="badge bg-light text-dark border float-end">${d.qty} ${esc(d.unit)}</span>`;
-                    return `<div style="${style}">
+                    const badge = `<span class="badge bg-light text-dark border float-end">${d.qty} ${esc(d.unit)}</span>`;
+                    return `<div>
                                 <div class="fw-bold">${esc(d.nama)} ${badge}</div>
                                 <small class="text-muted">${esc(d.sku)}</small>
                             </div>`;
@@ -735,11 +748,6 @@
             },
             onChange: function(val) {
                 const selected = this.options[val];
-                if (selected && selected.qty <= 0) {
-                    alert('Stok Habis! Produk ini tidak dapat dipilih.');
-                    this.clear();
-                    return;
-                }
                 if (selected) {
                     idInput.value = selected.id;
                     priceInput.value = formatRupiah(selected.harga);
@@ -1234,10 +1242,17 @@
     let stockCache = [];
 
     async function openStockModal() {
-        const modal = new bootstrap.Modal(document.getElementById('stockModal'));
+        const modalEl = document.getElementById('stockModal');
+        const modal = new bootstrap.Modal(modalEl);
         document.getElementById('stockBodyList').innerHTML =
             '<tr><td colspan="6" class="text-center p-4"><div class="spinner-border text-primary"></div></td></tr>';
+        
+        showCustomBackdrop();
         modal.show();
+
+        modalEl.addEventListener('hidden.bs.modal', function() {
+            hideCustomBackdrop();
+        }, { once: true });
 
         try {
             // Gunakan product-api dengan per_page besar untuk mengambil semua stok
@@ -1283,12 +1298,6 @@
             chk.dataset.raw = JSON.stringify(item);
 
             const qty = Number(item.qty || 0);
-            if (qty <= 0) {
-                tr.style.opacity = '0.5';
-                tr.style.backgroundColor = '#f8fafc';
-                tr.style.cursor = 'not-allowed';
-                chk.disabled = true;
-            }
 
             if (existingIds.includes(String(item.id))) {
                 chk.checked = true;
@@ -1319,64 +1328,74 @@
         const searchInput = document.getElementById('stockSearchInput');
         const categoryFilter = document.getElementById('stockCategoryFilter');
 
-        // Load kategori options
         loadStockCategories();
 
+        let stockSearchTimer = null;
         if (searchInput) {
-            searchInput.addEventListener('input', async function() {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(stockSearchTimer);
                 const searchTerm = this.value ? this.value.trim() : '';
                 const categoryId = categoryFilter ? categoryFilter.value : '';
 
-                try {
-                    let url = `/api/product-api?per_page=1000`;
-                    if (searchTerm) {
-                        url += `&search=${encodeURIComponent(searchTerm)}`;
-                    }
-                    if (categoryId) {
-                        url += `&category=${categoryId}`;
-                    }
+                stockSearchTimer = setTimeout(async () => {
+                    try {
+                        let url = `/api/product-api`;
+                        let params = new URLSearchParams();
+                        if (searchTerm) params.append('search', searchTerm);
+                        if (categoryId) params.append('category', categoryId);
+                        
+                        const fullUrl = url + (params.toString() ? '?' + params.toString() : '');
+                        const res = await fetch(fullUrl);
+                        const result = await res.json();
 
-                    const res = await fetch(url);
-                    const result = await res.json();
-
-                    if (result.success) {
-                        const data = result.data.data || result.data;
-                        stockCache = data; // Update cache
-                        renderStockList(data);
+                        if (result.success) {
+                            const data = result.data.data || result.data;
+                            renderStockList(data);
+                        }
+                    } catch (e) {
+                        console.error('Search failed:', e);
                     }
-                } catch (e) {
-                    console.error('Search failed:', e);
-                }
+                }, 500);
             });
         }
 
-        // Setup category filter
         if (categoryFilter) {
-            categoryFilter.addEventListener('change', async function() {
+            categoryFilter.addEventListener('change', function() {
                 const searchTerm = searchInput ? (searchInput.value ? searchInput.value.trim() : '') : '';
                 const categoryId = this.value ? this.value : '';
 
-                try {
-                    let url = `/api/product-api?per_page=1000`;
-                    if (searchTerm) {
-                        url += `&search=${encodeURIComponent(searchTerm)}`;
-                    }
-                    if (categoryId) {
-                        url += `&category=${categoryId}`;
-                    }
+                let url = `/api/product-api`;
+                let params = new URLSearchParams();
+                if (searchTerm) params.append('search', searchTerm);
+                if (categoryId) params.append('category', categoryId);
 
-                    const res = await fetch(url);
-                    const result = await res.json();
-
-                    if (result.success) {
-                        const data = result.data.data || result.data;
-                        stockCache = data;
-                        renderStockList(data);
-                    }
-                } catch (e) {
-                    console.error('Filter failed:', e);
-                }
+                fetch(url + (params.toString() ? '?' + params.toString() : ''))
+                    .then(res => res.json())
+                    .then(result => {
+                        if (result.success) {
+                            const data = result.data.data || result.data;
+                            renderStockList(data);
+                        }
+                    })
+                    .catch(e => console.error('Filter failed:', e));
             });
+        }
+    }
+
+    function showCustomBackdrop() {
+        let backdrop = document.querySelector('.modal-backdrop-custom');
+        if (!backdrop) {
+            backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop-custom';
+            document.body.appendChild(backdrop);
+        }
+        backdrop.style.display = 'block';
+    }
+
+    function hideCustomBackdrop() {
+        const backdrop = document.querySelector('.modal-backdrop-custom');
+        if (backdrop) {
+            backdrop.style.display = 'none';
         }
     }
 
