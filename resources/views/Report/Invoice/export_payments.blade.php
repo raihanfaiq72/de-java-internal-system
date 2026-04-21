@@ -16,18 +16,18 @@ header("Content-Disposition: attachment; filename=Laporan_Pembayaran_" . date('Y
     </style>
 </head>
 <body>
-    <h3>Laporan Pembayaran</h3>
+    <h3>Laporan Nota</h3>
     <p>Periode: {{ $startDate }} s/d {{ $endDate }}</p>
     <table>
         <thead>
             <tr>
                 <th>No</th>
                 @if(!in_array(0, $hiddenColumns)) <th>Tanggal</th> @endif
-                @if(!in_array(1, $hiddenColumns)) <th>No. Invoice</th> @endif
+                @if(!in_array(1, $hiddenColumns)) <th>No. Nota</th> @endif
                 @if(!in_array(2, $hiddenColumns)) <th>Metode</th> @endif
                 @if(!in_array(3, $hiddenColumns)) <th>No. Mitra</th> @endif
                 @if(!in_array(4, $hiddenColumns)) <th>Nama Mitra</th> @endif
-                @if(!in_array(5, $hiddenColumns)) <th>Jumlah</th> @endif
+                @if(!in_array(5, $hiddenColumns)) <th>Terbayar</th> @endif
             </tr>
         </thead>
         <tbody>
@@ -48,7 +48,7 @@ header("Content-Disposition: attachment; filename=Laporan_Pembayaran_" . date('Y
                 @php 
                     $footSpan = empty($hiddenColumns) ? 6 : (6 - count($hiddenColumns));
                 @endphp
-                <th colspan="{{ $footSpan }}" class="text-right">Total Pembayaran</th>
+                <th colspan="{{ $footSpan }}" class="text-right">Total Terbayar</th>
                 @if(!in_array(5, $hiddenColumns))
                     <th class="text-right">{{ number_format($totalPaymentAmount, 0, ',', '.') }}</th>
                 @endif

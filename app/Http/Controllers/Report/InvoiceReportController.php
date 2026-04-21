@@ -16,7 +16,8 @@ class InvoiceReportController extends Controller
         $officeId = session('active_office_id');
         $startDate = $request->start_date ?? date('Y-01-01');
         $endDate = $request->end_date ?? date('Y-12-31');
-        $mitraId = $request->mitra_id;
+        $mitraId = (array) $request->mitra_id;
+        $mitraId = array_values(array_filter($mitraId, fn($v) => $v !== null && $v !== ''));
         $search = $request->search;
 
         if ($request->ajax()) {
@@ -56,6 +57,7 @@ class InvoiceReportController extends Controller
             'pieLabels',
             'payments',
             'totalPaymentAmount',
+            'totalNotaAmount',
             'totalUniqueInvoices',
             'soldProducts',
             'totalSoldQty',
@@ -70,7 +72,8 @@ class InvoiceReportController extends Controller
     {
         $startDate = $request->start_date ?? date('Y-01-01');
         $endDate = $request->end_date ?? date('Y-12-31');
-        $mitraId = $request->mitra_id;
+        $mitraId = (array) $request->mitra_id;
+        $mitraId = array_values(array_filter($mitraId, fn($v) => $v !== null && $v !== ''));
         $search = $request->search;
 
         $response = [];
@@ -88,7 +91,7 @@ class InvoiceReportController extends Controller
 
         // --- Tab 2: Payments ---
         extract($this->getPaymentsData($request, $startDate, $endDate, $officeId, $mitraId, $search));
-        $response['html_payments'] = view('Report.Invoice._tab_payments', compact('payments', 'totalPaymentAmount', 'totalUniqueInvoices'))->render();
+        $response['html_payments'] = view('Report.Invoice._tab_payments', compact('payments', 'totalPaymentAmount', 'totalNotaAmount', 'totalUniqueInvoices'))->render();
 
         // --- Tab 3: Sold Products ---
         extract($this->getSoldProductsData($request, $startDate, $endDate, $officeId, $mitraId, $search));
@@ -211,46 +214,57 @@ class InvoiceReportController extends Controller
     {
         $itemsSubQuery = DB::table('invoice_items')
             ->whereNull('deleted_at')
-            ->select('invoice_id', DB::raw('SUM(qty) as total_qty'), DB::raw('MAX(harga_satuan) as harga_satuan'))
+            ->select('invoice_id', DB::raw('SUM(qty) as total_qty'))
             ->groupBy('invoice_id');
 
+        // Get total paid for each invoice
+        $totalPaidSubQuery = DB::table('payments')
+            ->whereNull('deleted_at')
+            ->select('invoice_id', DB::raw('SUM(jumlah_bayar) as total_paid_all'))
+            ->groupBy('invoice_id');
+
+        // Get latest payment method for each invoice
+        $latestPaymentSubQuery = DB::table('payments')
+            ->whereNull('deleted_at')
+            ->select('invoice_id', 'metode_pembayaran')
+            ->whereIn('id', function($q) {
+                $q->select(DB::raw('MAX(id)'))->from('payments')->whereNull('deleted_at')->groupBy('invoice_id');
+            });
+
         $paymentsQuery = DB::table('invoices')
-            ->leftJoin('payments', function($join) use ($startDate, $endDate) {
-                $join->on('payments.invoice_id', '=', 'invoices.id')
-                     ->whereNull('payments.deleted_at')
-                     ->whereBetween('payments.tgl_pembayaran', [$startDate, $endDate]);
-            })
+            ->leftJoinSub($totalPaidSubQuery, 'paid_summary', 'invoices.id', '=', 'paid_summary.invoice_id')
+            ->leftJoinSub($latestPaymentSubQuery, 'latest_pay', 'invoices.id', '=', 'latest_pay.invoice_id')
             ->leftJoin('mitras', 'invoices.mitra_id', '=', 'mitras.id')
-            ->leftJoinSub($itemsSubQuery, 'items', function ($join) {
-                $join->on('invoices.id', '=', 'items.invoice_id');
-            })
+            ->leftJoinSub($itemsSubQuery, 'items', 'invoices.id', '=', 'items.invoice_id')
             ->where('invoices.office_id', $officeId)
-            ->where('invoices.tipe_invoice', 'Sales') // Only show sales invoices
-            ->whereNull('invoices.deleted_at')
-            ->whereBetween('invoices.tgl_invoice', [$startDate, $endDate]) // Filter by invoice date instead of payment date
+            ->whereBetween('invoices.tgl_invoice', [$startDate, $endDate])
             ->select(
-                'invoices.tgl_invoice',
-                'invoices.total_akhir',
-                'invoices.status_pembayaran',
-                'invoices.tgl_jatuh_tempo',
+                'invoices.id',
                 'invoices.nomor_invoice',
-                DB::raw('COALESCE(payments.tgl_pembayaran, invoices.tgl_invoice) as tgl_pembayaran'),
-                DB::raw('COALESCE(payments.jumlah_bayar, 0) as jumlah_bayar'),
-                DB::raw('COALESCE(payments.metode_pembayaran, "Belum Bayar") as metode_pembayaran'),
-                DB::raw('COALESCE(payments.nomor_pembayaran, "-") as nomor_pembayaran'),
+                'invoices.tgl_invoice as tgl_pembayaran',
+                'invoices.status_pembayaran',
+                'invoices.total_akhir',
+                'invoices.tipe_invoice',
+                DB::raw('COALESCE(paid_summary.total_paid_all, 0) as jumlah_bayar'),
+                DB::raw('COALESCE(latest_pay.metode_pembayaran, "Belum Bayar") as metode_pembayaran'),
                 'mitras.nama as nama_mitra',
                 'mitras.nomor_mitra',
-                'items.total_qty',
-                'items.harga_satuan'
+                'items.total_qty'
             );
 
         $this->applyCommonFilters($paymentsQuery, $request, $mitraId, $search, true);
+        
+        // Calculate totals for the entire set before pagination
+        $allPayments = (clone $paymentsQuery)->get();
+        $totalPaymentAmount = $allPayments->sum('jumlah_bayar');
+        $totalNotaAmount = $allPayments->sum('total_akhir');
+        $totalUniqueInvoices = $allPayments->count();
 
-        $payments = $paymentsQuery->orderBy('invoices.tgl_invoice', 'desc')->get();
-        $totalPaymentAmount = $payments->sum('jumlah_bayar');
-        $totalUniqueInvoices = $payments->unique('nomor_invoice')->count();
+        // Paginate for display
+        $this->applySorting($paymentsQuery, $request, 'invoices.tgl_invoice', 'desc');
+        $payments = $paymentsQuery->paginate(10)->withQueryString();
 
-        return compact('payments', 'totalPaymentAmount', 'totalUniqueInvoices');
+        return compact('payments', 'totalPaymentAmount', 'totalNotaAmount', 'totalUniqueInvoices');
     }
 
     private function getPaymentsWithDetailsData(Request $request, $startDate, $endDate, $officeId, $mitraId, $search)
@@ -361,23 +375,30 @@ class InvoiceReportController extends Controller
             ->select('invoice_item_id', DB::raw('SUM(nilai_pajak_diterapkan) as total_tax'))
             ->groupBy('invoice_item_id');
 
+        $totalPaidSubQuery = DB::table('payments')
+            ->whereNull('deleted_at')
+            ->select('invoice_id', DB::raw('SUM(jumlah_bayar) as total_paid_all'))
+            ->groupBy('invoice_id');
+
         $soldProductsQuery = DB::table('invoice_items')
+            ->join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
+            ->leftJoinSub($totalPaidSubQuery, 'paid_summary', 'invoices.id', '=', 'paid_summary.invoice_id')
             ->join('products', 'invoice_items.produk_id', '=', 'products.id')
             ->leftJoin('product_categories', 'products.product_category_id', '=', 'product_categories.id')
             ->leftJoinSub($taxSumSub, 'tax_sum', function ($join) {
                 $join->on('invoice_items.id', '=', 'tax_sum.invoice_item_id');
             })
             ->whereIn('invoice_items.invoice_id', $invoiceIds)
-            ->whereNull('invoice_items.deleted_at')
             ->select(
                 'products.nama_produk',
                 'products.sku_kode',
                 'products.satuan',
                 'product_categories.nama_kategori',
                 DB::raw('SUM(invoice_items.qty) as total_qty'),
-                DB::raw('SUM((invoice_items.total_harga_item - (invoice_items.diskon_nilai * invoice_items.qty)) + COALESCE(tax_sum.total_tax, 0)) as total_value')
+                DB::raw('SUM(invoice_items.total_harga_item + COALESCE(tax_sum.total_tax, 0)) as total_value'),
+                'invoices.total_akhir' // Needed for sisa_piutang sort
             )
-            ->groupBy('products.id', 'products.nama_produk', 'products.sku_kode', 'products.satuan', 'product_categories.nama_kategori');
+            ->groupBy('products.id', 'products.nama_produk', 'products.sku_kode', 'products.satuan', 'product_categories.nama_kategori', 'invoices.total_akhir');
 
         // Apply Product ID filter directly on the items for this tab since it's querying invoice_items
         $prodIdFilter = $this->extractProductFilter($request);
@@ -385,34 +406,45 @@ class InvoiceReportController extends Controller
             $soldProductsQuery->whereIn('invoice_items.produk_id', $prodIdFilter);
         }
 
-        $soldProducts = $soldProductsQuery->get();
-        $totalSoldQty = $soldProducts->sum('total_qty');
-        $totalSoldValue = $soldProducts->sum('total_value');
+        // Calculate totals for the entire set before pagination
+        $allSold = (clone $soldProductsQuery)->get();
+        $totalSoldQty = $allSold->sum('total_qty');
+        $totalSoldValue = $allSold->sum('total_value');
+
+        // Paginate for display
+        $this->applySorting($soldProductsQuery, $request, 'products.nama_produk', 'asc');
+        $soldProducts = $soldProductsQuery->paginate(10)->withQueryString();
 
         return compact('soldProducts', 'totalSoldQty', 'totalSoldValue');
     }
 
     private function getInvoiceItemsData(Request $request, $startDate, $endDate, $officeId, $mitraId, $search)
     {
+        $totalPaidSubQuery = DB::table('payments')
+            ->whereNull('deleted_at')
+            ->select('invoice_id', DB::raw('SUM(jumlah_bayar) as total_paid_all'))
+            ->groupBy('invoice_id');
+
         $itemsQuery = DB::table('invoice_items')
             ->join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
             ->join('products', 'invoice_items.produk_id', '=', 'products.id')
             ->leftJoin('mitras', 'invoices.mitra_id', '=', 'mitras.id')
+            ->leftJoinSub($totalPaidSubQuery, 'paid_summary', 'invoices.id', '=', 'paid_summary.invoice_id')
             ->where('invoices.office_id', $officeId)
-            ->whereNull('invoice_items.deleted_at')
-            ->whereNull('invoices.deleted_at')
             ->select(
                 'invoices.status_pembayaran',
                 'invoices.tgl_invoice',
                 'products.nama_produk',
                 'mitras.nama as nama_mitra',
                 'invoices.nomor_invoice',
+                'invoices.total_akhir',
                 'invoice_items.qty',
                 'invoice_items.harga_satuan',
                 'invoice_items.diskon_nilai',
                 'invoice_items.total_harga_item',
                 'invoice_items.id as item_id',
-                'invoice_items.invoice_id'
+                'invoice_items.invoice_id',
+                'invoices.tipe_invoice'
             );
 
         if ($startDate && $endDate) {
@@ -421,13 +453,19 @@ class InvoiceReportController extends Controller
 
         $this->applyCommonFilters($itemsQuery, $request, $mitraId, $search, true, true);
 
-        $invoiceItems = $itemsQuery->orderBy('invoices.tgl_invoice', 'desc')->get();
-
-        $itemIds = $invoiceItems->pluck('item_id')->toArray();
-        $taxSums = [];
-        if (! empty($itemIds)) {
-            $taxSums = DB::table('invoice_item_taxes')
-                ->whereIn('invoice_item_id', $itemIds)
+        // Get all item IDs for full set calculations
+        $allItems = (clone $itemsQuery)->get();
+        
+        // Calculate totals for the entire set
+        $summaryTotalTransaction = 0;
+        $summaryTotalInvoices = $allItems->unique('invoice_id')->count();
+        
+        // We need tax for all items to get true total transaction
+        $allItemIds = $allItems->pluck('item_id')->toArray();
+        $allTaxSums = [];
+        if (!empty($allItemIds)) {
+            $allTaxSums = DB::table('invoice_item_taxes')
+                ->whereIn('invoice_item_id', $allItemIds)
                 ->whereNull('deleted_at')
                 ->select('invoice_item_id', DB::raw('SUM(nilai_pajak_diterapkan) as total_tax'))
                 ->groupBy('invoice_item_id')
@@ -435,14 +473,34 @@ class InvoiceReportController extends Controller
                 ->toArray();
         }
 
-        $summaryTotalTransaction = 0;
-        $summaryTotalInvoices = $invoiceItems->unique('invoice_id')->count();
+        foreach ($allItems as $item) {
+            $tax = $allTaxSums[$item->item_id] ?? 0;
+            $item_total_diskon = ($item->diskon_nilai * $item->qty);
+            $item_total_akhir = $item->total_harga_item + $tax;
+            $summaryTotalTransaction += $item_total_akhir;
+        }
+
+        // Paginate for display
+        $this->applySorting($itemsQuery, $request, 'invoices.tgl_invoice', 'desc');
+        $invoiceItems = $itemsQuery->paginate(10)->withQueryString();
+
+        // For the paginated results, we still need to calculate their specific total_akhir for display in the row
+        $pageItemIds = $invoiceItems->pluck('item_id')->toArray();
+        $pageTaxSums = [];
+        if (!empty($pageItemIds)) {
+            $pageTaxSums = DB::table('invoice_item_taxes')
+                ->whereIn('invoice_item_id', $pageItemIds)
+                ->whereNull('deleted_at')
+                ->select('invoice_item_id', DB::raw('SUM(nilai_pajak_diterapkan) as total_tax'))
+                ->groupBy('invoice_item_id')
+                ->pluck('total_tax', 'invoice_item_id')
+                ->toArray();
+        }
 
         foreach ($invoiceItems as $item) {
-            $tax = $taxSums[$item->item_id] ?? 0;
+            $tax = $pageTaxSums[$item->item_id] ?? 0;
             $item->total_diskon = ($item->diskon_nilai * $item->qty);
-            $item->total_akhir = ($item->total_harga_item - $item->total_diskon) + $tax;
-            $summaryTotalTransaction += $item->total_akhir;
+            $item->total_akhir = $item->total_harga_item + $tax;
         }
 
         return compact('invoiceItems', 'summaryTotalTransaction', 'summaryTotalInvoices');
@@ -460,15 +518,47 @@ class InvoiceReportController extends Controller
         }));
     }
 
+    private function applySorting($query, Request $request, $defaultSortField, $defaultSortDir)
+    {
+        $sortBy = $request->sort_by ?: $defaultSortField;
+        $sortDir = $request->sort_dir ?: $defaultSortDir;
+
+        if ($sortBy === 'status_pembayaran') {
+            $query->orderByRaw("CASE invoices.status_pembayaran 
+                WHEN 'Overdue' THEN 1 
+                WHEN 'Unpaid' THEN 2 
+                WHEN 'Partially Paid' THEN 3 
+                WHEN 'Paid' THEN 4 
+                WHEN 'Draft' THEN 5 
+                ELSE 6 END " . $sortDir);
+        } elseif ($sortBy === 'payments.jumlah_bayar') {
+            $query->orderByRaw("COALESCE(paid_summary.total_paid_all, 0) " . $sortDir);
+        } elseif ($sortBy === 'sisa_piutang') {
+            $query->orderByRaw("(invoices.total_akhir - COALESCE(paid_summary.total_paid_all, 0)) " . $sortDir);
+        } else {
+            $query->orderBy($sortBy, $sortDir);
+        }
+    }
+
     private function applyCommonFilters($query, Request $request, $mitraId, $search, $hasMitraJoin = false, $isInvoiceItemsQuery = false)
     {
         $prodIdFilter = $this->extractProductFilter($request);
         $invTypeFilter = $request->invoice_type;
         $payStatusFilter = $request->payment_status;
+        $showDeleted = $request->show_deleted;
+
+        // Soft delete handling
+        if (!$showDeleted) {
+            $query->whereNull('invoices.deleted_at');
+            // Only apply directly to invoice_items if it's the main table in the query
+            if ($isInvoiceItemsQuery) {
+                $query->whereNull('invoice_items.deleted_at');
+            }
+        }
 
         // Apply filters directly to invoices table
-        if ($mitraId) {
-            $query->where('invoices.mitra_id', $mitraId);
+        if (!empty($mitraId)) {
+            $query->whereIn('invoices.mitra_id', (array) $mitraId);
         }
         if ($invTypeFilter) {
             $query->where('invoices.tipe_invoice', $invTypeFilter);
