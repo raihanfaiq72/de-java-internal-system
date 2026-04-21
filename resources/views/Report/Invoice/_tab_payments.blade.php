@@ -40,8 +40,9 @@
                     <th class="py-3 text-muted small fw-bold text-uppercase">No. Mitra</th>
                     <th class="py-3 text-muted small fw-bold text-uppercase">Nama Mitra</th>
                     <th class="py-3 text-muted small fw-bold text-uppercase">Qty</th>
-                    <th class="py-3 text-muted small fw-bold text-uppercase">Harga Total</th>
-                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end">Jumlah Terbayar</th>
+                    <th class="py-3 text-muted small fw-bold text-uppercase">Total Invoice</th>
+                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end">Terbayar</th>
+                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end">Sisa Piutang</th>
                 </tr>
             </thead>
             <tbody>
@@ -50,20 +51,55 @@
                         <td class="px-4">{{ \Carbon\Carbon::parse($payment->tgl_pembayaran)->format('d M Y') }}</td>
                         <td class="fw-bold text-primary">{{ $payment->nomor_invoice }}</td>
                         <td>
-                            <span
-                                class="badge bg-soft-info text-info border border-info border-opacity-25 rounded-pill px-2">
-                                {{ $payment->metode_pembayaran }}
+                            @php
+                                $method = $payment->metode_pembayaran;
+                                $badgeClass = 'bg-soft-secondary text-secondary';
+                                $icon = 'fa-clock';
+                                
+                                if ($method === 'Tunai') {
+                                    $badgeClass = 'bg-soft-success text-success';
+                                    $icon = 'fa-money-bill-wave';
+                                } elseif ($method === 'Transfer') {
+                                    $badgeClass = 'bg-soft-primary text-primary';
+                                    $icon = 'fa-exchange-alt';
+                                } elseif ($method === 'Kartu Kredit') {
+                                    $badgeClass = 'bg-soft-info text-info';
+                                    $icon = 'fa-credit-card';
+                                } elseif ($method === 'Belum Bayar') {
+                                    $badgeClass = 'bg-danger-subtle text-danger'; // Match invoice page styling
+                                    $icon = 'fa-exclamation-triangle';
+                                }
+                            @endphp
+                            <span class="badge {{ $badgeClass }} border border-opacity-25 rounded-pill px-3 py-2 fw-semibold">
+                                <i class="fa {{ $icon }} me-1"></i>
+                                {{ $method }}
                             </span>
                         </td>
                         <td>{{ $payment->nomor_mitra }}</td>
                         <td>{{ $payment->nama_mitra }}</td>
                         <td>{{ (int) $payment->total_qty ?? '-' }}</td>
-                        <td>Rp {{ number_format($payment->harga_satuan, 0, ',', '.') }}</td>
+                        <td class="fw-bold">Rp {{ number_format($payment->total_akhir, 0, ',', '.') }}</td>
                         <td class="px-4 text-end fw-bold">Rp {{ number_format($payment->jumlah_bayar, 0, ',', '.') }}</td>
+                        <td class="px-4 text-end fw-bold">
+                            @php
+                                $outstanding = $payment->total_akhir - $payment->jumlah_bayar;
+                            @endphp
+                            @if($outstanding > 0)
+                                <span class="badge bg-soft-danger text-danger rounded-pill px-3 py-2 fw-semibold">
+                                    <i class="fa fa-exclamation-circle me-1"></i>
+                                    Rp {{ number_format($outstanding, 0, ',', '.') }}
+                                </span>
+                            @else
+                                <span class="badge bg-soft-success text-success rounded-pill px-3 py-2 fw-semibold">
+                                    <i class="fa fa-check-circle me-1"></i>
+                                    Lunas
+                                </span>
+                            @endif
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="text-center py-5">
+                        <td colspan="9" class="text-center py-5">
                             <div class="mb-3"><i class="iconoir-file-not-found fs-1 text-muted opacity-50"></i></div>
                             <h6 class="fw-bold text-dark">Tidak ada data pembayaran</h6>
                             <p class="text-muted small mb-0">Sesuaikan filter periode atau pencarian.</p>
@@ -73,7 +109,7 @@
             </tbody>
             <tfoot class="bg-light fw-bold">
                 <tr>
-                    <td colspan="7" class="px-4 text-end text-uppercase text-muted small">Total Pembayaran</td>
+                    <td colspan="8" class="px-4 text-end text-uppercase text-muted small">Total Pembayaran</td>
                     <td class="px-4 text-end text-dark">Rp {{ number_format($totalPaymentAmount, 0, ',', '.') }}</td>
                 </tr>
             </tfoot>

@@ -202,23 +202,30 @@ class InvoiceReportController extends Controller
             ->select('invoice_id', DB::raw('SUM(qty) as total_qty'), DB::raw('MAX(harga_satuan) as harga_satuan'))
             ->groupBy('invoice_id');
 
-        $paymentsQuery = DB::table('payments')
-            ->join('invoices', 'payments.invoice_id', '=', 'invoices.id')
+        $paymentsQuery = DB::table('invoices')
+            ->leftJoin('payments', function($join) use ($startDate, $endDate) {
+                $join->on('payments.invoice_id', '=', 'invoices.id')
+                     ->whereNull('payments.deleted_at')
+                     ->whereBetween('payments.tgl_pembayaran', [$startDate, $endDate]);
+            })
             ->leftJoin('mitras', 'invoices.mitra_id', '=', 'mitras.id')
             ->leftJoinSub($itemsSubQuery, 'items', function ($join) {
                 $join->on('invoices.id', '=', 'items.invoice_id');
             })
             ->where('invoices.office_id', $officeId)
-            ->whereNull('payments.deleted_at')
+            ->where('invoices.tipe_invoice', 'Sales') // Only show sales invoices
             ->whereNull('invoices.deleted_at')
-            ->whereBetween('payments.tgl_pembayaran', [$startDate, $endDate])
+            ->whereBetween('invoices.tgl_invoice', [$startDate, $endDate]) // Filter by invoice date instead of payment date
             ->select(
-                'payments.tgl_pembayaran',
-                'payments.jumlah_bayar',
-                'payments.metode_pembayaran',
-                'payments.nomor_pembayaran',
-                'invoices.nomor_invoice',
+                'invoices.tgl_invoice',
+                'invoices.total_akhir',
                 'invoices.status_pembayaran',
+                'invoices.tgl_jatuh_tempo',
+                'invoices.nomor_invoice',
+                DB::raw('COALESCE(payments.tgl_pembayaran, invoices.tgl_invoice) as tgl_pembayaran'),
+                DB::raw('COALESCE(payments.jumlah_bayar, 0) as jumlah_bayar'),
+                DB::raw('COALESCE(payments.metode_pembayaran, "Belum Bayar") as metode_pembayaran'),
+                DB::raw('COALESCE(payments.nomor_pembayaran, "-") as nomor_pembayaran'),
                 'mitras.nama as nama_mitra',
                 'mitras.nomor_mitra',
                 'items.total_qty',
@@ -227,7 +234,7 @@ class InvoiceReportController extends Controller
 
         $this->applyCommonFilters($paymentsQuery, $request, $mitraId, $search, true);
 
-        $payments = $paymentsQuery->orderBy('payments.tgl_pembayaran', 'desc')->get();
+        $payments = $paymentsQuery->orderBy('invoices.tgl_invoice', 'desc')->get();
         $totalPaymentAmount = $payments->sum('jumlah_bayar');
         $totalUniqueInvoices = $payments->unique('nomor_invoice')->count();
 

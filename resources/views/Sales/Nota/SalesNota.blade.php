@@ -291,20 +291,11 @@
                             <div class="sig-box text-center"><strong>Pengirim</strong><br><br><br>( . . . . . .)</div>
                             <div class="sig-box text-center"><strong>Gudang</strong><br><br><br>( . . . . .)</div>
                         </div>
-                        <div
-                            style="margin-top: 60px; border: 2px solid #000; padding: 2px; min-height: 20px; font-weight: bold;">
-                            TERBILANG: <span id="terbilang_display"
-                                style="font-style: italic; text-transform: uppercase;"></span>
-                        </div>
                     </td>
                 </tr>
                 <tr>
                     <td class="text-left">Diskon</td>
                     <td colspan="2" class="text-right" id="diskon_display">0</td>
-                </tr>
-                <tr style="border-top: 0px; border-bottom: 0px;">
-                    <td class="text-left">Pajak (PPN)</td>
-                    <td colspan="2" class="text-right" id="pajak_display">0</td>
                 </tr>
                 <tr>
                     <td class="text-left">Biaya Lain</td>
@@ -429,7 +420,6 @@
                     }
                     document.getElementById('diskon_display').innerText = discText;
 
-                    document.getElementById('pajak_display').innerText = formatNumber(data.pajak_ppn || 0);
                     document.getElementById('biaya_lain_display').innerText = formatNumber(data.other_fee ||
                         data.biaya_kirim || 0);
                     document.getElementById('cashback_display').innerText = formatNumber(data.cashback || 0);
@@ -439,7 +429,6 @@
                     // document.getElementById('sisa_tagihan').innerText = formatNumber(data.total_akhir -
                     //     totalBayar);
 
-                    document.getElementById('terbilang_display').innerText = terbilang(data.total_akhir) +
                         " RUPIAH";
 
                     document.getElementById('loading').style.display = 'none';
