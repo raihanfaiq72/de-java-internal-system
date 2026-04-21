@@ -54,13 +54,23 @@
     <tr>
         <td class="brand-name"></td>
         <td class="text-center">
-            <div class="d-flex gap-2 justify-content-center">
-                <button class="btn-premium btn-premium-edit btn-edit shadow-sm">
-                    <i class="fa fa-edit"></i> Edit
+            <div class="dropdown">
+                <button class="btn btn-sm btn-light border shadow-sm dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fa fa-cog text-muted"></i>
                 </button>
-                <button class="btn-premium btn-premium-delete btn-delete shadow-sm">
-                    <i class="fa fa-trash"></i> Hapus
-                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                    <li>
+                        <a class="dropdown-item btn-edit" href="javascript:void(0)">
+                            <i class="fa fa-edit me-2 text-warning"></i> Edit Brand
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-danger btn-delete" href="javascript:void(0)">
+                            <i class="fa fa-trash me-2"></i> Hapus Brand
+                        </a>
+                    </li>
+                </ul>
             </div>
         </td>
     </tr>

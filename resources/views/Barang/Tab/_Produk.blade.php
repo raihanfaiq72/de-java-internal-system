@@ -63,7 +63,7 @@
                     <th class="text-end" style="cursor: pointer;" onclick="toggleSort('harga_jual')">Harga Jual <span id="sort-icon-harga_jual"></span></th>
                     <th class="text-end" style="cursor: pointer;" onclick="toggleSort('harga_tempo')">Harga Tempo <span id="sort-icon-harga_tempo"></span></th>
                     <th>COA</th>
-                    <th width="180" class="text-center">Aksi</th>
+                    <th width="60" class="text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody id="produk-table-body">
@@ -100,13 +100,23 @@
         <td class="col-tempo text-end"></td>
         <td class="col-coa text-start"></td>
         <td class="text-center">
-            <div class="d-flex gap-2 justify-content-center">
-                <button class="btn-premium btn-premium-edit btn-edit shadow-sm">
-                    <i class="fa fa-edit"></i> Edit
+            <div class="dropdown">
+                <button class="btn btn-sm btn-light border shadow-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fa fa-cog text-muted"></i>
                 </button>
-                <button class="btn-premium btn-premium-delete btn-delete shadow-sm">
-                    <i class="fa fa-trash"></i> Hapus
-                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                    <li>
+                        <a class="dropdown-item btn-edit" href="javascript:void(0)">
+                            <i class="fa fa-edit me-2 text-warning"></i> Edit Produk
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-danger btn-delete" href="javascript:void(0)">
+                            <i class="fa fa-trash me-2"></i> Hapus Produk
+                        </a>
+                    </li>
+                </ul>
             </div>
         </td>
     </tr>
