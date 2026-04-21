@@ -74,7 +74,7 @@
         .main-table td {
             border: 2px solid #000;
             /* Semua border disamakan 2px */
-            padding: 5px;
+            padding: 1px;
             font-weight: bold;
         }
 
@@ -83,7 +83,7 @@
             border-right: 2px solid #000;
             border-top: none !important;
             border-bottom: none !important;
-            padding: 2px 5px !important;
+            padding: 0px !important;
         }
 
         .main-table tbody tr:last-child td {
@@ -91,7 +91,7 @@
         }
 
         .main-table th {
-            background-color: #f2f2f2 !important;
+            /* background-color: #f2f2f2 !important; */
             text-transform: uppercase;
         }
 
@@ -174,7 +174,7 @@
         }
 
         .total-table tr:last-child td {
-            background-color: #f2f2f2 !important;
+            /* background-color: #f2f2f2 !important; */
         }
 
         /* Tanda Tangan */
@@ -209,6 +209,10 @@
             font-weight: bold;
         }
 
+        .total-footer {
+            font-size: 16px !important;
+        }
+
         @media print {
             body {
                 padding: 0;
@@ -227,7 +231,7 @@
 
             @page {
                 size: auto;
-                margin: 15mm 15mm 10mm 5mm;
+                margin: 12mm 15mm 10mm 5mm;
                 /* Top Right Bottom Left - Moved Down and Left */
             }
         }
@@ -298,7 +302,7 @@
                         </div>
                     </td>
                 </tr>
-                <tr>
+                <tr style="padding: 0px;">
                     <td class="text-left">Diskon</td>
                     <td colspan="2" class="text-right" id="diskon_display">0</td>
                 </tr>
@@ -314,7 +318,7 @@
                     <td class="text-left">Cashback</td>
                     <td colspan="2" class="text-right" id="cashback_display">0</td>
                 </tr>
-                <tr style="background-color: #f2f2f2 !important;">
+                <tr class="total-footer">
                     <td class="text-left">TOTAL Rp</td>
                     <td colspan="2" class="text-right" id="total_akhir"></td>
                 </tr>
@@ -410,7 +414,7 @@
                     // Baris kosong (minimal 5 baris)
                     for (let i = data.items.length; i < 3; i++) {
                         tbody.insertAdjacentHTML('beforeend',
-                            '<tr><td style="height:35px;"></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'
+                            '<tr><td style="height:15px;"></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'
                         );
                     }
 
