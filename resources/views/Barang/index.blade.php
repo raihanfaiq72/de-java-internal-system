@@ -81,9 +81,61 @@
         }
 
         .table thead th {
-            font-size: 12px;
+            font-size: 14px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        /* Unified Modal Consistency */
+        .modal-header {
+            background-color: #ffffff;
+            border-bottom: 3px solid #0d6efd;
+            padding: 1.25rem;
+        }
+        .modal-title {
+            color: #212529;
+            font-weight: 800;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+        }
+        .modal-body {
+            padding: 1.5rem;
+        }
+        .modal-footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            padding: 1rem 1.5rem;
+        }
+
+        /* Better Labels & Inputs for Elderly */
+        .form-label, label.small.fw-bold {
+            font-size: 0.9rem !important;
+            color: #343a40 !important;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .form-control, .form-select {
+            border: 1px solid #ced4da;
+            padding: 0.6rem 0.75rem;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+        }
+
+        /* Section Dividers in Modals */
+        .modal-section-title {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #6c757d;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 5px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
         }
     </style>
 
@@ -230,12 +282,50 @@
                         supplierFilter.innerHTML += `<option value="${supplier.id}">${supplier.nama}</option>`;
                     });
                     
-                    // Initialize TomSelect for supplier filter
-                    new TomSelect(supplierFilter, {
+                    window.tsProductSupplierFilter = new TomSelect(supplierFilter, {
                         create: false,
                         allowEmptyOption: true,
-                        placeholder: 'Pilih Supplier...',
-                        dropdownParent: 'body'
+                        placeholder: 'Semua Supplier',
+                        dropdownParent: 'body',
+                        onChange: function() {
+                            if(typeof loadProductData === 'function') loadProductData();
+                        }
+                    });
+                }
+
+                const brandFilter = document.getElementById('filter-produk-brand');
+                if (brandFilter && masterBrands.length > 0) {
+                    brandFilter.innerHTML = '<option value="">Semua Brand</option>';
+                    masterBrands.forEach(brand => {
+                        brandFilter.innerHTML += `<option value="${brand.id}">${brand.nama_brand}</option>`;
+                    });
+                    
+                    window.tsProductBrandFilter = new TomSelect(brandFilter, {
+                        create: false,
+                        allowEmptyOption: true,
+                        placeholder: 'Semua Brand',
+                        dropdownParent: 'body',
+                        onChange: function() {
+                            if(typeof loadProductData === 'function') loadProductData();
+                        }
+                    });
+                }
+
+                const kategoriFilter = document.getElementById('filter-produk-kategori');
+                if (kategoriFilter && masterCategories.length > 0) {
+                    kategoriFilter.innerHTML = '<option value="">Semua Kategori</option>';
+                    masterCategories.forEach(kategori => {
+                        kategoriFilter.innerHTML += `<option value="${kategori.id}">${kategori.nama_kategori}</option>`;
+                    });
+                    
+                    window.tsProductKategoriFilter = new TomSelect(kategoriFilter, {
+                        create: false,
+                        allowEmptyOption: true,
+                        placeholder: 'Semua Kategori',
+                        dropdownParent: 'body',
+                        onChange: function() {
+                            if(typeof loadProductData === 'function') loadProductData();
+                        }
                     });
                 }
             }, 1000);

@@ -37,11 +37,30 @@ class ProductController extends Controller
             $query->where('supplier_id', $request->supplier_id);
         }
 
+        if ($request->brand_id) {
+            $query->where('brand_id', $request->brand_id);
+        }
+
+        $sortField = $request->get('sort', 'created_at');
+        $sortDir   = $request->get('dir', 'desc');
+
+        $allowedSorts = [
+            'sku_kode', 'nama_produk', 'kemasan', 'satuan', 
+            'qty', 'harga_beli', 'harga_jual', 'harga_tempo', 'created_at'
+        ];
+
+        if (in_array($sortField, $allowedSorts)) {
+            $sortDir = strtolower($sortDir) === 'asc' ? 'asc' : 'desc';
+            $query->orderBy($sortField, $sortDir);
+        } else {
+            $query->latest();
+        }
+
         $perPage = $request->get('per_page', 10);
         if ($perPage >= 1000) {
-            $data = $query->latest()->get();
+            $data = $query->get();
         } else {
-            $data = $query->latest()->paginate($perPage)->withQueryString();
+            $data = $query->paginate($perPage)->withQueryString();
         }
 
         return apiResponse(true, 'Data produk', $data);
@@ -65,7 +84,7 @@ class ProductController extends Controller
             'nama_produk' => 'required|string|max:255',
             'sku_kode' => 'nullable|string|max:100|unique:products,sku_kode,NULL,id,office_id,' . session('active_office_id'),
             'product_category_id' => 'nullable|exists:product_categories,id',
-            'supplier_id' => 'nullable|exists:suppliers,id',
+            'supplier_id' => 'nullable|exists:mitras,id',
             'brand_id' => 'nullable|exists:brands,id',
             'unit_id' => 'nullable|exists:unit_ukurans,id',
             'coa_id' => 'nullable|exists:coas,id',

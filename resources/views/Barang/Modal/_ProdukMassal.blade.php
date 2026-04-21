@@ -2,11 +2,11 @@
 <div class="modal fade" id="modalProdukMassal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header">
                 <h5 class="modal-title">
-                    <i class="fa fa-layer-group me-2"></i>Tambah Massal Produk
+                    <i class="fa fa-layer-group me-2 text-primary"></i>Tambah Massal Produk
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body">
@@ -98,29 +98,19 @@
     .massal-input {
         border: 1px solid #dee2e6;
         border-radius: 4px;
-        padding: 4px 8px;
-        font-size: 13px;
+        padding: 8px 12px;
+        font-size: 14px;
         width: 100%;
-        min-height: 28px;
+        min-height: 38px;
     }
     
-    .massal-input:focus {
-        outline: none;
-        border-color: #86b7fe;
-        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-    }
-    
-    .massal-select {
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-        padding: 4px 8px;
-        font-size: 13px;
-        width: 100%;
-        min-height: 28px;
+    #massalProductTable td {
+        padding: 8px 4px !important;
+        vertical-align: middle;
     }
     
     .required-field {
-        border-left: 3px solid #dc3545;
+        border-left: 4px solid #dc3545;
     }
     
     .row-number {
@@ -304,7 +294,7 @@
             <td>
                 <select class="form-select form-select-sm in-kategori-${productRowCount}">
                     <option value="">-- Pilih --</option>
-                    ${safeMap(categories, c => `<option value="${c.id}">${c.nama}</option>`)}
+                    ${safeMap(categories, c => `<option value="${c.id}">${c.nama_kategori || c.nama}</option>`)}
                 </select>
             </td>
             <td>
@@ -331,7 +321,7 @@
             <td>
                 <select class="form-select form-select-sm in-coa-${productRowCount}">
                     <option value="">-- Pilih --</option>
-                    ${safeMap(coas, c => `<option value="${c.id}">${c.nama}</option>`)}
+                    ${safeMap(coas, c => `<option value="${c.id}">${c.nama_akun || c.nama}</option>`)}
                 </select>
             </td>
             <td class="text-center align-middle">
@@ -378,8 +368,8 @@
                 if (categorySelect && typeof TomSelect !== 'undefined') {
                     new TomSelect(categorySelect, {
                         valueField: 'id',
-                        labelField: 'nama',
-                        searchField: 'nama',
+                        labelField: 'nama_kategori',
+                        searchField: 'nama_kategori',
                         create: false,
                         placeholder: 'Kategori...',
                         dropdownParent: 'body'
@@ -391,8 +381,8 @@
                 if (coaSelect && typeof TomSelect !== 'undefined') {
                     new TomSelect(coaSelect, {
                         valueField: 'id',
-                        labelField: 'nama',
-                        searchField: 'nama',
+                        labelField: 'nama_akun',
+                        searchField: 'nama_akun',
                         create: false,
                         placeholder: 'COA...',
                         dropdownParent: 'body'
