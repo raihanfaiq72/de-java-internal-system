@@ -273,13 +273,13 @@
             <thead>
                 <tr>
                     <th width="5%">NO</th>
-                    <th width="15%">KODE BARANG</th>
+                    <th width="8%">KODE</th>
                     <th width="30%">NAMA BARANG</th>
-                    <th width="10%">SATUAN</th>
+                    <th width="8%">SATUAN</th>
                     <th width="8%">QTY</th>
                     <th width="15%">HARGA SATUAN</th>
                     <th width="7%">DISC</th>
-                    <th width="10%">TOTAL</th>
+                    <th width="15%">TOTAL</th>
                 </tr>
             </thead>
             <tbody id="items-body"></tbody>
@@ -297,7 +297,7 @@
                         </div>
                     </td>
                 </tr>
-                <tr style="padding: 0px;">
+                <tr>
                     <td class="text-left">Diskon</td>
                     <td colspan="2" class="text-right" id="diskon_display">0</td>
                 </tr>
@@ -433,7 +433,7 @@
                     // document.getElementById('sisa_tagihan').innerText = formatNumber(data.total_akhir -
                     //     totalBayar);
 
-                        " RUPIAH";
+                    " RUPIAH";
 
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('nota-content').style.display = 'block';
