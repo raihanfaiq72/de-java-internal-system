@@ -266,7 +266,7 @@
                     <td class="text-left">Cashback</td>
                     <td colspan="2" class="text-right" id="cashback_display">0</td>
                 </tr>
-                <tr style="background-color: #f2f2f2 !important;">
+                <tr>
                     <td class="text-left">TOTAL Rp</td>
                     <td colspan="2" class="text-right" id="total_akhir"></td>
                 </tr>

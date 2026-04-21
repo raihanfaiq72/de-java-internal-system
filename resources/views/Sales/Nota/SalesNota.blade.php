@@ -74,7 +74,7 @@
         .main-table td {
             border: 2px solid #000;
             /* Semua border disamakan 2px */
-            padding: 5px;
+            padding: 1px;
             font-weight: bold;
         }
 
@@ -83,7 +83,7 @@
             border-right: 2px solid #000;
             border-top: none !important;
             border-bottom: none !important;
-            padding: 2px 5px !important;
+            padding: 0px !important;
         }
 
         .main-table tbody tr:last-child td {
@@ -91,7 +91,7 @@
         }
 
         .main-table th {
-            background-color: #f2f2f2 !important;
+            /* background-color: #f2f2f2 !important; */
             text-transform: uppercase;
         }
 
@@ -174,7 +174,7 @@
         }
 
         .total-table tr:last-child td {
-            background-color: #f2f2f2 !important;
+            /* background-color: #f2f2f2 !important; */
         }
 
         /* Tanda Tangan */
@@ -209,6 +209,10 @@
             font-weight: bold;
         }
 
+        .total-footer {
+            font-size: 16px !important;
+        }
+
         @media print {
             body {
                 padding: 0;
@@ -227,7 +231,7 @@
 
             @page {
                 size: auto;
-                margin: 15mm 15mm 10mm 5mm;
+                margin: 12mm 15mm 10mm 5mm;
                 /* Top Right Bottom Left - Moved Down and Left */
             }
         }
@@ -269,13 +273,13 @@
             <thead>
                 <tr>
                     <th width="5%">NO</th>
-                    <th width="15%">KODE BARANG</th>
+                    <th width="8%">KODE</th>
                     <th width="30%">NAMA BARANG</th>
-                    <th width="10%">SATUAN</th>
+                    <th width="8%">SATUAN</th>
                     <th width="8%">QTY</th>
                     <th width="15%">HARGA SATUAN</th>
                     <th width="7%">DISC</th>
-                    <th width="10%">TOTAL</th>
+                    <th width="15%">TOTAL</th>
                 </tr>
             </thead>
             <tbody id="items-body"></tbody>
@@ -305,7 +309,7 @@
                     <td class="text-left">Cashback</td>
                     <td colspan="2" class="text-right" id="cashback_display">0</td>
                 </tr>
-                <tr style="background-color: #f2f2f2 !important;">
+                <tr class="total-footer">
                     <td class="text-left">TOTAL Rp</td>
                     <td colspan="2" class="text-right" id="total_akhir"></td>
                 </tr>
@@ -401,7 +405,7 @@
                     // Baris kosong (minimal 5 baris)
                     for (let i = data.items.length; i < 3; i++) {
                         tbody.insertAdjacentHTML('beforeend',
-                            '<tr><td style="height:35px;"></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'
+                            '<tr><td style="height:15px;"></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'
                         );
                     }
 
@@ -429,7 +433,7 @@
                     // document.getElementById('sisa_tagihan').innerText = formatNumber(data.total_akhir -
                     //     totalBayar);
 
-                        " RUPIAH";
+                    " RUPIAH";
 
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('nota-content').style.display = 'block';
