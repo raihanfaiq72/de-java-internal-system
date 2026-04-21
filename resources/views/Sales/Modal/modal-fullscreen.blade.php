@@ -232,7 +232,7 @@
 <!-- Stock Modal remains largely the same, just refined styling -->
 <div class="modal fade" id="stockModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-content border-0 shadow-lg rounded-4" style="height: 90vh;">
             <div class="modal-header bg-dark border-bottom py-3">
                 <h5 class="modal-title fw-bold">Pilih Produk</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
