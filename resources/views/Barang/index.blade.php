@@ -85,6 +85,78 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             white-space: nowrap;
+            background-color: #fcfcfc;
+            position: relative;
+        }
+
+        /* Resizer Handle Styling */
+        .resizer {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 5px;
+            cursor: col-resize;
+            user-select: none;
+            height: 100%;
+            z-index: 10;
+        }
+        .resizer:hover, .resizing {
+            border-right: 3px solid #0d6efd;
+        }
+
+        #produk-table-body {
+            font-size: 15px;
+        }
+
+        /* Premium Action Buttons */
+        .btn-premium {
+            border-radius: 50px;
+            padding: 6px 16px;
+            font-weight: 700;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.2s ease;
+            border: none;
+            gap: 6px;
+        }
+        .btn-premium i {
+            font-size: 14px;
+        }
+        
+        .btn-premium-edit {
+            background-color: #fff9db;
+            color: #856404;
+        }
+        .btn-premium-edit:hover {
+            background-color: #ffec99;
+            color: #533f03;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .btn-premium-delete {
+            background-color: #fff5f5;
+            color: #c92a2a;
+        }
+        .btn-premium-delete:hover {
+            background-color: #ffe3e3;
+            color: #a61e1e;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        /* Improved Table Row Spacing */
+        #produk-table-body td {
+            padding-top: 12px !important;
+            padding-bottom: 12px !important;
+            vertical-align: middle;
+        }
+
+        /* Faint text for supplementary info */
+        .text-faint {
+            color: #adb5bd !important;
+            font-size: 0.85rem;
         }
 
         /* Unified Modal Consistency */
@@ -120,6 +192,7 @@
         .form-control, .form-select {
             border: 1px solid #ced4da;
             padding: 0.6rem 0.75rem;
+            font-size: 14px !important;
         }
         .form-control:focus, .form-select:focus {
             border-color: #0d6efd;
@@ -128,14 +201,50 @@
 
         /* Section Dividers in Modals */
         .modal-section-title {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 800;
-            color: #6c757d;
+            color: #0d6efd;
             border-bottom: 1px solid #e9ecef;
-            padding-bottom: 5px;
-            margin-top: 10px;
-            margin-bottom: 15px;
+            padding-bottom: 8px;
+            margin-top: 5px;
+            margin-bottom: 20px;
             text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+        }
+        .ts-dropdown-content {
+
+        /* Standardize TomSelect height with normal inputs */
+        .ts-control {
+            min-height: 48px !important;
+            padding: 0.6rem 0.75rem !important;
+            font-size: 14px !important;
+            border-radius: 0.375rem !important;
+            display: flex;
+            align-items: center;
+        }
+        .ts-dropdown-content {
+            font-size: 14px;
+        }
+        .modal-section-title::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #e9ecef;
+            margin-left: 15px;
+        }
+
+        /* 2-Column Modal Grid */
+        .modal-grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        @media (max-width: 768px) {
+            .modal-grid-container {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 
@@ -268,6 +377,11 @@
 
             if (typeof loadProductData === 'function') {
                 await loadProductData();
+                
+                // Initialize Excel-like Resizable Columns
+                if (typeof initResizableTable === 'function') {
+                    initResizableTable();
+                }
             }
 
             document.getElementById('btnSaveBrand')
