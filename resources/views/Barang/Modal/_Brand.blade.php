@@ -3,9 +3,9 @@
         <div class="modal-content">
 
             <div class="modal-header">
-                <h6 class="modal-title" id="brandModalTitle">
-                    Tambah Brand
-                </h6>
+                <h5 class="modal-title" id="brandModalTitle">
+                    <i class="fa fa-tags me-2 text-primary"></i>Tambah Brand
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
@@ -13,9 +13,9 @@
                 <form id="formBrand">
                     <input type="hidden" id="brandId">
 
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Nama Brand</label>
-                        <input type="text" id="nama_brand" class="form-control form-control-sm"
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Nama Brand <span class="text-danger">*</span></label>
+                        <input type="text" id="nama_brand" class="form-control"
                             placeholder="Contoh: Castrol">
                         <div class="invalid-feedback"></div>
                     </div>
@@ -29,11 +29,11 @@
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
                     Batal
                 </button>
-                <button type="button" class="btn btn-sm btn-primary" id="btnSaveBrand">
-                    Simpan
+                <button type="button" class="btn btn-primary px-4 fw-bold" id="btnSaveBrand">
+                    <i class="fa fa-save me-1"></i> Simpan Brand
                 </button>
             </div>
 

@@ -4,56 +4,66 @@
         <!-- Filter Controls -->
         <div class="col-md-3">
             <label class="small fw-bold text-muted">Cari Barang</label>
-            <div class="input-group input-group-sm">
+            <div class="input-group">
                 <span class="input-group-text"><i class="fa fa-search"></i></span>
                 <input type="text" id="filter-produk-search" class="form-control"
-                    placeholder="Ketik pencarian...">
+                    placeholder="Nama atau SKU...">
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <label class="small fw-bold text-muted">Supplier</label>
-            <select id="filter-produk-supplier" class="form-select form-select-sm">
-                <option value="">Semua Supplier</option>
+            <select id="filter-produk-supplier" class="form-select">
+                <option value="">Semua</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="small fw-bold text-muted">Brand</label>
+            <select id="filter-produk-brand" class="form-select">
+                <option value="">Semua</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="small fw-bold text-muted">Kategori</label>
+            <select id="filter-produk-kategori" class="form-select">
+                <option value="">Semua</option>
             </select>
         </div>
         
         <!-- Action Buttons -->
-        <div class="col-md-6">
-            <div class="d-flex gap-2 justify-content-end align-items-end">
-                <button onclick="loadProductData()" class="btn btn-outline-primary btn-sm">
-                    <i class="fa fa-filter me-1"></i> Filter
-                </button>
-                <button onclick="exportProduk()" class="btn btn-outline-success btn-sm">
-                    <i class="fa fa-download me-1"></i> Export
+        <div class="col-md-3">
+            <label class="small fw-bold text-muted d-block">&nbsp;</label>
+            <div class="d-flex gap-2">
+                <button onclick="resetFilterProduk()" class="btn btn-outline-secondary" title="Reset Filter">
+                    <i class="fa fa-undo"></i>
                 </button>
                 <div class="vr"></div>
-                <button class="btn btn-success btn-sm" onclick="tambahMassalProduk()">
-                    <i class="fa fa-layer-group me-1"></i> Massal
+                <button onclick="exportProduk()" class="btn btn-outline-success" title="Export Excel">
+                    <i class="fa fa-download"></i>
                 </button>
-                <button class="btn btn-primary btn-sm" onclick="tambahProduk()">
-                    <i class="fa fa-plus me-1"></i> Tambah
+                <button class="btn btn-primary w-100 fw-bold" onclick="tambahMassalProduk()">
+                    <i class="fa fa-plus me-1"></i> TAMBAH
                 </button>
             </div>
         </div>
     </div>
 
     <div class="table-responsive">
-        <table class="table table-sm table-bordered align-middle">
+        <table class="table table-bordered table-striped table-hover align-middle">
             <thead class="table-light">
                 <tr>
-                    <th width="120">SKU</th>
+                    <th width="120" style="cursor: pointer;" onclick="toggleSort('sku_kode')">SKU <span id="sort-icon-sku_kode"></span></th>
                     <th>Supplier</th>
                     <th>Brand</th>
-                    <th>Nama Produk</th>
+                    <th style="cursor: pointer;" onclick="toggleSort('nama_produk')">Nama Produk <span id="sort-icon-nama_produk"></span></th>
                     <th>Kategori</th>
-                    <th>Kemasan</th>
-                    <th>Satuan</th>
-                    <th>Qty</th>
-                    <th>Harga Beli</th>
-                    <th>Harga Jual</th>
-                    <th>Harga Tempo</th>
+                    <th class="text-center" style="cursor: pointer;" onclick="toggleSort('kemasan')">Kemasan <span id="sort-icon-kemasan"></span></th>
+                    <th class="text-center" style="cursor: pointer;" onclick="toggleSort('satuan')">Satuan <span id="sort-icon-satuan"></span></th>
+                    <th class="text-center" style="cursor: pointer;" onclick="toggleSort('qty')">Qty <span id="sort-icon-qty"></span></th>
+                    <th class="text-end" style="cursor: pointer;" onclick="toggleSort('harga_beli')">Harga Beli <span id="sort-icon-harga_beli"></span></th>
+                    <th class="text-end" style="cursor: pointer;" onclick="toggleSort('harga_jual')">Harga Jual <span id="sort-icon-harga_jual"></span></th>
+                    <th class="text-end" style="cursor: pointer;" onclick="toggleSort('harga_tempo')">Harga Tempo <span id="sort-icon-harga_tempo"></span></th>
                     <th>COA</th>
-                    <th width="80" class="text-center">Aksi</th>
+                    <th width="180" class="text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody id="produk-table-body">
@@ -73,56 +83,7 @@
 
 </div>
 
-<template id="produk-row-inline-template">
-    <tr class="bg-primary bg-opacity-10 border-primary">
-        <td>
-            <input type="text" class="form-control form-control-sm in-sku" disabled>
-        </td>
-        <td>
-            <select class="in-supplier"></select>
-        </td>
-        <td>
-            <select class="in-brand"></select>
-        </td>
-        <td>
-            <input type="text" class="form-control form-control-sm in-nama">
-        </td>
-        <td>
-            <select class="in-kategori"></select>
-        </td>
-        <td>
-            <input type="text" class="form-control form-control-sm in-kemasan">
-        </td>
-        <td>
-            <input type="text" class="form-control form-control-sm in-satuan">
-        </td>
-        <td>
-            <input type="number" class="form-control form-control-sm in-qty" value="0" min="0">
-        </td>
-        <td>
-            <input type="text" class="form-control form-control-sm in-beli" value="0">
-        </td>
-        <td>
-            <input type="text" class="form-control form-control-sm in-jual" value="0">
-        </td>
-        <td>
-            <input type="text" class="form-control form-control-sm in-tempo" value="0">
-        </td>
-        <td>
-            <select class="in-coa"></select>
-        </td>
-        <td class="text-center">
-            <div class="d-flex gap-1 justify-content-center">
-                <button class="btn btn-xs btn-success btn-save-inline" title="Simpan">
-                    <i class="fa fa-check"></i>
-                </button>
-                <button class="btn btn-xs btn-danger btn-cancel-inline" title="Batal">
-                    <i class="fa fa-times"></i>
-                </button>
-            </div>
-        </td>
-    </tr>
-</template>
+
 
 <template id="produk-row-display-template">
     <tr>
@@ -139,23 +100,13 @@
         <td class="col-tempo text-end"></td>
         <td class="col-coa text-start"></td>
         <td class="text-center">
-            <div class="dropdown">
-                <button class="btn btn-sm btn-light border dropdown-toggle" data-bs-toggle="dropdown">Aksi</button>
-                <ul class="dropdown-menu">
-                    <li>
-                        <a class="dropdown-item btn-edit" href="javascript:void(0)">
-                            <i class="fa fa-edit me-2 text-warning"></i> Edit
-                        </a>
-                    </li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-                    <li>
-                        <a class="dropdown-item btn-delete text-danger" href="javascript:void(0)">
-                            <i class="fa fa-trash me-2"></i> Hapus
-                        </a>
-                    </li>
-                </ul>
+            <div class="d-flex gap-1 justify-content-center">
+                <button class="btn btn-sm btn-warning btn-edit text-dark fw-bold">
+                    <i class="fa fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-sm btn-danger btn-delete fw-bold">
+                    <i class="fa fa-trash"></i> Hapus
+                </button>
             </div>
         </td>
     </tr>
@@ -191,6 +142,64 @@
             }
 
             el.value = new Intl.NumberFormat('id-ID').format(val);
+        }
+
+        let pCurrentSort = 'created_at';
+        let pCurrentDir = 'desc';
+
+        function toggleSort(field) {
+            if (pCurrentSort === field) {
+                pCurrentDir = pCurrentDir === 'desc' ? 'asc' : 'desc';
+            } else {
+                pCurrentSort = field;
+                pCurrentDir = 'asc';
+            }
+            updateSortIcons();
+            loadProductData();
+        }
+
+        function updateSortIcons() {
+            // Reset all icons to a faint neutral state
+            document.querySelectorAll('th span[id^="sort-icon-"]').forEach(el => {
+                el.innerHTML = '<i class="fa fa-sort text-muted ms-1" style="opacity: 0.3;"></i>';
+            });
+
+            // Highlight the active sort column
+            const iconEl = document.getElementById('sort-icon-' + pCurrentSort);
+            if (iconEl) {
+                if (pCurrentDir === 'asc') {
+                    iconEl.innerHTML = '<i class="fa fa-sort-up text-primary ms-1" style="font-size: 1.2rem;"></i>';
+                } else {
+                    iconEl.innerHTML = '<i class="fa fa-sort-down text-primary ms-1" style="font-size: 1.2rem;"></i>';
+                }
+            }
+        }
+
+        function formatBiggerPriceHTML(val) {
+            val = val || 0;
+            if (val == 0) {
+                return '<span class="text-muted">Rp 0</span>';
+            }
+            return '<span class="fw-bold text-dark">' + formatIDR(val) + '</span>';
+        }
+
+        let pSearchTimeout = null;
+        document.getElementById('filter-produk-search').addEventListener('input', function() {
+            clearTimeout(pSearchTimeout);
+            pSearchTimeout = setTimeout(() => {
+                loadProductData();
+            }, 500);
+        });
+
+        function resetFilterProduk() {
+            document.getElementById('filter-produk-search').value = '';
+            if(window.tsProductSupplierFilter) window.tsProductSupplierFilter.clear();
+            if(window.tsProductBrandFilter) window.tsProductBrandFilter.clear();
+            if(window.tsProductKategoriFilter) window.tsProductKategoriFilter.clear();
+            pCurrentSort = 'created_at';
+            pCurrentDir = 'desc';
+            updateSortIcons();
+            loadProductData();
         }
 
         async function syncBrandLink(brandId, supplierId, tsInstance) {
@@ -233,542 +242,199 @@
             }
         }
 
-        async function tambahProduk() {
-            await Promise.all([
-                fetchMasterSuppliers(),
-                fetchMasterBrands(),
-                fetchMasterCategories(),
-                fetchMasterCOA()
-            ]);
-
-            const tbody = document.getElementById('produk-table-body');
-            const template = document.getElementById('produk-row-inline-template');
-
-            if (document.querySelector('.in-sku')) return;
-
-            const clone = template.content.cloneNode(true);
-            const tr = clone.querySelector('tr');
-
-            tbody.prepend(tr);
-
-            const inBeli = tr.querySelector('.in-beli');
-            const inJual = tr.querySelector('.in-jual');
-            const inTempo = tr.querySelector('.in-tempo');
-            
-            inBeli.addEventListener('input', function() {
-                formatRupiahInput(this);
-            });
-            inJual.addEventListener('input', function() {
-                formatRupiahInput(this);
-            });
-            inTempo.addEventListener('input', function() {
-                formatRupiahInput(this);
-            });
-
-            let tsProductBrand, tsProductSupplier, tsProductKategori, tsCOA;
-
-            tsProductBrand = new TomSelect(tr.querySelector('.in-brand'), {
-
-                options: masterBrands.map(b => {
-                    const supplierId = tsProductSupplier ? tsProductSupplier.getValue() : null;
-                    const isLinked = b.suppliers && b.suppliers.some(s => String(s.id) === String(
-                        supplierId));
-                    return {
-                        value: b.id,
-                        text: b.nama_brand
-                    };
-                }),
-                placeholder: 'Brand...',
-                dropdownParent: 'body',
-                onChange: function(brandId) {
-                    if (!brandId) return;
-                    const supplierId = tsProductSupplier.getValue();
-                    syncBrandLink(brandId, supplierId, tsProductBrand);
-                },
-                create: async function(input, callback) {
-                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute(
-                        'content') || '';
-                    const supplierId = tsProductSupplier.getValue();
-
-                    try {
-                        const res = await fetch(BRAND_URL, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': token
-                            },
-                            body: JSON.stringify({
-                                nama_brand: input,
-                                supplier_ids: [supplierId],
-                            })
-                        });
-                        const data = await res.json();
-                        if (data.status === 'success' || data.success) {
-                            const idx = masterBrands.findIndex(b => b.id === data.data.id);
-                            if (idx !== -1) masterBrands[idx] = data.data;
-                            else masterBrands.push(data.data);
-
-                            callback({
-                                value: data.data.id,
-                                text: data.data.nama_brand
-                            });
-                        } else {
-                            alert(data.message || 'Gagal memproses brand');
-                            callback(false);
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        alert('Gagal memproses brand');
-                        callback(false);
-                    }
-                }
-            });
 
 
-            tsProductSupplier = new TomSelect(tr.querySelector('.in-supplier'), {
-                options: masterSuppliers.map(s => ({
-                    value: s.id,
-                    text: s.nama
-                })),
-                placeholder: 'Supplier...',
-                dropdownParent: 'body',
-                onChange: function(supplierId) {
-                    if (!tsProductBrand) return;
-
-                    tsProductBrand.clear();
-                    tsProductBrand.clearOptions();
-
-                    const options = masterBrands.map(b => {
-                        const isLinked = b.suppliers && b.suppliers.some(s => String(s.id) ===
-                            String(supplierId));
-                        return {
-                            value: b.id,
-                            text: b.nama_brand
-                        };
-                    });
-
-                    tsProductBrand.addOptions(options);
-                    tsProductBrand.refreshOptions(false);
-                }
-            });
-
-
-            tsProductKategori = new TomSelect(tr.querySelector('.in-kategori'), {
-                options: masterCategories.map(c => ({
-                    value: c.id,
-                    text: c.nama_kategori
-                })),
-                placeholder: 'Kategori...',
-                dropdownParent: 'body',
-                create: function(input, callback) {
-                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute(
-                        'content') || '';
-
-                    fetch(CATEGORY_URL, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': token
-                            },
-                            body: JSON.stringify({
-                                nama_kategori: input
-                            })
-                        }).then(response => response.json())
-                        .then(result => {
-                            if (result.success) {
-                                masterCategories.push(result.data);
-
-                                callback({
-                                    value: result.data.id,
-                                    text: result.data.nama_kategori
-                                });
-
-                                console.log('Kategori baru berhasil disimpan:', result.data
-                                    .nama_kategori);
-                            } else {
-                                alert('Gagal menyimpan kategori baru: ' + result.message);
-                                callback(false);
-                            }
-                        })
-                        .catch(err => {
-                            console.error('Error creating category:', err);
-                            callback(false);
-                        });
-                }
-            });
-
-            tsCOA = new TomSelect(tr.querySelector('.in-coa'), {
-                options: masterCOA.map(c => ({
-                    value: c.id,
-                    text: c.nama_akun
-                })),
-                placeholder: 'COA...',
-                create: false,
-                dropdownParent: 'body'
-            });
-
-            const skuInput = tr.querySelector('.in-sku');
-            skuInput.value = '...';
-            const res = await fetch(NEXT_SKU_URL);
-            const result = await res.json();
-            if (result.success) skuInput.value = result.data;
-
-            tr.querySelector('.btn-cancel-inline').onclick = () => tr.remove();
-
-            tr.querySelector('.btn-save-inline').onclick = async () => {
-                const supplierId = tsProductSupplier.getValue();
-                const brandId = tsProductBrand.getValue();
-                const categoryId = tsProductKategori.getValue();
-                const coaId = tsCOA.getValue();
-                const kemasanRaw = tr.querySelector('.in-kemasan').value;
-                const kemasanVal = kemasanRaw === '' ? null : parseInt(kemasanRaw, 10);
-
-                const qtyValue = tr.querySelector('.in-qty').value;
-                const payload = {
-                    sku_kode: skuInput.value,
-                    nama_produk: tr.querySelector('.in-nama').value,
-                    supplier_id: supplierId,
-                    brand_id: brandId,
-                    product_category_id: categoryId,
-                    kemasan: Number.isFinite(kemasanVal) ? kemasanVal : null,
-                    satuan: tr.querySelector('.in-satuan').value,
-                    qty: qtyValue || 0,
-                    harga_beli: inBeli.value.replace(/\./g, ''),
-                    harga_jual: inJual.value.replace(/\./g, ''),
-                    harga_tempo: inTempo.value.replace(/\./g, ''),
-                    track_stock: 1,
-                    akun_penjualan_id: 1,
-                    akun_pembelian_id: 1,
-                    coa_id: coaId
-                };
-
-                if (!payload.nama_produk || !payload.sku_kode) {
-                    alert('Nama dan SKU wajib diisi');
-                    return;
-                }
-                if (!payload.supplier_id) {
-                    alert('Supplier wajib dipilih');
-                    return;
-                }
-                if (!payload.brand_id) {
-                    alert(
-                        'Brand wajib dipilih. Jika brand belum ada untuk supplier ini, silakan buat brand terlebih dahulu.'
-                    );
-                    return;
-                }
-                if (!payload.product_category_id) {
-                    alert('Kategori wajib dipilih');
-                    return;
-                }
-                if (!payload.coa_id) {
-                    alert('COA wajib dipilih');
-                    return;
-                }
-                if (payload.kemasan !== null && !Number.isInteger(payload.kemasan)) {
-                    alert('Kemasan harus berupa angka');
-                    return;
-                }
-
-                try {
-                    const res = await fetch(PRODUCT_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                ?.getAttribute('content')
-                        },
-                        body: JSON.stringify(payload)
-                    });
-
-                    const result = await res.json();
-                    if (result.success) {
-                        alert('Produk berhasil ditambahkan');
-                        loadProductData();
-                    } else {
-                        if (result.errors && typeof result.errors === 'object') {
-                            const messages = Object.values(result.errors).flat().join('\n');
-                            alert('Validasi gagal:\n' + messages);
-                        } else {
-                            alert('Gagal: ' + (result.message || 'Terjadi kesalahan.'));
-                        }
-                    }
-                } catch (e) {
-                    console.error(e);
-                }
-            };
-        }
+        let tsEditSupplier, tsEditBrand, tsEditKategori, tsEditCOA;
 
         async function editProduk(id) {
-            const res = await fetch(`${PRODUCT_URL}/${id}`);
-            const result = await res.json();
-            if (!result.success) return alert('Gagal mengambil data produk');
+            document.getElementById('edit-produk-id').value = id;
+            
+            const inBeli = document.getElementById('edit-produk-beli');
+            const inJual = document.getElementById('edit-produk-jual');
+            const inTempo = document.getElementById('edit-produk-tempo');
 
-            const item = result.data;
+            if(!inBeli.hasAttribute('data-listener')) {
+                inBeli.addEventListener('input', function() { formatRupiahInput(this); });
+                inJual.addEventListener('input', function() { formatRupiahInput(this); });
+                inTempo.addEventListener('input', function() { formatRupiahInput(this); });
+                inBeli.setAttribute('data-listener', 'true');
+            }
 
-            const oldRow = document.getElementById(`row-product-${id}`);
-            if (!oldRow) return;
+            try {
+                const res = await fetch(`${PRODUCT_URL}/${id}`);
+                const result = await res.json();
+                if (!result.success) return alert('Gagal mengambil data produk');
 
-            const template = document.getElementById('produk-row-inline-template');
-            const clone = template.content.cloneNode(true);
-            const editRow = clone.querySelector('tr');
+                const item = result.data;
 
-            let tsBrand, tsSupplier, tsKategori, tsCOA;
+                document.getElementById('edit-produk-sku').value = item.sku_kode || '';
+                document.getElementById('edit-produk-nama').value = item.nama_produk || '';
+                document.getElementById('edit-produk-kemasan').value = item.kemasan || '';
+                document.getElementById('edit-produk-satuan').value = item.satuan || '';
+                document.getElementById('edit-produk-qty').value = item.qty || 0;
+                
+                inBeli.value = item.harga_beli || 0;
+                inJual.value = item.harga_jual || 0;
+                inTempo.value = item.harga_tempo || 0;
+                
+                formatRupiahInput(inBeli);
+                formatRupiahInput(inJual);
+                formatRupiahInput(inTempo);
 
-            tsBrand = new TomSelect(editRow.querySelector('.in-brand'), {
-                options: masterBrands.map(b => {
-                    const supplierId = typeof tsSupplier !== 'undefined' ? tsSupplier.getValue() :
-                        null;
-                    const isLinked = b.suppliers && b.suppliers.some(s => String(s.id) === String(
-                        supplierId));
-                    return {
-                        value: b.id,
-                        text: b.nama_brand
-                    };
-                }),
-                placeholder: 'Brand...',
-                dropdownParent: 'body',
-                onChange: function(brandId) {
-                    if (!brandId) return;
-                    const supplierId = tsSupplier.getValue();
-                    syncBrandLink(brandId, supplierId, tsBrand);
-                },
-                create: async function(input, callback) {
-                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute(
-                        'content') || '';
-                    const supplierId = tsSupplier.getValue();
+                if(tsEditSupplier) tsEditSupplier.destroy();
+                if(tsEditBrand) tsEditBrand.destroy();
+                if(tsEditKategori) tsEditKategori.destroy();
+                if(tsEditCOA) tsEditCOA.destroy();
 
-                    try {
-                        const res = await fetch(BRAND_URL, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': token
-                            },
-                            body: JSON.stringify({
-                                nama_brand: input,
-                                supplier_ids: [supplierId],
-                            })
-                        });
-                        const data = await res.json();
-                        if (data.status === 'success' || data.success) {
-                            const idx = masterBrands.findIndex(b => b.id === data.data.id);
-                            if (idx !== -1) masterBrands[idx] = data.data;
-                            else masterBrands.push(data.data);
+                tsEditBrand = new TomSelect('#edit-produk-brand', {
+                    valueField: 'value',
+                    labelField: 'text',
+                    searchField: 'text',
+                    options: masterBrands.map(b => ({ value: b.id, text: b.nama_brand })),
+                    placeholder: 'Pilih Brand...',
+                    dropdownParent: 'body',
+                    create: async function(input, callback) {
+                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                        const supplierId = tsEditSupplier ? tsEditSupplier.getValue() : null;
 
-                            callback({
-                                value: data.data.id,
-                                text: data.data.nama_brand
+                        try {
+                            const res = await fetch(BRAND_URL, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': token
+                                },
+                                body: JSON.stringify({ nama_brand: input, supplier_ids: [supplierId] })
                             });
-                        } else {
-                            alert(data.message || 'Gagal memproses brand');
-                            callback(false);
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        alert('Gagal memproses brand');
-                        callback(false);
-                    }
-                }
-            });
-
-
-            tsSupplier = new TomSelect(editRow.querySelector('.in-supplier'), {
-                options: masterSuppliers.map(s => ({
-                    value: s.id,
-                    text: s.nama
-                })),
-                placeholder: 'Supplier...',
-                dropdownParent: 'body',
-                onChange: function(supplierId) {
-                    if (!tsBrand) return;
-
-                    tsBrand.clear();
-                    tsBrand.clearOptions();
-
-                    const options = masterBrands.map(b => {
-                        const isLinked = b.suppliers && b.suppliers.some(s => String(s.id) ===
-                            String(supplierId));
-                        return {
-                            value: b.id,
-                            text: b.nama_brand
-                        };
-                    });
-
-                    tsBrand.addOptions(options);
-                    tsBrand.refreshOptions(false);
-                }
-            });
-
-            tsKategori = new TomSelect(editRow.querySelector('.in-kategori'), {
-                options: masterCategories.map(c => ({
-                    value: c.id,
-                    text: c.nama_kategori
-                })),
-                create: function(input, callback) {
-                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute(
-                        'content') || '';
-
-                    fetch(CATEGORY_URL, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': token
-                            },
-                            body: JSON.stringify({
-                                nama_kategori: input
-                            })
-                        }).then(response => response.json())
-                        .then(result => {
-                            if (result.success) {
-                                masterCategories.push(result.data);
-
-                                callback({
-                                    value: result.data.id,
-                                    text: result.data.nama_kategori
-                                });
-
-                                console.log('Kategori baru berhasil disimpan:', result.data
-                                    .nama_kategori);
+                            const data = await res.json();
+                            if (data.status === 'success' || data.success) {
+                                masterBrands.push(data.data);
+                                callback({ value: data.data.id, text: data.data.nama_brand });
                             } else {
-                                alert('Gagal menyimpan kategori baru: ' + result.message);
+                                alert(data.message || 'Gagal memproses brand');
                                 callback(false);
                             }
-                        })
-                        .catch(err => {
-                            console.error('Error creating category:', err);
+                        } catch (err) {
+                            alert('Gagal memproses brand');
                             callback(false);
-                        });
-                },
-                dropdownParent: 'body'
-            });
-
-            tsCOA = new TomSelect(editRow.querySelector('.in-coa'), {
-                options: masterCOA.map(c => ({
-                    value: c.id,
-                    text: c.nama_akun
-                })),
-                dropdownParent: 'body'
-            });
-
-            editRow.querySelector('.in-sku').value = item.sku_kode;
-            editRow.querySelector('.in-nama').value = item.nama_produk;
-            editRow.querySelector('.in-kemasan').value = item.kemasan || '';
-            editRow.querySelector('.in-satuan').value = item.satuan || '';
-            editRow.querySelector('.in-qty').value = item.qty || 0;
-            editRow.querySelector('.in-beli').value = item.harga_beli || 0;
-            editRow.querySelector('.in-jual').value = item.harga_jual || 0;
-            editRow.querySelector('.in-tempo').value = item.harga_tempo || 0;
-
-            tsSupplier.setValue(item.supplier_id);
-            tsBrand.setValue(item.brand_id);
-            tsKategori.setValue(item.product_category_id);
-            tsCOA.setValue(item.coa_id);
-
-            const inBeliEdit = editRow.querySelector('.in-beli');
-            const inJualEdit = editRow.querySelector('.in-jual');
-            const inTempoEdit = editRow.querySelector('.in-tempo');
-
-            inBeliEdit.addEventListener('input', function() {
-                formatRupiahInput(this);
-            });
-            inJualEdit.addEventListener('input', function() {
-                formatRupiahInput(this);
-            });
-            inTempoEdit.addEventListener('input', function() {
-                formatRupiahInput(this);
-            });
-
-            inBeliEdit.value = new Intl.NumberFormat('id-ID').format(item.harga_beli || 0);
-            inJualEdit.value = new Intl.NumberFormat('id-ID').format(item.harga_jual || 0);
-            inTempoEdit.value = new Intl.NumberFormat('id-ID').format(item.harga_tempo || 0);
-
-            oldRow.replaceWith(editRow);
-
-            editRow.querySelector('.btn-cancel-inline').onclick = () => loadProductData();
-
-            editRow.querySelector('.btn-save-inline').onclick = async () => {
-                const supplierId = tsSupplier.getValue();
-                const brandId = tsBrand.getValue();
-                const categoryId = tsKategori.getValue();
-                const coaId = tsCOA.getValue();
-                const kemasanRaw = editRow.querySelector('.in-kemasan').value;
-                const kemasanVal = kemasanRaw === '' ? null : parseInt(kemasanRaw, 10);
-
-                const payload = {
-                    sku_kode: item.sku_kode,
-                    nama_produk: editRow.querySelector('.in-nama').value,
-                    supplier_id: supplierId,
-                    brand_id: brandId,
-                    product_category_id: categoryId,
-                    kemasan: Number.isFinite(kemasanVal) ? kemasanVal : null,
-                    satuan: editRow.querySelector('.in-satuan').value,
-                    qty: editRow.querySelector('.in-qty').value || 0,
-                    harga_beli: inBeliEdit.value.replace(/\./g, ''),
-                    harga_jual: inJualEdit.value.replace(/\./g, ''),
-                    harga_tempo: inTempoEdit.value.replace(/\./g, ''),
-                    coa_id: coaId,
-                    track_stock: 1
-                };
-                if (!payload.nama_produk) {
-                    alert('Nama produk wajib diisi');
-                    return;
-                }
-                if (!payload.supplier_id) {
-                    alert('Supplier wajib dipilih');
-                    return;
-                }
-                if (!payload.brand_id) {
-                    alert(
-                        'Brand wajib dipilih. Jika brand belum ada untuk supplier ini, silakan buat brand terlebih dahulu.'
-                    );
-                    return;
-                }
-                if (!payload.product_category_id) {
-                    alert('Kategori wajib dipilih');
-                    return;
-                }
-                if (!payload.coa_id) {
-                    alert('COA wajib dipilih');
-                    return;
-                }
-                if (payload.kemasan !== null && !Number.isInteger(payload.kemasan)) {
-                    alert('Kemasan harus berupa angka');
-                    return;
-                }
-
-                try {
-                    const saveRes = await fetch(`${PRODUCT_URL}/${id}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                ?.getAttribute('content')
-                        },
-                        body: JSON.stringify(payload)
-                    });
-
-                    const saveResult = await saveRes.json();
-                    if (saveResult.success) {
-                        alert('Produk berhasil diperbarui');
-                        loadProductData();
-                    } else {
-                        if (saveResult.errors && typeof saveResult.errors === 'object') {
-                            const messages = Object.values(saveResult.errors).flat().join('\n');
-                            alert('Validasi gagal:\n' + messages);
-                        } else {
-                            alert('Gagal memperbarui: ' + (saveResult.message || 'Terjadi kesalahan.'));
                         }
                     }
-                } catch (e) {
-                    console.error(e);
-                }
+                });
+
+                tsEditSupplier = new TomSelect('#edit-produk-supplier', {
+                    valueField: 'value',
+                    labelField: 'text',
+                    searchField: 'text',
+                    options: masterSuppliers.map(s => ({ value: s.id, text: s.nama })),
+                    placeholder: 'Pilih Supplier...',
+                    dropdownParent: 'body',
+                    onChange: function(supplierId) {
+                        if (!tsEditBrand) return;
+                        tsEditBrand.clear();
+                        tsEditBrand.clearOptions();
+                        const options = masterBrands.map(b => ({ value: b.id, text: b.nama_brand }));
+                        tsEditBrand.addOptions(options);
+                        tsEditBrand.refreshOptions(false);
+                    }
+                });
+
+                tsEditKategori = new TomSelect('#edit-produk-kategori', {
+                    valueField: 'value',
+                    labelField: 'text',
+                    searchField: 'text',
+                    options: masterCategories.map(c => ({ value: c.id, text: c.nama_kategori })),
+                    placeholder: 'Pilih Kategori...',
+                    dropdownParent: 'body'
+                });
+
+                tsEditCOA = new TomSelect('#edit-produk-coa', {
+                    valueField: 'value',
+                    labelField: 'text',
+                    searchField: 'text',
+                    options: masterCOA.map(c => ({ value: c.id, text: c.nama_akun })),
+                    placeholder: 'Pilih COA...',
+                    dropdownParent: 'body'
+                });
+
+                tsEditSupplier.setValue(item.supplier_id);
+                tsEditBrand.setValue(item.brand_id);
+                tsEditKategori.setValue(item.product_category_id);
+                tsEditCOA.setValue(item.coa_id);
+
+                new bootstrap.Modal(document.getElementById('modalProduk')).show();
+
+            } catch (err) {
+                console.error(err);
+                alert('Terjadi kesalahan memuat produk.');
+            }
+        }
+
+        async function submitEditProduk() {
+            const id = document.getElementById('edit-produk-id').value;
+            if (!id) return;
+
+            const btn = document.getElementById('btn-simpan-edit-produk');
+            btn.disabled = true;
+            btn.innerHTML = 'Menyimpan...';
+
+            const supplierId = tsEditSupplier.getValue();
+            const brandId = tsEditBrand.getValue();
+            const categoryId = tsEditKategori.getValue();
+            const coaId = tsEditCOA.getValue();
+            const kemasanRaw = document.getElementById('edit-produk-kemasan').value;
+            const kemasanVal = kemasanRaw === '' ? null : parseInt(kemasanRaw, 10);
+
+            const payload = {
+                nama_produk: document.getElementById('edit-produk-nama').value,
+                supplier_id: supplierId,
+                brand_id: brandId,
+                product_category_id: categoryId,
+                kemasan: Number.isFinite(kemasanVal) ? kemasanVal : null,
+                satuan: document.getElementById('edit-produk-satuan').value,
+                harga_beli: document.getElementById('edit-produk-beli').value.replace(/\./g, ''),
+                harga_jual: document.getElementById('edit-produk-jual').value.replace(/\./g, ''),
+                harga_tempo: document.getElementById('edit-produk-tempo').value.replace(/\./g, ''),
+                coa_id: coaId,
             };
+
+            if (!payload.nama_produk) { alert('Nama produk wajib diisi'); btn.disabled = false; btn.innerHTML = 'Simpan Perubahan'; return; }
+            if (!payload.supplier_id) { alert('Supplier wajib dipilih'); btn.disabled = false; btn.innerHTML = 'Simpan Perubahan'; return; }
+            if (!payload.brand_id) { alert('Brand wajib dipilih.'); btn.disabled = false; btn.innerHTML = 'Simpan Perubahan'; return; }
+            if (!payload.product_category_id) { alert('Kategori wajib dipilih'); btn.disabled = false; btn.innerHTML = 'Simpan Perubahan'; return; }
+            if (!payload.coa_id) { alert('COA wajib dipilih'); btn.disabled = false; btn.innerHTML = 'Simpan Perubahan'; return; }
+
+            try {
+                const saveRes = await fetch(`${PRODUCT_URL}/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const saveResult = await saveRes.json();
+                if (saveResult.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('modalProduk')).hide();
+                    alert('Produk berhasil diperbarui');
+                    loadProductData();
+                } else {
+                    if (saveResult.errors && typeof saveResult.errors === 'object') {
+                        const messages = Object.values(saveResult.errors).flat().join('\n');
+                        alert('Validasi gagal:\n' + messages);
+                    } else {
+                        alert('Gagal memperbarui: ' + (saveResult.message || 'Terjadi kesalahan.'));
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Terjadi kesalahan pada sistem.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Simpan Perubahan';
+            }
         }
 
         async function hapusProduk(id) {
@@ -836,10 +502,17 @@
                 clone.querySelector('.col-kategori').textContent = item.category?.nama_kategori || '-';
                 clone.querySelector('.col-kemasan').textContent = item.kemasan || '-';
                 clone.querySelector('.col-satuan').textContent = item.satuan || '-';
-                clone.querySelector('.col-qty').textContent = item.qty || 0;
-                clone.querySelector('.col-beli').textContent = formatIDR(item.harga_beli);
-                clone.querySelector('.col-jual').textContent = formatIDR(item.harga_jual);
-                clone.querySelector('.col-tempo').textContent = formatIDR(item.harga_tempo);
+
+                const qty = item.qty || 0;
+                if(qty < 10 && qty >= 0) {
+                    clone.querySelector('.col-qty').innerHTML = `<span class="badge bg-danger p-2" style="font-size: 13px;">${qty}</span>`;
+                } else {
+                    clone.querySelector('.col-qty').textContent = qty;
+                }
+
+                clone.querySelector('.col-beli').innerHTML = formatBiggerPriceHTML(item.harga_beli);
+                clone.querySelector('.col-jual').innerHTML = formatBiggerPriceHTML(item.harga_jual);
+                clone.querySelector('.col-tempo').innerHTML = formatBiggerPriceHTML(item.harga_tempo);
                 clone.querySelector('.col-coa').textContent = coaName;
 
                 // Memasang Event Klik
@@ -894,10 +567,17 @@
             try {
                 const search = document.getElementById('filter-produk-search').value;
                 const supplierId = document.getElementById('filter-produk-supplier').value;
+                const brandId = document.getElementById('filter-produk-brand').value;
+                const categoryId = document.getElementById('filter-produk-kategori').value;
 
                 const fetchUrl = new URL(url);
                 if (search) fetchUrl.searchParams.append('search', search);
                 if (supplierId) fetchUrl.searchParams.append('supplier_id', supplierId);
+                if (brandId) fetchUrl.searchParams.append('brand_id', brandId);
+                if (categoryId) fetchUrl.searchParams.append('category', categoryId);
+
+                fetchUrl.searchParams.append('sort', pCurrentSort);
+                fetchUrl.searchParams.append('dir', pCurrentDir);
 
                 const res = await fetch(fetchUrl);
                 const result = await res.json();
@@ -905,6 +585,7 @@
                 if (result.success) {
                     renderProductTable(result.data.data);
                     renderProductPagination(result.data);
+                    updateSortIcons();
                 }
             } catch (error) {
                 console.error('Fetch error:', error);
@@ -920,10 +601,16 @@
         function exportProduk() {
             const search = document.getElementById('filter-produk-search').value;
             const supplierId = document.getElementById('filter-produk-supplier').value;
+            const brandId = document.getElementById('filter-produk-brand').value;
+            const categoryId = document.getElementById('filter-produk-kategori').value;
             let url = '/barang/export?';
             const params = [];
             if (search) params.push(`search=${encodeURIComponent(search)}`);
             if (supplierId) params.push(`supplier_id=${supplierId}`);
+            if (brandId) params.push(`brand_id=${brandId}`);
+            if (categoryId) params.push(`category=${categoryId}`);
+            if (pCurrentSort) params.push(`sort=${pCurrentSort}`);
+            if (pCurrentDir) params.push(`dir=${pCurrentDir}`);
             url += params.join('&');
             window.location.href = url;
         }
