@@ -213,8 +213,6 @@
             display: flex;
             align-items: center;
         }
-        .ts-dropdown-content {
-
         /* Standardize TomSelect height with normal inputs */
         .ts-control {
             min-height: 48px !important;
