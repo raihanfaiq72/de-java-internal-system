@@ -253,6 +253,10 @@
                                                     onclick="exportReport('payments')">
                                                     <i class="fa fa-file-excel me-1 text-success"></i> Export
                                                 </button>
+                                                <button class="btn btn-success border btn-sm fw-bold text-white"
+                                                    onclick="exportReport('payments_with_details')">
+                                                    <i class="fa fa-file-excel me-1"></i> Export Detail
+                                                </button>
                                             </div>
                                         </div>
                                     </div>

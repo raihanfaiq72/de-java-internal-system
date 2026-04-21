@@ -63,6 +63,8 @@
     </div>
 @endsection
 
+@include('Barang.Modal._ProdukMassal')
+
 @push('css')
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
 

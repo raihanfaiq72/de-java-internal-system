@@ -62,29 +62,17 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'sku_kode' => 'required|unique:products,sku_kode',
-            'nama_produk' => 'required',
-            'supplier_id' => 'required|exists:mitras,id',
-            'brand_id' => 'required|exists:brands,id',
-            'product_category_id' => 'required|exists:product_categories,id',
-            'coa_id' => 'required|exists:chart_of_accounts,id',
-            'kemasan' => 'nullable|integer|min:1',
-            'satuan' => 'nullable|string|max:20',
+            'nama_produk' => 'required|string|max:255',
+            'sku_kode' => 'nullable|string|max:100|unique:products,sku_kode,NULL,id,office_id,' . session('active_office_id'),
+            'product_category_id' => 'nullable|exists:product_categories,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
+            'brand_id' => 'nullable|exists:brands,id',
+            'unit_id' => 'nullable|exists:unit_ukurans,id',
+            'coa_id' => 'nullable|exists:coas,id',
+            'kemasan' => 'nullable|string|max:100',
             'harga_beli' => 'nullable|numeric|min:0',
             'harga_jual' => 'nullable|numeric|min:0',
             'harga_tempo' => 'nullable|numeric|min:0',
-        ], [
-            'sku_kode.required' => 'SKU wajib diisi.',
-            'sku_kode.unique' => 'SKU sudah digunakan. Silakan gunakan SKU lain.',
-            'nama_produk.required' => 'Nama produk wajib diisi.',
-            'supplier_id.required' => 'Supplier wajib dipilih.',
-            'supplier_id.exists' => 'Supplier tidak valid.',
-            'brand_id.required' => 'Brand wajib dipilih.',
-            'brand_id.exists' => 'Brand tidak valid.',
-            'product_category_id.required' => 'Kategori wajib dipilih.',
-            'product_category_id.exists' => 'Kategori tidak valid.',
-            'coa_id.required' => 'COA wajib dipilih.',
-            'coa_id.exists' => 'COA tidak valid.',
             'kemasan.integer' => 'Kemasan harus berupa angka.',
         ]);
 
@@ -208,5 +196,63 @@ class ProductController extends Controller
         $newQty = $this->stockService->recalculateProductStock($id);
 
         return apiResponse(true, 'Stok berhasil direkalkulasi', ['qty' => $newQty]);
+    }
+
+    public function bulkStore(Request $request)
+    {
+        $products = $request->input('products', []);
+        
+        if (empty($products)) {
+            return apiResponse(false, 'Tidak ada produk untuk disimpan', null, null, 422);
+        }
+
+        $validator = Validator::make(['products' => $products], [
+            'products.*.nama_produk' => 'required|string|max:255',
+            'products.*.sku_kode' => 'nullable|string|max:100|unique:products,sku_kode,NULL,id,office_id,' . session('active_office_id'),
+            'products.*.product_category_id' => 'nullable|exists:product_categories,id',
+            'products.*.supplier_id' => 'nullable|exists:suppliers,id',
+            'products.*.brand_id' => 'nullable|exists:brands,id',
+            'products.*.unit_id' => 'nullable|exists:unit_ukurans,id',
+            'products.*.coa_id' => 'nullable|exists:coas,id',
+            'products.*.kemasan' => 'nullable|string|max:100',
+            'products.*.qty' => 'nullable|integer|min:0',
+            'products.*.harga_beli' => 'nullable|numeric|min:0',
+            'products.*.harga_jual' => 'nullable|numeric|min:0',
+            'products.*.harga_tempo' => 'nullable|numeric|min:0',
+            'products.*.kemasan.integer' => 'Kemasan harus berupa angka.',
+        ]);
+
+        if ($validator->fails()) {
+            return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
+        }
+
+        if (!session()->has('active_office_id')) {
+            return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
+        }
+
+        $createdProducts = [];
+        $errors = [];
+
+        foreach ($products as $index => $productData) {
+            try {
+                $productData = array_merge($productData, [
+                    'office_id' => session('active_office_id'),
+                    'track_stock' => 1,
+                    'akun_penjualan_id' => 1,
+                    'akun_pembelian_id' => 1,
+                ]);
+
+                $product = Product::create($productData);
+                $createdProducts[] = $product;
+            } catch (\Throwable $e) {
+                $errors[] = "Baris ke-" . ($index + 1) . ": " . $e->getMessage();
+            }
+        }
+
+        if (!empty($errors)) {
+            return apiResponse(false, 'Beberapa produk gagal disimpan', null, $errors, 422);
+        }
+
+        return apiResponse(true, 'Berhasil menyimpan ' . count($createdProducts) . ' produk', $createdProducts, null, 201);
     }
 }

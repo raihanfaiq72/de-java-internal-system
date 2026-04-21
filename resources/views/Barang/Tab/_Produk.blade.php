@@ -1,10 +1,14 @@
 <div class="tab-pane fade show active" id="tab-produk" role="tabpanel">
 
-    <div class="row g-2 mb-3 align-items-end">
+    <div class="row g-2 mb-3">
+        <!-- Filter Controls -->
         <div class="col-md-3">
             <label class="small fw-bold text-muted">Cari Barang</label>
-            <input type="text" id="filter-produk-search" class="form-control form-control-sm"
-                placeholder="Ketik pencarian...">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="fa fa-search"></i></span>
+                <input type="text" id="filter-produk-search" class="form-control"
+                    placeholder="Ketik pencarian...">
+            </div>
         </div>
         <div class="col-md-3">
             <label class="small fw-bold text-muted">Supplier</label>
@@ -12,20 +16,24 @@
                 <option value="">Semua Supplier</option>
             </select>
         </div>
-
-        <div class="col-md-auto">
-            <button onclick="loadProductData()" class="btn btn-sm btn-dark px-3">
-                <i class="fa fa-filter me-1"></i> Filter
-            </button>
-            <button onclick="exportProduk()" class="btn btn-sm btn-white border px-3 text-dark shadow-sm">
-                <i class="fa fa-file-excel me-1 text-success"></i> Export
-            </button>
-        </div>
-
-        <div class="col text-end">
-            <button class="btn btn-sm btn-primary px-3 shadow-sm" onclick="tambahProduk()">
-                <i class="fa fa-plus me-1"></i> TAMBAH PRODUK
-            </button>
+        
+        <!-- Action Buttons -->
+        <div class="col-md-6">
+            <div class="d-flex gap-2 justify-content-end align-items-end">
+                <button onclick="loadProductData()" class="btn btn-outline-primary btn-sm">
+                    <i class="fa fa-filter me-1"></i> Filter
+                </button>
+                <button onclick="exportProduk()" class="btn btn-outline-success btn-sm">
+                    <i class="fa fa-download me-1"></i> Export
+                </button>
+                <div class="vr"></div>
+                <button class="btn btn-success btn-sm" onclick="tambahMassalProduk()">
+                    <i class="fa fa-layer-group me-1"></i> Massal
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="tambahProduk()">
+                    <i class="fa fa-plus me-1"></i> Tambah
+                </button>
+            </div>
         </div>
     </div>
 
@@ -40,6 +48,7 @@
                     <th>Kategori</th>
                     <th>Kemasan</th>
                     <th>Satuan</th>
+                    <th>Qty</th>
                     <th>Harga Beli</th>
                     <th>Harga Jual</th>
                     <th>Harga Tempo</th>
@@ -88,6 +97,9 @@
             <input type="text" class="form-control form-control-sm in-satuan">
         </td>
         <td>
+            <input type="number" class="form-control form-control-sm in-qty" value="0" min="0">
+        </td>
+        <td>
             <input type="text" class="form-control form-control-sm in-beli" value="0">
         </td>
         <td>
@@ -121,6 +133,7 @@
         <td class="col-kategori"></td>
         <td class="col-kemasan text-center"></td>
         <td class="col-satuan text-center"></td>
+        <td class="col-qty text-center"></td>
         <td class="col-beli text-end"></td>
         <td class="col-jual text-end"></td>
         <td class="col-tempo text-end"></td>
@@ -412,6 +425,7 @@
                 const kemasanRaw = tr.querySelector('.in-kemasan').value;
                 const kemasanVal = kemasanRaw === '' ? null : parseInt(kemasanRaw, 10);
 
+                const qtyValue = tr.querySelector('.in-qty').value;
                 const payload = {
                     sku_kode: skuInput.value,
                     nama_produk: tr.querySelector('.in-nama').value,
@@ -420,6 +434,7 @@
                     product_category_id: categoryId,
                     kemasan: Number.isFinite(kemasanVal) ? kemasanVal : null,
                     satuan: tr.querySelector('.in-satuan').value,
+                    qty: qtyValue || 0,
                     harga_beli: inBeli.value.replace(/\./g, ''),
                     harga_jual: inJual.value.replace(/\./g, ''),
                     harga_tempo: inTempo.value.replace(/\./g, ''),
@@ -644,6 +659,7 @@
             editRow.querySelector('.in-nama').value = item.nama_produk;
             editRow.querySelector('.in-kemasan').value = item.kemasan || '';
             editRow.querySelector('.in-satuan').value = item.satuan || '';
+            editRow.querySelector('.in-qty').value = item.qty || 0;
             editRow.querySelector('.in-beli').value = item.harga_beli || 0;
             editRow.querySelector('.in-jual').value = item.harga_jual || 0;
             editRow.querySelector('.in-tempo').value = item.harga_tempo || 0;
@@ -691,6 +707,7 @@
                     product_category_id: categoryId,
                     kemasan: Number.isFinite(kemasanVal) ? kemasanVal : null,
                     satuan: editRow.querySelector('.in-satuan').value,
+                    qty: editRow.querySelector('.in-qty').value || 0,
                     harga_beli: inBeliEdit.value.replace(/\./g, ''),
                     harga_jual: inJualEdit.value.replace(/\./g, ''),
                     harga_tempo: inTempoEdit.value.replace(/\./g, ''),
@@ -819,6 +836,7 @@
                 clone.querySelector('.col-kategori').textContent = item.category?.nama_kategori || '-';
                 clone.querySelector('.col-kemasan').textContent = item.kemasan || '-';
                 clone.querySelector('.col-satuan').textContent = item.satuan || '-';
+                clone.querySelector('.col-qty').textContent = item.qty || 0;
                 clone.querySelector('.col-beli').textContent = formatIDR(item.harga_beli);
                 clone.querySelector('.col-jual').textContent = formatIDR(item.harga_jual);
                 clone.querySelector('.col-tempo').textContent = formatIDR(item.harga_tempo);
