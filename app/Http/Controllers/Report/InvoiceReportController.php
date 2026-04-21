@@ -104,6 +104,13 @@ class InvoiceReportController extends Controller
     public function export(Request $request)
     {
         $officeId = session('active_office_id');
+        
+        // If no office ID in session, try to get the first available office
+        if (!$officeId) {
+            $officeId = \App\Models\Office::first()?->id;
+            session(['active_office_id' => $officeId]);
+        }
+        
         $startDate = $request->start_date ?? date('Y-01-01');
         $endDate = $request->end_date ?? date('Y-12-31');
         $mitraId = $request->mitra_id;
@@ -121,6 +128,11 @@ class InvoiceReportController extends Controller
                 extract($this->getPaymentsData($request, $startDate, $endDate, $officeId, $mitraId, $search));
 
                 return view('Report.Invoice.export_payments', compact('startDate', 'endDate', 'payments', 'totalPaymentAmount', 'hiddenColumns'));
+
+            case 'payments_with_details':
+                extract($this->getPaymentsWithDetailsData($request, $startDate, $endDate, $officeId, $mitraId, $search));
+
+                return view('Report.Invoice.export_payments_with_details', compact('startDate', 'endDate', 'payments', 'totalPaymentAmount', 'hiddenColumns'));
 
             case 'sold_products':
                 extract($this->getSoldProductsData($request, $startDate, $endDate, $officeId, $mitraId, $search));
@@ -235,6 +247,94 @@ class InvoiceReportController extends Controller
         $this->applyCommonFilters($paymentsQuery, $request, $mitraId, $search, true);
 
         $payments = $paymentsQuery->orderBy('invoices.tgl_invoice', 'desc')->get();
+        $totalPaymentAmount = $payments->sum('jumlah_bayar');
+        $totalUniqueInvoices = $payments->unique('nomor_invoice')->count();
+
+        return compact('payments', 'totalPaymentAmount', 'totalUniqueInvoices');
+    }
+
+    private function getPaymentsWithDetailsData(Request $request, $startDate, $endDate, $officeId, $mitraId, $search)
+    {
+        // Get payments with invoice details
+        $paymentsQuery = DB::table('invoices')
+            ->leftJoin('payments', function($join) use ($startDate, $endDate) {
+                $join->on('payments.invoice_id', '=', 'invoices.id')
+                     ->whereNull('payments.deleted_at')
+                     ->whereBetween('payments.tgl_pembayaran', [$startDate, $endDate]);
+            })
+            ->leftJoin('mitras', 'invoices.mitra_id', '=', 'mitras.id')
+            ->where('invoices.office_id', $officeId)
+            ->where('invoices.tipe_invoice', 'Sales')
+            ->whereNull('invoices.deleted_at')
+            ->whereBetween('invoices.tgl_invoice', [$startDate, $endDate])
+            ->select(
+                'invoices.id as invoice_id',
+                'invoices.tgl_invoice',
+                'invoices.total_akhir',
+                'invoices.status_pembayaran',
+                'invoices.tgl_jatuh_tempo',
+                'invoices.nomor_invoice',
+                'invoices.keterangan',
+                DB::raw('COALESCE(payments.tgl_pembayaran, invoices.tgl_invoice) as tgl_pembayaran'),
+                DB::raw('COALESCE(payments.jumlah_bayar, 0) as jumlah_bayar'),
+                DB::raw('COALESCE(payments.metode_pembayaran, "Belum Bayar") as metode_pembayaran'),
+                DB::raw('COALESCE(payments.nomor_pembayaran, "-") as nomor_pembayaran'),
+                'mitras.nama as nama_mitra',
+                'mitras.nomor_mitra',
+                'mitras.alamat',
+                'mitras.no_hp as telepon'
+            );
+
+        $this->applyCommonFilters($paymentsQuery, $request, $mitraId, $search, true);
+
+        $payments = $paymentsQuery->orderBy('invoices.tgl_invoice', 'desc')->get();
+
+        // Get invoice items for each payment
+        $invoiceIds = $payments->pluck('invoice_id')->toArray();
+        $itemsData = [];
+
+        if (!empty($invoiceIds)) {
+            $taxSumSub = DB::table('invoice_item_taxes')
+                ->whereNull('deleted_at')
+                ->select('invoice_item_id', DB::raw('SUM(nilai_pajak_diterapkan) as total_tax'))
+                ->groupBy('invoice_item_id');
+
+            $itemsQuery = DB::table('invoice_items')
+                ->join('products', 'invoice_items.produk_id', '=', 'products.id')
+                ->leftJoinSub($taxSumSub, 'tax_sum', function ($join) {
+                    $join->on('invoice_items.id', '=', 'tax_sum.invoice_item_id');
+                })
+                ->whereIn('invoice_items.invoice_id', $invoiceIds)
+                ->whereNull('invoice_items.deleted_at')
+                ->select(
+                    'invoice_items.invoice_id',
+                    'invoice_items.qty',
+                    'invoice_items.harga_satuan',
+                    'invoice_items.diskon_nilai',
+                    'invoice_items.total_harga_item',
+                    'invoice_items.id as item_id',
+                    'products.nama_produk',
+                    'products.sku_kode',
+                    'products.satuan',
+                    DB::raw('COALESCE(tax_sum.total_tax, 0) as total_tax')
+                )
+                ->orderBy('invoice_items.invoice_id')
+                ->orderBy('invoice_items.id');
+
+            $items = $itemsQuery->get();
+
+            foreach ($items as $item) {
+                $item->total_diskon = $item->diskon_nilai * $item->qty;
+                $item->total_akhir = ($item->total_harga_item - $item->total_diskon) + $item->total_tax;
+                $itemsData[$item->invoice_id][] = $item;
+            }
+        }
+
+        // Attach items to payments
+        foreach ($payments as $payment) {
+            $payment->items = $itemsData[$payment->invoice_id] ?? [];
+        }
+
         $totalPaymentAmount = $payments->sum('jumlah_bayar');
         $totalUniqueInvoices = $payments->unique('nomor_invoice')->count();
 

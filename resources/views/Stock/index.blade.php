@@ -700,6 +700,26 @@
                             const actor = m.actor?.name || m.actor?.username || '-';
                             const action = m.action_label || m.reference_type || 'Mutasi Stok';
 
+                            // Check if action contains invoice reference and make it clickable
+                            let actionHtml = action;
+                            if (action && (action.includes('Invoice') || action.includes('INV/'))) {
+                                // Extract invoice number if possible
+                                const invoiceMatch = action.match(/#([^#\s]+)/);
+                                const invoiceNumber = invoiceMatch ? invoiceMatch[1] : action;
+                                
+                                if (invoiceNumber) {
+                                    actionHtml = `<a href="{{ route('report.invoice') }}?search=${encodeURIComponent(invoiceNumber)}" 
+                                        class="text-primary text-decoration-none" 
+                                        title="Klik untuk menuju ke invoice"
+                                        style="cursor: pointer;">
+                                        ${action}
+                                    </a>`;
+                                } else {
+                                    // Fallback if no invoice number found
+                                    actionHtml = action;
+                                }
+                            }
+
                             const tr = document.createElement('tr');
                             tr.innerHTML = `
                                                                                                                     <td class="ps-4 small">${new Date(m.created_at).toLocaleString('id-ID')}</td>
@@ -712,7 +732,7 @@
                                                                                                                         ${isInc ? '+' : '-'}${m.qty}
                                                                                                                     </td>
                                                                                                                     <td><small class="text-muted">${m.stock_location?.name || '-'}</small></td>
-                                                                                                                    <td><small class="text-muted">${action}</small></td>
+                                                                                                                    <td><small class="text-muted">${actionHtml}</small></td>
                                                                                                                     <td><small class="text-muted">${actor}</small></td>
                                                                                                                     <td><small>${m.notes || '-'}</small></td>
                                                                                                                 `;
