@@ -1332,6 +1332,7 @@
                 }
 
                 const prodId = String(rawId);
+                const masterItem = masterProduk.find(p => String(p.id) === prodId);
 
                 if (ts.options[prodId]) {
                     ts.setValue(prodId, true);
@@ -1373,7 +1374,6 @@
                 }
 
                 let unitName = 'Pcs';
-                const masterItem = masterProduk.find(p => String(p.id) === prodId);
 
                 if (data.unit) {
                     unitName = (typeof data.unit === 'object') ? data.unit.nama_unit : data.unit;

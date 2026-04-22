@@ -160,9 +160,13 @@ class InvoiceReportController extends Controller
                 ->where('tipe_invoice', 'Sales');
         })
             ->whereYear('tgl_pembayaran', $year)
-            ->selectRaw('MONTH(tgl_pembayaran) as month, SUM(jumlah_bayar) as total')
-            ->groupBy('month')
-            ->pluck('total', 'month')
+            ->get()
+            ->groupBy(function ($payment) {
+                return $payment->tgl_pembayaran->format('n');
+            })
+            ->map(function ($group) {
+                return $group->sum('jumlah_bayar');
+            })
             ->toArray();
 
         // Expenditure
@@ -171,9 +175,13 @@ class InvoiceReportController extends Controller
                 ->where('tipe_invoice', 'Purchase');
         })
             ->whereYear('tgl_pembayaran', $year)
-            ->selectRaw('MONTH(tgl_pembayaran) as month, SUM(jumlah_bayar) as total')
-            ->groupBy('month')
-            ->pluck('total', 'month')
+            ->get()
+            ->groupBy(function ($payment) {
+                return \Carbon\Carbon::parse($payment->tgl_pembayaran)->format('n');
+            })
+            ->map(function ($group) {
+                return $group->sum('jumlah_bayar');
+            })
             ->toArray();
 
         $chartLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
@@ -242,17 +250,39 @@ class InvoiceReportController extends Controller
         $this->applySorting($paymentsQuery, $request, 'invoices.tgl_invoice', 'desc');
         $payments = $paymentsQuery->paginate(10)->withQueryString();
 
-        // Map values for backward compatibility with the view if needed (though Eloquent handles this better)
-        $payments->getCollection()->transform(function ($invoice) {
-            $invoice->nama_mitra = $invoice->mitra?->nama;
-            $invoice->nomor_mitra = $invoice->mitra?->nomor_mitra;
-            $invoice->tgl_pembayaran = $invoice->tgl_invoice; // Consistency with old view
-            $invoice->metode_pembayaran = $invoice->metode_pembayaran ?? 'Belum Bayar';
+        /*
+        |--------------------------------------------------------------------------
+        | TOTAL
+        |--------------------------------------------------------------------------
+        */
 
-            return $invoice;
-        });
+        $totalPaymentAmount = $payments->sum('jumlah_bayar');
+        $totalNotaAmount    = $payments->sum('total_akhir');
+        $totalUniqueInvoices = $payments->count();
 
-        return compact('payments', 'totalPaymentAmount', 'totalNotaAmount', 'totalUniqueInvoices');
+        /*
+        |--------------------------------------------------------------------------
+        | PAGINATION MANUAL
+        |--------------------------------------------------------------------------
+        */
+
+        $page = request()->get('page', 1);
+        $perPage = 10;
+
+        $payments = new \Illuminate\Pagination\LengthAwarePaginator(
+            $payments->forPage($page, $perPage)->values(),
+            $payments->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        return compact(
+            'payments',
+            'totalPaymentAmount',
+            'totalNotaAmount',
+            'totalUniqueInvoices'
+        );
     }
 
     private function getPaymentsWithDetailsData(Request $request, $startDate, $endDate, $officeId, $mitraId, $search)
@@ -860,6 +890,9 @@ class InvoiceReportController extends Controller
         if ($payStatusFilter) {
             $query->where('status_pembayaran', $payStatusFilter);
         }
+        
+        // Return the query object to ensure it can be cloned
+        return $query;
 
         // Apply product filter
         if (! empty($prodIdFilter)) {
