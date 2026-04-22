@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
+use App\Models\Partner;
+use App\Models\Payment;
 use App\Models\User;
+use App\Models\UserOfficeRole;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class SalesController extends Controller
 {
@@ -18,13 +20,12 @@ class SalesController extends Controller
 
         $users = collect();
         if ($officeId) {
-            $users = DB::table('users')
-                ->where('users.is_sales', 1)
-                ->where('user_office_roles.office_id', $officeId)
-                ->leftJoin('user_office_roles', 'users.id', '=', 'user_office_roles.user_id')
-                ->select('users.id', 'users.name')
-                ->distinct()
-                ->orderBy('users.name')
+            $users = User::where('is_sales', true)
+                ->whereHas('plots', function ($query) use ($officeId) {
+                    $query->where('office_id', $officeId);
+                })
+                ->select('id', 'name')
+                ->orderBy('name')
                 ->get();
         }
 
@@ -122,30 +123,32 @@ class SalesController extends Controller
 
         $salesPerson = null;
         if ($salesId != 0) {
-            $salesPerson = DB::table('users')->where('id', $salesId)->first();
+            $salesPerson = User::where('id', $salesId)->first();
         }
 
-        $invoices = DB::table('invoices as i')
-            ->leftJoin('mitras as m', 'i.mitra_id', '=', 'm.id')
-            ->leftJoin('payments as p', 'i.id', '=', 'p.invoice_id')
-            ->where('i.office_id', session('active_office_id'))
-            ->where('i.tipe_invoice', 'Sales')
-            ->where('i.sales_id', $salesId)
-            ->whereDate('i.tgl_invoice', '>=', $dateFrom)
-            ->whereDate('i.tgl_invoice', '<=', $dateTo)
-            ->select(
-                'i.id',
-                'i.nomor_invoice',
-                'i.tgl_invoice',
-                'i.total_akhir',
-                'm.nama as mitra_nama',
-                'p.tgl_pembayaran as payment_date',
-                'p.jumlah_bayar as payment_amount',
-                'p.catatan as payment_note',
-                'p.nomor_pembayaran as no_receipt'
-            )
-            ->orderBy('i.tgl_invoice')
-            ->get();
+        $invoices = Invoice::with(['mitra', 'payment'])
+            ->where('office_id', session('active_office_id'))
+            ->where('tipe_invoice', 'Sales')
+            ->where('sales_id', $salesId)
+            ->whereDate('tgl_invoice', '>=', $dateFrom)
+            ->whereDate('tgl_invoice', '<=', $dateTo)
+            ->orderBy('tgl_invoice')
+            ->get()
+            ->map(function ($invoice) {
+                // Transform to match original structure
+                $payment = $invoice->payment->first(); // Get first payment
+                return (object) [
+                    'id' => $invoice->id,
+                    'nomor_invoice' => $invoice->nomor_invoice,
+                    'tgl_invoice' => $invoice->tgl_invoice,
+                    'total_akhir' => $invoice->total_akhir,
+                    'mitra_nama' => $invoice->mitra ? $invoice->mitra->nama : null,
+                    'payment_date' => $payment ? $payment->tgl_pembayaran : null,
+                    'payment_amount' => $payment ? $payment->jumlah_bayar : null,
+                    'payment_note' => $payment ? $payment->catatan : null,
+                    'no_receipt' => $payment ? $payment->nomor_pembayaran : null,
+                ];
+            });
 
         $totalInvoices = $invoices->sum('total_akhir');
         $totalPayments = $invoices->sum('payment_amount');

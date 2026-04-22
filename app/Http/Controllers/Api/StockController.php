@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\StockLocation;
 use App\Models\StockMutation;
 use App\Services\StockService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class StockController extends Controller
@@ -57,10 +57,10 @@ class StockController extends Controller
         }
 
         // Untuk modal pemilihan produk, load semua data tanpa pagination
-        if ($request->get('all', false) || $request->get('per_page', 10) >= 1000) {
+        if ($request->input('all', false) || $request->input('per_page', 10) >= 1000) {
             $data = $query->latest()->get();
         } else {
-            $data = $query->latest()->paginate($request->get('per_page', 10))->withQueryString();
+            $data = $query->latest()->paginate($request->input('per_page', 10))->withQueryString();
         }
 
         return apiResponse(true, 'Data stok produk', $data);
@@ -138,6 +138,16 @@ class StockController extends Controller
         }
 
         // Chart Data (Last 6 Months)
+        $sixMonthsAgo = now()->subMonths(5)->startOfMonth();
+
+        $mutationsTrend = StockMutation::where('office_id', $officeId)
+            ->where('created_at', '>=', $sixMonthsAgo)
+            ->when($locationId, fn ($q) => $q->where('stock_location_id', $locationId))
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, type, SUM(qty) as q, SUM(qty * cost_price) as v")
+            ->groupBy('month', 'type')
+            ->get()
+            ->groupBy('month');
+
         $months = [];
         $qtyIncoming = [];
         $qtyOutgoing = [];
@@ -146,26 +156,12 @@ class StockController extends Controller
 
         for ($i = 5; $i >= 0; $i--) {
             $date = now()->subMonths($i);
-            $monthName = $date->format('M');
-            $months[] = $monthName;
+            $monthKey = $date->format('Y-m');
+            $months[] = $date->format('M');
 
-            $start = $date->startOfMonth()->toDateTimeString();
-            $end = $date->endOfMonth()->toDateTimeString();
-
-            $incomingQuery = StockMutation::where('type', 'IN')
-                ->where('office_id', $officeId)
-                ->whereBetween('created_at', [$start, $end]);
-            $outgoingQuery = StockMutation::where('type', 'OUT')
-                ->where('office_id', $officeId)
-                ->whereBetween('created_at', [$start, $end]);
-
-            if ($locationId) {
-                $incomingQuery->where('stock_location_id', $locationId);
-                $outgoingQuery->where('stock_location_id', $locationId);
-            }
-
-            $incoming = $incomingQuery->selectRaw('SUM(qty) as q, SUM(qty * cost_price) as v')->first();
-            $outgoing = $outgoingQuery->selectRaw('SUM(qty) as q, SUM(qty * cost_price) as v')->first();
+            $monthData = $mutationsTrend->get($monthKey, collect());
+            $incoming = $monthData->where('type', 'IN')->first();
+            $outgoing = $monthData->where('type', 'OUT')->first();
 
             $qtyIncoming[] = (float) ($incoming->q ?? 0);
             $qtyOutgoing[] = (float) ($outgoing->q ?? 0);
@@ -260,7 +256,7 @@ class StockController extends Controller
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
-        $perPage = $request->get('per_page', 10);
+        $perPage = $request->input('per_page', 10);
         if ($perPage >= 1000) {
             $data = $query->latest()->get();
         } else {
@@ -270,15 +266,19 @@ class StockController extends Controller
         $mutationIds = $data->getCollection()->pluck('id')->all();
         $actors = [];
         if (! empty($mutationIds)) {
-            $logs = DB::table('activity_logs')
-                ->leftJoin('users', 'activity_logs.user_id', '=', 'users.id')
-                ->whereNull('activity_logs.deleted_at')
-                ->where('activity_logs.office_id', session('active_office_id'))
-                ->where('activity_logs.tabel_terkait', 'stock_mutations')
-                ->where('activity_logs.tindakan', 'Create')
-                ->whereIn('activity_logs.data_id', $mutationIds)
-                ->select('activity_logs.data_id', 'users.name as user_name', 'users.username as username')
-                ->get();
+            $logs = ActivityLog::with(['user'])
+                ->where('office_id', session('active_office_id'))
+                ->where('tabel_terkait', 'stock_mutations')
+                ->where('tindakan', 'Create')
+                ->whereIn('data_id', $mutationIds)
+                ->get()
+                ->map(function ($log) {
+                    return (object) [
+                        'data_id' => $log->data_id,
+                        'user_name' => $log->user ? $log->user->name : null,
+                        'username' => $log->user ? $log->user->username : null,
+                    ];
+                });
 
             foreach ($logs as $l) {
                 $actors[(int) $l->data_id] = [

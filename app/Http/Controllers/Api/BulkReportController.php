@@ -5,12 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\BulkReport;
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use App\Models\Payment;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -263,11 +262,22 @@ class BulkReportController extends Controller
         $salesRevenue = Invoice::whereBetween('tgl_invoice', [$startDate, $endDate])
             ->sum('total_akhir');
 
-        // Cost of goods sold
-        $costOfGoodsSold = DB::table('invoice_items')
-            ->join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
-            ->whereBetween('invoices.tgl_invoice', [$startDate, $endDate])
-            ->sum(DB::raw('invoice_items.qty * invoice_items.harga_satuan'));
+        // Cost of goods sold using Eloquent relationship
+        $costOfGoodsSold = InvoiceItem::whereHas('invoice', function ($query) use ($startDate, $endDate) {
+            $query->whereBetween('tgl_invoice', [$startDate, $endDate]);
+        })->sum(function ($invoiceItem) {
+            return $invoiceItem->qty * $invoiceItem->harga_satuan;
+        });
+
+        // Alternative approach using collection for better performance
+        // $costOfGoodsSold = Invoice::with('items')
+        //     ->whereBetween('tgl_invoice', [$startDate, $endDate])
+        //     ->get()
+        //     ->sum(function ($invoice) {
+        //         return $invoice->items->sum(function ($item) {
+        //             return $item->qty * $item->harga_satuan;
+        //         });
+        //     });
 
         // Other revenues
         $otherRevenues = 0; // Can be expanded later

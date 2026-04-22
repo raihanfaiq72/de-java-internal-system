@@ -140,10 +140,7 @@ class StockService
         $out = StockMutation::where('product_id', $productId)->where('type', 'OUT')->sum('qty');
         $adj = StockMutation::where('product_id', $productId)->where('type', 'ADJUSTMENT')->sum('qty');
 
-        // Note: For simplicity, I'll count IN as positive and OUT as negative.
-        // If ADJUSTMENT is added later as a separate type, we handle it too.
-
-        $total = $in - $out;
+        $total = ($in + $adj) - $out;
 
         Product::where('id', $productId)->update(['qty' => $total]);
     }

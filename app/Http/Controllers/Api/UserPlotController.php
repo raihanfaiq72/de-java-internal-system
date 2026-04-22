@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Office;
 use App\Models\Roles;
 use App\Models\User;
+use App\Models\UserOfficeRole;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class UserPlotController extends Controller
 {
@@ -16,12 +16,22 @@ class UserPlotController extends Controller
         $users = User::all();
         $offices = Office::all();
         $roles = Roles::all();
-        $plots = DB::table('user_office_roles')
-            ->join('users', 'user_office_roles.user_id', '=', 'users.id')
-            ->join('offices', 'user_office_roles.office_id', '=', 'offices.id')
-            ->join('roles', 'user_office_roles.role_id', '=', 'roles.id')
-            ->select('user_office_roles.*', 'users.name as user_name', 'offices.name as office_name', 'roles.name as role_name', 'users.is_sales')
-            ->get();
+        $plots = UserOfficeRole::with(['user', 'office', 'role'])
+            ->get()
+            ->map(function ($plot) {
+                return (object) [
+                    'id' => $plot->id,
+                    'user_id' => $plot->user_id,
+                    'office_id' => $plot->office_id,
+                    'role_id' => $plot->role_id,
+                    'user_name' => $plot->user ? $plot->user->name : null,
+                    'office_name' => $plot->office ? $plot->office->name : null,
+                    'role_name' => $plot->role ? $plot->role->name : null,
+                    'is_sales' => $plot->user ? $plot->user->is_sales : false,
+                    'created_at' => $plot->created_at,
+                    'updated_at' => $plot->updated_at,
+                ];
+            });
 
         return view('UserPlot.index', compact('users', 'offices', 'roles', 'plots'));
     }
@@ -33,12 +43,10 @@ class UserPlotController extends Controller
             'is_sales' => $request->has('is_sales') ? true : false,
         ]);
 
-        DB::table('user_office_roles')->insert([
+        UserOfficeRole::create([
             'user_id' => $request->user_id,
             'office_id' => $request->office_id,
             'role_id' => $request->role_id,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         return back()->with('success', 'User berhasil diplot ke kantor');
@@ -46,11 +54,20 @@ class UserPlotController extends Controller
 
     public function show($id)
     {
-        $plot = DB::table('user_office_roles')
-            ->join('users', 'user_office_roles.user_id', '=', 'users.id')
-            ->where('user_office_roles.id', $id)
-            ->select('user_office_roles.*', 'users.is_sales')
-            ->first();
+        $plot = UserOfficeRole::with(['user'])
+            ->where('id', $id)
+            ->first()
+            ->map(function ($plot) {
+                return (object) [
+                    'id' => $plot->id,
+                    'user_id' => $plot->user_id,
+                    'office_id' => $plot->office_id,
+                    'role_id' => $plot->role_id,
+                    'is_sales' => $plot->user ? $plot->user->is_sales : false,
+                    'created_at' => $plot->created_at,
+                    'updated_at' => $plot->updated_at,
+                ];
+            });
 
         if (! $plot) {
             return response()->json([
@@ -72,21 +89,18 @@ class UserPlotController extends Controller
             'is_sales' => $request->has('is_sales') ? true : false,
         ]);
 
-        DB::table('user_office_roles')
-            ->where('id', $id)
-            ->update([
-                'user_id' => $request->user_id,
-                'office_id' => $request->office_id,
-                'role_id' => $request->role_id,
-                'updated_at' => now(),
-            ]);
+        UserOfficeRole::where('id', $id)->update([
+            'user_id' => $request->user_id,
+            'office_id' => $request->office_id,
+            'role_id' => $request->role_id,
+        ]);
 
         return back()->with('success', 'Plotting berhasil diperbarui');
     }
 
     public function destroy($id)
     {
-        DB::table('user_office_roles')->where('id', $id)->delete();
+        UserOfficeRole::where('id', $id)->delete();
 
         return back()->with('success', 'Plotting berhasil dihapus');
     }

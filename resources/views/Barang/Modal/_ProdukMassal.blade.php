@@ -126,6 +126,9 @@
     let categories = [];
     let units = [];
     let coas = [];
+    
+    let brandTsInstances = [];
+    let categoryTsInstances = [];
 
     // Initialize data
     async function initializeMassalModal() {
@@ -245,6 +248,7 @@
     // Add new product row
     function addProductRow() {
         productRowCount++;
+        const currentRowId = productRowCount;
         
         console.log('Adding row with data:', {
             suppliers: suppliers.length,
@@ -336,51 +340,129 @@
                 const currentRow = row;
                 
                 // Initialize supplier dropdown
-                const supplierSelect = currentRow.querySelector(`.in-supplier-${productRowCount}`);
+                const supplierSelect = currentRow.querySelector(`.in-supplier-${currentRowId}`);
                 if (supplierSelect && typeof TomSelect !== 'undefined') {
                     new TomSelect(supplierSelect, {
                         valueField: 'id',
                         labelField: 'nama',
                         searchField: 'nama',
-                        create: false,
+                        options: suppliers,
                         placeholder: 'Supplier...',
                         dropdownParent: 'body'
                     });
                 }
 
                 // Initialize brand dropdown
-                const brandSelect = currentRow.querySelector(`.in-brand-${productRowCount}`);
+                const brandSelect = currentRow.querySelector(`.in-brand-${currentRowId}`);
                 if (brandSelect && typeof TomSelect !== 'undefined') {
-                    new TomSelect(brandSelect, {
+                    const ts = new TomSelect(brandSelect, {
                         valueField: 'id',
                         labelField: 'nama_brand',
                         searchField: 'nama_brand',
-                        create: false,
+                        options: brands,
+                        create: async function(input, callback) {
+                            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                            const supplierSelect = currentRow.querySelector(`.in-supplier-${currentRowId}`);
+                            const supplierId = supplierSelect && supplierSelect.tomselect ? supplierSelect.tomselect.getValue() : null;
+
+                            try {
+                                const res = await fetch('{{ route("brand-api.index") }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': token
+                                    },
+                                    body: JSON.stringify({ nama_brand: input, supplier_ids: [supplierId] })
+                                });
+                                const data = await res.json();
+                                if (data.status === 'success' || data.success) {
+                                    // Add to local brands array
+                                    brands.push(data.data);
+                                    // Also add to global masterBrands if available
+                                    if (typeof masterBrands !== 'undefined') masterBrands.push(data.data);
+                                    
+                                    // Sync all brand TomSelect instances
+                                    brandTsInstances.forEach(ts => {
+                                        if (ts) {
+                                            ts.addOption({ id: data.data.id, nama_brand: data.data.nama_brand });
+                                        }
+                                    });
+
+                                    callback({ id: data.data.id, nama_brand: data.data.nama_brand });
+                                } else {
+                                    alert(data.message || 'Gagal memproses brand');
+                                    callback(false);
+                                }
+                            } catch (err) {
+                                alert('Gagal memproses brand');
+                                callback(false);
+                            }
+                        },
                         placeholder: 'Brand...',
                         dropdownParent: 'body'
                     });
+                    brandTsInstances.push(ts);
                 }
 
                 // Initialize category dropdown
-                const categorySelect = currentRow.querySelector(`.in-kategori-${productRowCount}`);
+                const categorySelect = currentRow.querySelector(`.in-kategori-${currentRowId}`);
                 if (categorySelect && typeof TomSelect !== 'undefined') {
-                    new TomSelect(categorySelect, {
+                    const ts = new TomSelect(categorySelect, {
                         valueField: 'id',
                         labelField: 'nama_kategori',
                         searchField: 'nama_kategori',
-                        create: false,
+                        options: categories,
+                        create: async function(input, callback) {
+                            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                            try {
+                                const res = await fetch('{{ route("product-category-api.index") }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': token
+                                    },
+                                    body: JSON.stringify({ nama_kategori: input })
+                                });
+                                const data = await res.json();
+                                if (data.success) {
+                                    // Add to local categories array
+                                    categories.push(data.data);
+                                    // Also add to global masterCategories if available
+                                    if (typeof masterCategories !== 'undefined') masterCategories.push(data.data);
+
+                                    // Sync all category TomSelect instances
+                                    categoryTsInstances.forEach(ts => {
+                                        if (ts) {
+                                            ts.addOption({ id: data.data.id, nama_kategori: data.data.nama_kategori });
+                                        }
+                                    });
+
+                                    callback({ id: data.data.id, nama_kategori: data.data.nama_kategori });
+                                } else {
+                                    alert(data.message || 'Gagal memproses kategori');
+                                    callback(false);
+                                }
+                            } catch (err) {
+                                alert('Gagal memproses kategori');
+                                callback(false);
+                            }
+                        },
                         placeholder: 'Kategori...',
                         dropdownParent: 'body'
                     });
+                    categoryTsInstances.push(ts);
                 }
 
                 // Initialize COA dropdown
-                const coaSelect = currentRow.querySelector(`.in-coa-${productRowCount}`);
+                const coaSelect = currentRow.querySelector(`.in-coa-${currentRowId}`);
                 if (coaSelect && typeof TomSelect !== 'undefined') {
                     new TomSelect(coaSelect, {
                         valueField: 'id',
                         labelField: 'nama_akun',
                         searchField: 'nama_akun',
+                        options: coas,
                         create: false,
                         placeholder: 'COA...',
                         dropdownParent: 'body'
@@ -388,12 +470,13 @@
                 }
 
                 // Initialize unit dropdown
-                const unitSelect = currentRow.querySelector(`.in-unit-${productRowCount}`);
+                const unitSelect = currentRow.querySelector(`.in-unit-${currentRowId}`);
                 if (unitSelect && typeof TomSelect !== 'undefined') {
                     new TomSelect(unitSelect, {
                         valueField: 'id',
                         labelField: 'nama',
                         searchField: 'nama',
+                        options: units,
                         create: false,
                         placeholder: 'Satuan...',
                         dropdownParent: 'body'
@@ -401,9 +484,9 @@
                 }
 
                 // Add price formatting like existing system
-                const beliInput = currentRow.querySelector(`.in-beli-${productRowCount}`);
-                const jualInput = currentRow.querySelector(`.in-jual-${productRowCount}`);
-                const tempoInput = currentRow.querySelector(`.in-tempo-${productRowCount}`);
+                const beliInput = currentRow.querySelector(`.in-beli-${currentRowId}`);
+                const jualInput = currentRow.querySelector(`.in-jual-${currentRowId}`);
+                const tempoInput = currentRow.querySelector(`.in-tempo-${currentRowId}`);
 
                 if (beliInput) {
                     beliInput.addEventListener('input', function() {
@@ -435,6 +518,21 @@
     function removeProductRow(id) {
         const row = document.getElementById(`product-row-${id}`);
         if (row) {
+            // Find and remove TomSelect instances from tracking arrays
+            const brandSelect = row.querySelector(`[class*="in-brand-"]`);
+            if (brandSelect && brandSelect.tomselect) {
+                const idx = brandTsInstances.indexOf(brandSelect.tomselect);
+                if (idx !== -1) brandTsInstances.splice(idx, 1);
+                brandSelect.tomselect.destroy();
+            }
+            
+            const categorySelect = row.querySelector(`[class*="in-kategori-"]`);
+            if (categorySelect && categorySelect.tomselect) {
+                const idx = categoryTsInstances.indexOf(categorySelect.tomselect);
+                if (idx !== -1) categoryTsInstances.splice(idx, 1);
+                categorySelect.tomselect.destroy();
+            }
+
             row.remove();
             updateRowCount();
             updateEmptyState();
@@ -442,13 +540,21 @@
     }
 
     // Clear all rows
-    function clearAllRows() {
-        if (confirm('Apakah Anda yakin ingin menghapus semua baris?')) {
-            document.getElementById('massalProductBody').innerHTML = '';
-            productRowCount = 0;
-            updateRowCount();
-            updateEmptyState();
+    async function clearAllRows(force = false) {
+        if (!force) {
+            const confirmed = await macConfirm('Hapus Semua Baris', 'Apakah Anda yakin ingin menghapus semua baris? Semua data yang belum disimpan akan hilang.', {
+                confirmText: 'Hapus Semua',
+                confirmType: 'danger'
+            });
+            if (!confirmed) return;
         }
+
+        document.getElementById('massalProductBody').innerHTML = '';
+        productRowCount = 0;
+        brandTsInstances = [];
+        categoryTsInstances = [];
+        updateRowCount();
+        updateEmptyState();
     }
 
     // Update row count
@@ -584,12 +690,18 @@
             return;
         }
 
+        const saveBtn = document.querySelector('[onclick="saveMassalProducts()"]');
+        let originalText = '';
+        if (saveBtn) {
+            originalText = saveBtn.innerHTML;
+        }
+
         try {
             // Show loading
-            const saveBtn = document.querySelector('[onclick="saveMassalProducts()"]');
-            const originalText = saveBtn.innerHTML;
-            saveBtn.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Menyimpan...';
-            saveBtn.disabled = true;
+            if (saveBtn) {
+                saveBtn.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Menyimpan...';
+                saveBtn.disabled = true;
+            }
 
             const response = await fetch('{{ route("product-api.bulk-store") }}', {
                 method: 'POST',
@@ -604,8 +716,11 @@
 
             if (response.ok) {
                 alert(`Berhasil menyimpan ${products.length} produk!`);
-                bootstrap.Modal.getInstance(document.getElementById('modalProdukMassal')).hide();
-                clearAllRows();
+                const modalEl = document.getElementById('modalProdukMassal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+                
+                clearAllRows(true);
                 // Refresh product table
                 if (typeof loadProductData === 'function') {
                     loadProductData();
@@ -618,8 +733,10 @@
             alert('Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.');
         } finally {
             // Restore button
-            saveBtn.innerHTML = originalText;
-            saveBtn.disabled = false;
+            if (saveBtn) {
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            }
         }
     }
 

@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Office;
+use App\Models\UserOfficeRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -30,18 +31,6 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            // Auto-set office jika user hanya punya 1 office
-            $user = Auth::user();
-            $availableOffices = DB::table('user_office_roles')
-                ->where('user_id', $user->id)
-                ->pluck('office_id')
-                ->toArray();
-
-            if (count($availableOffices) === 1) {
-                session(['active_office_id' => $availableOffices[0]]);
-                return redirect()->route('dashboard');
-            }
-
             return redirect()->route('syo');
         }
 
@@ -63,12 +52,21 @@ class AuthController extends Controller
     {
         $user = Auth::user();
 
-        $availableOffices = DB::table('user_office_roles')
-            ->join('offices', 'user_office_roles.office_id', '=', 'offices.id')
-            ->join('roles', 'user_office_roles.role_id', '=', 'roles.id')
-            ->where('user_office_roles.user_id', $user->id)
-            ->select('offices.*', 'roles.name as role_name')
-            ->get();
+        $availableOffices = UserOfficeRole::with(['office', 'role'])
+            ->where('user_id', $user->id)
+            ->get()
+            ->map(function ($userOfficeRole) {
+                // Create a stdClass object to maintain object property access
+                $officeData = new \stdClass;
+                $officeData->id = $userOfficeRole->office->id;
+                $officeData->name = $userOfficeRole->office->name;
+                $officeData->code = $userOfficeRole->office->code;
+                $officeData->role_name = $userOfficeRole->role->name;
+                $officeData->created_at = $userOfficeRole->office->created_at;
+                $officeData->updated_at = $userOfficeRole->office->updated_at;
+
+                return $officeData;
+            });
 
         return view('Auth.syo', compact('availableOffices'));
     }
@@ -78,11 +76,11 @@ class AuthController extends Controller
         $user = Auth::user();
 
         // Cek apakah user memiliki role Superadmin atau Owner untuk outlet ini
-        $hasAccess = DB::table('user_office_roles')
-            ->join('roles', 'user_office_roles.role_id', '=', 'roles.id')
-            ->where('user_office_roles.user_id', $user->id)
-            ->where('user_office_roles.office_id', $id)
-            ->whereIn('roles.name', ['Superadmin', 'Owner'])
+        $hasAccess = UserOfficeRole::where('user_id', $user->id)
+            ->where('office_id', $id)
+            ->whereHas('role', function ($query) {
+                $query->whereIn('name', ['Superadmin', 'Owner']);
+            })
             ->exists();
 
         if (! $hasAccess) {
@@ -95,7 +93,7 @@ class AuthController extends Controller
         try {
             // Karena cascading delete sudah diatur di migration,
             // menghapus office akan menghapus data terkait.
-            \App\Models\Office::findOrFail($id)->delete();
+            Office::findOrFail($id)->delete();
 
             return response()->json([
                 'success' => true,

@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\COA;
 use App\Models\Invoice;
 use App\Models\Partner;
 use App\Models\Payment;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class PurchaseController extends Controller
 {
@@ -70,8 +71,7 @@ class PurchaseController extends Controller
             })
             ->get();
 
-        $accounts = DB::table('chart_of_accounts')
-            ->where('is_kas_bank', 1)
+        $accounts = COA::where('is_kas_bank', true)
             ->get();
 
         return view($this->views.'receipt', compact('mitras', 'accounts'));
@@ -145,31 +145,33 @@ class PurchaseController extends Controller
         // Get staff/purchaser info
         $salesPerson = null;
         if ($salesId != 0) {
-            $salesPerson = DB::table('users')->where('id', $salesId)->first();
+            $salesPerson = User::where('id', $salesId)->first();
         }
 
-        // Get purchase invoices with payments
-        $invoices = DB::table('invoices as i')
-            ->leftJoin('mitras as m', 'i.mitra_id', '=', 'm.id')
-            ->leftJoin('payments as p', 'i.id', '=', 'p.invoice_id')
-            ->where('i.office_id', session('active_office_id'))
-            ->where('i.tipe_invoice', 'Purchase')
-            ->where('i.sales_id', $salesId)
-            ->whereDate('i.tgl_invoice', '>=', $dateFrom)
-            ->whereDate('i.tgl_invoice', '<=', $dateTo)
-            ->select(
-                'i.id',
-                'i.nomor_invoice',
-                'i.tgl_invoice',
-                'i.total_akhir',
-                'm.nama as mitra_nama',
-                'p.tgl_pembayaran as payment_date',
-                'p.jumlah_bayar as payment_amount',
-                'p.catatan as payment_note',
-                'p.nomor_pembayaran as no_receipt'
-            )
-            ->orderBy('i.tgl_invoice')
-            ->get();
+        // Get purchase invoices with payments using Eloquent
+        $invoices = Invoice::with(['mitra', 'payment'])
+            ->where('office_id', session('active_office_id'))
+            ->where('tipe_invoice', 'Purchase')
+            ->where('sales_id', $salesId)
+            ->whereDate('tgl_invoice', '>=', $dateFrom)
+            ->whereDate('tgl_invoice', '<=', $dateTo)
+            ->orderBy('tgl_invoice')
+            ->get()
+            ->map(function ($invoice) {
+                // Transform to match original structure
+                $payment = $invoice->payment->first(); // Get first payment
+                return (object) [
+                    'id' => $invoice->id,
+                    'nomor_invoice' => $invoice->nomor_invoice,
+                    'tgl_invoice' => $invoice->tgl_invoice,
+                    'total_akhir' => $invoice->total_akhir,
+                    'mitra_nama' => $invoice->mitra ? $invoice->mitra->nama : null,
+                    'payment_date' => $payment ? $payment->tgl_pembayaran : null,
+                    'payment_amount' => $payment ? $payment->jumlah_bayar : null,
+                    'payment_note' => $payment ? $payment->catatan : null,
+                    'no_receipt' => $payment ? $payment->nomor_pembayaran : null,
+                ];
+            });
 
         if ($request->check && $invoices->isEmpty()) {
             return response()->json(['error' => 'Tidak ada data pembelian untuk periode ini.'], 400);
