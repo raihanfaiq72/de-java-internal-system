@@ -291,9 +291,9 @@
                             <strong>Catatan: Barang yang sudah dibeli tidak dapat ditukar/dikembalikan.</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+                            <div class="sig-box text-center"><strong>Admin</strong><br><br><br>( . . . . .)</div>
+                            <div class="sig-box text-center"><strong>Checker</strong><br><br><br>( . . . . . .)</div>
                             <div class="sig-box text-center"><strong>Penerima</strong><br><br><br>( . . . . .)</div>
-                            <div class="sig-box text-center"><strong>Pengirim</strong><br><br><br>( . . . . . .)</div>
-                            <div class="sig-box text-center"><strong>Gudang</strong><br><br><br>( . . . . .)</div>
                         </div>
                     </td>
                 </tr>
