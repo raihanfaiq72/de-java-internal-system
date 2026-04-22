@@ -36,9 +36,9 @@
             --dr-line-strong: rgba(0, 0, 0, 0.1);
             --dr-radius: 16px;
             --dr-radius-sm: 12px;
-            --dr-shadow: 0 8px 30px rgba(0,0,0,0.04);
-            --sidebar-width: 260px;
-            
+            --dr-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+            --sidebar-width: 250px;
+
             /* Legacy support */
             --apple-blue: var(--dr-primary);
             --apple-gray: var(--dr-bg);
@@ -69,29 +69,58 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
+            overflow-x: hidden !important;
         }
 
         .startbar .brand {
             background: transparent !important;
             border-bottom: 1px solid var(--dr-line);
-            padding: 24px 0;
+            padding: 15px 0;
+            min-height: 70px;
             flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
         }
 
         .startbar .brand .logo-lg h4 {
-            color: var(--dr-text) !important;
+            color: #1d1d1f !important;
             font-weight: 800;
             letter-spacing: -0.8px;
-            font-size: 22px;
+            font-size: 20px;
+            margin-bottom: 0;
+            line-height: 1.2;
+        }
+
+        .startbar .brand .logo-lg small {
+            display: block;
+            margin-top: 0px;
+            font-size: 11px;
+            opacity: 0.7;
         }
 
         .startbar-menu {
-            padding: 12px !important;
+            padding: 4px !important;
             flex-grow: 1;
             overflow-y: auto;
-            scrollbar-width: none; /* Hide scrollbar for Chrome/Safari */
+            overflow-x: hidden !important;
+            scrollbar-width: none;
+            /* Hide scrollbar for Chrome/Safari */
         }
-        .startbar-menu::-webkit-scrollbar { display: none; }
+
+        .startbar-menu::-webkit-scrollbar {
+            display: none;
+        }
+
+        .startbar-menu .navbar-nav .nav-item {
+            margin: 0 !important;
+        }
+
+        .collapse .nav-item {
+            margin-bottom: 0 !important;
+        }
 
         .startbar-menu .menu-label {
             color: var(--dr-text-muted);
@@ -99,41 +128,56 @@
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin: 20px 0 8px 12px;
+            margin: 16px 0 6px 0px;
+            padding-left: 8px !important;
             opacity: 0.8;
         }
 
         .startbar-menu .nav-item .nav-link {
-            color: var(--dr-text) !important;
+            color: #1d1d1f !important;
             font-weight: 600;
-            font-size: 14px;
-            padding: 12px 16px;
+            font-size: 13px;
+            padding: 8px 14px;
             border-radius: var(--dr-radius-sm);
-            transition: all 0.2s ease;
-            margin-bottom: 2px;
+            transition: none !important;
+            margin-bottom: 4px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
+            background-color: transparent;
         }
 
         .startbar-menu .nav-item .nav-link i {
             font-size: 20px;
             color: var(--dr-text-muted);
-            transition: color 0.2s;
+            transition: none !important;
         }
 
         .startbar-menu .nav-item .nav-link:hover {
-            background-color: rgba(0, 0, 0, 0.04);
+            background-color: #f0f2f5 !important;
+            color: var(--dr-primary) !important;
+        }
+
+        .startbar-menu .nav-item .nav-link:hover i {
             color: var(--dr-primary) !important;
         }
 
         .startbar-menu .nav-item .nav-link.active {
             background-color: var(--dr-primary) !important;
             color: #fff !important;
-            box-shadow: 0 8px 20px rgba(0, 122, 255, 0.25);
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
         }
 
-        .startbar-menu .nav-item .nav-link.active i {
+        .startbar-menu .nav-item .nav-link.active i,
+        .startbar-menu .nav-item .nav-link.active span {
+            color: #fff !important;
+        }
+
+        .startbar-menu .nav-link[data-bs-toggle="collapse"]::after {
+            color: inherit !important;
+        }
+
+        .startbar-menu .nav-link.active[data-bs-toggle="collapse"]::after {
             color: #fff !important;
         }
 
@@ -187,8 +231,9 @@
             margin-bottom: 24px;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+
         .dr-card:hover {
-            box-shadow: 0 12px 40px rgba(0,0,0,0.06);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
         }
 
         .dr-card-header {
@@ -221,21 +266,45 @@
             text-decoration: none !important;
         }
 
-        .dr-btn-primary { background: var(--dr-primary); color: #fff; }
-        .dr-btn-primary:hover { background: #0056CC; transform: translateY(-1px); }
-        
-        .dr-btn-success { background: var(--dr-success); color: #fff; }
-        .dr-btn-success:hover { background: #219150; transform: translateY(-1px); }
+        .dr-btn-primary {
+            background: var(--dr-primary);
+            color: #fff;
+        }
 
-        .dr-btn-danger { background: var(--dr-danger); color: #fff; }
-        .dr-btn-danger:hover { background: #b32626; transform: translateY(-1px); }
+        .dr-btn-primary:hover {
+            background: #0056CC;
+            transform: translateY(-1px);
+        }
+
+        .dr-btn-success {
+            background: var(--dr-success);
+            color: #fff;
+        }
+
+        .dr-btn-success:hover {
+            background: #219150;
+            transform: translateY(-1px);
+        }
+
+        .dr-btn-danger {
+            background: var(--dr-danger);
+            color: #fff;
+        }
+
+        .dr-btn-danger:hover {
+            background: #b32626;
+            transform: translateY(-1px);
+        }
 
         .dr-btn-outline {
             background: transparent;
             border: 1.5px solid var(--dr-line-strong);
             color: var(--dr-text);
         }
-        .dr-btn-outline:hover { background: var(--dr-line); }
+
+        .dr-btn-outline:hover {
+            background: var(--dr-line);
+        }
 
         /* 3. Modern Data Table */
         .dr-table-container {
@@ -270,12 +339,19 @@
             vertical-align: middle;
         }
 
-        .dr-table tr:last-child td { border-bottom: none; }
-        .dr-table tr:hover { background-color: #fcfcfc; }
+        .dr-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .dr-table tr:hover {
+            background-color: #fcfcfc;
+        }
 
         /* 4. Form Controls */
-        .dr-form-group { margin-bottom: 20px; }
-        
+        .dr-form-group {
+            margin-bottom: 20px;
+        }
+
         .dr-label {
             display: block;
             font-size: 13px;
@@ -369,42 +445,67 @@
 
         /* Collapse Menu Fix & Styling */
         .collapse .nav-link {
-            padding-left: 44px !important;
-            font-size: 12.5px !important;
-            padding-top: 6px !important;
-            padding-bottom: 6px !important;
+            margin-left: 32px;
+            padding-left: 30px !important;
+            font-size: 12px !important;
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
             color: #6e6e73 !important;
             position: relative;
+            margin-bottom: 2px;
+            transition: none !important;
+            /* Remove general transition to avoid jump */
+        }
+
+        .startbar-menu .collapse,
+        .startbar-menu .collapsing,
+        .startbar-menu .collapse.show {
+            transition: none !important;
+            animation: none !important;
+        }
+
+        .startbar-menu .collapse:not(.show) {
+            display: none !important;
+        }
+
+        .startbar-menu .collapsing {
+            height: auto !important;
+            display: block !important;
         }
 
         .collapse .nav-link::before {
             content: '';
             position: absolute;
-            left: 26px;
+            left: 10px;
             top: 50%;
             transform: translateY(-50%);
             width: 4px;
             height: 4px;
             border-radius: 50%;
             background-color: #d2d2d7;
-            transition: all 0.2s;
+            transition: none !important;
         }
 
         .collapse .nav-link:hover {
-            color: #1d1d1f !important;
-            background-color: rgba(0, 0, 0, 0.03) !important;
+            color: var(--dr-primary) !important;
+            background-color: #f0f2f5 !important;
         }
 
         .collapse .nav-link:hover::before {
-            background-color: #86868b;
+            background-color: var(--dr-primary);
             transform: translateY(-50%) scale(1.2);
         }
 
         .collapse .nav-link.active {
-            background-color: var(--apple-blue) !important;
+            background-color: var(--dr-primary) !important;
             color: #fff !important;
             box-shadow: none !important;
             font-weight: 600;
+        }
+
+        .collapse .nav-link.active i,
+        .collapse .nav-link.active span {
+            color: #fff !important;
         }
 
         .collapse .nav-link.active::before {
