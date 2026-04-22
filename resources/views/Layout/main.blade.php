@@ -22,25 +22,43 @@
 
     <style>
         :root {
-            --apple-blue: #007AFF;
-            --apple-gray: #F5F5F7;
-            --glass-bg: rgba(255, 255, 255, 0.85);
-            --glass-border: rgba(0, 0, 0, 0.05);
+            /* DeJava Design System Tokens */
+            --dr-primary: #007AFF;
+            --dr-success: #27ae60;
+            --dr-danger: #d63031;
+            --dr-warning: #e67e22;
+            --dr-info: #2980b9;
+            --dr-bg: #F2F2F7;
+            --dr-card-bg: #ffffff;
+            --dr-text: #1d1d1f;
+            --dr-text-muted: #86868b;
+            --dr-line: rgba(0, 0, 0, 0.05);
+            --dr-line-strong: rgba(0, 0, 0, 0.1);
+            --dr-radius: 16px;
+            --dr-radius-sm: 12px;
+            --dr-shadow: 0 8px 30px rgba(0,0,0,0.04);
             --sidebar-width: 260px;
+            
+            /* Legacy support */
+            --apple-blue: var(--dr-primary);
+            --apple-gray: var(--dr-bg);
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: var(--dr-line);
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
-            background-color: #F2F2F7 !important;
-            color: #1d1d1f;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+            background-color: var(--dr-bg) !important;
+            color: var(--dr-text);
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Sidebar Layout - Flexbox for perfect height */
+        /* Sidebar Layout */
         .startbar {
-            background: rgba(255, 255, 255, 0.95) !important;
+            background: rgba(255, 255, 255, 0.98) !important;
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-right: 1px solid var(--glass-border);
+            border-right: 1px solid var(--dr-line);
             width: var(--sidebar-width);
             position: fixed;
             top: 0;
@@ -48,129 +66,101 @@
             left: 0;
             z-index: 1000;
             box-shadow: none !important;
-            transition: transform 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
         }
 
         .startbar .brand {
             background: transparent !important;
-            border-bottom: 1px solid var(--glass-border);
-            padding: 20px 0;
+            border-bottom: 1px solid var(--dr-line);
+            padding: 24px 0;
             flex-shrink: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .startbar .brand .logo {
-            text-align: center;
-            width: 100%;
         }
 
         .startbar .brand .logo-lg h4 {
-            color: #1d1d1f !important;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-
-        .startbar .brand .logo-sm {
-            color: var(--apple-blue) !important;
-            background: rgba(0, 122, 255, 0.1);
-            padding: 5px 8px;
-            border-radius: 8px;
-        }
-
-        .startbar .brand .logo-lg small {
-            color: #86868b !important;
+            color: var(--dr-text) !important;
+            font-weight: 800;
+            letter-spacing: -0.8px;
+            font-size: 22px;
         }
 
         .startbar-menu {
-            padding: 0 !important;
+            padding: 12px !important;
             flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            overflow-y: auto;
+            scrollbar-width: none; /* Hide scrollbar for Chrome/Safari */
         }
+        .startbar-menu::-webkit-scrollbar { display: none; }
 
         .startbar-menu .menu-label {
-            color: #6e6e73;
-            /* Darker for readability */
-            font-weight: 600;
+            color: var(--dr-text-muted);
+            font-weight: 700;
             font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 24px 0 12px 12px;
+            letter-spacing: 1px;
+            margin: 20px 0 8px 12px;
+            opacity: 0.8;
         }
 
         .startbar-menu .nav-item .nav-link {
-            color: #1d1d1f !important;
-            /* Apple Black */
-            font-weight: 500;
+            color: var(--dr-text) !important;
+            font-weight: 600;
             font-size: 14px;
-            padding: 10px 12px;
-            border-radius: 10px;
-            transition: background-color 0.2s, color 0.2s;
-            /* Performance optimization */
-            margin-bottom: 4px;
+            padding: 12px 16px;
+            border-radius: var(--dr-radius-sm);
+            transition: all 0.2s ease;
+            margin-bottom: 2px;
             display: flex;
             align-items: center;
+            gap: 12px;
         }
 
         .startbar-menu .nav-item .nav-link i {
-            font-size: 18px;
-            margin-right: 12px;
-            color: #86868b;
+            font-size: 20px;
+            color: var(--dr-text-muted);
             transition: color 0.2s;
         }
 
-        .startbar-menu .nav-item .nav-link:not(.active):not([aria-expanded="true"]):hover {
-            background-color: rgba(0, 0, 0, 0.05);
-            color: #000 !important;
+        .startbar-menu .nav-item .nav-link:hover {
+            background-color: rgba(0, 0, 0, 0.04);
+            color: var(--dr-primary) !important;
         }
 
-        .startbar-menu .nav-item .nav-link:not(.active):not([aria-expanded="true"]):hover i {
-            color: #86868b;
-        }
-
-        /* Active State - Only for child/leaf items */
-        .startbar-menu .nav-item .nav-link.active:not([data-bs-toggle="collapse"]) {
-            background-color: var(--apple-blue) !important;
+        .startbar-menu .nav-item .nav-link.active {
+            background-color: var(--dr-primary) !important;
             color: #fff !important;
-            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+            box-shadow: 0 8px 20px rgba(0, 122, 255, 0.25);
         }
 
-        .startbar-menu .nav-item .nav-link.active:not([data-bs-toggle="collapse"]) i,
-        .startbar-menu .nav-item .nav-link.active:not([data-bs-toggle="collapse"]) span {
+        .startbar-menu .nav-item .nav-link.active i {
             color: #fff !important;
         }
-
-        /* Keep parent normal, but maybe just expanded style if needed (bootstrap handles this usually as collapsed class removal) */
 
         /* Topbar Redesign */
         .topbar {
             background: rgba(255, 255, 255, 0.8) !important;
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--dr-line);
             box-shadow: none !important;
             position: fixed;
-            /* Fixed as requested */
             top: 0;
             right: 0;
             width: calc(100% - var(--sidebar-width));
-            /* Adjust for fixed sidebar */
             z-index: 999;
-            transition: width 0.3s ease;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
         }
 
         /* Main Content Adjustment */
         .page-content {
             margin-left: var(--sidebar-width) !important;
-            /* Override default margin */
-            padding-top: 80px;
-            /* Space for fixed topbar */
-            transition: margin-left 0.3s ease;
+            padding-top: 70px;
+            transition: all 0.3s ease;
+            min-height: 100vh;
         }
 
         body.sidebar-desktop-collapsed .startbar {
@@ -183,6 +173,132 @@
 
         body.sidebar-desktop-collapsed .page-content {
             margin-left: 0 !important;
+        }
+
+        /* --- Global DeJava Components --- */
+
+        /* 1. Universal Card */
+        .dr-card {
+            background: var(--dr-card-bg);
+            border: 1px solid var(--dr-line);
+            border-radius: var(--dr-radius);
+            box-shadow: var(--dr-shadow);
+            padding: 24px;
+            margin-bottom: 24px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .dr-card:hover {
+            box-shadow: 0 12px 40px rgba(0,0,0,0.06);
+        }
+
+        .dr-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .dr-card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--dr-text);
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        /* 2. Standard Buttons */
+        .dr-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: var(--dr-radius-sm);
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+            text-decoration: none !important;
+        }
+
+        .dr-btn-primary { background: var(--dr-primary); color: #fff; }
+        .dr-btn-primary:hover { background: #0056CC; transform: translateY(-1px); }
+        
+        .dr-btn-success { background: var(--dr-success); color: #fff; }
+        .dr-btn-success:hover { background: #219150; transform: translateY(-1px); }
+
+        .dr-btn-danger { background: var(--dr-danger); color: #fff; }
+        .dr-btn-danger:hover { background: #b32626; transform: translateY(-1px); }
+
+        .dr-btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--dr-line-strong);
+            color: var(--dr-text);
+        }
+        .dr-btn-outline:hover { background: var(--dr-line); }
+
+        /* 3. Modern Data Table */
+        .dr-table-container {
+            border-radius: var(--dr-radius-sm);
+            overflow: hidden;
+            border: 1px solid var(--dr-line);
+        }
+
+        .dr-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+        }
+
+        .dr-table th {
+            background: #fbfaf8;
+            padding: 14px 16px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--dr-text-muted);
+            border-bottom: 1px solid var(--dr-line);
+            text-align: left;
+        }
+
+        .dr-table td {
+            padding: 16px;
+            font-size: 14px;
+            color: var(--dr-text);
+            border-bottom: 1px solid var(--dr-line);
+            vertical-align: middle;
+        }
+
+        .dr-table tr:last-child td { border-bottom: none; }
+        .dr-table tr:hover { background-color: #fcfcfc; }
+
+        /* 4. Form Controls */
+        .dr-form-group { margin-bottom: 20px; }
+        
+        .dr-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--dr-text);
+            margin-bottom: 8px;
+        }
+
+        .dr-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: var(--dr-radius-sm);
+            border: 1.5px solid var(--dr-line-strong);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            background: #fff;
+        }
+
+        .dr-input:focus {
+            outline: none;
+            border-color: var(--dr-primary);
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
         }
 
         /* Mobile Hamburger - Better touch target */
