@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Office;
 use App\Models\UserOfficeRole;
-use App\Models\Roles;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -32,15 +31,6 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            // Auto-set office jika user hanya punya 1 office
-            $user = Auth::user();
-            $availableOffices = $user->plots()->pluck('office_id')->toArray();
-
-            if (count($availableOffices) === 1) {
-                session(['active_office_id' => $availableOffices[0]]);
-                return redirect()->route('dashboard');
-            }
-
             return redirect()->route('syo');
         }
 
@@ -67,13 +57,14 @@ class AuthController extends Controller
             ->get()
             ->map(function ($userOfficeRole) {
                 // Create a stdClass object to maintain object property access
-                $officeData = new \stdClass();
+                $officeData = new \stdClass;
                 $officeData->id = $userOfficeRole->office->id;
                 $officeData->name = $userOfficeRole->office->name;
                 $officeData->code = $userOfficeRole->office->code;
                 $officeData->role_name = $userOfficeRole->role->name;
                 $officeData->created_at = $userOfficeRole->office->created_at;
                 $officeData->updated_at = $userOfficeRole->office->updated_at;
+
                 return $officeData;
             });
 
