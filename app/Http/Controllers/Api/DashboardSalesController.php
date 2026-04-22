@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Invoice;
+use App\Models\InvoiceItem;
+use App\Models\Partner;
+use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class DashboardSalesController extends Controller
@@ -20,52 +23,72 @@ class DashboardSalesController extends Controller
             $status = $request->input('status');
             $perPage = (int) ($request->input('per_page', 10));
 
-            $query = DB::table('invoices')
-                ->join('mitras', 'invoices.mitra_id', '=', 'mitras.id')
-                ->where('invoices.tipe_invoice', 'Sales')
-                ->where('invoices.office_id', $officeId)
-                ->whereBetween('invoices.tgl_invoice', [$startDate, $endDate])
-                ->whereNull('invoices.deleted_at');
+            // Build base query using Eloquent
+            $query = Invoice::with(['mitra'])
+                ->where('tipe_invoice', 'Sales')
+                ->where('office_id', $officeId)
+                ->whereBetween('tgl_invoice', [$startDate, $endDate]);
 
             if ($mitraId) {
-                $query->where('invoices.mitra_id', $mitraId);
+                $query->where('mitra_id', $mitraId);
             }
 
             if ($status) {
                 if ($status === 'NOT_PAID') {
-                    $query->where('invoices.status_pembayaran', '!=', 'Paid');
+                    $query->where('status_pembayaran', '!=', 'Paid');
                 } else {
-                    $query->where('invoices.status_pembayaran', $status);
+                    $query->where('status_pembayaran', $status);
                 }
             }
 
-            $summary = (clone $query)->select(
-                DB::raw('SUM(invoices.total_akhir) as total_sales'),
-                DB::raw('SUM(CASE WHEN invoices.status_pembayaran != "Paid" AND mitras.is_cash_customer = 0 THEN invoices.total_akhir ELSE 0 END) as total_piutang'),
-                DB::raw('ROUND(AVG(CASE WHEN invoices.status_pembayaran != "Paid" AND mitras.is_cash_customer = 0 THEN DATEDIFF(NOW(), invoices.tgl_invoice) ELSE NULL END)) as avg_aging')
-            )->first();
+            // Calculate summary using Eloquent collections
+            $invoicesForSummary = $query->get();
+            $summary = (object) [
+                'total_sales' => $invoicesForSummary->sum('total_akhir'),
+                'total_piutang' => $invoicesForSummary->filter(function ($invoice) {
+                    return $invoice->status_pembayaran !== 'Paid' && $invoice->mitra && $invoice->mitra->is_cash_customer === false;
+                })->sum('total_akhir'),
+                'avg_aging' => $invoicesForSummary->filter(function ($invoice) {
+                    return $invoice->status_pembayaran !== 'Paid' && $invoice->mitra && $invoice->mitra->is_cash_customer === false;
+                })->avg(function ($invoice) {
+                    return now()->diffInDays($invoice->tgl_invoice);
+                })
+            ];
 
+            // Build invoices query with calculated aging
             $invoicesQuery = clone $query;
-            $invoicesQuery->select(
-                'invoices.id',
-                'invoices.nomor_invoice',
-                'invoices.tgl_invoice',
-                'invoices.total_akhir',
-                'invoices.status_pembayaran',
-                'mitras.nama as nama_pelanggan',
-                DB::raw('DATEDIFF(NOW(), invoices.tgl_invoice) as umur_nota')
-            )
-                ->orderBy('invoices.tgl_invoice', 'desc');
+            $invoicesCollection = $invoicesQuery->orderBy('tgl_invoice', 'desc')->get();
+            
+            // Add calculated umur_nota to collection
+            $invoicesWithAging = $invoicesCollection->map(function ($invoice) {
+                $invoice->umur_nota = now()->diffInDays($invoice->tgl_invoice);
+                return $invoice;
+            });
 
+            // Handle pagination
             $perPage = (int) ($request->get('per_page', 10));
             if ($perPage >= 1000) {
-                $invoices = $invoicesQuery->get();
+                $invoices = $invoicesWithAging;
             } else {
-                $invoices = $invoicesQuery->paginate($perPage)->withQueryString();
+                // Manual pagination for collection
+                $currentPage = request()->get('page', 1);
+                $offset = ($currentPage - 1) * $perPage;
+                $itemsForCurrentPage = $invoicesWithAging->slice($offset, $perPage)->values();
+                
+                $invoices = new \Illuminate\Pagination\LengthAwarePaginator(
+                    $itemsForCurrentPage,
+                    $invoicesWithAging->count(),
+                    $perPage,
+                    $currentPage,
+                    [
+                        'path' => request()->url(),
+                        'query' => request()->query(),
+                    ]
+                );
             }
 
-            $listMitra = DB::table('mitras')
-                ->whereIn('tipe_mitra', ['Client', 'Both'])
+            // Get list of mitra using Eloquent
+            $listMitra = Partner::whereIn('tipe_mitra', ['Client', 'Both'])
                 ->where('office_id', $officeId)
                 ->orderBy('nama', 'asc')
                 ->get(['id', 'nama']);
@@ -91,8 +114,7 @@ class DashboardSalesController extends Controller
 
     public function detail($id)
     {
-        $invoice = DB::table('invoices')
-            ->where('id', $id)
+        $invoice = Invoice::where('id', $id)
             ->where('office_id', session('active_office_id'))
             ->first();
 
@@ -100,11 +122,18 @@ class DashboardSalesController extends Controller
             return response()->json(['success' => false, 'message' => 'Invoice not found or access denied'], 404);
         }
 
-        $items = DB::table('invoice_items')
-            ->leftJoin('products', 'invoice_items.produk_id', '=', 'products.id')
+        $items = InvoiceItem::with(['product' => function ($query) {
+                $query->select('id', 'nama_produk', 'sku_kode');
+            }])
             ->where('invoice_id', $id)
-            ->select('invoice_items.*', 'products.nama_produk', 'products.sku_kode')
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                // Add product data to the item for consistent structure
+                $item->nama_produk = $item->product ? $item->product->nama_produk : $item->nama_produk_manual;
+                $item->sku_kode = $item->product ? $item->product->sku_kode : null;
+                unset($item->product); // Remove the relationship to match original structure
+                return $item;
+            });
 
         return response()->json(['success' => true, 'data' => $items]);
     }

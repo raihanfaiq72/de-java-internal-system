@@ -4,16 +4,23 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\COA;
+use App\Models\COAGroup;
+use App\Models\COAType;
 use App\Models\Expense;
 use App\Models\FinancialAccount;
 use App\Models\Invoice;
+use App\Models\Journal;
+use App\Models\JournalDetail;
 use App\Models\Office;
 use App\Models\Partner;
 use App\Models\Payment;
+use App\Models\Product;
+use App\Models\ProductCategory;
+use App\Models\StockLocation;
+use App\Models\StockMutation;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
@@ -347,38 +354,52 @@ class ReportController extends Controller
         $year = date('Y');
         $officeId = session('active_office_id');
 
-        $stats = DB::table('invoices')
+        $invoices = Invoice::with(['payment'])
             ->where('tipe_invoice', 'Sales')
             ->where('office_id', $officeId)
-            ->whereNull('deleted_at')
-            ->select(
-                DB::raw('SUM(total_akhir) as total_revenue'),
-                DB::raw('SUM(CASE WHEN status_pembayaran != "Paid" THEN (total_akhir - COALESCE((SELECT SUM(jumlah_bayar) FROM payments WHERE payments.invoice_id = invoices.id AND payments.deleted_at IS NULL), 0)) ELSE 0 END) as total_ar'),
-                DB::raw('COUNT(*) as total_count'),
-                DB::raw('SUM(CASE WHEN tgl_jatuh_tempo < CURDATE() AND status_pembayaran != "Paid" THEN (total_akhir - COALESCE((SELECT SUM(jumlah_bayar) FROM payments WHERE payments.invoice_id = invoices.id AND payments.deleted_at IS NULL), 0)) ELSE 0 END) as total_overdue'),
-            )->first();
+            ->get();
+
+        $stats = (object) [
+            'total_revenue' => $invoices->sum('total_akhir'),
+            'total_ar' => $invoices->filter(function ($invoice) {
+                return $invoice->status_pembayaran !== 'Paid';
+            })->sum(function ($invoice) {
+                $paid = $invoice->payment->sum('jumlah_bayar');
+                return $invoice->total_akhir - $paid;
+            }),
+            'total_count' => $invoices->count(),
+            'total_overdue' => $invoices->filter(function ($invoice) {
+                return $invoice->tgl_jatuh_tempo < now() && $invoice->status_pembayaran !== 'Paid';
+            })->sum(function ($invoice) {
+                $paid = $invoice->payment->sum('jumlah_bayar');
+                return $invoice->total_akhir - $paid;
+            }),
+        ];
 
         $monthlyData = [];
         for ($m = 1; $m <= 12; $m++) {
-            $monthlyData[] = DB::table('invoices')
-                ->where('tipe_invoice', 'Sales')
+            $monthlyData[] = Invoice::where('tipe_invoice', 'Sales')
                 ->where('office_id', $officeId)
                 ->whereYear('tgl_invoice', $year)
                 ->whereMonth('tgl_invoice', $m)
-                ->whereNull('deleted_at')
                 ->sum('total_akhir');
         }
 
-        $topClients = DB::table('invoices')
-            ->join('mitras', 'invoices.mitra_id', '=', 'mitras.id')
-            ->where('invoices.tipe_invoice', 'Sales')
-            ->where('invoices.office_id', $officeId)
-            ->whereNull('invoices.deleted_at')
-            ->select('mitras.nama', DB::raw('SUM(total_akhir) as value'))
-            ->groupBy('mitras.id', 'mitras.nama')
-            ->orderByDesc('value')
-            ->limit(5)
-            ->get();
+        $topClients = Invoice::with(['mitra'])
+            ->where('tipe_invoice', 'Sales')
+            ->where('office_id', $officeId)
+            ->get()
+            ->groupBy('mitra_id')
+            ->map(function ($group) {
+                $firstInvoice = $group->first();
+                return (object) [
+                    'nama' => $firstInvoice->mitra ? $firstInvoice->mitra->nama : 'Unknown',
+                    'value' => $group->sum('total_akhir')
+                ];
+            })
+            ->sortByDesc('value')
+            ->take(5)
+            ->values();
 
         return view($this->views.'sales', compact('stats', 'monthlyData', 'topClients'));
     }
@@ -390,8 +411,7 @@ class ReportController extends Controller
         $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfMonth();
         $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfMonth();
 
-        $query = DB::table('products')
-            ->leftJoin('product_categories', 'products.product_category_id', '=', 'product_categories.id')
+        $query = Product::leftJoin('category', 'products.product_category_id', '=', 'category.id')
             ->leftJoin('stock_mutations', function ($join) use ($officeId, $request) {
                 $join->on('products.id', '=', 'stock_mutations.product_id')
                     ->where('stock_mutations.office_id', '=', $officeId)
@@ -402,21 +422,20 @@ class ReportController extends Controller
                 }
             })
             ->where('products.office_id', $officeId)
-            ->whereNull('products.deleted_at')
             ->select(
                 'products.id',
                 'products.nama_produk',
                 'products.sku_kode',
                 'products.satuan',
-                'product_categories.nama_kategori',
-                DB::raw("SUM(CASE WHEN stock_mutations.created_at < '$startDate' AND stock_mutations.type = 'IN' THEN stock_mutations.qty WHEN stock_mutations.created_at < '$startDate' AND stock_mutations.type = 'OUT' THEN -stock_mutations.qty ELSE 0 END) as opening_qty"),
-                DB::raw("SUM(CASE WHEN stock_mutations.created_at BETWEEN '$startDate' AND '$endDate' AND stock_mutations.type = 'IN' THEN stock_mutations.qty ELSE 0 END) as qty_in"),
-                DB::raw("SUM(CASE WHEN stock_mutations.created_at BETWEEN '$startDate' AND '$endDate' AND stock_mutations.type = 'OUT' THEN stock_mutations.qty ELSE 0 END) as qty_out"),
-                DB::raw("SUM(CASE WHEN stock_mutations.created_at < '$startDate' AND stock_mutations.type = 'IN' THEN stock_mutations.qty * stock_mutations.cost_price WHEN stock_mutations.created_at < '$startDate' AND stock_mutations.type = 'OUT' THEN -stock_mutations.qty * stock_mutations.cost_price ELSE 0 END) as opening_value"),
-                DB::raw("SUM(CASE WHEN stock_mutations.created_at BETWEEN '$startDate' AND '$endDate' AND stock_mutations.type = 'IN' THEN stock_mutations.qty * stock_mutations.cost_price ELSE 0 END) as value_in"),
-                DB::raw("SUM(CASE WHEN stock_mutations.created_at BETWEEN '$startDate' AND '$endDate' AND stock_mutations.type = 'OUT' THEN stock_mutations.qty * stock_mutations.cost_price ELSE 0 END) as value_out"),
+                'category.nama_kategori',
+                \DB::raw("SUM(CASE WHEN stock_mutations.created_at < '$startDate' AND stock_mutations.type = 'IN' THEN stock_mutations.qty WHEN stock_mutations.created_at < '$startDate' AND stock_mutations.type = 'OUT' THEN -stock_mutations.qty ELSE 0 END) as opening_qty"),
+                \DB::raw("SUM(CASE WHEN stock_mutations.created_at BETWEEN '$startDate' AND '$endDate' AND stock_mutations.type = 'IN' THEN stock_mutations.qty ELSE 0 END) as qty_in"),
+                \DB::raw("SUM(CASE WHEN stock_mutations.created_at BETWEEN '$startDate' AND '$endDate' AND stock_mutations.type = 'OUT' THEN stock_mutations.qty ELSE 0 END) as qty_out"),
+                \DB::raw("SUM(CASE WHEN stock_mutations.created_at < '$startDate' AND stock_mutations.type = 'IN' THEN stock_mutations.qty * stock_mutations.cost_price WHEN stock_mutations.created_at < '$startDate' AND stock_mutations.type = 'OUT' THEN -stock_mutations.qty * stock_mutations.cost_price ELSE 0 END) as opening_value"),
+                \DB::raw("SUM(CASE WHEN stock_mutations.created_at BETWEEN '$startDate' AND '$endDate' AND stock_mutations.type = 'IN' THEN stock_mutations.qty * stock_mutations.cost_price ELSE 0 END) as value_in"),
+                \DB::raw("SUM(CASE WHEN stock_mutations.created_at BETWEEN '$startDate' AND '$endDate' AND stock_mutations.type = 'OUT' THEN stock_mutations.qty * stock_mutations.cost_price ELSE 0 END) as value_out"),
             )
-            ->groupBy('products.id', 'products.nama_produk', 'products.sku_kode', 'products.satuan', 'product_categories.nama_kategori');
+            ->groupBy('products.id', 'products.nama_produk', 'products.sku_kode', 'products.satuan', 'category.nama_kategori');
 
         if ($request->category_id) {
             $query->where('products.product_category_id', $request->category_id);
@@ -442,9 +461,9 @@ class ReportController extends Controller
     {
         $officeId = session('active_office_id');
 
-        $categories = DB::table('product_categories')->where('office_id', $officeId)->get();
-        $locations = DB::table('stock_locations')->where('office_id', $officeId)->get();
-        $allProducts = DB::table('products')->where('office_id', $officeId)->select('id', 'nama_produk')->get();
+        $categories = ProductCategory::where('office_id', $officeId)->get();
+        $locations = StockLocation::where('office_id', $officeId)->get();
+        $allProducts = Product::where('office_id', $officeId)->select('id', 'nama_produk')->get();
 
         $products = $this->getStockData($request);
 
@@ -477,40 +496,45 @@ class ReportController extends Controller
         $coaId = $request->coa_id;
         $status = $request->status;
 
-        $query = DB::table('journal_details')
-            ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-            ->join('chart_of_accounts', 'journal_details.akun_id', '=', 'chart_of_accounts.id')
-            ->leftJoin('invoices', function ($join) use ($officeId) {
-                $join->on('journals.nomor_referensi', '=', 'invoices.nomor_invoice')
-                    ->where('invoices.office_id', '=', $officeId)
-                    ->whereNull('invoices.deleted_at');
-            })
-            ->where('journals.office_id', $officeId)
-            ->whereNull('journals.deleted_at')
-            ->whereNull('journal_details.deleted_at')
-            ->whereBetween('journals.tgl_jurnal', [$startDate, $endDate])
-            ->select(
-                'journals.tgl_jurnal',
-                'journals.keterangan',
-                'journals.nomor_referensi',
-                'journal_details.nomor_journal',
-                'journal_details.debit',
-                'journal_details.kredit',
-                'chart_of_accounts.id as coa_id',
-                'chart_of_accounts.kode_akun',
-                'chart_of_accounts.nama_akun',
-                'invoices.status_dok',
-            );
+        $query = JournalDetail::with(['journal' => function ($query) use ($officeId, $startDate, $endDate) {
+                    $query->where('office_id', $officeId)
+                          ->whereBetween('tgl_jurnal', [$startDate, $endDate]);
+                }, 'journal.invoice' => function ($query) use ($officeId) {
+                    $query->where('office_id', $officeId);
+                }, 'coa'])
+            ->whereHas('journal', function ($query) use ($officeId, $startDate, $endDate) {
+                $query->where('office_id', $officeId)
+                      ->whereBetween('tgl_jurnal', [$startDate, $endDate]);
+            });
 
         if ($coaId) {
-            $query->where('journal_details.akun_id', $coaId);
+            $query->where('akun_id', $coaId);
         }
 
         if ($status) {
-            $query->where('invoices.status_dok', $status);
+            $query->whereHas('journal.invoice', function ($query) use ($status) {
+                $query->where('status_dok', $status);
+            });
         }
 
-        $journalLines = $query->orderBy('journals.tgl_jurnal')->orderBy('journals.id')->get();
+        $journalLines = $query->get()
+            ->map(function ($detail) {
+                return (object) [
+                    'tgl_jurnal' => $detail->journal->tgl_jurnal,
+                    'keterangan' => $detail->journal->keterangan,
+                    'nomor_referensi' => $detail->journal->nomor_referensi,
+                    'nomor_journal' => $detail->nomor_journal,
+                    'debit' => $detail->debit,
+                    'kredit' => $detail->kredit,
+                    'coa_id' => $detail->coa_id,
+                    'kode_akun' => $detail->coa ? $detail->coa->kode_akun : null,
+                    'nama_akun' => $detail->coa ? $detail->coa->nama_akun : null,
+                    'status_dok' => $detail->journal->invoice ? $detail->journal->invoice->status_dok : null,
+                ];
+            })
+            ->sortBy('tgl_jurnal')
+            ->sortBy('nomor_journal')
+            ->values();
         $groupedData = $journalLines->groupBy('coa_id');
 
         $reportData = [];
@@ -554,15 +578,15 @@ class ReportController extends Controller
         $officeId = session('active_office_id');
 
         $getBalance = function ($accountId) use ($officeId, $date) {
-            return DB::table('journal_details')
-                ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-                ->where('journal_details.akun_id', $accountId)
-                ->where('journals.office_id', $officeId)
-                ->where('journals.tgl_jurnal', '<=', $date)
-                ->whereNull('journal_details.deleted_at')
-                ->whereNull('journals.deleted_at')
-                ->select(DB::raw('SUM(debit) - SUM(kredit) as bal'))
-                ->first()->bal ?? 0;
+            return JournalDetail::whereHas('journal', function ($query) use ($officeId, $date) {
+                    $query->where('office_id', $officeId)
+                          ->where('tgl_jurnal', '<=', $date);
+                })
+                ->where('akun_id', $accountId)
+                ->get()
+                ->sum(function ($detail) {
+                    return $detail->debit - $detail->kredit;
+                });
         };
 
         $groups = \App\Models\COAGroup::where('office_id', $officeId)
@@ -592,24 +616,18 @@ class ReportController extends Controller
 
         $startOfYear = date('Y-01-01', strtotime($date));
 
-        $revenue = DB::table('invoices')
-            ->where('tipe_invoice', 'Sales')
+        $revenue = Invoice::where('tipe_invoice', 'Sales')
             ->where('office_id', $officeId)
             ->whereBetween('tgl_invoice', [$startOfYear, $date])
-            ->whereNull('deleted_at')
             ->sum('total_akhir');
 
-        $cogs = DB::table('invoices')
-            ->where('tipe_invoice', 'Purchase')
+        $cogs = Invoice::where('tipe_invoice', 'Purchase')
             ->where('office_id', $officeId)
             ->whereBetween('tgl_invoice', [$startOfYear, $date])
-            ->whereNull('deleted_at')
             ->sum('total_akhir');
 
-        $expenses = DB::table('expenses')
-            ->where('office_id', $officeId)
+        $expenses = Expense::where('office_id', $officeId)
             ->whereBetween('tgl_biaya', [$startOfYear, $date])
-            ->whereNull('deleted_at')
             ->sum('jumlah');
 
         $currentYearEarnings = $revenue - ($cogs + $expenses);
@@ -627,29 +645,6 @@ class ReportController extends Controller
 
     public function coaManagement(Request $request)
     {
-        $date = $request->input('date', date('Y-m-d'));
-        $data = $this->getBalanceSheetData($date);
-
-        $officeId = session('active_office_id');
-
-        $groups = DB::table('coa_group as g')
-            ->join('coa_type as t', 't.kelompok_id', '=', 'g.id')
-            ->join('chart_of_accounts as c', 'c.tipe_id', '=', 't.id')
-            ->where('g.office_id', $officeId)
-            ->select(
-                'g.id as kelompok_id',
-                'g.kode_kelompok',
-                'g.nama_kelompok',
-                't.id as tipe_id',
-                't.nama_tipe',
-                'c.id as coa_id',
-                'c.kode_akun',
-                'c.nama_akun',
-            )
-            ->orderBy('g.kode_kelompok')
-            ->orderBy('t.nama_tipe')
-            ->orderBy('c.kode_akun')
-            ->get();
 
         $dropdownGroups = \App\Models\COAGroup::where('office_id', $officeId)->get();
         $dropdownTypes = \App\Models\COAType::whereHas('group', function ($q) use ($officeId) {
@@ -684,39 +679,34 @@ class ReportController extends Controller
 
         $targetGroups = [4000, 5000, 6000, 6800, 7001, 8001, 9000];
 
-        $movements = DB::table('journal_details')
-            ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-            ->where('journals.office_id', $officeId)
-            ->whereNull('journals.deleted_at')
-            ->whereNull('journal_details.deleted_at')
-            ->whereBetween('journals.tgl_jurnal', [$startDate, $endDate])
-            ->select(
-                'journal_details.akun_id',
-                DB::raw('SUM(journal_details.debit) as total_debit'),
-                DB::raw('SUM(journal_details.kredit) as total_credit'),
-            )
-            ->groupBy('journal_details.akun_id')
+        $movements = JournalDetail::whereHas('journal', function ($query) use ($officeId, $startDate, $endDate) {
+                $query->where('office_id', $officeId)
+                      ->whereBetween('tgl_jurnal', [$startDate, $endDate]);
+            })
             ->get()
-            ->keyBy('akun_id');
+            ->groupBy('akun_id')
+            ->map(function ($group) {
+                return (object) [
+                    'total_debit' => $group->sum('debit'),
+                    'total_credit' => $group->sum('kredit'),
+                ];
+            });
 
-        $groups = DB::table('coa_group')
-            ->join('coa_type', 'coa_group.id', '=', 'coa_type.kelompok_id')
-            ->join('chart_of_accounts', 'coa_type.id', '=', 'chart_of_accounts.tipe_id')
-            ->where('coa_group.office_id', $officeId)
-            ->whereIn('coa_group.kode_kelompok', $targetGroups)
-            ->whereNull('coa_group.deleted_at')
-            ->whereNull('coa_type.deleted_at')
-            ->whereNull('chart_of_accounts.deleted_at')
-            ->select(
-                'coa_group.kode_kelompok',
-                'coa_group.nama_kelompok',
-                'chart_of_accounts.id as coa_id',
-                'chart_of_accounts.kode_akun',
-                'chart_of_accounts.nama_akun',
-            )
-            ->orderBy('coa_group.kode_kelompok')
-            ->orderBy('chart_of_accounts.kode_akun')
-            ->get();
+        $groups = COAGroup::with(['type.coas'])
+            ->where('office_id', $officeId)
+            ->whereIn('kode_kelompok', $targetGroups)
+            ->get()
+            ->map(function ($group) {
+                return $group->type->flatMap(function ($type) {
+                    return $type->coas->map(function ($coa) use ($group) {
+                        return (object) [
+                            'kode_kelompok' => $group->kode_kelompok,
+                            'coa_id' => $coa->id
+                        ];
+                    });
+                });
+            })
+            ->flatten(1);
 
         $report = [];
         $summary = [

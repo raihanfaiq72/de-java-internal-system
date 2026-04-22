@@ -3,9 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\COAGroup;
+use App\Models\COAType;
 use App\Models\DeliveryOrderFleet;
 use App\Models\Expense;
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
+use App\Models\Journal;
+use App\Models\JournalDetail;
 use App\Models\Office;
 use App\Models\Payment;
 use App\Models\Product;
@@ -13,7 +18,6 @@ use App\Models\StockMutation;
 use App\Models\UserOfficeRole;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class DashboardController extends Controller
@@ -103,11 +107,17 @@ class DashboardController extends Controller
                 for ($i = 0; $i < 24; $i++) {
                     $chartData->put($i, ['label' => sprintf('%02d:00', $i), 'total' => 0]);
                 }
-                $sales = $query->select(DB::raw('HOUR(created_at) as hour'), DB::raw('SUM(total_akhir) as total'))
-                    ->groupBy('hour')->get()->keyBy('hour');
-                foreach ($sales as $h => $s) {
+                // Use Eloquent collection to group by hour
+                $sales = $query->get()
+                    ->groupBy(function ($invoice) {
+                        return $invoice->created_at->format('H');
+                    })
+                    ->map(function ($group) {
+                        return $group->sum('total_akhir');
+                    });
+                foreach ($sales as $h => $total) {
                     if ($chartData->has($h)) {
-                        $chartData[$h] = ['label' => $chartData[$h]['label'], 'total' => (float)$s->total];
+                        $chartData[$h] = ['label' => $chartData[$h]['label'], 'total' => (float)$total];
                     }
                 }
             } elseif ($range === 'week' || $range === 'month') {
@@ -116,11 +126,17 @@ class DashboardController extends Controller
                     $key = $date->format('Y-m-d');
                     $chartData->put($key, ['label' => $date->translatedFormat('d M'), 'total' => 0]);
                 }
-                $sales = $query->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(total_akhir) as total'))
-                    ->groupBy('date')->get()->keyBy('date');
-                foreach ($sales as $d => $s) {
+                // Use Eloquent collection to group by date
+                $sales = $query->get()
+                    ->groupBy(function ($invoice) {
+                        return $invoice->created_at->format('Y-m-d');
+                    })
+                    ->map(function ($group) {
+                        return $group->sum('total_akhir');
+                    });
+                foreach ($sales as $d => $total) {
                     if ($chartData->has($d)) {
-                        $chartData[$d] = ['label' => $chartData[$d]['label'], 'total' => (float)$s->total];
+                        $chartData[$d] = ['label' => $chartData[$d]['label'], 'total' => (float)$total];
                     }
                 }
             } else {
@@ -128,11 +144,17 @@ class DashboardController extends Controller
                     $m = \Carbon\Carbon::now()->subMonths($i);
                     $chartData->put($m->format('Y-m'), ['label' => $m->translatedFormat('M Y'), 'total' => 0]);
                 }
-                $sales = $query->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"), DB::raw("SUM(total_akhir) as total"))
-                    ->groupBy('month')->get()->keyBy('month');
-                foreach ($sales as $m => $s) {
+                // Use Eloquent collection to group by month
+                $sales = $query->get()
+                    ->groupBy(function ($invoice) {
+                        return $invoice->created_at->format('Y-m');
+                    })
+                    ->map(function ($group) {
+                        return $group->sum('total_akhir');
+                    });
+                foreach ($sales as $m => $total) {
                     if ($chartData->has($m)) {
-                        $chartData[$m] = ['label' => $chartData[$m]['label'], 'total' => (float)$s->total];
+                        $chartData[$m] = ['label' => $chartData[$m]['label'], 'total' => (float)$total];
                     }
                 }
             }
@@ -249,35 +271,38 @@ class DashboardController extends Controller
             $data['stats_prev']['saldo_aktif'] = $totalIncomePrev - $totalOutcomePrev - $totalExpensesPrev;
 
             // Accurate Net Profit calculation based on GL
-            $movements = DB::table('journal_details')
-                ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-                ->where('journals.office_id', $officeId)
-                ->whereNull('journals.deleted_at')
-                ->whereNull('journal_details.deleted_at')
-                ->select(
-                    'journal_details.akun_id',
-                    DB::raw('SUM(journal_details.debit) as total_debit'),
-                    DB::raw('SUM(journal_details.kredit) as total_credit')
-                )
-                ->groupBy('journal_details.akun_id')
+            $movements = JournalDetail::with(['journal' => function ($query) use ($officeId) {
+                    $query->where('office_id', $officeId);
+                }])
+                ->whereHas('journal', function ($query) use ($officeId) {
+                    $query->where('office_id', $officeId);
+                })
                 ->get()
-                ->keyBy('akun_id');
+                ->groupBy('akun_id')
+                ->map(function ($group) {
+                    return (object) [
+                        'total_debit' => $group->sum('debit'),
+                        'total_credit' => $group->sum('kredit')
+                    ];
+                });
 
             $targetGroups = [4000, 5000, 6000, 6800, 7001, 8001, 9000];
 
-            $groups = DB::table('coa_group')
-                ->join('coa_type', 'coa_group.id', '=', 'coa_type.kelompok_id')
-                ->join('chart_of_accounts', 'coa_type.id', '=', 'chart_of_accounts.tipe_id')
-                ->where('coa_group.office_id', $officeId)
-                ->whereIn('coa_group.kode_kelompok', $targetGroups)
-                ->whereNull('coa_group.deleted_at')
-                ->whereNull('coa_type.deleted_at')
-                ->whereNull('chart_of_accounts.deleted_at')
-                ->select(
-                    'coa_group.kode_kelompok',
-                    'chart_of_accounts.id as coa_id'
-                )
-                ->get();
+            $groups = COAGroup::with(['type.coas'])
+                ->where('office_id', $officeId)
+                ->whereIn('kode_kelompok', $targetGroups)
+                ->get()
+                ->map(function ($group) {
+                    return $group->type->flatMap(function ($type) {
+                        return $type->coas->map(function ($coa) use ($group) {
+                            return (object) [
+                                'kode_kelompok' => $group->kode_kelompok,
+                                'coa_id' => $coa->id
+                            ];
+                        });
+                    });
+                })
+                ->flatten(1);
 
             $totalRevenue = 0;
             $totalExpense = 0;

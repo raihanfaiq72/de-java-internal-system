@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Office;
+use App\Models\Roles;
+use App\Models\UserOfficeRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class AdminOfficeController extends Controller
 {
@@ -25,17 +26,15 @@ class AdminOfficeController extends Controller
         ]);
 
         $office = null;
-        DB::transaction(function () use ($request, &$office) {
+        \DB::transaction(function () use ($request, &$office) {
             $office = Office::create($request->all());
 
-            $role = DB::table('roles')->where('name', 'superadmin')->first();
+            $role = Roles::where('name', 'superadmin')->first();
             if ($role) {
-                DB::table('user_office_roles')->insert([
+                UserOfficeRole::create([
                     'user_id' => Auth::id(),
                     'office_id' => $office->id,
                     'role_id' => $role->id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
                 ]);
             }
         });

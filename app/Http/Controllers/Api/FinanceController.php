@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\COA;
+use App\Models\DeliveryOrderInvoice;
 use App\Models\Expense;
 use App\Models\FinancialAccount;
 use App\Models\FinancialTransaction;
@@ -11,7 +12,6 @@ use App\Models\Payment;
 use App\Traits\LogsActivity;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class FinanceController extends Controller
 {
@@ -84,8 +84,7 @@ class FinanceController extends Controller
             ->where('transaction_date', '<', $startStr)
             ->sum('amount');
 
-        $openingDeliveryCost = DB::table('delivery_order_invoices')
-            ->where('chart_of_accounts_id', $accountId)
+        $openingDeliveryCost = DeliveryOrderInvoice::where('chart_of_accounts_id', $accountId)
             ->where('created_at', '<', $start)
             ->sum('total_cost');
 
@@ -160,8 +159,7 @@ class FinanceController extends Controller
             }
         }
 
-        $deliveryCosts = DB::table('delivery_order_invoices')
-            ->select('created_at', 'total_cost')
+        $deliveryCosts = DeliveryOrderInvoice::select('created_at', 'total_cost')
             ->where('chart_of_accounts_id', $accountId)
             ->whereBetween('created_at', [$start, $end])
             ->get();
@@ -274,8 +272,7 @@ class FinanceController extends Controller
             ->where('status', 'posted')
             ->sum('amount');
 
-        $deliveryOrderAmount = DB::table('delivery_order_invoices')
-            ->where('chart_of_accounts_id', $accountId)
+        $deliveryOrderAmount = DeliveryOrderInvoice::where('chart_of_accounts_id', $accountId)
             ->sum('total_cost');
 
         return ($income + $transferIn + $otherIncome) - ($purchaseExpense + $expense + $transferOut + $otherExpense + $deliveryOrderAmount);
@@ -330,8 +327,7 @@ class FinanceController extends Controller
             ->where('status', 'posted')
             ->sum('amount');
 
-        $deliveryOrderAmount = DB::table('delivery_order_invoices')
-            ->where('chart_of_accounts_id', $accountId)
+        $deliveryOrderAmount = DeliveryOrderInvoice::where('chart_of_accounts_id', $accountId)
             ->sum('total_cost');
 
         return $expense + $purchaseExpense + $transferOut + $otherExpense + $deliveryOrderAmount;

@@ -3,7 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\DB;
+use App\Models\COA;
+use App\Models\Expense;
+use App\Models\Invoice;
+use App\Models\Journal;
+use App\Models\JournalDetail;
+use App\Models\Partner;
 use Throwable;
 
 class DashboardPiutangController extends Controller
@@ -14,58 +19,70 @@ class DashboardPiutangController extends Controller
             $year = date('Y');
             $officeId = session('active_office_id');
 
-            $totalSaldo = DB::table('journal_details')
-                ->join('chart_of_accounts', 'journal_details.akun_id', '=', 'chart_of_accounts.id')
-                ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-                ->where('chart_of_accounts.is_kas_bank', true)
-                ->where('journals.office_id', $officeId)
-                ->whereNull('journals.deleted_at')
-                ->select(DB::raw('SUM(journal_details.debit) - SUM(journal_details.kredit) as balance'))
-                ->first()->balance ?? 0;
+            // Calculate total saldo using Eloquent
+            $totalSaldo = JournalDetail::whereHas('coa', function ($query) {
+                    $query->where('is_kas_bank', true);
+                })
+                ->whereHas('journal', function ($query) use ($officeId) {
+                    $query->where('office_id', $officeId);
+                })
+                ->get()
+                ->sum(function ($detail) {
+                    return $detail->debit - $detail->kredit;
+                });
 
-            $piutangData = DB::table('invoices')
-                ->join('mitras', 'invoices.mitra_id', '=', 'mitras.id')
-                ->where('invoices.tipe_invoice', 'Sales')
-                ->where('invoices.office_id', $officeId)
-                ->whereNull('invoices.deleted_at')
-                ->where('mitras.is_cash_customer', false)
-                ->select(
-                    DB::raw('SUM(invoices.total_akhir) as total_nilai'),
-                    DB::raw("COUNT(CASE WHEN invoices.status_pembayaran = 'Unpaid' THEN 1 END) as count_unpaid"),
-                    DB::raw("COUNT(CASE WHEN invoices.status_pembayaran = 'Partially Paid' THEN 1 END) as count_partial"),
-                    DB::raw("COUNT(CASE WHEN invoices.status_pembayaran = 'Overdue' OR (invoices.tgl_jatuh_tempo < NOW() AND invoices.status_pembayaran != 'Paid') THEN 1 END) as count_overdue")
-                )->first();
-
-            $utangData = DB::table('invoices')
-                ->where('tipe_invoice', 'Purchase')
+            // Calculate piutang data using Eloquent collections
+            $piutangInvoices = Invoice::with(['mitra'])
+                ->where('tipe_invoice', 'Sales')
                 ->where('office_id', $officeId)
-                ->whereNull('deleted_at')
-                ->select(
-                    DB::raw('SUM(total_akhir) as total_nilai'),
-                    DB::raw("COUNT(CASE WHEN status_pembayaran = 'Unpaid' THEN 1 END) as count_unpaid"),
-                    DB::raw("COUNT(CASE WHEN status_pembayaran = 'Partially Paid' THEN 1 END) as count_partial"),
-                    DB::raw("COUNT(CASE WHEN status_pembayaran = 'Overdue' OR (tgl_jatuh_tempo < NOW() AND status_pembayaran != 'Paid') THEN 1 END) as count_overdue")
-                )->first();
+                ->whereHas('mitra', function ($query) {
+                    $query->where('is_cash_customer', false);
+                })
+                ->get();
+
+            $piutangData = (object) [
+                'total_nilai' => $piutangInvoices->sum('total_akhir'),
+                'count_unpaid' => $piutangInvoices->where('status_pembayaran', 'Unpaid')->count(),
+                'count_partial' => $piutangInvoices->where('status_pembayaran', 'Partially Paid')->count(),
+                'count_overdue' => $piutangInvoices->filter(function ($invoice) {
+                    return $invoice->status_pembayaran === 'Overdue' || 
+                           ($invoice->tgl_jatuh_tempo < now() && $invoice->status_pembayaran !== 'Paid');
+                })->count()
+            ];
+
+            // Calculate utang data using Eloquent collections
+            $utangInvoices = Invoice::where('tipe_invoice', 'Purchase')
+                ->where('office_id', $officeId)
+                ->get();
+
+            $utangData = (object) [
+                'total_nilai' => $utangInvoices->sum('total_akhir'),
+                'count_unpaid' => $utangInvoices->where('status_pembayaran', 'Unpaid')->count(),
+                'count_partial' => $utangInvoices->where('status_pembayaran', 'Partially Paid')->count(),
+                'count_overdue' => $utangInvoices->filter(function ($invoice) {
+                    return $invoice->status_pembayaran === 'Overdue' || 
+                           ($invoice->tgl_jatuh_tempo < now() && $invoice->status_pembayaran !== 'Paid');
+                })->count()
+            ];
 
             $monthlyIncome = [];
             $monthlyExpense = [];
 
             for ($m = 1; $m <= 12; $m++) {
-                $income = DB::table('invoices')
-                    ->where('tipe_invoice', 'Sales')
+                // Calculate monthly income using Eloquent
+                $income = Invoice::where('tipe_invoice', 'Sales')
                     ->where('office_id', $officeId)
                     ->whereYear('tgl_invoice', $year)
                     ->whereMonth('tgl_invoice', $m)
                     ->sum('total_akhir');
 
-                $expenseTable = DB::table('expenses')
-                    ->where('office_id', $officeId)
+                // Calculate monthly expenses using Eloquent
+                $expenseTable = Expense::where('office_id', $officeId)
                     ->whereYear('tgl_biaya', $year)
                     ->whereMonth('tgl_biaya', $m)
                     ->sum('jumlah');
 
-                $purchaseInvoice = DB::table('invoices')
-                    ->where('tipe_invoice', 'Purchase')
+                $purchaseInvoice = Invoice::where('tipe_invoice', 'Purchase')
                     ->where('office_id', $officeId)
                     ->whereYear('tgl_invoice', $year)
                     ->whereMonth('tgl_invoice', $m)

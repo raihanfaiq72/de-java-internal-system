@@ -4,14 +4,15 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\COA;
+use App\Models\Expense;
+use App\Models\JournalDetail;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ChartOfAccountController extends Controller
 {
     public function index(Request $request)
     {
-        $query = DB::table('chart_of_accounts');
+        $query = COA::query();
 
         if ($request->has('is_kas_bank')) {
             $query->where('is_kas_bank', $request->is_kas_bank);
@@ -87,13 +88,13 @@ class ChartOfAccountController extends Controller
         $coa = COA::findOrFail($id);
 
         // Validation: Check if account has transactions
-        $hasTransactions = \App\Models\JournalDetail::where('akun_id', $id)->exists();
+        $hasTransactions = JournalDetail::where('akun_id', $id)->exists();
         if ($hasTransactions) {
             return response()->json(['message' => 'Gagal menghapus: Akun ini memiliki riwayat transaksi.'], 422);
         }
 
         // Check expenses just in case (though they should have journal entries)
-        $hasExpenses = \DB::table('expenses')->where('akun_beban_id', $id)->exists();
+        $hasExpenses = Expense::where('akun_beban_id', $id)->exists();
         if ($hasExpenses) {
             return response()->json(['message' => 'Gagal menghapus: Akun ini digunakan dalam data pengeluaran.'], 422);
         }

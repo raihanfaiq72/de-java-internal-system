@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\StockLocation;
 use App\Models\StockMutation;
+use App\Models\User;
 use App\Services\StockService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class StockController extends Controller
@@ -270,15 +271,19 @@ class StockController extends Controller
         $mutationIds = $data->getCollection()->pluck('id')->all();
         $actors = [];
         if (! empty($mutationIds)) {
-            $logs = DB::table('activity_logs')
-                ->leftJoin('users', 'activity_logs.user_id', '=', 'users.id')
-                ->whereNull('activity_logs.deleted_at')
-                ->where('activity_logs.office_id', session('active_office_id'))
-                ->where('activity_logs.tabel_terkait', 'stock_mutations')
-                ->where('activity_logs.tindakan', 'Create')
-                ->whereIn('activity_logs.data_id', $mutationIds)
-                ->select('activity_logs.data_id', 'users.name as user_name', 'users.username as username')
-                ->get();
+            $logs = ActivityLog::with(['user'])
+                ->where('office_id', session('active_office_id'))
+                ->where('tabel_terkait', 'stock_mutations')
+                ->where('tindakan', 'Create')
+                ->whereIn('data_id', $mutationIds)
+                ->get()
+                ->map(function ($log) {
+                    return (object) [
+                        'data_id' => $log->data_id,
+                        'user_name' => $log->user ? $log->user->name : null,
+                        'username' => $log->user ? $log->user->username : null,
+                    ];
+                });
 
             foreach ($logs as $l) {
                 $actors[(int) $l->data_id] = [
