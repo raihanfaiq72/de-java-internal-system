@@ -114,11 +114,9 @@
         const tourCompleted = localStorage.getItem('dejava-tour-completed');
         const tourStartBtn = document.getElementById('tour-start-btn');
         
-        // Hide button if tour completed
-        if (tourCompleted) {
-            if (tourStartBtn) tourStartBtn.style.display = 'none';
-        } else {
-            if (tourStartBtn) tourStartBtn.style.display = 'inline-flex';
+        // Show button always if it exists so user can re-run
+        if (tourStartBtn) {
+            tourStartBtn.style.display = 'inline-flex';
         }
         
         // Initialize tour

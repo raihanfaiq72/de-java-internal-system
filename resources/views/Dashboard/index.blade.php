@@ -6,6 +6,7 @@
 @push('css')
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css');
 
         :root {
             --dr-bg: #ffffff;
@@ -179,6 +180,8 @@
             font-weight: 700;
             line-height: 1;
             color: var(--dr-text);
+            transition: font-size 0.2s ease;
+            white-space: nowrap;
         }
 
         .dr-stat-foot {
@@ -432,7 +435,7 @@
         }
 
         .dr-table-card .table-responsive {
-            height: 285px;
+            height: 280px;
             overflow-y: auto;
             scrollbar-width: thin;
             scrollbar-color: var(--dr-line-strong) transparent;
@@ -894,6 +897,63 @@
             align-items: center;
             gap: 4px;
         }
+        /* Tom Select Standard Styling */
+        .ts-wrapper.tom-select-standard {
+            width: 160px !important;
+            height: 42px !important;
+        }
+        .ts-wrapper.tom-select-standard .ts-control {
+            border-radius: 12px !important;
+            border: 1px solid var(--dr-line-strong) !important;
+            padding: 0 16px !important;
+            height: 42px !important;
+            display: flex !important;
+            align-items: center !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            color: var(--dr-text) !important;
+            background-color: #fff !important;
+            box-shadow: none !important;
+        }
+        .ts-wrapper.tom-select-standard .ts-control input {
+            display: none !important;
+        }
+        .ts-wrapper.tom-select-standard .ts-control::after {
+            border-color: var(--dr-text) transparent transparent transparent !important;
+            right: 15px !important;
+        }
+        .ts-wrapper.tom-select-standard.focus .ts-control {
+            border-color: #1f1f1f !important;
+        }
+        .ts-dropdown.tom-select-standard {
+            border-radius: 12px !important;
+            border: 0 !important;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+            margin-top: 8px !important;
+            padding: 4px !important;
+        }
+        .ts-dropdown.tom-select-standard .option {
+            padding: 8px 12px !important;
+            border-radius: 8px !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+        }
+        .ts-dropdown.tom-select-standard .active {
+            background-color: #f7f6f4 !important;
+            color: #1f1f1f !important;
+        }
+
+        .dr-filter-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ts-wrapper.tom-select-standard .ts-control .item-with-icon {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
     </style>
 @endpush
 
@@ -919,21 +979,15 @@
                             </div>
                         </div>
                         <div class="dr-actions">
-                            <div class="dropdown">
-                                <button class="dr-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="globalFilterBtn">
-                                    <i class="iconoir-calendar"></i>
-                                    <span id="currentDateRangeLabel">Bulan Ini</span>
-                                    <i class="iconoir-nav-arrow-down"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end p-2 border-0 shadow-lg rounded-4 mt-2">
-                                    <li><a class="dropdown-item rounded-3 fw-600" href="#" onclick="changeGlobalFilter('today', 'Hari Ini')">Hari Ini</a></li>
-                                    <li><a class="dropdown-item rounded-3 fw-600" href="#" onclick="changeGlobalFilter('week', 'Minggu Ini')">Minggu Ini</a></li>
-                                    <li><a class="dropdown-item rounded-3 fw-600" href="#" onclick="changeGlobalFilter('month', 'Bulan Ini')">Bulan Ini</a></li>
-                                    <li><a class="dropdown-item rounded-3 fw-600" href="#" onclick="changeGlobalFilter('year', 'Tahun Ini')">Tahun Ini</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item rounded-3 fw-600" href="#" onclick="changeGlobalFilter('all', 'Semua Waktu')">Semua Waktu</a></li>
-                                </ul>
-                            </div>
+                            <select id="globalFilterTS" class="tom-select-standard">
+                                <option value="today">Hari Ini</option>
+                                <option value="week">Minggu Ini</option>
+                                <option value="month" selected>Bulan Ini</option>
+                                <option value="year">Tahun Ini</option>
+                            </select>
+                            <button id="tour-start-btn" class="dr-btn dr-btn--icon me-1" title="Mulai Panduan" style="display: none;">
+                                <i class="iconoir-question-mark"></i>
+                            </button>
                             <a href="{{ route('profile.edit') }}" class="dr-btn dr-btn--icon" aria-label="Settings">
                                 <i class="iconoir-settings"></i>
                             </a>
@@ -986,55 +1040,11 @@
                     </div>
 
                     <div class="row g-3 mb-3">
+                        <!-- 1. Saldo Aktif -->
                         <div class="col-xl-3 col-md-6">
                             <div class="dr-card dr-stat-card">
                                 <div class="dr-stat-head">
                                     <div class="dr-stat-icon">
-                                        <i class="iconoir-reports"></i>
-                                    </div>
-                                    <p class="dr-stat-title">Total Pendapatan</p>
-                                </div>
-                                <div class="dr-stat-value">Rp <span id="dashboardRevenue">0</span></div>
-                                <div class="dr-stat-foot">
-                                    <div class="dr-diff up" id="dashboardRevenueDiff">+0% <span>vs bln lalu</span></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-xl-3 col-md-6">
-                            <div class="dr-card dr-stat-card">
-                                <div class="dr-stat-head">
-                                    <div class="dr-stat-icon">
-                                        <i class="iconoir-hand-cash"></i>
-                                    </div>
-                                    <p class="dr-stat-title">Piutang Usaha</p>
-                                </div>
-                                <div class="dr-stat-value">Rp <span id="dashboardPiutang">0</span></div>
-                                <div class="dr-stat-foot">
-                                    <div class="dr-diff up" id="dashboardPiutangDiff">+0% <span>vs bln lalu</span></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-xl-3 col-md-6">
-                            <div class="dr-card dr-stat-card">
-                                <div class="dr-stat-head">
-                                    <div class="dr-stat-icon" style="color: var(--dr-red);">
-                                        <i class="iconoir-handshake"></i>
-                                    </div>
-                                    <p class="dr-stat-title">Utang Usaha</p>
-                                </div>
-                                <div class="dr-stat-value">Rp <span id="dashboardUtang">0</span></div>
-                                <div class="dr-stat-foot">
-                                    <div class="dr-diff down" id="dashboardUtangDiff">-0% <span>vs bln lalu</span></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-xl-3 col-md-6">
-                            <div class="dr-card dr-stat-card">
-                                <div class="dr-stat-head">
-                                    <div class="dr-stat-icon" style="color: var(--dr-green);">
                                         <i class="iconoir-wallet"></i>
                                     </div>
                                     <p class="dr-stat-title">Saldo Aktif</p>
@@ -1045,25 +1055,63 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- 2. Total Pendapatan -->
+                        <div class="col-xl-3 col-md-6">
+                            <div class="dr-card dr-stat-card">
+                                <div class="dr-stat-head">
+                                    <div class="dr-stat-icon" style="color: var(--dr-green);">
+                                        <i class="iconoir-graph-up"></i>
+                                    </div>
+                                    <p class="dr-stat-title">Total Pendapatan</p>
+                                </div>
+                                <div class="dr-stat-value">Rp <span id="dashboardRevenue">0</span></div>
+                                <div class="dr-stat-foot">
+                                    <div class="dr-diff up" id="dashboardRevenueDiff">+0% <span>vs bln lalu</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Piutang Usaha -->
+                        <div class="col-xl-3 col-md-6">
+                            <div class="dr-card dr-stat-card">
+                                <div class="dr-stat-head">
+                                    <div class="dr-stat-icon" style="color: var(--dr-blue);">
+                                        <i class="iconoir-hand-cash"></i>
+                                    </div>
+                                    <p class="dr-stat-title">Piutang Usaha</p>
+                                </div>
+                                <div class="dr-stat-value">Rp <span id="dashboardPiutang">0</span></div>
+                                <div class="dr-stat-foot">
+                                    <div class="small text-muted fw-500"><i class="iconoir-info-empty me-1"></i>Angka Keseluruhan (Tidak terfilter)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Utang Usaha -->
+                        <div class="col-xl-3 col-md-6">
+                            <div class="dr-card dr-stat-card">
+                                <div class="dr-stat-head">
+                                    <div class="dr-stat-icon" style="color: var(--dr-red);">
+                                        <i class="iconoir-handshake"></i>
+                                    </div>
+                                    <p class="dr-stat-title">Utang Usaha</p>
+                                </div>
+                                <div class="dr-stat-value">Rp <span id="dashboardUtang">0</span></div>
+                                <div class="dr-stat-foot">
+                                    <div class="small text-muted fw-500"><i class="iconoir-info-empty me-1"></i>Angka Keseluruhan (Tidak terfilter)</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="row g-3">
-                        <div class="col-xl-8">
-                            <div class="dr-card dr-chart-card mb-4" id="overviewCard">
+                        <div class="col-xl-8 d-flex flex-column">
+                            <div class="dr-card dr-chart-card mb-3" id="overviewCard">
                                 <div class="dr-card-header">
-                                    <div>
+                                    <div class="d-flex align-items-center gap-2">
                                         <h2 class="dr-card-title">Overview Penjualan</h2>
-                                    </div>
-                                    <div class="dropdown">
-                                        <button class="dr-select" type="button" data-bs-toggle="dropdown">
-                                            <span id="widgetOverviewLabel">Filter Stats</span>
-                                            <i class="iconoir-nav-arrow-down"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end p-2 border-0 shadow-lg rounded-4">
-                                            <li><a class="dropdown-item rounded-3 fw-600" href="#" onclick="changeGlobalFilter('today', 'Hari Ini')">Hari Ini</a></li>
-                                            <li><a class="dropdown-item rounded-3 fw-600" href="#" onclick="changeGlobalFilter('week', 'Minggu Ini')">Minggu Ini</a></li>
-                                            <li><a class="dropdown-item rounded-3 fw-600" href="#" onclick="changeGlobalFilter('month', 'Bulan Ini')">Bulan Ini</a></li>
-                                        </ul>
+                                        <a href="{{ route('sales') }}" class="text-muted" title="Buka Penjualan"><i class="iconoir-open-new-window"></i></a>
                                     </div>
                                 </div>
 
@@ -1092,25 +1140,18 @@
                                 </div>
                             </div>
 
-                            <div class="dr-card dr-table-card">
+                            <div class="dr-card dr-table-card flex-grow-1">
                                 <div class="dr-card-header">
                                     <div>
-                                        <h2 class="dr-card-title">Pesanan Terbaru</h2>
-                                    </div>
-                                    <div class="dropdown">
-                                        <button class="dr-select" type="button" data-bs-toggle="dropdown">
-                                            <span id="widgetTableLabel">Bulan Ini</span>
-                                            <i class="iconoir-filter"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end p-2 border-0 shadow-lg rounded-4">
-                                            <li><a class="dropdown-item rounded-3 fw-600" href="#" onclick="changeGlobalFilter('today', 'Hari Ini')">Hari Ini</a></li>
-                                            <li><a class="dropdown-item rounded-3 fw-600" href="#" onclick="changeGlobalFilter('month', 'Bulan Ini')">Bulan Ini</a></li>
-                                            <li><a class="dropdown-item rounded-3 fw-600" href="#" onclick="changeGlobalFilter('all', 'Semua')">Semua</a></li>
-                                        </ul>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <h2 class="dr-card-title">Pesanan Terbaru</h2>
+                                            <a href="{{ route('sales') }}" class="text-muted" title="Buka Penjualan"><i class="iconoir-open-new-window"></i></a>
+                                        </div>
+                                        <p class="dr-card-subtitle mt-1" style="font-size: 11px;">Menampilkan 15 data terbaru</p>
                                     </div>
                                 </div>
 
-                                <div class="table-responsive">
+                                <div class="table-responsive" style="height: 400px; overflow-y: auto;">
                                     <table class="dr-data-table">
                                         <thead style="position: sticky; top: 0; z-index: 5;">
                                             <tr>
@@ -1131,30 +1172,24 @@
                             </div>
                         </div>
 
-                        <div class="col-xl-4">
-                            <div class="dr-card dr-feed-card" id="activityCard">
+                        <div class="col-xl-4 d-flex flex-column">
+                            <div class="dr-card dr-feed-card mb-2" id="activityCard">
                                 <div class="dr-card-header">
                                     <div>
-                                        <h2 class="dr-card-title">Riwayat Aktivitas</h2>
-                                    </div>
-                                    <div class="dropdown">
-                                        <button class="dr-select" type="button" data-bs-toggle="dropdown">
-                                            <span id="widgetActivityLabel">Otomatis / Range</span>
-                                            <i class="iconoir-nav-arrow-down"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end p-2 border-0 shadow-lg rounded-4">
-                                            <li><a class="dropdown-item rounded-3 fw-600" href="#" onclick="changeGlobalFilter('today', 'Hari Ini')">Hari Ini</a></li>
-                                            <li><a class="dropdown-item rounded-3 fw-600" href="#" onclick="changeGlobalFilter('month', 'Bulan Ini')">Bulan Ini</a></li>
-                                        </ul>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <h2 class="dr-card-title">Mutasi Stok Terbaru</h2>
+                                            <a href="{{ route('stok') }}" class="text-muted" title="Buka Inventaris"><i class="iconoir-open-new-window"></i></a>
+                                        </div>
+                                        <p class="dr-card-subtitle mt-1" style="font-size: 11px;">Menampilkan 15 data terbaru</p>
                                     </div>
                                 </div>
 
-                                <div class="dr-feed-list" id="dashboardActivityList">
+                                <div class="dr-feed-list" id="dashboardActivityList" style="height: 400px; overflow-y: auto;">
                                     <div class="dr-empty">Memuat aktivitas...</div>
                                 </div>
                             </div>
 
-                            <div class="dr-card dr-inventory-summary">
+                            <div class="dr-card dr-inventory-summary flex-grow-1">
                                 <div class="dr-card-header mb-3">
                                     <h2 class="dr-card-title">Ringkasan Inventaris</h2>
                                     <i class="iconoir-box-iso" style="color: var(--dr-muted);"></i>
@@ -1188,12 +1223,17 @@
 @endsection
 
 @push('js')
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <script>
         function formatCompactNumber(value) {
             const amount = Number(value || 0);
-            if (Math.abs(amount) >= 1000000000) return (amount / 1000000000).toFixed(1).replace('.0', '') + 'B';
-            if (Math.abs(amount) >= 1000000) return (amount / 1000000).toFixed(1).replace('.0', '') + 'M';
-            if (Math.abs(amount) >= 1000) return (amount / 1000).toFixed(1).replace('.0', '') + 'K';
+            const absAmount = Math.abs(amount);
+            
+            if (absAmount >= 1000000000000) return (amount / 1000000000000).toFixed(1).replace('.0', '') + ' T';
+            if (absAmount >= 1000000000) return (amount / 1000000000).toFixed(1).replace('.0', '') + ' M';
+            if (absAmount >= 1000000) return (amount / 1000000).toFixed(1).replace('.0', '') + ' Jt';
+            if (absAmount >= 1000) return (amount / 1000).toFixed(1).replace('.0', '') + ' Rb';
+            
             return amount.toLocaleString('id-ID');
         }
 
@@ -1296,7 +1336,7 @@
                 return;
             }
 
-            tbody.innerHTML = transactions.slice(0, 5).map((tx, index) => {
+            tbody.innerHTML = transactions.slice(0, 15).map((tx, index) => {
                 const status = statusMeta(tx.status_pembayaran);
                 return `
                     <tr>
@@ -1324,16 +1364,29 @@
             }
 
             container.innerHTML = logs.map((log) => {
-                const isOut = log.type === 'out';
-                const thumbColor = isOut ? 'red' : 'green';
-                const thumbIcon = isOut ? '-' : '+';
+                const type = String(log.type || '').toLowerCase();
+                const isOut = type === 'out';
+                const isIn = type === 'in';
+                
+                let thumbColor = 'amber';
+                let thumbIcon = '•';
+                
+                if (isOut) {
+                    thumbColor = 'red';
+                    thumbIcon = '-';
+                } else if (isIn) {
+                    thumbColor = 'green';
+                    thumbIcon = '+';
+                }
+
+                const formattedQty = Number(log.qty || 0).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
                 return `
                     <div class="dr-feed-item">
-                        <div class="dr-feed-thumb">${thumbIcon}</div>
+                        <div class="dr-feed-thumb" style="color: var(--dr-${thumbColor === 'amber' ? 'amber' : thumbColor});">${thumbIcon}</div>
                         <div>
                             <h3 class="dr-feed-title">${escapeHtml(log.product_name)}</h3>
                             <p class="dr-feed-meta">Status : <span class="dr-tag ${thumbColor}">${log.type.toUpperCase()}</span></p>
-                            <p class="dr-feed-submeta">Qty : <strong>${log.qty} pcs</strong></p>
+                            <p class="dr-feed-submeta">Qty : <strong>${formattedQty} pcs</strong></p>
                             <p class="dr-feed-submeta">Info : ${escapeHtml(log.notes || '-')}</p>
                         </div>
                         <div class="dr-feed-time">${escapeHtml(log.time)}</div>
@@ -1419,14 +1472,62 @@
                 document.getElementById('dashboardUserName').textContent = data.user?.name || '{{ auth()->user()->name }}';
                 document.getElementById('dashboardOfficeName').textContent = data.office?.name || 'kantor aktif';
                 
-                // 1. KPI Metrics
-                document.getElementById('dashboardRevenue').innerText = formatCurrency(stats.total_pendapatan || 0);
-                document.getElementById('dashboardPiutang').innerText = formatCurrency(stats.piutang_usaha || 0);
-                document.getElementById('dashboardUtang').innerText = formatCurrency(stats.utang_usaha || 0);
-                document.getElementById('dashboardSaldo').innerText = formatCurrency(stats.saldo_aktif || 0);
+                // 1. KPI Metrics with Adaptive Font Size
+                const setKpiValue = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        const fullValue = formatCurrency(val);
+                        el.innerText = fullValue;
+                        
+                        // Adaptive Font Size: Start shrinking after 10 characters
+                        const charCount = fullValue.length;
+                        if (charCount > 15) {
+                            el.style.fontSize = '18px';
+                        } else if (charCount > 12) {
+                            el.style.fontSize = '22px';
+                        } else if (charCount > 10) {
+                            el.style.fontSize = '26px';
+                        } else {
+                            el.style.fontSize = '32px';
+                        }
+                    }
+                };
+
+                const rangeLabel = range === 'today' ? 'kemarin' : (range === 'week' ? 'mgg lalu' : (range === 'month' ? 'bln lalu' : 'thn lalu'));
+                
+                const updateDiff = (id, current, previous, isInverted = false) => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    
+                    let diff = 0;
+                    if (previous > 0) {
+                        diff = ((current - previous) / previous) * 100;
+                    } else if (current > 0) {
+                        diff = 100;
+                    }
+
+                    let isUp = diff >= 0;
+                    let displayUp = isUp;
+                    
+                    // Invert color for things like Debt (Increase is Bad)
+                    if (isInverted) {
+                        displayUp = !isUp;
+                    }
+
+                    el.className = `dr-diff ${displayUp ? 'up' : 'down'}`;
+                    el.innerHTML = `${isUp ? '+' : ''}${diff.toFixed(0)}% <span>vs ${rangeLabel}</span>`;
+                };
+
+                updateDiff('dashboardRevenueDiff', stats.total_pendapatan || 0, data.stats_prev?.total_pendapatan || 0);
+                updateDiff('dashboardSaldoDiff', stats.saldo_aktif || 0, data.stats_prev?.saldo_aktif || 0);
+
+                setKpiValue('dashboardRevenue', stats.total_pendapatan);
+                setKpiValue('dashboardPiutang', stats.piutang_usaha);
+                setKpiValue('dashboardUtang', stats.utang_usaha);
+                setKpiValue('dashboardSaldo', stats.saldo_aktif);
                 
                 // 2. Inventory Highlight
-                document.getElementById('dashboardInventoryValue').innerText = 'Rp ' + formatCompactNumber(stats.inventory_value || 0);
+                document.getElementById('dashboardInventoryValue').innerText = 'Rp ' + formatCurrency(stats.inventory_value || 0);
                 document.getElementById('dashboardZeroStock').innerText = stats.zero_stock || 0;
                 document.getElementById('dashboardLowStock').innerText = stats.low_stock || 0;
                 
@@ -1459,26 +1560,45 @@
             }
         }
 
-        function changeGlobalFilter(range, label) {
-            // Update all labels to keep UI consistent
-            const labelElements = [
-                'currentDateRangeLabel',
-                'widgetActivityLabel',
-                'widgetOverviewLabel',
-                'widgetTableLabel'
-            ];
+        let tsInstances = {};
 
-            labelElements.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = label;
+        function initTomSelect(id, icon = 'iconoir-calendar') {
+            const el = document.getElementById(id);
+            if (!el) return null;
+
+            return new TomSelect(el, {
+                controlInput: null,
+                allowEmptyOption: false,
+                render: {
+                    option: function(data, escape) {
+                        return `<div class="option"><i class="${icon} me-2"></i>${escape(data.text)}</div>`;
+                    },
+                    item: function(data, escape) {
+                        return `<div class="item-with-icon"><i class="${icon} me-2"></i>${escape(data.text)}</div>`;
+                    }
+                },
+                onChange: function(value) {
+                    // Sync others if it's the global one
+                    if (id === 'globalFilterTS') {
+                        Object.keys(tsInstances).forEach(key => {
+                            if (key !== 'globalFilterTS') {
+                                tsInstances[key].setValue(value, true); // true to skip silent onChange
+                            }
+                        });
+                        fetchDashboardData(value);
+                    } else {
+                        // If individual changed, just fetch for this range (though here we fetch all for simplicity)
+                        fetchDashboardData(value);
+                    }
+                }
             });
-            
-            // Re-fetch data
-            fetchDashboardData(range);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Initial load
+            // Initial TomSelect Load (GLOBAL ONLY)
+            tsInstances['globalFilterTS'] = initTomSelect('globalFilterTS', 'iconoir-calendar');
+
+            // Initial load data
             fetchDashboardData('month');
 
             const searchInput = document.querySelector('.topbar .top-search');

@@ -30,6 +30,18 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
+            // Auto-set office jika user hanya punya 1 office
+            $user = Auth::user();
+            $availableOffices = DB::table('user_office_roles')
+                ->where('user_id', $user->id)
+                ->pluck('office_id')
+                ->toArray();
+
+            if (count($availableOffices) === 1) {
+                session(['active_office_id' => $availableOffices[0]]);
+                return redirect()->route('dashboard');
+            }
+
             return redirect()->route('syo');
         }
 

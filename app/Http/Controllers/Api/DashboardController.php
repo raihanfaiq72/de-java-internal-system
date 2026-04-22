@@ -58,6 +58,21 @@ class DashboardController extends Controller
                     break;
             }
 
+            // Calculate Previous Period for Comparison (Apples-to-Apples for Revenue)
+            $start_prev = $start->copy();
+            switch ($range) {
+                case 'today': $start_prev = $start->copy()->subDay(); break;
+                case 'week': $start_prev = $start->copy()->subWeek(); break;
+                case 'month': $start_prev = $start->copy()->subMonth(); break;
+                case 'year': $start_prev = $start->copy()->subYear(); break;
+                default: $start_prev = $start->copy()->subMonth(); break;
+            }
+            $end_prev = $start->copy()->subSecond();
+            
+            // For revenue, we compare the exact same duration from the start
+            $elapsedSeconds = now()->diffInSeconds($start);
+            $end_prev_revenue = $start_prev->copy()->addSeconds($elapsedSeconds);
+
             $data = [
                 'office' => $office ? [
                     'id' => $office->id,
@@ -132,7 +147,7 @@ class DashboardController extends Controller
                 ->get()
                 ->map(function ($m) {
                     return [
-                        'product_name' => $m->product->nama ?? 'Produk',
+                        'product_name' => $m->product->nama_produk ?? 'Produk',
                         'type' => $m->type, // in, out
                         'qty' => $m->qty,
                         'notes' => $m->notes,
@@ -183,17 +198,55 @@ class DashboardController extends Controller
 
             $totalIncome = Payment::where('office_id', $officeId)
                 ->whereHas('invoice', fn ($q) => $q->where('tipe_invoice', 'Sales'))
-                ->whereBetween('tgl_pembayaran', [$start->toDateString(), $end->toDateString()])
                 ->sum('jumlah_bayar');
             $totalOutcome = Payment::where('office_id', $officeId)
                 ->whereHas('invoice', fn ($q) => $q->where('tipe_invoice', 'Purchase'))
-                ->whereBetween('tgl_pembayaran', [$start->toDateString(), $end->toDateString()])
                 ->sum('jumlah_bayar');
             $totalExpenses = Expense::where('office_id', $officeId)
-                ->whereBetween('tgl_biaya', [$start->toDateString(), $end->toDateString()])
                 ->sum('jumlah');
 
             $data['stats']['saldo_aktif'] = $totalIncome - $totalOutcome - $totalExpenses;
+
+            // --- PREVIOUS PERIOD STATS (For Comparison) ---
+            $data['stats_prev']['total_pendapatan'] = Invoice::where('office_id', $officeId)
+                ->where('tipe_invoice', 'Sales')
+                ->where('status_pembayaran', 'Paid')
+                ->whereBetween('created_at', [$start_prev, $end_prev_revenue])
+                ->sum('total_akhir');
+
+            $data['stats_prev']['piutang_usaha'] = Invoice::where('office_id', $officeId)
+                ->where('tipe_invoice', 'Sales')
+                ->where('status_pembayaran', '!=', 'Draft')
+                ->where('created_at', '<=', $end_prev)
+                ->get()->sum(function($inv) use ($end_prev) {
+                    $paidUntilThen = $inv->payment()->where('tgl_pembayaran', '<=', $end_prev->toDateString())->sum('jumlah_bayar');
+                    $debtAtThatTime = $inv->total_akhir - $paidUntilThen;
+                    return $debtAtThatTime > 0 ? $debtAtThatTime : 0;
+                });
+
+            $data['stats_prev']['utang_usaha'] = Invoice::where('office_id', $officeId)
+                ->where('tipe_invoice', 'Purchase')
+                ->where('status_pembayaran', '!=', 'Draft')
+                ->where('created_at', '<=', $end_prev)
+                ->get()->sum(function($inv) use ($end_prev) {
+                    $paidUntilThen = $inv->payment()->where('tgl_pembayaran', '<=', $end_prev->toDateString())->sum('jumlah_bayar');
+                    $debtAtThatTime = $inv->total_akhir - $paidUntilThen;
+                    return $debtAtThatTime > 0 ? $debtAtThatTime : 0;
+                });
+
+            $totalIncomePrev = Payment::where('office_id', $officeId)
+                ->whereHas('invoice', fn ($q) => $q->where('tipe_invoice', 'Sales'))
+                ->where('tgl_pembayaran', '<=', $end_prev->toDateString())
+                ->sum('jumlah_bayar');
+            $totalOutcomePrev = Payment::where('office_id', $officeId)
+                ->whereHas('invoice', fn ($q) => $q->where('tipe_invoice', 'Purchase'))
+                ->where('tgl_pembayaran', '<=', $end_prev->toDateString())
+                ->sum('jumlah_bayar');
+            $totalExpensesPrev = Expense::where('office_id', $officeId)
+                ->where('tgl_biaya', '<=', $end_prev->toDateString())
+                ->sum('jumlah');
+
+            $data['stats_prev']['saldo_aktif'] = $totalIncomePrev - $totalOutcomePrev - $totalExpensesPrev;
 
             // Accurate Net Profit calculation based on GL
             $movements = DB::table('journal_details')
@@ -271,7 +324,7 @@ class DashboardController extends Controller
                 ->where('status_dok', 'Approved')
                 ->whereBetween('created_at', [$start, $end])
                 ->latest()
-                ->limit(10)
+                ->limit(15)
                 ->get();
 
             $data['recentTransactions'] = $recent->map(function ($tx) {
