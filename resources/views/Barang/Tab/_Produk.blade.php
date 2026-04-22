@@ -398,7 +398,32 @@
                     searchField: 'text',
                     options: masterCategories.map(c => ({ value: c.id, text: c.nama_kategori })),
                     placeholder: 'Pilih Kategori...',
-                    dropdownParent: 'body'
+                    dropdownParent: 'body',
+                    create: async function(input, callback) {
+                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                        try {
+                            const res = await fetch(CATEGORY_URL, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': token
+                                },
+                                body: JSON.stringify({ nama_kategori: input })
+                            });
+                            const data = await res.json();
+                            if (data.success) {
+                                masterCategories.push(data.data);
+                                callback({ value: data.data.id, text: data.data.nama_kategori });
+                            } else {
+                                alert(data.message || 'Gagal memproses kategori');
+                                callback(false);
+                            }
+                        } catch (err) {
+                            alert('Gagal memproses kategori');
+                            callback(false);
+                        }
+                    }
                 });
 
                 tsEditCOA = new TomSelect('#edit-produk-coa', {

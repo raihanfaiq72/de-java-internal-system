@@ -42,11 +42,11 @@ class ProductController extends Controller
         }
 
         $sortField = $request->get('sort', 'created_at');
-        $sortDir   = $request->get('dir', 'desc');
+        $sortDir = $request->get('dir', 'desc');
 
         $allowedSorts = [
-            'sku_kode', 'nama_produk', 'kemasan', 'satuan', 
-            'qty', 'harga_beli', 'harga_jual', 'harga_tempo', 'created_at'
+            'sku_kode', 'nama_produk', 'kemasan', 'satuan',
+            'qty', 'harga_beli', 'harga_jual', 'harga_tempo', 'created_at',
         ];
 
         if (in_array($sortField, $allowedSorts)) {
@@ -82,12 +82,11 @@ class ProductController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'nama_produk' => 'required|string|max:255',
-            'sku_kode' => 'nullable|string|max:100|unique:products,sku_kode,NULL,id,office_id,' . session('active_office_id'),
+            'sku_kode' => 'nullable|string|max:100|unique:products,sku_kode,NULL,id,office_id,'.session('active_office_id'),
             'product_category_id' => 'nullable|exists:product_categories,id',
             'supplier_id' => 'nullable|exists:mitras,id',
             'brand_id' => 'nullable|exists:brands,id',
-            'unit_id' => 'nullable|exists:unit_ukurans,id',
-            'coa_id' => 'nullable|exists:coas,id',
+            'coa_id' => 'nullable|exists:chart_of_accounts,id',
             'kemasan' => 'nullable|string|max:100',
             'harga_beli' => 'nullable|numeric|min:0',
             'harga_jual' => 'nullable|numeric|min:0',
@@ -220,20 +219,20 @@ class ProductController extends Controller
     public function bulkStore(Request $request)
     {
         $products = $request->input('products', []);
-        
+
         if (empty($products)) {
             return apiResponse(false, 'Tidak ada produk untuk disimpan', null, null, 422);
         }
 
         $validator = Validator::make(['products' => $products], [
             'products.*.nama_produk' => 'required|string|max:255',
-            'products.*.sku_kode' => 'nullable|string|max:100|unique:products,sku_kode,NULL,id,office_id,' . session('active_office_id'),
+            'products.*.sku_kode' => 'nullable|string|max:100|unique:products,sku_kode,NULL,id,office_id,'.session('active_office_id'),
             'products.*.product_category_id' => 'nullable|exists:product_categories,id',
-            'products.*.supplier_id' => 'nullable|exists:suppliers,id',
+            'products.*.supplier_id' => 'nullable|exists:mitras,id',
             'products.*.brand_id' => 'nullable|exists:brands,id',
             'products.*.unit_id' => 'nullable|exists:unit_ukurans,id',
-            'products.*.coa_id' => 'nullable|exists:coas,id',
-            'products.*.kemasan' => 'nullable|string|max:100',
+            'products.*.coa_id' => 'nullable|exists:chart_of_accounts,id',
+            'products.*.kemasan' => 'nullable|numeric',
             'products.*.qty' => 'nullable|integer|min:0',
             'products.*.harga_beli' => 'nullable|numeric|min:0',
             'products.*.harga_jual' => 'nullable|numeric|min:0',
@@ -245,7 +244,7 @@ class ProductController extends Controller
             return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
         }
 
-        if (!session()->has('active_office_id')) {
+        if (! session()->has('active_office_id')) {
             return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
         }
 
@@ -264,14 +263,14 @@ class ProductController extends Controller
                 $product = Product::create($productData);
                 $createdProducts[] = $product;
             } catch (\Throwable $e) {
-                $errors[] = "Baris ke-" . ($index + 1) . ": " . $e->getMessage();
+                $errors[] = 'Baris ke-'.($index + 1).': '.$e->getMessage();
             }
         }
 
-        if (!empty($errors)) {
+        if (! empty($errors)) {
             return apiResponse(false, 'Beberapa produk gagal disimpan', null, $errors, 422);
         }
 
-        return apiResponse(true, 'Berhasil menyimpan ' . count($createdProducts) . ' produk', $createdProducts, null, 201);
+        return apiResponse(true, 'Berhasil menyimpan '.count($createdProducts).' produk', $createdProducts, null, 201);
     }
 }

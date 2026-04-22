@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(UsersSeeder::class); 
+        $this->call(UsersSeeder::class);
 
         // 2. Finance Master Data
         $this->call(ChartOfAccountSeeder::class);
@@ -23,21 +23,21 @@ class DatabaseSeeder extends Seeder
         $this->call(ExpenseCategorySeeder::class);
 
         // 3. Partners
-        $this->call(MitraSeeder::class);
+        // $this->call(MitraSeeder::class);
 
         // 4. Inventory Master Data
-        $this->call(StockLocationSeeder::class);
-        $this->call(BrandSeeder::class);
-        $this->call(ProductCategorySeeder::class);
+        // $this->call(StockLocationSeeder::class);
+        // $this->call(BrandSeeder::class);
+        // $this->call(ProductCategorySeeder::class);
 
         // 5. Logistics
-        $this->call(FleetSeeder::class);
+        // $this->call(FleetSeeder::class);
 
         // 6. Products (Depends on Brand, Category, Mitra)
-        $this->call(ProductSeeder::class);
+        // $this->call(ProductSeeder::class);
 
         // 7. Transactions (Demo Data)
-        $this->call(TransactionSeeder::class);
-        $this->call(PaymentSeeder::class);
+        // $this->call(TransactionSeeder::class);
+        // $this->call(PaymentSeeder::class);
     }
 }
