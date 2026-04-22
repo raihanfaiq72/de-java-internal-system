@@ -13,7 +13,7 @@ class TaxController extends Controller
     {
         $query = Tax::where('office_id', session('active_office_id'))->latest();
 
-        $perPage = $request->get('per_page', 10);
+        $perPage = $request->input('per_page', 10);
         if ($perPage >= 1000) {
             $data = $query->get();
         } else {
@@ -88,7 +88,7 @@ class TaxController extends Controller
         $data = Tax::where('office_id', session('active_office_id'))
             ->where('nama_pajak', 'LIKE', "%$value%")
             ->latest()
-            ->paginate($request->get('per_page', 10))
+            ->paginate($request->input('per_page', 10))
             ->withQueryString();
 
         return apiResponse(true, 'Hasil pencarian pajak', $data);

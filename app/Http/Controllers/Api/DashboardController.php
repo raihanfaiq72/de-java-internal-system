@@ -3,13 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\COAGroup;
-use App\Models\COAType;
-use App\Models\DeliveryOrderFleet;
 use App\Models\Expense;
 use App\Models\Invoice;
-use App\Models\InvoiceItem;
-use App\Models\Journal;
 use App\Models\JournalDetail;
 use App\Models\Office;
 use App\Models\Payment;
@@ -17,6 +12,7 @@ use App\Models\Product;
 use App\Models\StockMutation;
 use App\Models\UserOfficeRole;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Auth;
 use Throwable;
 
@@ -65,14 +61,19 @@ class DashboardController extends Controller
             // Calculate Previous Period for Comparison (Apples-to-Apples for Revenue)
             $start_prev = $start->copy();
             switch ($range) {
-                case 'today': $start_prev = $start->copy()->subDay(); break;
-                case 'week': $start_prev = $start->copy()->subWeek(); break;
-                case 'month': $start_prev = $start->copy()->subMonth(); break;
-                case 'year': $start_prev = $start->copy()->subYear(); break;
-                default: $start_prev = $start->copy()->subMonth(); break;
+                case 'today': $start_prev = $start->copy()->subDay();
+                    break;
+                case 'week': $start_prev = $start->copy()->subWeek();
+                    break;
+                case 'month': $start_prev = $start->copy()->subMonth();
+                    break;
+                case 'year': $start_prev = $start->copy()->subYear();
+                    break;
+                default: $start_prev = $start->copy()->subMonth();
+                    break;
             }
             $end_prev = $start->copy()->subSecond();
-            
+
             // For revenue, we compare the exact same duration from the start
             $elapsedSeconds = now()->diffInSeconds($start);
             $end_prev_revenue = $start_prev->copy()->addSeconds($elapsedSeconds);
@@ -107,54 +108,40 @@ class DashboardController extends Controller
                 for ($i = 0; $i < 24; $i++) {
                     $chartData->put($i, ['label' => sprintf('%02d:00', $i), 'total' => 0]);
                 }
-                // Use Eloquent collection to group by hour
-                $sales = $query->get()
-                    ->groupBy(function ($invoice) {
-                        return $invoice->created_at->format('H');
-                    })
-                    ->map(function ($group) {
-                        return $group->sum('total_akhir');
-                    });
+                $sales = $query->selectRaw('HOUR(created_at) as h, SUM(total_akhir) as total')
+                    ->groupBy('h')
+                    ->pluck('total', 'h');
                 foreach ($sales as $h => $total) {
-                    if ($chartData->has($h)) {
-                        $chartData[$h] = ['label' => $chartData[$h]['label'], 'total' => (float)$total];
+                    $hStr = sprintf('%02d', $h);
+                    if ($chartData->has((int) $h)) {
+                        $chartData[(int) $h] = ['label' => $hStr.':00', 'total' => (float) $total];
                     }
                 }
             } elseif ($range === 'week' || $range === 'month') {
-                $period = \Carbon\CarbonPeriod::create($start, $end);
+                $period = CarbonPeriod::create($start, $end);
                 foreach ($period as $date) {
                     $key = $date->format('Y-m-d');
                     $chartData->put($key, ['label' => $date->translatedFormat('d M'), 'total' => 0]);
                 }
-                // Use Eloquent collection to group by date
-                $sales = $query->get()
-                    ->groupBy(function ($invoice) {
-                        return $invoice->created_at->format('Y-m-d');
-                    })
-                    ->map(function ($group) {
-                        return $group->sum('total_akhir');
-                    });
+                $sales = $query->selectRaw('DATE(created_at) as d, SUM(total_akhir) as total')
+                    ->groupBy('d')
+                    ->pluck('total', 'd');
                 foreach ($sales as $d => $total) {
                     if ($chartData->has($d)) {
-                        $chartData[$d] = ['label' => $chartData[$d]['label'], 'total' => (float)$total];
+                        $chartData[$d] = ['label' => $chartData[$d]['label'], 'total' => (float) $total];
                     }
                 }
             } else {
                 for ($i = 5; $i >= 0; $i--) {
-                    $m = \Carbon\Carbon::now()->subMonths($i);
+                    $m = Carbon::now()->subMonths($i);
                     $chartData->put($m->format('Y-m'), ['label' => $m->translatedFormat('M Y'), 'total' => 0]);
                 }
-                // Use Eloquent collection to group by month
-                $sales = $query->get()
-                    ->groupBy(function ($invoice) {
-                        return $invoice->created_at->format('Y-m');
-                    })
-                    ->map(function ($group) {
-                        return $group->sum('total_akhir');
-                    });
+                $sales = $query->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as m, SUM(total_akhir) as total")
+                    ->groupBy('m')
+                    ->pluck('total', 'm');
                 foreach ($sales as $m => $total) {
                     if ($chartData->has($m)) {
-                        $chartData[$m] = ['label' => $chartData[$m]['label'], 'total' => (float)$total];
+                        $chartData[$m] = ['label' => $chartData[$m]['label'], 'total' => (float) $total];
                     }
                 }
             }
@@ -174,7 +161,7 @@ class DashboardController extends Controller
                         'qty' => $m->qty,
                         'notes' => $m->notes,
                         'time' => $m->created_at->diffForHumans(),
-                        'created_at' => $m->created_at->toISOString()
+                        'created_at' => $m->created_at->toISOString(),
                     ];
                 });
 
@@ -194,29 +181,23 @@ class DashboardController extends Controller
 
             $data['stats']['piutang_usaha'] = Invoice::where('office_id', $officeId)
                 ->where('tipe_invoice', 'Sales')
-                ->where('status_pembayaran', '!=', 'Paid')
-                ->where('status_pembayaran', '!=', 'Draft')
+                ->whereNotIn('status_pembayaran', ['Paid', 'Draft'])
+                ->withSum(['payment as total_paid'], 'jumlah_bayar')
                 ->get()
-                ->sum(function ($inv) {
-                    return $inv->total_akhir - $inv->payment()->sum('jumlah_bayar');
-                });
+                ->sum(fn ($inv) => $inv->total_akhir - ($inv->total_paid ?? 0));
 
             // Utang Usaha (Total Purchase Debt) - NEW
             $data['stats']['utang_usaha'] = Invoice::where('office_id', $officeId)
                 ->where('tipe_invoice', 'Purchase')
-                ->where('status_pembayaran', '!=', 'Paid')
-                ->where('status_pembayaran', '!=', 'Draft')
+                ->whereNotIn('status_pembayaran', ['Paid', 'Draft'])
+                ->withSum(['payment as total_paid'], 'jumlah_bayar')
                 ->get()
-                ->sum(function ($inv) {
-                    return $inv->total_akhir - $inv->payment()->sum('jumlah_bayar');
-                });
+                ->sum(fn ($inv) => $inv->total_akhir - ($inv->total_paid ?? 0));
 
             // Inventory Valuation (Total Asset Value)
             $data['stats']['inventory_value'] = Product::where('office_id', $officeId)
-                ->get()
-                ->sum(function ($p) {
-                    return $p->qty * $p->harga_beli; // Basic valuation
-                });
+                ->selectRaw('SUM(qty * harga_beli) as total')
+                ->value('total') ?? 0;
 
             $totalIncome = Payment::where('office_id', $officeId)
                 ->whereHas('invoice', fn ($q) => $q->where('tipe_invoice', 'Sales'))
@@ -240,21 +221,21 @@ class DashboardController extends Controller
                 ->where('tipe_invoice', 'Sales')
                 ->where('status_pembayaran', '!=', 'Draft')
                 ->where('created_at', '<=', $end_prev)
-                ->get()->sum(function($inv) use ($end_prev) {
-                    $paidUntilThen = $inv->payment()->where('tgl_pembayaran', '<=', $end_prev->toDateString())->sum('jumlah_bayar');
-                    $debtAtThatTime = $inv->total_akhir - $paidUntilThen;
-                    return $debtAtThatTime > 0 ? $debtAtThatTime : 0;
-                });
+                ->withSum(['payment as paid_until_then' => function ($q) use ($end_prev) {
+                    $q->where('tgl_pembayaran', '<=', $end_prev->toDateString());
+                }], 'jumlah_bayar')
+                ->get()
+                ->sum(fn ($inv) => max(0, $inv->total_akhir - ($inv->paid_until_then ?? 0)));
 
             $data['stats_prev']['utang_usaha'] = Invoice::where('office_id', $officeId)
                 ->where('tipe_invoice', 'Purchase')
                 ->where('status_pembayaran', '!=', 'Draft')
                 ->where('created_at', '<=', $end_prev)
-                ->get()->sum(function($inv) use ($end_prev) {
-                    $paidUntilThen = $inv->payment()->where('tgl_pembayaran', '<=', $end_prev->toDateString())->sum('jumlah_bayar');
-                    $debtAtThatTime = $inv->total_akhir - $paidUntilThen;
-                    return $debtAtThatTime > 0 ? $debtAtThatTime : 0;
-                });
+                ->withSum(['payment as paid_until_then' => function ($q) use ($end_prev) {
+                    $q->where('tgl_pembayaran', '<=', $end_prev->toDateString());
+                }], 'jumlah_bayar')
+                ->get()
+                ->sum(fn ($inv) => max(0, $inv->total_akhir - ($inv->paid_until_then ?? 0)));
 
             $totalIncomePrev = Payment::where('office_id', $officeId)
                 ->whereHas('invoice', fn ($q) => $q->where('tipe_invoice', 'Sales'))
@@ -271,57 +252,25 @@ class DashboardController extends Controller
             $data['stats_prev']['saldo_aktif'] = $totalIncomePrev - $totalOutcomePrev - $totalExpensesPrev;
 
             // Accurate Net Profit calculation based on GL
-            $movements = JournalDetail::with(['journal' => function ($query) use ($officeId) {
-                    $query->where('office_id', $officeId);
-                }])
-                ->whereHas('journal', function ($query) use ($officeId) {
-                    $query->where('office_id', $officeId);
-                })
-                ->get()
-                ->groupBy('akun_id')
-                ->map(function ($group) {
-                    return (object) [
-                        'total_debit' => $group->sum('debit'),
-                        'total_credit' => $group->sum('kredit')
-                    ];
-                });
-
-            $targetGroups = [4000, 5000, 6000, 6800, 7001, 8001, 9000];
-
-            $groups = COAGroup::with(['type.coas'])
-                ->where('office_id', $officeId)
-                ->whereIn('kode_kelompok', $targetGroups)
-                ->get()
-                ->map(function ($group) {
-                    return $group->type->flatMap(function ($type) {
-                        return $type->coas->map(function ($coa) use ($group) {
-                            return (object) [
-                                'kode_kelompok' => $group->kode_kelompok,
-                                'coa_id' => $coa->id
-                            ];
-                        });
-                    });
-                })
-                ->flatten(1);
+            $movements = JournalDetail::query()
+                ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
+                ->join('coas', 'journal_details.akun_id', '=', 'coas.id')
+                ->join('coa_types', 'coas.coa_type_id', '=', 'coa_types.id')
+                ->join('coa_groups', 'coa_types.coa_group_id', '=', 'coa_groups.id')
+                ->where('journals.office_id', $officeId)
+                ->whereIn('coa_groups.kode_kelompok', [4000, 5000, 6000, 6800, 7001, 8001, 9000])
+                ->selectRaw('coa_groups.kode_kelompok, SUM(journal_details.debit) as total_debit, SUM(journal_details.kredit) as total_credit')
+                ->groupBy('coa_groups.kode_kelompok')
+                ->get();
 
             $totalRevenue = 0;
             $totalExpense = 0;
 
-            foreach ($groups as $row) {
-                $groupId = $row->kode_kelompok;
-                $coaId = $row->coa_id;
-
-                $debit = 0;
-                $credit = 0;
-                if (isset($movements[$coaId])) {
-                    $debit = $movements[$coaId]->total_debit;
-                    $credit = $movements[$coaId]->total_credit;
-                }
-
-                if (in_array($groupId, [4000, 7001])) {
-                    $totalRevenue += ($credit - $debit);
+            foreach ($movements as $m) {
+                if (in_array($m->kode_kelompok, [4000, 7001])) {
+                    $totalRevenue += ($m->total_credit - $m->total_debit);
                 } else {
-                    $totalExpense += ($debit - $credit);
+                    $totalExpense += ($m->total_debit - $m->total_credit);
                 }
             }
 
@@ -353,7 +302,7 @@ class DashboardController extends Controller
 
             $data['stats']['inventory_value'] = Product::where('office_id', $officeId)
                 ->get()
-                ->sum(fn($p) => $p->qty * $p->harga_beli);
+                ->sum(fn ($p) => $p->qty * $p->harga_beli);
 
             $recent = Invoice::with('mitra')
                 ->where('office_id', $officeId)
@@ -376,6 +325,7 @@ class DashboardController extends Controller
                     'created_at' => $tx->created_at,
                 ];
             });
+
             return response()->json(['success' => true, 'data' => $data]);
         } catch (Throwable $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
