@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Expense;
 use App\Models\Invoice;
-use App\Models\JournalDetail;
 use App\Models\Office;
 use App\Models\Payment;
 use App\Models\Product;
@@ -179,20 +178,25 @@ class DashboardController extends Controller
                 ->whereBetween('created_at', [$start, $end])
                 ->sum('total_akhir');
 
+            // Piutang Usaha (Current Outstanding Accounts Receivable)
             $data['stats']['piutang_usaha'] = Invoice::where('office_id', $officeId)
                 ->where('tipe_invoice', 'Sales')
-                ->whereNotIn('status_pembayaran', ['Paid', 'Draft'])
-                ->withSum(['payment as total_paid'], 'jumlah_bayar')
+                ->where('status_pembayaran', '!=', 'Draft')
+                ->where('status_pembayaran', '!=', 'Paid')
                 ->get()
-                ->sum(fn ($inv) => $inv->total_akhir - ($inv->total_paid ?? 0));
+                ->sum(function ($inv) {
+                    return $inv->total_akhir - $inv->payment()->sum('jumlah_bayar');
+                });
 
-            // Utang Usaha (Total Purchase Debt) - NEW
+            // Utang Usaha (Current Outstanding Accounts Payable)
             $data['stats']['utang_usaha'] = Invoice::where('office_id', $officeId)
                 ->where('tipe_invoice', 'Purchase')
-                ->whereNotIn('status_pembayaran', ['Paid', 'Draft'])
-                ->withSum(['payment as total_paid'], 'jumlah_bayar')
+                ->where('status_pembayaran', '!=', 'Draft')
+                ->where('status_pembayaran', '!=', 'Paid')
                 ->get()
-                ->sum(fn ($inv) => $inv->total_akhir - ($inv->total_paid ?? 0));
+                ->sum(function ($inv) {
+                    return $inv->total_akhir - $inv->payment()->sum('jumlah_bayar');
+                });
 
             // Inventory Valuation (Total Asset Value)
             $data['stats']['inventory_value'] = Product::where('office_id', $officeId)
@@ -251,30 +255,20 @@ class DashboardController extends Controller
 
             $data['stats_prev']['saldo_aktif'] = $totalIncomePrev - $totalOutcomePrev - $totalExpensesPrev;
 
-            // Accurate Net Profit calculation based on GL
-            $movements = JournalDetail::query()
-                ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-                ->join('coas', 'journal_details.akun_id', '=', 'coas.id')
-                ->join('coa_types', 'coas.coa_type_id', '=', 'coa_types.id')
-                ->join('coa_groups', 'coa_types.coa_group_id', '=', 'coa_groups.id')
-                ->where('journals.office_id', $officeId)
-                ->whereIn('coa_groups.kode_kelompok', [4000, 5000, 6000, 6800, 7001, 8001, 9000])
-                ->selectRaw('coa_groups.kode_kelompok, SUM(journal_details.debit) as total_debit, SUM(journal_details.kredit) as total_credit')
-                ->groupBy('coa_groups.kode_kelompok')
-                ->get();
+            // Net Profit: Revenue from paid sales minus expenses (current month)
+            $firstDayOfMonth = date('Y-m-01');
+            $now = date('Y-m-d');
+            $revenue = Invoice::where('office_id', $officeId)
+                ->where('tipe_invoice', 'Sales')
+                ->where('status_pembayaran', 'Paid')
+                ->whereBetween('created_at', [$firstDayOfMonth, $now])
+                ->sum('total_akhir');
 
-            $totalRevenue = 0;
-            $totalExpense = 0;
+            $expenses = Expense::where('office_id', $officeId)
+                ->whereBetween('tgl_biaya', [$firstDayOfMonth, $now])
+                ->sum('jumlah');
 
-            foreach ($movements as $m) {
-                if (in_array($m->kode_kelompok, [4000, 7001])) {
-                    $totalRevenue += ($m->total_credit - $m->total_debit);
-                } else {
-                    $totalExpense += ($m->total_debit - $m->total_credit);
-                }
-            }
-
-            $data['stats']['pendapatan_bersih'] = $totalRevenue - $totalExpense;
+            $data['stats']['pendapatan_bersih'] = $revenue - $expenses;
 
             $data['stats']['new_orders'] = Invoice::where('office_id', $officeId)
                 ->where('tipe_invoice', 'Sales')
@@ -299,10 +293,6 @@ class DashboardController extends Controller
 
             $data['stats']['total_products'] = Product::where('office_id', $officeId)
                 ->count();
-
-            $data['stats']['inventory_value'] = Product::where('office_id', $officeId)
-                ->get()
-                ->sum(fn ($p) => $p->qty * $p->harga_beli);
 
             $recent = Invoice::with('mitra')
                 ->where('office_id', $officeId)
