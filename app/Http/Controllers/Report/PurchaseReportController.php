@@ -44,7 +44,7 @@ class PurchaseReportController extends Controller
         $totalOverdue = (clone $query)
             ->where('tgl_jatuh_tempo', '<', now()->format('Y-m-d'))
             ->where('status_pembayaran', '!=', 'Paid')
-            ->withSum(['payments as paid_amount'], 'jumlah_bayar')
+            ->withSum(['payment as paid_amount'], 'jumlah_bayar')
             ->get()
             ->sum(fn($inv) => max(0, $inv->total_akhir - ($inv->paid_amount ?? 0)));
 
@@ -97,7 +97,7 @@ class PurchaseReportController extends Controller
 
         // Only unpaid/partial
         $payablesQuery->where('status_pembayaran', '!=', 'Paid')
-            ->withSum(['payments as paid_amount'], 'jumlah_bayar');
+            ->withSum(['payment as paid_amount'], 'jumlah_bayar');
 
         $payables = $payablesQuery->latest('tgl_invoice')->get()->map(function ($invoice) {
             $invoice->sisa_tagihan = max(0, $invoice->total_akhir - ($invoice->paid_amount ?? 0));
@@ -143,7 +143,7 @@ class PurchaseReportController extends Controller
         }
 
         $payablesQuery->where('status_pembayaran', '!=', 'Paid')
-            ->withSum(['payments as paid_amount'], 'jumlah_bayar');
+            ->withSum(['payment as paid_amount'], 'jumlah_bayar');
 
         $payables = $payablesQuery->latest('tgl_invoice')->get()->map(function ($invoice) {
             $invoice->sisa_tagihan = max(0, $invoice->total_akhir - ($invoice->paid_amount ?? 0));

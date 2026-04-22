@@ -206,8 +206,11 @@ class InvoiceReportController extends Controller
     private function getPaymentsData(Request $request, $startDate, $endDate, $officeId, $mitraId, $search)
     {
         $paymentsQuery = Invoice::with(['mitra'])
-            ->withSum(['items as total_qty'], 'qty')
-            ->withSum(['payments as jumlah_bayar'], 'jumlah_bayar')
+            ->leftJoin('mitras', 'invoices.mitra_id', '=', 'mitras.id')
+            ->select('invoices.*')
+            ->addSelect(['mitras.nama as nama_mitra', 'mitras.nomor_mitra as nomor_mitra'])
+            ->withSum(['payment as jumlah_bayar'], 'jumlah_bayar')
+            ->selectRaw('(invoices.total_akhir - COALESCE((SELECT SUM(jumlah_bayar) FROM payments WHERE invoice_id = invoices.id AND deleted_at IS NULL), 0)) as sisa_piutang_virtual')
             ->selectSub(function ($query) {
                 $query->from('payments')
                     ->select('metode_pembayaran')
@@ -216,13 +219,16 @@ class InvoiceReportController extends Controller
                     ->latest('id')
                     ->limit(1);
             }, 'metode_pembayaran')
-            ->where('office_id', $officeId)
-            ->whereBetween('tgl_invoice', [$startDate, $endDate]);
+            ->where('invoices.office_id', $officeId)
+            ->whereBetween('invoices.tgl_invoice', [$startDate, $endDate]);
 
-        $this->applyCommonFilters($paymentsQuery, $request, $mitraId, $search, false);
+        $this->applyCommonFilters($paymentsQuery, $request, $mitraId, $search, true);
 
         // Calculate totals for the entire set before pagination
-        $totals = (clone $paymentsQuery)->selectRaw('SUM(total_akhir) as total_nota, COUNT(*) as total_count')->first();
+        $totalsQuery = Invoice::where('invoices.office_id', $officeId)
+            ->whereBetween('invoices.tgl_invoice', [$startDate, $endDate]);
+        $this->applyCommonFilters($totalsQuery, $request, $mitraId, $search, false);
+        $totals = $totalsQuery->selectRaw('SUM(invoices.total_akhir) as total_nota, COUNT(*) as total_count')->first();
 
         // Unfortunately withSum doesn't work well for calculating grand total of the sum across all records in a single query easily without a subquery or second query
         $totalPaymentAmount = Payment::whereHas('invoice', function ($q) use ($officeId, $startDate, $endDate) {
@@ -252,7 +258,7 @@ class InvoiceReportController extends Controller
     private function getPaymentsWithDetailsData(Request $request, $startDate, $endDate, $officeId, $mitraId, $search)
     {
         // Get payments with invoice details
-        $paymentsQuery = Invoice::with(['payments', 'mitra'])
+        $paymentsQuery = Invoice::with(['payment', 'mitra'])
             ->where('office_id', $officeId)
             ->where('tipe_invoice', 'Sales')
             ->whereBetween('tgl_invoice', [$startDate, $endDate]);
@@ -262,7 +268,7 @@ class InvoiceReportController extends Controller
         $payments = $paymentsQuery->orderBy('tgl_invoice', 'desc')->get();
 
         $payments->transform(function ($invoice) {
-            $payment = $invoice->payments->first(); // Get first payment
+            $payment = $invoice->payment->first(); // Get first payment
 
             return (object) [
                 'invoice_id' => $invoice->id,
@@ -372,15 +378,27 @@ class InvoiceReportController extends Controller
     private function getInvoiceItemsData(Request $request, $startDate, $endDate, $officeId, $mitraId, $search)
     {
         $itemsQuery = InvoiceItem::with(['invoice.mitra', 'product'])
+            ->join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
+            ->leftJoin('mitras', 'invoices.mitra_id', '=', 'mitras.id')
+            ->join('products', 'invoice_items.produk_id', '=', 'products.id')
+            ->select('invoice_items.*')
+            ->addSelect([
+                'invoices.tgl_invoice',
+                'invoices.nomor_invoice',
+                'invoices.status_pembayaran',
+                'invoices.tipe_invoice',
+                'mitras.nama as nama_mitra',
+                'products.nama_produk',
+                DB::raw('(invoice_items.qty * invoice_items.diskon_nilai) as total_diskon')
+            ])
             ->withSum(['taxes as total_tax'], 'nilai_pajak_diterapkan')
-            ->whereHas('invoice', function ($query) use ($officeId, $startDate, $endDate) {
-                $query->where('office_id', $officeId);
-                if ($startDate && $endDate) {
-                    $query->whereBetween('tgl_invoice', [$startDate, $endDate]);
-                }
-            });
+            ->where('invoices.office_id', $officeId);
 
-        $this->applyCommonFilters($itemsQuery, $request, $mitraId, $search, false, true);
+        if ($startDate && $endDate) {
+            $itemsQuery->whereBetween('invoices.tgl_invoice', [$startDate, $endDate]);
+        }
+
+        $this->applyCommonFilters($itemsQuery, $request, $mitraId, $search, true, true);
 
         // Calculate totals for the entire set before pagination
         $totalsQuery = (clone $itemsQuery);
@@ -481,7 +499,7 @@ class InvoiceReportController extends Controller
     {
         $paymentsQuery = Invoice::with(['mitra'])
             ->withSum(['items as total_qty'], 'qty')
-            ->withSum(['payments as jumlah_bayar'], 'jumlah_bayar')
+            ->withSum(['payment as jumlah_bayar'], 'jumlah_bayar')
             ->selectSub(function ($query) {
                 $query->from('payments')
                     ->select('metode_pembayaran')
@@ -802,11 +820,20 @@ class InvoiceReportController extends Controller
                 WHEN 'Paid' THEN 4 
                 WHEN 'Draft' THEN 5 
                 ELSE 6 END ".$sortDir);
-        } elseif ($sortBy === 'payments.jumlah_bayar') {
-            $query->orderByRaw('jumlah_bayar '.$sortDir);
+        } elseif ($sortBy === 'payments.jumlah_bayar' || $sortBy === 'terbayar') {
+            $query->orderByRaw('COALESCE(jumlah_bayar, 0) '.$sortDir);
         } elseif ($sortBy === 'sisa_piutang') {
-            $query->orderByRaw('(total_akhir - jumlah_bayar) '.$sortDir);
+            $query->orderByRaw('sisa_piutang_virtual '.$sortDir);
+        } elseif ($sortBy === 'total_diskon') {
+            $query->orderByRaw('(invoice_items.qty * invoice_items.diskon_nilai) '.$sortDir);
+        } elseif ($sortBy === 'total_akhir' && str_contains($query->toSql(), 'invoice_items')) {
+            // Special case for invoice items sort by total akhir (including tax sum)
+            $query->orderByRaw('( (invoice_items.qty * invoice_items.harga_satuan) - (invoice_items.qty * invoice_items.diskon_nilai) + COALESCE(total_tax, 0) ) '.$sortDir);
         } else {
+            // Fix ambiguity for total_akhir if multiple tables joined
+            if ($sortBy === 'total_akhir' || $sortBy === 'invoices.total_akhir') {
+                $sortBy = 'invoices.total_akhir';
+            }
             $query->orderBy($sortBy, $sortDir);
         }
     }

@@ -1245,8 +1245,14 @@
             let currentVal = parseFloat(this.value) || 0;
 
             if (currentVal > maxVal) {
-                alert(`Stok tidak mencukupi! Maksimum stok tersedia adalah ${maxVal}.`);
-                this.value = maxVal;
+                const selectedId = selectEl.value;
+                const product = masterProduk.find(p => p.id == selectedId);
+                const isTracked = product ? (product.track_stock == 1) : true;
+
+                if (isTracked) {
+                    alert(`Stok tidak mencukupi! Maksimum stok tersedia adalah ${maxVal}.`);
+                    this.value = maxVal;
+                }
                 calculateInvoiceTotal();
             } else {
                 calculateInvoiceTotal();
