@@ -21,7 +21,7 @@ class SalesController extends Controller
         $users = collect();
         if ($officeId) {
             $users = User::where('is_sales', true)
-                ->whereHas('userOfficeRoles', function ($query) use ($officeId) {
+                ->whereHas('plots', function ($query) use ($officeId) {
                     $query->where('office_id', $officeId);
                 })
                 ->select('id', 'name')
