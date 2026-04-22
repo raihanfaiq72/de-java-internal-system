@@ -318,6 +318,18 @@ class DashboardController extends Controller
                 ->where('qty', '<=', 0)
                 ->count();
 
+            $data['stats']['safe_stock'] = Product::where('office_id', $officeId)
+                ->where('track_stock', 1)
+                ->where('qty', '>', 10)
+                ->count();
+
+            $data['stats']['total_products'] = Product::where('office_id', $officeId)
+                ->count();
+
+            $data['stats']['inventory_value'] = Product::where('office_id', $officeId)
+                ->get()
+                ->sum(fn($p) => $p->qty * $p->harga_beli);
+
             $recent = Invoice::with('mitra')
                 ->where('office_id', $officeId)
                 ->where('tipe_invoice', 'Sales')

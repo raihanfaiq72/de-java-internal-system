@@ -768,8 +768,15 @@
             background: #fff;
         }
 
-        .dr-inv-sub.danger { border-color: rgba(234, 84, 75, 0.2); background: #fff9f8; }
-        .dr-inv-sub.warning { border-color: rgba(215, 162, 56, 0.2); background: #fffdf5; }
+        .dr-inv-sub.danger { border-color: rgba(234, 84, 75, 0.5); background: #fff5f4; }
+        .dr-inv-sub.warning { border-color: rgba(215, 162, 56, 0.5); background: #fffcf0; }
+        .dr-inv-sub.success { border-color: rgba(40, 167, 69, 0.5); background: #f0fff4; }
+        .dr-inv-sub.info { border-color: rgba(23, 162, 184, 0.5); background: #f0f9ff; }
+
+        .dr-inv-sub.danger strong { color: #d63031; }
+        .dr-inv-sub.warning strong { color: #e67e22; }
+        .dr-inv-sub.success strong { color: #27ae60; }
+        .dr-inv-sub.info strong { color: #2980b9; }
 
         .dr-inv-sub strong {
             display: block;
@@ -1189,26 +1196,36 @@
                                 </div>
                             </div>
 
-                            <div class="dr-card dr-inventory-summary flex-grow-1">
+                            <div class="dr-card dr-inventory-summary flex-grow-1 d-flex flex-column">
                                 <div class="dr-card-header mb-3">
                                     <h2 class="dr-card-title">Ringkasan Inventaris</h2>
                                     <i class="iconoir-box-iso" style="color: var(--dr-muted);"></i>
                                 </div>
-                                <div class="dr-inv-metric">
-                                    <span class="dr-inv-label">Nilai Aset Gudang</span>
-                                    <span class="dr-inv-value" id="dashboardInventoryValue">Rp 0</span>
-                                </div>
-                                <div class="dr-inv-grid">
-                                    <div class="dr-inv-sub danger">
-                                        <strong id="dashboardZeroStock">0</strong>
-                                        <span>Stok Kosong</span>
+                                <div class="flex-grow-1 d-flex flex-column justify-content-center">
+                                    <div class="dr-inv-metric">
+                                        <span class="dr-inv-label">Nilai Aset Gudang</span>
+                                        <span class="dr-inv-value" id="dashboardInventoryValue">Rp 0</span>
                                     </div>
-                                    <div class="dr-inv-sub warning">
-                                        <strong id="dashboardLowStock">0</strong>
-                                        <span>Stok Menipis</span>
+                                    <div class="dr-inv-grid">
+                                        <div class="dr-inv-sub danger">
+                                            <strong id="dashboardZeroStock">0</strong>
+                                            <span>Stok Kosong</span>
+                                        </div>
+                                        <div class="dr-inv-sub warning">
+                                            <strong id="dashboardLowStock">0</strong>
+                                            <span>Stok Menipis</span>
+                                        </div>
+                                        <div class="dr-inv-sub success">
+                                            <strong id="dashboardSafeStock">0</strong>
+                                            <span>Stok Aman</span>
+                                        </div>
+                                        <div class="dr-inv-sub info">
+                                            <strong id="dashboardTotalProducts">0</strong>
+                                            <span>Total Produk</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="mt-3">
+                                <div class="mt-auto pt-3">
                                     <a href="{{ route('stok') }}" class="dr-btn w-100 justify-content-center" style="height: 38px; font-size: 13px; font-weight: 700;">
                                         Kelola Inventaris
                                     </a>
@@ -1525,6 +1542,14 @@
                 setKpiValue('dashboardPiutang', stats.piutang_usaha);
                 setKpiValue('dashboardUtang', stats.utang_usaha);
                 setKpiValue('dashboardSaldo', stats.saldo_aktif);
+                setKpiValue('dashboardLowStock', stats.low_stock);
+                setKpiValue('dashboardZeroStock', stats.zero_stock);
+                setKpiValue('dashboardSafeStock', stats.safe_stock);
+                setKpiValue('dashboardTotalProducts', stats.total_products);
+                
+                if (stats.inventory_value !== undefined) {
+                    document.getElementById('dashboardInventoryValue').innerText = 'Rp ' + formatCurrency(stats.inventory_value);
+                }
                 
                 // 2. Inventory Highlight
                 document.getElementById('dashboardInventoryValue').innerText = 'Rp ' + formatCurrency(stats.inventory_value || 0);
