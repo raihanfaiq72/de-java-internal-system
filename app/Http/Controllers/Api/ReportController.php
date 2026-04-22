@@ -8,8 +8,8 @@ use App\Models\COAGroup;
 use App\Models\COAType;
 use App\Models\Expense;
 use App\Models\FinancialAccount;
+use App\Models\FinancialTransaction;
 use App\Models\Invoice;
-use App\Models\Journal;
 use App\Models\JournalDetail;
 use App\Models\Office;
 use App\Models\Partner;
@@ -17,8 +17,6 @@ use App\Models\Payment;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\StockLocation;
-use App\Models\StockMutation;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -41,7 +39,7 @@ class ReportController extends Controller
             ->whereHas('mitra', function ($q) {
                 $q->where('is_cash_customer', false);
             })
-            ->with(['mitra', 'payment']);
+            ->with(['mitra', 'sales']);
 
         if ($request->mitra_id) {
             $query->where('mitra_id', $request->mitra_id);
@@ -51,7 +49,7 @@ class ReportController extends Controller
             $query->whereBetween('tgl_invoice', [$request->start_date, $request->end_date]);
         }
 
-        $invoices = $query->get();
+        $invoices = $query->withSum(['payment as paid_amount'], 'jumlah_bayar')->get();
 
         $agingData = [];
         $customerDetails = [];
@@ -91,8 +89,7 @@ class ReportController extends Controller
             ];
 
             foreach ($invs as $inv) {
-                $paid = $inv->payment->sum('jumlah_bayar');
-                $remaining = $inv->total_akhir - $paid;
+                $remaining = $inv->total_akhir - ($inv->paid_amount ?? 0);
                 if ($remaining <= 0) {
                     continue;
                 }
@@ -137,15 +134,12 @@ class ReportController extends Controller
             ];
 
             $totalTagihan = $invs->sum('total_akhir');
-            $totalPaid = $invs->sum(function ($inv) {
-                return $inv->payment->sum('jumlah_bayar');
-            });
+            $totalPaid = $invs->sum('paid_amount');
             $outstanding = $totalTagihan - $totalPaid;
 
             $ages = [];
             foreach ($invs as $inv) {
-                $paid = $inv->payment->sum('jumlah_bayar');
-                $remaining = $inv->total_akhir - $paid;
+                $remaining = $inv->total_akhir - ($inv->paid_amount ?? 0);
                 if ($remaining <= 0) {
                     continue;
                 }
@@ -154,7 +148,7 @@ class ReportController extends Controller
             $avgAge = count($ages) > 0 ? floor(array_sum($ages) / count($ages)) : 0;
 
             $latestInv = $invs->sortByDesc('tgl_invoice')->first();
-            $salesUser = $latestInv && $latestInv->sales_id ? User::find($latestInv->sales_id) : null;
+            $salesUser = $latestInv ? $latestInv->sales : null;
 
             $customerDetails[] = [
                 'kode' => $mitraCode,
@@ -216,14 +210,14 @@ class ReportController extends Controller
             ->whereDate('tgl_biaya', '<', $start->toDateString())
             ->sum('jumlah');
 
-        $openingTransferIn = \App\Models\FinancialTransaction::where('office_id', $officeId)
+        $openingTransferIn = FinancialTransaction::where('office_id', $officeId)
             ->where('to_account_id', $accountId)
             ->where('status', 'posted')
             ->whereIn('type', ['transfer', 'income'])
             ->whereDate('transaction_date', '<', $start->toDateString())
             ->sum('amount');
 
-        $openingTransferOut = \App\Models\FinancialTransaction::where('office_id', $officeId)
+        $openingTransferOut = FinancialTransaction::where('office_id', $officeId)
             ->where('from_account_id', $accountId)
             ->where('status', 'posted')
             ->whereIn('type', ['transfer', 'expense'])
@@ -275,7 +269,7 @@ class ReportController extends Controller
             ];
         }
 
-        $finTrxIn = \App\Models\FinancialTransaction::where('office_id', $officeId)
+        $finTrxIn = FinancialTransaction::where('office_id', $officeId)
             ->where('to_account_id', $accountId)
             ->where('status', 'posted')
             ->whereBetween('transaction_date', [$start->toDateString(), $end->toDateString()])
@@ -291,7 +285,7 @@ class ReportController extends Controller
             ];
         }
 
-        $finTrxOut = \App\Models\FinancialTransaction::where('office_id', $officeId)
+        $finTrxOut = FinancialTransaction::where('office_id', $officeId)
             ->where('from_account_id', $accountId)
             ->where('status', 'posted')
             ->whereBetween('transaction_date', [$start->toDateString(), $end->toDateString()])
@@ -354,52 +348,45 @@ class ReportController extends Controller
         $year = date('Y');
         $officeId = session('active_office_id');
 
-        $invoices = Invoice::with(['payment'])
-            ->where('tipe_invoice', 'Sales')
+        $statsInvoices = Invoice::where('tipe_invoice', 'Sales')
             ->where('office_id', $officeId)
+            ->withSum(['payment as paid_amount'], 'jumlah_bayar')
             ->get();
 
         $stats = (object) [
-            'total_revenue' => $invoices->sum('total_akhir'),
-            'total_ar' => $invoices->filter(function ($invoice) {
-                return $invoice->status_pembayaran !== 'Paid';
-            })->sum(function ($invoice) {
-                $paid = $invoice->payment->sum('jumlah_bayar');
-                return $invoice->total_akhir - $paid;
-            }),
-            'total_count' => $invoices->count(),
-            'total_overdue' => $invoices->filter(function ($invoice) {
-                return $invoice->tgl_jatuh_tempo < now() && $invoice->status_pembayaran !== 'Paid';
-            })->sum(function ($invoice) {
-                $paid = $invoice->payment->sum('jumlah_bayar');
-                return $invoice->total_akhir - $paid;
-            }),
+            'total_revenue' => $statsInvoices->sum('total_akhir'),
+            'total_ar' => $statsInvoices->filter(fn ($inv) => $inv->status_pembayaran !== 'Paid')
+                ->sum(fn ($inv) => max(0, $inv->total_akhir - ($inv->paid_amount ?? 0))),
+            'total_count' => $statsInvoices->count(),
+            'total_overdue' => $statsInvoices->filter(fn ($inv) => $inv->tgl_jatuh_tempo < now() && $inv->status_pembayaran !== 'Paid')
+                ->sum(fn ($inv) => max(0, $inv->total_akhir - ($inv->paid_amount ?? 0))),
         ];
 
         $monthlyData = [];
+        $monthlyRaw = Invoice::where('tipe_invoice', 'Sales')
+            ->where('office_id', $officeId)
+            ->whereYear('tgl_invoice', $year)
+            ->selectRaw('MONTH(tgl_invoice) as month, SUM(total_akhir) as total')
+            ->groupBy('month')
+            ->pluck('total', 'month');
+
+        $monthlyData = [];
         for ($m = 1; $m <= 12; $m++) {
-            $monthlyData[] = Invoice::where('tipe_invoice', 'Sales')
-                ->where('office_id', $officeId)
-                ->whereYear('tgl_invoice', $year)
-                ->whereMonth('tgl_invoice', $m)
-                ->sum('total_akhir');
+            $monthlyData[] = $monthlyRaw->get($m, 0);
         }
 
-        $topClients = Invoice::with(['mitra'])
-            ->where('tipe_invoice', 'Sales')
+        $topClients = Invoice::where('tipe_invoice', 'Sales')
             ->where('office_id', $officeId)
+            ->join('mitras', 'invoices.mitra_id', '=', 'mitras.id')
+            ->selectRaw('mitras.nama, SUM(invoices.total_akhir) as total')
+            ->groupBy('invoices.mitra_id', 'mitras.nama')
+            ->orderByDesc('total')
+            ->limit(5)
             ->get()
-            ->groupBy('mitra_id')
-            ->map(function ($group) {
-                $firstInvoice = $group->first();
-                return (object) [
-                    'nama' => $firstInvoice->mitra ? $firstInvoice->mitra->nama : 'Unknown',
-                    'value' => $group->sum('total_akhir')
-                ];
-            })
-            ->sortByDesc('value')
-            ->take(5)
-            ->values();
+            ->map(fn ($row) => (object) [
+                'nama' => $row->nama,
+                'value' => $row->total,
+            ]);
 
         return view($this->views.'sales', compact('stats', 'monthlyData', 'topClients'));
     }
@@ -497,14 +484,14 @@ class ReportController extends Controller
         $status = $request->status;
 
         $query = JournalDetail::with(['journal' => function ($query) use ($officeId, $startDate, $endDate) {
-                    $query->where('office_id', $officeId)
-                          ->whereBetween('tgl_jurnal', [$startDate, $endDate]);
-                }, 'journal.invoice' => function ($query) use ($officeId) {
-                    $query->where('office_id', $officeId);
-                }, 'coa'])
+            $query->where('office_id', $officeId)
+                ->whereBetween('tgl_jurnal', [$startDate, $endDate]);
+        }, 'journal.invoice' => function ($query) use ($officeId) {
+            $query->where('office_id', $officeId);
+        }, 'coa'])
             ->whereHas('journal', function ($query) use ($officeId, $startDate, $endDate) {
                 $query->where('office_id', $officeId)
-                      ->whereBetween('tgl_jurnal', [$startDate, $endDate]);
+                    ->whereBetween('tgl_jurnal', [$startDate, $endDate]);
             });
 
         if ($coaId) {
@@ -577,19 +564,16 @@ class ReportController extends Controller
     {
         $officeId = session('active_office_id');
 
-        $getBalance = function ($accountId) use ($officeId, $date) {
-            return JournalDetail::whereHas('journal', function ($query) use ($officeId, $date) {
-                    $query->where('office_id', $officeId)
-                          ->where('tgl_jurnal', '<=', $date);
-                })
-                ->where('akun_id', $accountId)
-                ->get()
-                ->sum(function ($detail) {
-                    return $detail->debit - $detail->kredit;
-                });
-        };
+        $movements = JournalDetail::query()
+            ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
+            ->where('journals.office_id', $officeId)
+            ->where('journals.tgl_jurnal', '<=', $date)
+            ->selectRaw('journal_details.akun_id, SUM(journal_details.debit) as total_debit, SUM(journal_details.kredit) as total_credit')
+            ->groupBy('journal_details.akun_id')
+            ->get()
+            ->keyBy('akun_id');
 
-        $groups = \App\Models\COAGroup::where('office_id', $officeId)
+        $groups = COAGroup::where('office_id', $officeId)
             ->with(['type' => function ($q) {
                 $q->orderBy('nama_tipe');
             }, 'type.coas' => function ($q) {
@@ -598,10 +582,11 @@ class ReportController extends Controller
             ->orderBy('kode_kelompok')
             ->get();
 
-        $groups->each(function ($group) use ($getBalance) {
-            $group->type->each(function ($type) use ($getBalance, $group) {
-                $type->coas->each(function ($coa) use ($getBalance, $group) {
-                    $rawBalance = $getBalance($coa->id);
+        $groups->each(function ($group) use ($movements) {
+            $group->type->each(function ($type) use ($movements, $group) {
+                $type->coas->each(function ($coa) use ($movements, $group) {
+                    $m = $movements->get($coa->id);
+                    $rawBalance = $m ? ($m->total_debit - $m->total_credit) : 0;
                     $isCreditNormal = in_array(substr($group->kode_kelompok, 0, 1), ['2', '3']);
                     $coa->balance = $isCreditNormal ? ($rawBalance * -1) : $rawBalance;
                 });
@@ -646,10 +631,20 @@ class ReportController extends Controller
     public function coaManagement(Request $request)
     {
 
-        $dropdownGroups = \App\Models\COAGroup::where('office_id', $officeId)->get();
-        $dropdownTypes = \App\Models\COAType::whereHas('group', function ($q) use ($officeId) {
+        $officeId = session('active_office_id');
+        $date = $request->input('date', date('Y-m-d'));
+        $data = $this->getBalanceSheetData($date);
+
+        $dropdownGroups = COAGroup::where('office_id', $officeId)->get();
+        $dropdownTypes = COAType::whereHas('group', function ($q) use ($officeId) {
             $q->where('office_id', $officeId);
         })->get();
+
+        $groups = COA::join('coa_types', 'coas.coa_type_id', '=', 'coa_types.id')
+            ->join('coa_groups', 'coa_types.coa_group_id', '=', 'coa_groups.id')
+            ->where('coas.office_id', $officeId)
+            ->select('coas.*', 'coa_types.nama_tipe', 'coa_groups.nama_kelompok')
+            ->get();
 
         $groupedAccounts = $groups->groupBy('nama_kelompok')->map(function ($items) {
             return $items->groupBy('nama_tipe');
@@ -679,29 +674,28 @@ class ReportController extends Controller
 
         $targetGroups = [4000, 5000, 6000, 6800, 7001, 8001, 9000];
 
-        $movements = JournalDetail::whereHas('journal', function ($query) use ($officeId, $startDate, $endDate) {
-                $query->where('office_id', $officeId)
-                      ->whereBetween('tgl_jurnal', [$startDate, $endDate]);
-            })
+        $movements = JournalDetail::query()
+            ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
+            ->where('journals.office_id', $officeId)
+            ->whereBetween('journals.tgl_jurnal', [$startDate, $endDate])
+            ->selectRaw('journal_details.akun_id, SUM(journal_details.debit) as total_debit, SUM(journal_details.kredit) as total_credit')
+            ->groupBy('journal_details.akun_id')
             ->get()
-            ->groupBy('akun_id')
-            ->map(function ($group) {
-                return (object) [
-                    'total_debit' => $group->sum('debit'),
-                    'total_credit' => $group->sum('kredit'),
-                ];
-            });
+            ->keyBy('akun_id');
 
         $groups = COAGroup::with(['type.coas'])
             ->where('office_id', $officeId)
             ->whereIn('kode_kelompok', $targetGroups)
             ->get()
             ->map(function ($group) {
-                return $group->type->flatMap(function ($type) {
+                return $group->type->flatMap(function ($type) use ($group) {
                     return $type->coas->map(function ($coa) use ($group) {
                         return (object) [
                             'kode_kelompok' => $group->kode_kelompok,
-                            'coa_id' => $coa->id
+                            'nama_kelompok' => $group->nama_kelompok,
+                            'coa_id' => $coa->id,
+                            'kode_akun' => $coa->kode_akun,
+                            'nama_akun' => $coa->nama_akun,
                         ];
                     });
                 });
@@ -765,7 +759,7 @@ class ReportController extends Controller
     public function supplierInvoices(Request $request)
     {
         $officeId = session('active_office_id');
-        
+
         // Build query for purchase invoices that are not fully paid
         $query = Invoice::with(['mitra', 'payment'])
             ->where('office_id', $officeId)
@@ -795,12 +789,12 @@ class ReportController extends Controller
         foreach ($invoices as $invoice) {
             $totalPaid = $invoice->payment->sum('jumlah_bayar');
             $remaining = $invoice->total_akhir - $totalPaid;
-            
+
             // Only include invoices with remaining balance
             if ($remaining > 0) {
                 $supplierId = $invoice->mitra_id;
-                
-                if (!$suppliersData->has($supplierId)) {
+
+                if (! $suppliersData->has($supplierId)) {
                     $suppliersData->put($supplierId, [
                         'id' => $invoice->mitra->id,
                         'nama' => $invoice->mitra->nama,
@@ -812,18 +806,18 @@ class ReportController extends Controller
                         'latest_invoice_date' => $invoice->tgl_invoice,
                     ]);
                 }
-                
+
                 $supplierData = $suppliersData->get($supplierId);
                 $supplierData['total_invoice'] += $invoice->total_akhir;
                 $supplierData['total_paid'] += $totalPaid;
                 $supplierData['total_remaining'] += $remaining;
                 $supplierData['invoice_count'] += 1;
-                
+
                 // Update latest invoice date if this one is newer
                 if ($invoice->tgl_invoice > $supplierData['latest_invoice_date']) {
                     $supplierData['latest_invoice_date'] = $invoice->tgl_invoice;
                 }
-                
+
                 $grandTotalInvoice += $invoice->total_akhir;
                 $grandTotalPayment += $totalPaid;
             }
@@ -841,13 +835,13 @@ class ReportController extends Controller
     public function supplierInvoicesDetail($id, Request $request)
     {
         $officeId = session('active_office_id');
-        
+
         // Get supplier info
         $supplier = Partner::where('office_id', $officeId)
             ->where('id', $id)
             ->whereIn('tipe_mitra', ['Supplier', 'Both'])
             ->firstOrFail();
-        
+
         // Build query for purchase invoices for this specific supplier
         $query = Invoice::with(['mitra', 'payment'])
             ->where('office_id', $officeId)
@@ -871,7 +865,7 @@ class ReportController extends Controller
         foreach ($invoices as $invoice) {
             $totalPaid = $invoice->payment->sum('jumlah_bayar');
             $remaining = $invoice->total_akhir - $totalPaid;
-            
+
             // Only include invoices with remaining balance
             if ($remaining > 0) {
                 $invoiceData->push([
@@ -884,10 +878,10 @@ class ReportController extends Controller
                     'remaining' => $remaining,
                     'status_pembayaran' => $invoice->status_pembayaran,
                     'keterangan' => $invoice->keterangan,
-                    'days_overdue' => $invoice->tgl_jatuh_tempo ? 
-                        \Carbon\Carbon::parse($invoice->tgl_jatuh_tempo)->diffInDays(now(), false) : 0,
+                    'days_overdue' => $invoice->tgl_jatuh_tempo ?
+                        Carbon::parse($invoice->tgl_jatuh_tempo)->diffInDays(now(), false) : 0,
                 ]);
-                
+
                 $totalInvoice += $invoice->total_akhir;
                 $totalPayment += $totalPaid;
             }
@@ -899,13 +893,13 @@ class ReportController extends Controller
         // Handle export
         if ($request->has('export') && $request->export == 'excel') {
             $filename = 'Detail_Tagihan_Supplier_'.str_replace(' ', '_', $supplier->nama).'_'.date('YmdHis').'.xlsx';
-            
+
             return response()->streamDownload(function () use ($supplier, $invoiceData, $totalInvoice, $totalPayment, $totalRemaining) {
                 echo view('Report.supplier-invoices-detail-excel', compact(
-                    'supplier', 
-                    'invoiceData', 
-                    'totalInvoice', 
-                    'totalPayment', 
+                    'supplier',
+                    'invoiceData',
+                    'totalInvoice',
+                    'totalPayment',
                     'totalRemaining'
                 ));
             }, $filename, [
@@ -915,10 +909,10 @@ class ReportController extends Controller
         }
 
         return view($this->views.'supplier-invoices-detail', compact(
-            'supplier', 
-            'invoiceData', 
-            'totalInvoice', 
-            'totalPayment', 
+            'supplier',
+            'invoiceData',
+            'totalInvoice',
+            'totalPayment',
             'totalRemaining'
         ));
     }

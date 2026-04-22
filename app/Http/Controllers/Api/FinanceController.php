@@ -12,6 +12,7 @@ use App\Models\Payment;
 use App\Traits\LogsActivity;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class FinanceController extends Controller
 {
@@ -188,12 +189,28 @@ class FinanceController extends Controller
     {
         $officeId = session('active_office_id');
 
-        $accounts = FinancialAccount::where('office_id', $officeId)->get();
+        $accounts = FinancialAccount::where('office_id', $officeId)
+            ->withSum(['payments as income_sales' => function ($q) {
+                $q->whereHas('invoice', fn ($sq) => $sq->where('tipe_invoice', 'Sales'));
+            }], 'jumlah_bayar')
+            ->withSum(['payments as expense_purchase' => function ($q) {
+                $q->whereHas('invoice', fn ($sq) => $sq->where('tipe_invoice', 'Purchase'));
+            }], 'jumlah_bayar')
+            ->withSum('expenses', 'jumlah')
+            ->withSum(['transfersIn as transfer_in' => fn ($q) => $q->where('type', 'transfer')->where('status', 'posted')], 'amount')
+            ->withSum(['transfersOut as transfer_out' => fn ($q) => $q->where('type', 'transfer')->where('status', 'posted')], 'amount')
+            ->withSum(['transfersIn as other_income' => fn ($q) => $q->where('type', 'income')->where('status', 'posted')], 'amount')
+            ->withSum(['transfersOut as other_expense' => fn ($q) => $q->where('type', 'expense')->where('status', 'posted')], 'amount')
+            ->withSum('deliveryOrderCosts', 'total_cost')
+            ->get();
 
         foreach ($accounts as $account) {
-            $account->balance = $this->calculateBalance($account->id, $officeId);
-            $account->income_lain = $this->calculateIncomeLain($account->id, $officeId);
-            $account->expense_lain = $this->calculateExpenseLain($account->id, $officeId);
+            $inc = ($account->income_sales ?? 0) + ($account->transfer_in ?? 0) + ($account->other_income ?? 0);
+            $exp = ($account->expense_purchase ?? 0) + ($account->expenses_sum_jumlah ?? 0) + ($account->transfer_out ?? 0) + ($account->other_expense ?? 0) + ($account->delivery_order_costs_sum_total_cost ?? 0);
+
+            $account->balance = $inc - $exp;
+            $account->income_lain = $inc;
+            $account->expense_lain = $exp;
         }
 
         $all_accounts = FinancialAccount::where('office_id', $officeId)->get();
@@ -228,110 +245,7 @@ class FinanceController extends Controller
         return view('Finance.index', compact('accounts', 'all_accounts', 'parent_accounts', 'transactions'));
     }
 
-    private function calculateBalance($accountId, $officeId)
-    {
-        $income = Payment::where('office_id', $officeId)
-            ->where('akun_keuangan_id', $accountId)
-            ->whereHas('invoice', function ($q) {
-                $q->where('tipe_invoice', 'Sales');
-            })
-            ->sum('jumlah_bayar');
 
-        $purchaseExpense = Payment::where('office_id', $officeId)
-            ->where('akun_keuangan_id', $accountId)
-            ->whereHas('invoice', function ($q) {
-                $q->where('tipe_invoice', 'Purchase');
-            })
-            ->sum('jumlah_bayar');
-
-        $expense = Expense::where('office_id', $officeId)
-            ->where('akun_keuangan_id', $accountId)
-            ->sum('jumlah');
-
-        $transferIn = FinancialTransaction::where('office_id', $officeId)
-            ->where('to_account_id', $accountId)
-            ->where('type', 'transfer')
-            ->where('status', 'posted')
-            ->sum('amount');
-
-        $transferOut = FinancialTransaction::where('office_id', $officeId)
-            ->where('from_account_id', $accountId)
-            ->where('type', 'transfer')
-            ->where('status', 'posted')
-            ->sum('amount');
-
-        $otherIncome = FinancialTransaction::where('office_id', $officeId)
-            ->where('to_account_id', $accountId)
-            ->where('type', 'income')
-            ->where('status', 'posted')
-            ->sum('amount');
-
-        $otherExpense = FinancialTransaction::where('office_id', $officeId)
-            ->where('from_account_id', $accountId)
-            ->where('type', 'expense')
-            ->where('status', 'posted')
-            ->sum('amount');
-
-        $deliveryOrderAmount = DeliveryOrderInvoice::where('chart_of_accounts_id', $accountId)
-            ->sum('total_cost');
-
-        return ($income + $transferIn + $otherIncome) - ($purchaseExpense + $expense + $transferOut + $otherExpense + $deliveryOrderAmount);
-    }
-
-    private function calculateIncomeLain($accountId, $officeId)
-    {
-        $income = Payment::where('office_id', $officeId)
-            ->where('akun_keuangan_id', $accountId)
-            ->whereHas('invoice', function ($q) {
-                $q->where('tipe_invoice', 'Sales');
-            })
-            ->sum('jumlah_bayar');
-
-        $transferIn = FinancialTransaction::where('office_id', $officeId)
-            ->where('to_account_id', $accountId)
-            ->where('type', 'transfer')
-            ->where('status', 'posted')
-            ->sum('amount');
-
-        $otherIncome = FinancialTransaction::where('office_id', $officeId)
-            ->where('to_account_id', $accountId)
-            ->where('type', 'income')
-            ->where('status', 'posted')
-            ->sum('amount');
-
-        return $income + $transferIn + $otherIncome;
-    }
-
-    private function calculateExpenseLain($accountId, $officeId)
-    {
-        $expense = Expense::where('office_id', $officeId)
-            ->where('akun_keuangan_id', $accountId)
-            ->sum('jumlah');
-
-        $purchaseExpense = Payment::where('office_id', $officeId)
-            ->where('akun_keuangan_id', $accountId)
-            ->whereHas('invoice', function ($q) {
-                $q->where('tipe_invoice', 'Purchase');
-            })
-            ->sum('jumlah_bayar');
-
-        $transferOut = FinancialTransaction::where('office_id', $officeId)
-            ->where('from_account_id', $accountId)
-            ->where('type', 'transfer')
-            ->where('status', 'posted')
-            ->sum('amount');
-
-        $otherExpense = FinancialTransaction::where('office_id', $officeId)
-            ->where('from_account_id', $accountId)
-            ->where('type', 'expense')
-            ->where('status', 'posted')
-            ->sum('amount');
-
-        $deliveryOrderAmount = DeliveryOrderInvoice::where('chart_of_accounts_id', $accountId)
-            ->sum('total_cost');
-
-        return $expense + $purchaseExpense + $transferOut + $otherExpense + $deliveryOrderAmount;
-    }
 
     public function storeTransaction(Request $request)
     {

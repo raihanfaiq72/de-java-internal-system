@@ -12,5 +12,28 @@ class FinancialAccount extends Model
 
     protected $guarded = ['id'];
 
-    // Additional properties if needed
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'akun_keuangan_id');
+    }
+
+    public function expenses()
+    {
+        return $this->hasMany(Expense::class, 'akun_keuangan_id');
+    }
+
+    public function transfersIn()
+    {
+        return $this->hasMany(FinancialTransaction::class, 'to_account_id');
+    }
+
+    public function transfersOut()
+    {
+        return $this->hasMany(FinancialTransaction::class, 'from_account_id');
+    }
+
+    public function deliveryOrderCosts()
+    {
+        return $this->hasMany(DeliveryOrderInvoice::class, 'chart_of_accounts_id');
+    }
 }

@@ -107,9 +107,9 @@ class InvoiceController extends Controller
             });
         }
 
-        $perPage = $request->get('per_page', 10);
-        $sortBy = $request->get('sort_by', 'tgl_invoice');
-        $sortDir = $request->get('sort_dir', 'desc');
+        $perPage = $request->input('per_page', 10);
+        $sortBy = $request->input('sort_by', 'tgl_invoice');
+        $sortDir = $request->input('sort_dir', 'desc');
 
         $query->orderBy($sortBy, $sortDir);
 
@@ -222,32 +222,18 @@ class InvoiceController extends Controller
 
     private function getMaxOverdueDays($partnerId)
     {
-        $invoices = Invoice::where('mitra_id', $partnerId)
+        $maxDays = Invoice::where('mitra_id', $partnerId)
             ->where('tipe_invoice', 'Sales')
             ->where('status_pembayaran', '!=', 'Paid')
-            ->whereNull('deleted_at')
-            ->with('payment')
-            ->get();
+            ->withSum(['payment as paid_amount'], 'jumlah_bayar')
+            ->get()
+            ->filter(fn ($inv) => ($inv->total_akhir - ($inv->paid_amount ?? 0)) > 0)
+            ->map(function ($inv) {
+                $dueDate = $inv->tgl_jatuh_tempo ? Carbon::parse($inv->tgl_jatuh_tempo) : Carbon::parse($inv->tgl_invoice);
 
-        $maxDays = 0;
-        foreach ($invoices as $inv) {
-            $paid = $inv->payment->sum('jumlah_bayar');
-            $remaining = $inv->total_akhir - $paid;
-
-            if ($remaining <= 0) {
-                continue;
-            }
-
-            // Determine Due Date (Use tgl_invoice if tgl_jatuh_tempo is null)
-            $dueDate = $inv->tgl_jatuh_tempo ? Carbon::parse($inv->tgl_jatuh_tempo) : Carbon::parse($inv->tgl_invoice);
-
-            if ($dueDate->isPast()) {
-                $days = $dueDate->diffInDays(Carbon::now());
-                if ($days > $maxDays) {
-                    $maxDays = $days;
-                }
-            }
-        }
+                return $dueDate->isPast() ? $dueDate->diffInDays(Carbon::now()) : 0;
+            })
+            ->max() ?? 0;
 
         return $maxDays;
     }
@@ -470,7 +456,7 @@ class InvoiceController extends Controller
             });
         }
 
-        $perPage = $request->get('per_page', 10);
+        $perPage = $request->input('per_page', 10);
         if ($perPage >= 1000) {
             $data = $query->latest()->get();
         } else {
@@ -676,7 +662,7 @@ class InvoiceController extends Controller
             });
         }
 
-        $perPage = $request->get('per_page', 10);
+        $perPage = $request->input('per_page', 10);
         if ($perPage >= 1000) {
             $data = $query->latest()->get();
         } else {
