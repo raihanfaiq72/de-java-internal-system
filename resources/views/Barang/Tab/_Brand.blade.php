@@ -1,50 +1,49 @@
-<div class="tab-pane fade show" id="tab-brand" role="tabpanel">
+<div class="tab-pane fade" id="tab-brand" role="tabpanel">
 
-    <div class="row g-2 mb-3">
+    <div class="d-flex flex-wrap align-items-end gap-3 mb-4 bg-light-subtle p-3 border-radius-sm border">
         <!-- Filter Controls -->
-        <div class="col-md-4">
-            <label class="small fw-bold text-muted">Cari Brand</label>
+        <div style="flex: 1; min-width: 250px;">
+            <label class="dr-label mb-2">Cari Brand</label>
             <div class="input-group">
-                <span class="input-group-text"><i class="fa fa-search"></i></span>
-                <input type="text" id="filter-brand-search" class="form-control"
-                    placeholder="Nama Brand...">
+                <span class="input-group-text border-end-0 bg-white"><i class="iconoir-search"></i></span>
+                <input type="text" id="filter-brand-search" class="dr-input border-start-0" style="padding-left: 0;"
+                    placeholder="Ketik nama brand...">
             </div>
         </div>
         
         <!-- Action Buttons -->
-        <div class="col text-end align-self-end">
-            <div class="d-flex gap-2 justify-content-end">
-                <button onclick="resetFilterBrand()" class="btn btn-outline-secondary" title="Reset Filter">
-                    <i class="fa fa-undo"></i>
-                </button>
-                <div class="vr"></div>
-                <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openBrandModal()">
-                    <i class="fa fa-plus me-1"></i> TAMBAH BRAND
-                </button>
-            </div>
+        <div class="ms-auto d-flex gap-2">
+            <button onclick="resetFilterBrand()" class="dr-btn dr-btn-outline" title="Reset Filter" style="padding: 10px 14px;">
+                <i class="iconoir-undo"></i>
+            </button>
+            <button class="dr-btn dr-btn-primary px-4" onclick="openBrandModal()">
+                <i class="iconoir-plus me-1"></i> TAMBAH BRAND
+            </button>
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-sm table-bordered align-middle">
-            <thead class="table-light">
+    <div class="dr-table-container mb-4">
+        <table class="dr-table align-middle">
+            <thead>
                 <tr>
-                    <th>Nama Brand</th>
-                    <th width="80" class="text-center">Aksi</th>
+                    <th class="ps-4">Nama Brand</th>
+                    <th width="80" class="text-center pe-4">Aksi</th>
                 </tr>
             </thead>
             <tbody id="brand-table-body">
                 <tr>
-                    <td colspan="2" class="text-center text-muted">Memuat data...</td>
+                    <td colspan="2" class="text-center text-muted py-5">
+                        <div class="spinner-border spinner-border-sm text-primary me-2"></div> Memuat data brand...
+                    </td>
                 </tr>
             </tbody>
         </table>
     </div>
 
     <div class="d-flex justify-content-between align-items-center px-2">
-        <span id="brand-pagination-info" class="text-muted small"></span>
+        <span id="brand-pagination-info" class="text-muted small fw-medium"></span>
         <nav>
-            <ul class="pagination pagination-sm mb-0" id="brand-pagination-container"></ul>
+            <ul class="pagination pagination-sm mb-0 gap-1" id="brand-pagination-container"></ul>
         </nav>
     </div>
 
@@ -52,22 +51,24 @@
 
 <template id="brand-row-template">
     <tr>
-        <td class="brand-name"></td>
-        <td class="text-center">
+        <td class="brand-name ps-4 fw-semibold"></td>
+        <td class="text-center pe-4">
             <div class="dropdown">
-                <button class="btn btn-sm btn-light border shadow-sm dropdown-toggle" data-bs-toggle="dropdown">
-                    <i class="fa fa-cog text-muted"></i>
+                <button class="dr-btn dr-btn-outline p-2 shadow-none border-0 bg-light-subtle dropdown-toggle no-caret" data-bs-toggle="dropdown">
+                    <i class="iconoir-more-vert fs-5"></i>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-2" style="border-radius: 12px; min-width: 160px;">
                     <li>
-                        <a class="dropdown-item btn-edit" href="javascript:void(0)">
-                            <i class="fa fa-edit me-2 text-warning"></i> Edit Brand
+                        <a class="dropdown-item btn-edit d-flex align-items-center gap-2 py-2 px-3 rounded-2" href="javascript:void(0)">
+                            <i class="iconoir-edit-pencil text-warning"></i> 
+                            <span class="fw-semibold" style="font-size: 13px;">Edit Brand</span>
                         </a>
                     </li>
-                    <li><hr class="dropdown-divider"></li>
+                    <li><hr class="dropdown-divider opacity-50"></li>
                     <li>
-                        <a class="dropdown-item text-danger btn-delete" href="javascript:void(0)">
-                            <i class="fa fa-trash me-2"></i> Hapus Brand
+                        <a class="dropdown-item text-danger btn-delete d-flex align-items-center gap-2 py-2 px-3 rounded-2" href="javascript:void(0)">
+                            <i class="iconoir-trash"></i>
+                            <span class="fw-semibold" style="font-size: 13px;">Hapus Brand</span>
                         </a>
                     </li>
                 </ul>

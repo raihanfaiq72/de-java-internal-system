@@ -1,287 +1,199 @@
 @extends('Layout.main')
 
 @section('main')
+@push('css')
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+@endpush
     <div class="page-wrapper">
-        <div class="page-content">
-            <div class="container-fluid">
-                <!-- Header -->
-                <div class="row mt-3 mb-4">
-                    <div class="col-12">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h4 class="page-title mb-1">Manajemen Stok</h4>
-                                <p class="text-muted mb-0">Monitor persediaan, lokasi, dan mutasi barang.</p>
+        <div class="page-content bg-white">
+            <div class="dr-page-shell">
+                <div class="container-fluid p-0">
+                <!-- Hero Header (Dashboard Style) -->
+                <div class="dr-breadcrumb">
+                    <span>Main Menu</span>
+                    <span>/</span>
+                    <span class="dr-breadcrumb-icon"><i class="iconoir-box-iso"></i></span>
+                    <strong>Stok</strong>
+                </div>
+
+                <div class="dr-hero">
+                    <div>
+                        <h1 class="dr-title">Manajemen Stok</h1>
+                        <p class="dr-subtitle">Monitor persediaan, lokasi, dan mutasi barang secara real-time.</p>
+                        <div class="dr-last-updated">
+                            <i class="iconoir-refresh"></i>
+                            Terakhir update: <span id="stockLastUpdated">-</span>
+                        </div>
+                    </div>
+                    <div class="dr-actions">
+                        <select id="filter-stock-location" class="dr-input" style="width: 200px;" onchange="handleFilterChange()">
+                            <option value="" selected>Semua Gudang</option>
+                        </select>
+                        <button class="dr-btn dr-btn-outline" onclick="loadStockData()">
+                            <i class="iconoir-refresh"></i> Refresh
+                        </button>
+                        <button class="dr-btn dr-btn-primary" onclick="window.location.href='{{ route('report.stock') }}'">
+                            <i class="iconoir-stats-report"></i> Laporan Lengkap
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPI Summary Cards (Dashboard Style) -->
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-md-3">
+                        <div class="dr-stat-card">
+                            <div class="dr-stat-head">
+                                <h4 class="dr-stat-title">Total Produk</h4>
+                                <div class="dr-stat-icon"><i class="iconoir-box-iso"></i></div>
                             </div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-outline-primary" onclick="loadStockData()">
-                                    <i class="iconoir-refresh me-1"></i> Refresh
-                                </button>
-                                <button class="btn btn-primary"
-                                    onclick="window.location.href='{{ route('report.stock') }}'">
-                                    <i class="iconoir-stats-report me-1"></i> Laporan Lengkap
-                                </button>
+                            <div class="dr-stat-value" id="stat-total-items">0</div>
+                            <div class="dr-stat-footer">
+                                <span>Items: <strong id="stat-total-qty">0</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="dr-stat-card">
+                            <div class="dr-stat-head">
+                                <h4 class="dr-stat-title">Perlu Restock</h4>
+                                <div class="dr-stat-icon text-danger"><i class="iconoir-warning-triangle"></i></div>
+                            </div>
+                            <div class="dr-stat-value text-danger" id="stat-restock-count">0</div>
+                            <div class="dr-stat-footer">
+                                <span>Habis: <strong id="stat-out-stock" class="text-danger">0</strong></span>
+                                <span class="mx-1">·</span>
+                                <span>Low: <strong id="stat-low-stock" class="text-warning">0</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="dr-stat-card">
+                            <div class="dr-stat-head">
+                                <h4 class="dr-stat-title">Valuasi Stok</h4>
+                                <div class="dr-stat-icon text-success"><i class="iconoir-wallet"></i></div>
+                            </div>
+                            <div class="dr-stat-value text-success" style="font-size: 24px;" id="stat-inventory-value">Rp 0</div>
+                            <div class="dr-stat-footer">
+                                <span>Nilai aset saat ini</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="dr-stat-card">
+                            <div class="dr-stat-head">
+                                <h4 class="dr-stat-title">Akan Masuk</h4>
+                                <div class="dr-stat-icon text-info"><i class="iconoir-delivery-truck"></i></div>
+                            </div>
+                            <div class="dr-stat-value" style="font-size: 24px;" id="stat-pending-receive">Rp 0</div>
+                            <div class="dr-stat-footer">
+                                <span>Dari Pembelian (PO)</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Stats Cards -->
-                <div class="row g-2 mb-1 stats-row">
-                    <!-- Total Produk -->
-                    <div class="col-md-3">
-                        <div class="card border-0 shadow-sm h-auto position-relative">
-                            <div class="card-body p-3">
-                                <div class="d-flex align-items-center mb-3">
-                                    <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded-circle stat-icon-circle">
-                                        <i class="iconoir-box-iso fs-3 text-primary"></i>
-                                    </div>
-                                    <div class="flex-grow-1 ms-2 stat-text-container">
-                                        <h6 class="text-muted text-uppercase fw-bold small mb-1">Total Produk</h6>
-                                        <h3 class="mb-0 fw-bold" id="stat-total-items">0</h3>
-                                    </div>
-                                </div>
-                                <div class="small text-muted">
-                                    Items: <span id="stat-total-qty" class="fw-bold text-dark">0</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Perlu Restock -->
-                    <div class="col-md-3">
-                        <div class="card border-0 shadow-sm h-auto position-relative">
-                            <div class="card-body p-3">
-                                <div class="d-flex align-items-center mb-3">
-                                    <div class="flex-shrink-0 bg-danger bg-opacity-10 p-3 rounded-circle stat-icon-circle">
-                                        <i class="iconoir-warning-triangle fs-3 text-danger"></i>
-                                    </div>
-                                    <div class="flex-grow-1 ms-2 stat-text-container">
-                                        <h6 class="text-muted text-uppercase fw-bold small mb-1">Perlu Restock</h6>
-                                        <h3 class="mb-0 fw-bold text-danger" id="stat-restock-count">0</h3>
-                                    </div>
-                                </div>
-                                <div class="small text-muted d-flex justify-content-between">
-                                    <span>Habis: <span id="stat-out-stock" class="fw-bold text-danger">0</span></span>
-                                    <span>Low: <span id="stat-low-stock" class="fw-bold text-warning">0</span></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Valuasi -->
-                    <div class="col-md-3">
-                        <div class="card border-0 shadow-sm h-auto position-relative">
-                            <div class="card-body p-3">
-                                <div class="d-flex align-items-center mb-3">
-                                    <div class="flex-shrink-0 bg-success bg-opacity-10 p-3 rounded-circle stat-icon-circle">
-                                        <i class="iconoir-wallet fs-3 text-success"></i>
-                                    </div>
-                                    <div class="flex-grow-1 ms-2 stat-text-container">
-                                        <h6 class="text-muted text-uppercase fw-bold small mb-1">Valuasi Stok</h6>
-                                        <h3 class="mb-0 fw-bold text-success" id="stat-inventory-value">Rp 0</h3>
-                                    </div>
-                                </div>
-                                <small class="text-muted d-block">Nilai aset saat ini</small>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Akan Masuk -->
-                    <div class="col-md-3">
-                        <div class="card border-0 shadow-sm h-auto position-relative">
-                            <div class="card-body p-3">
-                                <div class="d-flex align-items-center mb-3">
-                                    <div class="flex-shrink-0 bg-info bg-opacity-10 p-3 rounded-circle stat-icon-circle">
-                                        <i class="iconoir-delivery-truck fs-3 text-info"></i>
-                                    </div>
-                                    <div class="flex-grow-1 ms-2 stat-text-container">
-                                        <h6 class="text-muted text-uppercase fw-bold small mb-1">Akan Masuk</h6>
-                                        <h3 class="mb-0 fw-bold" id="stat-pending-receive">Rp 0</h3>
-                                    </div>
-                                </div>
-                                <small class="text-muted d-block">Dari Pembelian (PO)</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Main Content Tabs -->
-                <style>
-                    .nav-tabs-finance .nav-link.active {
-                        color: var(--bs-primary) !important;
-                    }
-
-                    /* Responsive Stat Icons */
-                    .stat-icon-circle {
-                        transition: all 0.3s ease;
-                    }
-
-                    @media (min-width: 992px) {
-                        .stats-row .card {
-                            min-height: auto !important;
-                        }
-
-                        .stats-row .card-body {
-                            padding: 0.6rem 0.8rem !important;
-                        }
-
-                        .stat-icon-circle {
-                            padding: 0.3rem !important;
-                        }
-
-                        .stat-icon-circle i {
-                            font-size: 0.9rem !important;
-                        }
-
-                        /* Dynamic Font Scaling Container */
-                        .stat-text-container {
-                            container-type: inline-size;
-                            width: 100%;
-                        }
-
-                        .stats-row h3 {
-                            /* Aggressive scaling: 9cqw fits long numbers better */
-                            font-size: clamp(0.5rem, 9cqw, 0.95rem) !important;
-                            white-space: nowrap;
-                            overflow: visible;
-                            text-overflow: clip;
-                            /* No ellipsis */
-                            line-height: 1;
-                        }
-
-                        .stats-row h6 {
-                            font-size: 0.55rem !important;
-                            margin-bottom: 2px !important;
-                        }
-
-                        .stats-row .small {
-                            font-size: 0.6rem !important;
-                        }
-
-                        .stats-row .mb-3 {
-                            margin-bottom: 0.3rem !important;
-                        }
-                    }
-                </style>
-                <div class="card shadow-sm border-0">
-                    <div
-                        class="card-header bg-white border-bottom py-0 px-4 d-flex align-items-center justify-content-between">
-                        <ul class="nav nav-tabs nav-tabs-finance" role="tablist">
-                            <li class="nav-item">
-                                <a class="nav-link active fw-bold py-3" data-bs-toggle="tab" href="#tab-persediaan"
-                                    role="tab">
-                                    <i class="fa fa-cubes me-2"></i>Daftar Stok
-                                </a>
+                <!-- Main Content Section -->
+                <div class="dr-card p-0 overflow-hidden bg-white">
+                    <div class="dr-card-header border-bottom px-4 py-3 bg-white d-flex align-items-center justify-content-between">
+                        <ul class="nav dr-tabs-segmented" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active"
+                                    data-bs-toggle="tab" data-bs-target="#tab-persediaan" type="button" role="tab">
+                                    <i class="iconoir-box-iso me-2"></i> Daftar Stok
+                                </button>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link fw-bold py-3" data-bs-toggle="tab" href="#tab-lokasi" role="tab">
-                                    <i class="fa fa-location-pin me-2"></i>Lokasi & Gudang
-                                </a>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link"
+                                    data-bs-toggle="tab" data-bs-target="#tab-lokasi" type="button" role="tab">
+                                    <i class="iconoir-map-pin me-2"></i> Lokasi
+                                </button>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link fw-bold py-3" data-bs-toggle="tab" href="#tab-dokumen" role="tab">
-                                    <i class="fa fa-clock-rotate-left me-2"></i>Riwayat Mutasi
-                                </a>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link"
+                                    data-bs-toggle="tab" data-bs-target="#tab-dokumen" type="button" role="tab">
+                                    <i class="iconoir-clock-rotate-right me-2"></i> Riwayat
+                                </button>
                             </li>
                         </ul>
+                        
+                        <div class="d-flex align-items-center gap-2">
+                             <!-- Compact search or other quick tools could go here -->
+                        </div>
                     </div>
 
-                    <div class="card-body p-4">
+                    <div class="p-4">
                         <div class="tab-content">
                             <!-- TAB 1: DAFTAR STOK -->
                             <div class="tab-pane fade show active" id="tab-persediaan" role="tabpanel">
-                                <!-- Filter Section -->
-                                <div class="card bg-light border-0 mb-4">
-                                    <div class="card-body p-3">
-                                        <div class="row g-3 align-items-center">
-                                            <div class="col-md-4">
-                                                <div class="form-floating">
-                                                    <input type="text" id="filter-stock-search"
-                                                        class="form-control border-0 shadow-none" placeholder="Cari..."
-                                                        onkeyup="handleFilterChange()">
-                                                    <label for="filter-stock-search">Cari Nama Produk / SKU</label>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <div class="form-floating">
-                                                    <select id="filter-stock-location"
-                                                        class="form-select border-0 shadow-sm"
-                                                        onchange="handleFilterChange()">
-                                                        <option value="">Semua Lokasi</option>
-                                                    </select>
-                                                    <label for="filter-stock-location">Lokasi</label>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <div class="form-floating">
-                                                    <select id="filter-stock-kategori"
-                                                        class="form-select border-0 shadow-sm"
-                                                        onchange="handleFilterChange()">
-                                                        <option value="">Semua Kategori</option>
-                                                    </select>
-                                                    <label for="filter-stock-kategori">Kategori</label>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <div class="form-floating">
-                                                    <select id="filter-stock-status"
-                                                        class="form-select border-0 shadow-sm"
-                                                        onchange="handleFilterChange()">
-                                                        <option value="">Semua Status</option>
-                                                        <option value="safe">Aman</option>
-                                                        <option value="low">Menipis (< 5)</option>
-                                                        <option value="empty">Habis (0)</option>
-                                                    </select>
-                                                    <label for="filter-stock-status">Status Stok</label>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2 text-end">
-                                                <div class="btn-group shadow-sm w-100 h-100">
-                                                    <button
-                                                        class="btn btn-white text-muted h-100 d-flex align-items-center justify-content-center"
-                                                        title="Export Excel" onclick="exportStock()"><i
-                                                            class="iconoir-download fs-4"></i></button>
-                                                    <button
-                                                        class="btn btn-white text-muted h-100 d-flex align-items-center justify-content-center"
-                                                        title="Print" onclick="printStock()"><i
-                                                            class="iconoir-printer fs-4"></i></button>
-                                                </div>
-                                            </div>
+                                <div class="mb-4">
+                                    <p class="dr-card-title fs-5 mb-1">Daftar Inventori Barang</p>
+                                    <p class="text-muted small mb-0">Informasi detail posisi stok, nilai inventori, dan status ketersediaan produk secara real-time.</p>
+                                </div>
+                                <div class="dr-filter-bar mb-4">
+                                    <div class="dr-filter-group" style="flex:2;min-width:200px;">
+                                        <label class="dr-label">Cari Produk / SKU</label>
+                                        <div class="dr-search-wrap">
+                                            <i class="iconoir-search dr-search-icon"></i>
+                                            <input type="text" id="filter-stock-search" class="dr-input dr-search-input"
+                                                placeholder="Ketik nama produk atau SKU..." onkeyup="handleFilterChange()">
+                                        </div>
+                                    </div>
+
+                                    <div class="dr-filter-group" style="flex:1;min-width:140px;">
+                                        <label class="dr-label">Kategori</label>
+                                        <select id="filter-stock-kategori" class="dr-input" onchange="handleFilterChange()">
+                                            <option value="">Semua Kategori</option>
+                                        </select>
+                                    </div>
+                                    <div class="dr-filter-group" style="flex:1;min-width:140px;">
+                                        <label class="dr-label">Status Stok</label>
+                                        <select id="filter-stock-status" class="dr-input" onchange="handleFilterChange()">
+                                            <option value="">Semua Status</option>
+                                            <option value="safe">Aman</option>
+                                            <option value="low">Menipis (< 5)</option>
+                                            <option value="empty">Habis (0)</option>
+                                        </select>
+                                    </div>
+                                    <div class="dr-filter-actions">
+                                        <label class="dr-label" style="visibility:hidden;">-</label>
+                                        <div class="d-flex gap-2">
+                                            <button class="dr-btn dr-btn-outline dr-btn-icon" title="Export" onclick="exportStock()">
+                                                <i class="iconoir-download"></i>
+                                            </button>
+                                            <button class="dr-btn dr-btn-outline dr-btn-icon" title="Print" onclick="printStock()">
+                                                <i class="iconoir-printer"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Table -->
-                                <div class="table-responsive rounded border-0 shadow-sm">
-                                    <table class="table table-hover align-middle mb-0">
-                                        <thead class="bg-light text-muted small text-uppercase">
+                                <div class="dr-table-container mb-4">
+                                    <table class="dr-table align-middle">
+                                        <thead>
                                             <tr>
-                                                <th class="py-3 ps-4 border-0" style="width: 30%;">Produk</th>
-                                                <th class="py-3 border-0" style="width: 12%;">Supplier</th>
-                                                <th class="py-3 border-0 text-center" style="width: 12%;">Status</th>
-                                                <th class="py-3 border-0 text-center" style="width: 12%;">Stok Fisik</th>
-                                                <th class="py-3 border-0 text-end" style="width: 12%;">Nilai Aset (IDR)
-                                                </th>
-                                                <th class="py-3 border-0 text-end" style="width: 12%;">Nilai Aset Jual
-                                                    (IDR)</th>
-                                                <th class="py-3 border-0 text-end pe-4" style="width: 10%;">Aksi</th>
+                                                <th class="ps-4" style="width:30%;">Produk</th>
+                                                <th style="width:12%;">Supplier</th>
+                                                <th class="text-center" style="width:10%;">Status</th>
+                                                <th class="text-center" style="width:10%;">Stok Fisik</th>
+                                                <th class="text-end" style="width:12%;">Nilai Aset (IDR)</th>
+                                                <th class="text-end" style="width:12%;">Nilai Jual (IDR)</th>
+                                                <th class="text-end pe-4" style="width:10%;">Aksi</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="stock-table-body" class="bg-white">
+                                        <tbody id="stock-table-body">
                                             <tr>
                                                 <td colspan="7" class="text-center py-5 text-muted">
-                                                    <div class="spinner-border text-primary mb-2" role="status"></div>
-                                                    <p class="mb-0 small">Sedang memuat data stok...</p>
+                                                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                                    Sedang memuat data stok...
                                                 </td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
 
-                                <!-- Pagination -->
-                                <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top"
-                                    id="persediaan-pagination-wrapper">
-                                    <span id="stock-pagination-info" class="text-muted small"></span>
-                                    <nav>
-                                        <ul class="pagination pagination-sm mb-0" id="stock-pagination-container"></ul>
-                                    </nav>
+                                <div class="d-flex justify-content-between align-items-center px-2" id="persediaan-pagination-wrapper">
+                                    <span id="stock-pagination-info" class="text-muted small fw-medium"></span>
+                                    <nav><ul class="pagination pagination-sm mb-0 gap-1" id="stock-pagination-container"></ul></nav>
                                 </div>
                             </div>
 
@@ -289,27 +201,28 @@
                             <div class="tab-pane fade" id="tab-lokasi" role="tabpanel">
                                 <div class="d-flex justify-content-between align-items-center mb-4">
                                     <div>
-                                        <h5 class="fw-bold mb-1">Daftar Lokasi Penyimpanan</h5>
+                                        <p class="dr-card-title fs-5 mb-1">Daftar Lokasi Penyimpanan</p>
                                         <p class="text-muted small mb-0">Kelola gudang, rak, dan area penyimpanan stok.</p>
                                     </div>
-                                    <button class="btn btn-primary btn-sm shadow-sm" onclick="showCreateLocationModal()">
-                                        <i class="iconoir-plus-circle me-1"></i> Tambah Lokasi
+                                    <button class="dr-btn dr-btn-primary" onclick="showCreateLocationModal()">
+                                        <i class="iconoir-plus"></i> Tambah Lokasi
                                     </button>
                                 </div>
 
-                                <div class="table-responsive rounded border-0 shadow-sm">
-                                    <table class="table table-hover align-middle mb-0">
-                                        <thead class="bg-light text-muted small text-uppercase">
+                                <div class="dr-table-container mb-4">
+                                    <table class="dr-table align-middle">
+                                        <thead>
                                             <tr>
-                                                <th class="py-3 ps-4 border-0">Nama Lokasi</th>
-                                                <th class="py-3 border-0">Tipe</th>
-                                                <th class="py-3 border-0 text-end pe-4">Aksi</th>
+                                                <th class="ps-4">Nama Lokasi</th>
+                                                <th>Tipe</th>
+                                                <th class="text-end pe-4">Aksi</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="location-table-body" class="bg-white">
+                                        <tbody id="location-table-body">
                                             <tr>
-                                                <td colspan="3" class="text-center py-5 text-muted">Memuat data
-                                                    lokasi...
+                                                <td colspan="3" class="text-center py-5 text-muted">
+                                                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                                    Memuat data lokasi...
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -330,87 +243,61 @@
                                 </div>
 
                                 <!-- Mutation Filters -->
-                                <div class="card bg-light border-0 mb-4">
-                                    <div class="card-body p-3">
-                                        <div class="row g-3 align-items-center">
-                                            <div class="col-md-4">
-                                                <div class="form-floating">
-                                                    <input type="text" id="filter-mutation-search"
-                                                        class="form-control border-0 shadow-none"
-                                                        placeholder="Cari produk..." onkeyup="loadMutationData()">
-                                                    <label for="filter-mutation-search">Cari Produk / SKU</label>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <div class="form-floating">
-                                                    <input type="date" id="filter-mutation-start"
-                                                        class="form-control border-0 shadow-none"
-                                                        onchange="loadMutationData()">
-                                                    <label for="filter-mutation-start">Dari Tanggal</label>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <div class="form-floating">
-                                                    <input type="date" id="filter-mutation-end"
-                                                        class="form-control border-0 shadow-none"
-                                                        onchange="loadMutationData()">
-                                                    <label for="filter-mutation-end">Sampai Tanggal</label>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <div class="form-floating">
-                                                    <select id="filter-mutation-type"
-                                                        class="form-select border-0 shadow-sm"
-                                                        onchange="loadMutationData()">
-                                                        <option value="">Semua Tipe</option>
-                                                        <option value="IN">Masuk (IN)</option>
-                                                        <option value="OUT">Keluar (OUT)</option>
-                                                    </select>
-                                                    <label for="filter-mutation-type">Tipe Mutasi</label>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <div class="form-floating">
-                                                    <select id="filter-mutation-location"
-                                                        class="form-select border-0 shadow-sm"
-                                                        onchange="loadMutationData()">
-                                                        <option value="">Semua Lokasi</option>
-                                                    </select>
-                                                    <label for="filter-mutation-location">Lokasi</label>
-                                                </div>
-                                            </div>
+                                <div class="dr-filter-bar mb-4">
+                                    <div class="dr-filter-group" style="flex:2;min-width:200px;">
+                                        <label class="dr-label">Cari Produk / SKU</label>
+                                        <div class="dr-search-wrap">
+                                            <i class="iconoir-search dr-search-icon"></i>
+                                            <input type="text" id="filter-mutation-search" class="dr-input dr-search-input"
+                                                placeholder="Cari produk..." onkeyup="loadMutationData()">
                                         </div>
                                     </div>
+                                    <div class="dr-filter-group" style="flex:1;min-width:140px;">
+                                        <label class="dr-label">Dari Tanggal</label>
+                                        <input type="date" id="filter-mutation-start" class="dr-input" onchange="loadMutationData()">
+                                    </div>
+                                    <div class="dr-filter-group" style="flex:1;min-width:140px;">
+                                        <label class="dr-label">Sampai Tanggal</label>
+                                        <input type="date" id="filter-mutation-end" class="dr-input" onchange="loadMutationData()">
+                                    </div>
+                                    <div class="dr-filter-group" style="flex:1;min-width:130px;">
+                                        <label class="dr-label">Tipe Mutasi</label>
+                                        <select id="filter-mutation-type" class="dr-input" onchange="loadMutationData()">
+                                            <option value="">Semua Tipe</option>
+                                            <option value="IN">Masuk (IN)</option>
+                                            <option value="OUT">Keluar (OUT)</option>
+                                        </select>
+                                    </div>
+
                                 </div>
 
-                                <div class="table-responsive rounded border-0 shadow-sm">
-                                    <table class="table table-hover mb-0 align-middle">
-                                        <thead class="bg-light text-muted small text-uppercase">
+                                <div class="dr-table-container mb-4">
+                                    <table class="dr-table align-middle">
+                                        <thead>
                                             <tr>
-                                                <th class="py-3 ps-4 border-0">Tanggal</th>
-                                                <th class="py-3 border-0">Produk</th>
-                                                <th class="py-3 border-0 text-center">Tipe</th>
-                                                <th class="py-3 border-0 text-center">Qty</th>
-                                                <th class="py-3 border-0">Lokasi</th>
-                                                <th class="py-3 border-0">Aksi</th>
-                                                <th class="py-3 border-0">User</th>
-                                                <th class="py-3 border-0">Catatan</th>
+                                                <th class="ps-4">Tanggal</th>
+                                                <th>Produk</th>
+                                                <th class="text-center">Tipe</th>
+                                                <th class="text-center">Qty</th>
+                                                <th>Lokasi</th>
+                                                <th>Aksi / Referensi</th>
+                                                <th>User</th>
+                                                <th>Catatan</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="mutation-table-body" class="bg-white">
+                                        <tbody id="mutation-table-body">
                                             <tr>
-                                                <td colspan="8" class="text-center py-5 text-muted">Memuat riwayat...
+                                                <td colspan="8" class="text-center py-5 text-muted">
+                                                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                                    Memuat riwayat...
                                                 </td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
-                                <!-- Mutation Pagination -->
-                                <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-                                    <span id="mutation-pagination-info" class="text-muted small"></span>
-                                    <nav>
-                                        <ul class="pagination pagination-sm mb-0" id="mutation-pagination-container"></ul>
-                                    </nav>
+                                <div class="d-flex justify-content-between align-items-center px-2">
+                                    <span id="mutation-pagination-info" class="text-muted small fw-medium"></span>
+                                    <nav><ul class="pagination pagination-sm mb-0 gap-1" id="mutation-pagination-container"></ul></nav>
                                 </div>
                             </div>
                         </div>
@@ -424,13 +311,16 @@
     @include('Stock.Modal._AdjustStock')
     @include('Stock.Modal._LocationModals')
 
-    <!-- FIFO Modal (New) -->
+    <!-- FIFO Modal -->
+    <!-- FIFO Modal -->
     <div class="modal fade" id="modalFifo" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Detail Stok (FIFO)</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="dr-card-title fs-5">
+                        <i class="iconoir-list-select me-2 text-primary"></i> Detail Stok (FIFO)
+                    </h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div id="fifo-content"></div>
@@ -444,10 +334,44 @@
         // State
         let currentPage = 1;
         let currentMutationPage = 1;
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <script>
+        // TomSelect Initialization Helper
+        let tsInstances = {};
+        function initTS(id, icon = 'iconoir-filter') {
+            const el = document.getElementById(id);
+            if (!el) return null;
+            if (tsInstances[id]) tsInstances[id].destroy();
+            
+            tsInstances[id] = new TomSelect(el, {
+                controlInput: null,
+                allowEmptyOption: true,
+                render: {
+                    option: function(data, escape) {
+                        return `<div class="option"><i class="${icon} me-2 text-muted"></i>${escape(data.text)}</div>`;
+                    },
+                    item: function(data, escape) {
+                        return `<div class="item-with-icon"><i class="${icon} me-2 text-primary"></i>${escape(data.text)}</div>`;
+                    }
+                },
+                onChange: function() {
+                    // Manually trigger onchange if exists
+                    const event = new Event('change', { bubbles: true });
+                    el.dispatchEvent(event);
+                }
+            });
+            return tsInstances[id];
+        }
+
         let debounceTimer;
 
         // Init
         document.addEventListener('DOMContentLoaded', function() {
+            // Initial TS Load for static selects
+            initTS('filter-stock-status', 'iconoir-check-circle');
+
             loadStockDashboard();
             loadStockData();
             loadLocations(); // For filter dropdown
@@ -486,6 +410,13 @@
                         document.getElementById('stat-restock-count').innerText = (low + out);
                         document.getElementById('stat-low-stock').innerText = low;
                         document.getElementById('stat-out-stock').innerText = out;
+
+                        // Update Last Updated Time
+                        const now = new Date();
+                        const timeString = now.getHours().toString().padStart(2, '0') + '.' +
+                                         now.getMinutes().toString().padStart(2, '0') + '.' +
+                                         now.getSeconds().toString().padStart(2, '0');
+                        document.getElementById('stockLastUpdated').innerText = timeString;
                     }
                 })
                 .catch(err => console.error('Error loading dashboard:', err));
@@ -502,6 +433,7 @@
             debounceTimer = setTimeout(() => {
                 currentPage = 1;
                 loadStockData();
+                loadMutationData(); // Also refresh mutation data with new global filters
                 loadStockDashboard(); // Update stats based on location filter if needed
             }, 500);
         }
@@ -527,12 +459,10 @@
 
                     if (res.success && res.data.data.length > 0) {
                         res.data.data.forEach(item => {
-                            // Calculate status
                             const locationQty = item.location_qty;
                             const globalQty = item.qty;
-
-                            // Use location_qty if available (even if 0/null), otherwise global
                             let qty = globalQty;
+                            
                             if (location !== '') {
                                 qty = locationQty !== null ? parseFloat(locationQty) : 0;
                             } else {
@@ -541,49 +471,49 @@
 
                             let statusBadge = '';
                             if (qty <= 0) {
-                                statusBadge =
-                                    '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">Habis</span>';
+                                statusBadge = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">Habis</span>';
                             } else if (qty < 5) {
-                                statusBadge =
-                                    '<span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3">Menipis</span>';
+                                statusBadge = '<span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3">Menipis</span>';
                             } else {
-                                statusBadge =
-                                    '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">Aman</span>';
+                                statusBadge = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">Aman</span>';
                             }
 
-                            // Optional: Client-side filter for status (simple implementation)
                             if (status === 'empty' && qty > 0) return;
                             if (status === 'low' && (qty <= 0 || qty >= 5)) return;
                             if (status === 'safe' && qty < 5) return;
 
                             const tr = document.createElement('tr');
                             tr.innerHTML = `
-                                                                                                                    <td class="ps-4">
-                                                                                                                        <div class="d-flex align-items-center">
-                                                                                                                            <div class="flex-shrink-0">
-                                                                                                                                ${item.foto_produk
-                                    ? `<img src="/storage/${item.foto_produk}" class="rounded border" style="width: 48px; height: 48px; object-fit: cover;">`
-                                    : `<div class="bg-light rounded d-flex align-items-center justify-content-center text-muted border" style="width: 48px; height: 48px;"><i class="iconoir-box-iso fs-4"></i></div>`
-                                }
-                                                                                                                            </div>
-                                                                                                                            <div class="flex-grow-1 ms-3">
-                                                                                                                                <h6 class="mb-0 fw-bold text-dark">${item.nama_produk}</h6>
-                                                                                                                                <small class="text-muted d-block">${item.sku_kode} <span class="mx-1">•</span> <span class="badge bg-light text-secondary border">${item.category?.nama_kategori || '-'}</span></small>
-                                                                                                                            </div>
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                    <td class="small">${item.supplier?.nama || '-'}</td>
-                                                                                                                    <td class="text-center">${statusBadge}</td>
-                                                                                                                    <td class="text-center fw-bold fs-6">${new Intl.NumberFormat('id-ID').format(qty)} <small class="text-muted fw-normal">${item.satuan}</small></td>
-                                                                                                                    <td class="text-end text-muted font-monospace">${formatCurrency(qty * item.harga_beli)}</td>
-                                                                                                                    <td class="text-end text-muted font-monospace">${formatCurrency(qty * (item.harga_jual || 0))}</td>
-                                                                                                                    <td class="text-end pe-4">
-                                                                                                                        <div class="btn-group">
-                                                                                                                            <button class="btn btn-sm btn-light border" onclick="showFifoDetail(${item.id})" title="Detail FIFO"><i class="iconoir-list"></i></button>
-                                                                                                                            <button class="btn btn-sm btn-light border" onclick="showAdjustStockModal(${item.id}, '${item.nama_produk}', '${item.sku_kode}', ${qty})" title="Adjust"><i class="iconoir-edit-pencil"></i></button>
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                `;
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            ${item.foto_produk
+                                                ? `<img src="/storage/${item.foto_produk}" class="rounded border" style="width: 48px; height: 48px; object-fit: cover;">`
+                                                : `<div class="bg-light rounded d-flex align-items-center justify-content-center text-muted border" style="width: 48px; height: 48px;"><i class="iconoir-box-iso fs-4"></i></div>`
+                                            }
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-0 fw-bold text-dark">${item.nama_produk}</h6>
+                                            <small class="text-muted d-block">${item.sku_kode} <span class="mx-1">•</span> <span class="badge bg-light text-secondary border fw-medium">${item.category?.nama_kategori || '-'}</span></small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="small text-muted">${item.supplier?.nama || '-'}</td>
+                                <td class="text-center">${statusBadge}</td>
+                                <td class="text-center fw-bold fs-6">${new Intl.NumberFormat('id-ID').format(qty)} <small class="text-muted fw-normal">${item.satuan}</small></td>
+                                <td class="text-end text-muted font-monospace">${formatCurrency(qty * item.harga_beli)}</td>
+                                <td class="text-end text-muted font-monospace">${formatCurrency(qty * (item.harga_jual || 0))}</td>
+                                <td class="text-end pe-4">
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <button class="dr-btn dr-btn-outline" style="padding: 6px 10px; min-height: unset; border-radius: 8px;" onclick="showFifoDetail(${item.id})" title="Detail FIFO">
+                                            <i class="iconoir-list" style="font-size: 16px;"></i>
+                                        </button>
+                                        <button class="dr-btn dr-btn-primary" style="padding: 6px 10px; min-height: unset; border-radius: 8px;" onclick="showAdjustStockModal(${item.id}, '${item.nama_produk}', '${item.sku_kode}', ${qty})" title="Adjust">
+                                            <i class="iconoir-edit-pencil" style="font-size: 16px;"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            `;
                             tbody.appendChild(tr);
                         });
 
@@ -608,40 +538,30 @@
 
         // --- LOCATIONS ---
         function loadLocations() {
-            // Populate Dropdown Filter
+            // Populate Dropdown Filter (Hero)
             fetch('{{ route('stock-location-api.index') }}?per_page=1000')
                 .then(res => res.json())
                 .then(data => {
+                    // Populate Dropdown Filter (Hero)
                     const select = document.getElementById('filter-stock-location');
-                    const selectMut = document.getElementById('filter-mutation-location');
+                    
+                    // Always start with "Semua Gudang"
+                    select.innerHTML = '<option value="" selected>Semua Gudang</option>';
 
-                    // Keep first option
-                    const first = select.firstElementChild;
-                    select.innerHTML = '';
-                    select.appendChild(first);
-
-                    if (selectMut) {
-                        const firstMut = selectMut.firstElementChild;
-                        selectMut.innerHTML = '';
-                        selectMut.appendChild(firstMut);
+                    if (data && data.data) {
+                        data.data.forEach(loc => {
+                            const opt = document.createElement('option');
+                            opt.value = loc.id;
+                            opt.textContent = loc.name;
+                            select.appendChild(opt);
+                        });
                     }
 
-                    data.data.forEach(loc => {
-                        const opt = document.createElement('option');
-                        opt.value = loc.id;
-                        opt.textContent = loc.name;
-                        select.appendChild(opt);
+                    // Also populate table in Location Tab
+                    renderLocationTable(data.data || []);
 
-                        if (selectMut) {
-                            const optMut = document.createElement('option');
-                            optMut.value = loc.id;
-                            optMut.textContent = loc.name;
-                            selectMut.appendChild(optMut);
-                        }
-                    });
-
-                    // Also populate table
-                    renderLocationTable(data.data);
+                    // Re-init TomSelect
+                    initTS('filter-stock-location', 'iconoir-map-pin');
                 });
         }
 
@@ -672,8 +592,7 @@
             const start = document.getElementById('filter-mutation-start').value;
             const end = document.getElementById('filter-mutation-end').value;
             const type = document.getElementById('filter-mutation-type').value;
-            const location = document.getElementById('filter-mutation-location') ? document.getElementById(
-                'filter-mutation-location').value : '';
+            const location = document.getElementById('filter-stock-location').value;
             const search = document.getElementById('filter-mutation-search') ? document.getElementById(
                 'filter-mutation-search').value : '';
 
@@ -907,6 +826,9 @@
                             opt.textContent = cat.nama_kategori;
                             select.appendChild(opt);
                         });
+                        
+                        // Re-init TomSelect
+                        initTS('filter-stock-kategori', 'iconoir-nav-arrow-right');
                     }
                 })
                 .catch(err => {
@@ -929,15 +851,19 @@
             if (!data || !data.links) return;
 
             if (info) {
-                info.innerText = `Menampilkan ${data.from || 0} sampai ${data.to || 0} dari ${data.total} data`;
+                info.innerHTML = `Menampilkan <span class="text-dark fw-bold">${data.from || 0}</span> - <span class="text-dark fw-bold">${data.to || 0}</span> dari <span class="text-dark fw-bold">${data.total}</span> data`;
             }
 
             let html = '';
-            data.links.forEach(link => {
+            data.links.forEach((link, index) => {
                 const activeClass = link.active ? 'active' : '';
                 const disabledClass = !link.url ? 'disabled' : '';
 
-                // Extract page number from URL
+                // Label adjustments
+                let label = link.label;
+                if (label.includes('Previous')) label = '<i class="iconoir-nav-arrow-left"></i>';
+                if (label.includes('Next')) label = '<i class="iconoir-nav-arrow-right"></i>';
+
                 let pageNum = 1;
                 if (link.url) {
                     const url = new URL(link.url);
@@ -948,7 +874,7 @@
 
                 html += `
                     <li class="page-item ${activeClass} ${disabledClass}">
-                        <button class="page-link" ${onclick}>${link.label}</button>
+                        <button class="page-link d-flex align-items-center justify-content-center" style="min-width: 32px; height: 32px; border-radius: 8px !important;" ${onclick}>${label}</button>
                     </li>`;
             });
 

@@ -3,26 +3,28 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="location-modal-title">Buat Lokasi Stok</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="dr-card-title fs-5" id="location-modal-title">
+                    <i class="iconoir-map-pin me-2 text-primary"></i> Buat Lokasi Stok
+                </h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="location-id">
-                <div class="mb-3">
-                    <label class="small fw-bold">Nama Lokasi</label>
-                    <input type="text" id="location-name" class="form-control" placeholder="Contoh: Gudang Utama">
+                <div class="mb-4">
+                    <label class="dr-label mb-2">Nama Lokasi</label>
+                    <input type="text" id="location-name" class="dr-input" placeholder="Contoh: Gudang Utama">
                 </div>
-                <div class="mb-3">
-                    <label class="small fw-bold">Tipe Lokasi</label>
-                    <select id="location-type" class="form-select">
-                        <option value="stock">Stock</option>
-                        <option value="virtual">Virtual</option>
+                <div class="mb-0">
+                    <label class="dr-label mb-2">Tipe Lokasi</label>
+                    <select id="location-type" class="dr-input">
+                        <option value="stock">Gudang / Stok Fisik</option>
+                        <option value="virtual">Virtual / Dropship</option>
                     </select>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                <button class="btn btn-primary btn-sm" onclick="submitLocation()">Simpan</button>
+            <div class="modal-footer gap-2">
+                <button class="dr-btn dr-btn-outline grow justify-content-center" data-bs-dismiss="modal">Batal</button>
+                <button class="dr-btn dr-btn-primary grow justify-content-center" onclick="submitLocation()">Simpan</button>
             </div>
         </div>
     </div>
@@ -33,35 +35,43 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Persediaan Awal</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="dr-card-title fs-5">
+                    <i class="iconoir-add-database me-2 text-success"></i> Persediaan Awal
+                </h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="opening-stock-location-id">
-                <div class="mb-3">
-                    <label class="small fw-bold">Lokasi</label>
-                    <input type="text" id="opening-stock-location-name" class="form-control" readonly>
+                <div class="mb-4">
+                    <label class="dr-label mb-2">Lokasi Terpilih</label>
+                    <div class="position-relative">
+                        <input type="text" id="opening-stock-location-name" class="dr-input bg-light" style="background-color: #f1f1f4 !important;" readonly>
+                        <i class="iconoir-lock position-absolute end-0 top-50 translate-middle-y me-3 text-muted small"></i>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label class="small fw-bold">Pilih Produk</label>
-                    <select id="opening-stock-product-id" class="form-select select2-opening">
+                <div class="mb-4">
+                    <label class="dr-label mb-2">Pilih Produk</label>
+                    <select id="opening-stock-product-id" class="dr-input select2-opening">
                         <option value="">-- Pilih Produk --</option>
                     </select>
                 </div>
-                <div class="row g-3">
+                <div class="row g-3 mb-0">
                     <div class="col-md-6">
-                        <label class="small fw-bold">Kuantitas</label>
-                        <input type="number" id="opening-stock-qty" class="form-control" min="1" value="1">
+                        <label class="dr-label mb-2">Kuantitas</label>
+                        <input type="number" id="opening-stock-qty" class="dr-input" min="1" value="1">
                     </div>
                     <div class="col-md-6">
-                        <label class="small fw-bold">Harga Beli (Satuan)</label>
-                        <input type="number" id="opening-stock-cost" class="form-control" min="0">
+                        <label class="dr-label mb-2">Harga Beli (Satuan)</label>
+                        <div class="position-relative">
+                            <span class="position-absolute start-0 top-50 translate-middle-y ms-3 text-muted small fw-bold">Rp</span>
+                            <input type="number" id="opening-stock-cost" class="dr-input ps-5" min="0" placeholder="0">
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                <button class="btn btn-primary btn-sm" onclick="submitOpeningStock()">Simpan</button>
+            <div class="modal-footer gap-2">
+                <button class="dr-btn dr-btn-outline grow justify-content-center" data-bs-dismiss="modal">Batal</button>
+                <button class="dr-btn dr-btn-primary grow justify-content-center" onclick="submitOpeningStock()">Simpan</button>
             </div>
         </div>
     </div>
@@ -72,39 +82,44 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Stok Opname</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="dr-card-title fs-5">
+                    <i class="iconoir-search-window me-2 text-warning"></i> Stok Opname
+                </h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="opname-location-id">
-                <div class="mb-3">
-                    <label class="small fw-bold">Lokasi</label>
-                    <input type="text" id="opname-location-name" class="form-control" readonly>
+                <div class="mb-4">
+                    <label class="dr-label mb-2">Lokasi Terpilih</label>
+                    <div class="position-relative">
+                        <input type="text" id="opname-location-name" class="dr-input bg-light" style="background-color: #f1f1f4 !important;" readonly>
+                        <i class="iconoir-lock position-absolute end-0 top-50 translate-middle-y me-3 text-muted small"></i>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label class="small fw-bold">Pilih Produk</label>
-                    <select id="opname-product-id" class="form-select select2-opname">
+                <div class="mb-4">
+                    <label class="dr-label mb-2">Pilih Produk</label>
+                    <select id="opname-product-id" class="dr-input select2-opname">
                         <option value="">-- Pilih Produk --</option>
                     </select>
                 </div>
-                <div class="row g-3">
+                <div class="row g-3 mb-4">
                     <div class="col-md-6">
-                        <label class="small fw-bold">Stok Tercatat</label>
-                        <input type="text" id="opname-qty-current" class="form-control" readonly value="0">
+                        <label class="dr-label mb-2">Stok Tercatat</label>
+                        <input type="text" id="opname-qty-current" class="dr-input bg-light" style="background-color: #f1f1f4 !important;" readonly value="0">
                     </div>
                     <div class="col-md-6">
-                        <label class="small fw-bold">Stok Fisik</label>
-                        <input type="number" id="opname-qty-physical" class="form-control" min="0">
+                        <label class="dr-label mb-2">Stok Fisik</label>
+                        <input type="number" id="opname-qty-physical" class="dr-input" min="0" placeholder="0">
                     </div>
                 </div>
-                <div class="mt-3">
-                    <label class="small fw-bold">Catatan</label>
-                    <textarea id="opname-note" class="form-control" rows="2" placeholder="Alasan perbedaan stok..."></textarea>
+                <div class="mb-0">
+                    <label class="dr-label mb-2">Catatan</label>
+                    <textarea id="opname-note" class="dr-input" rows="2" style="height: auto;" placeholder="Alasan perbedaan stok..."></textarea>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                <button class="btn btn-primary btn-sm" onclick="submitStockOpname()">Simpan</button>
+            <div class="modal-footer gap-2">
+                <button class="dr-btn dr-btn-outline grow justify-content-center" data-bs-dismiss="modal">Batal</button>
+                <button class="dr-btn dr-btn-primary grow justify-content-center" onclick="submitStockOpname()">Simpan</button>
             </div>
         </div>
     </div>

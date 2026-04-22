@@ -23,20 +23,21 @@
     <style>
         :root {
             /* DeJava Design System Tokens */
-            --dr-primary: #007AFF;
+            --dr-primary: #181818;
             --dr-success: #27ae60;
             --dr-danger: #d63031;
             --dr-warning: #e67e22;
             --dr-info: #2980b9;
-            --dr-bg: #F2F2F7;
+            --dr-bg: #ffffff;
             --dr-card-bg: #ffffff;
-            --dr-text: #1d1d1f;
-            --dr-text-muted: #86868b;
-            --dr-line: rgba(0, 0, 0, 0.05);
-            --dr-line-strong: rgba(0, 0, 0, 0.1);
-            --dr-radius: 16px;
-            --dr-radius-sm: 12px;
-            --dr-shadow: 0 8px 30px rgba(0,0,0,0.04);
+            --dr-panel-soft: #f9fafb;
+            --dr-text: #181818;
+            --dr-text-muted: #8f8a83;
+            --dr-line: #f0f0f0;
+            --dr-line-strong: #e5e5e5;
+            --dr-radius: 12px;
+            --dr-radius-sm: 8px;
+            --dr-shadow: 0 22px 50px rgba(34, 28, 21, 0.08);
             --sidebar-width: 260px;
             
             /* Legacy support */
@@ -161,6 +162,16 @@
             padding-top: 70px;
             transition: all 0.3s ease;
             min-height: 100vh;
+            background: #ffffff !important; /* Force white background for consistency */
+        }
+
+        .dr-page-shell {
+            background: #ffffff;
+            border: 0;
+            border-radius: 0;
+            min-height: calc(100vh - 80px);
+            box-shadow: none;
+            padding: 12px 24px 24px;
         }
 
         body.sidebar-desktop-collapsed .startbar {
@@ -222,7 +233,7 @@
         }
 
         .dr-btn-primary { background: var(--dr-primary); color: #fff; }
-        .dr-btn-primary:hover { background: #0056CC; transform: translateY(-1px); }
+        .dr-btn-primary:hover { background: #333333; transform: translateY(-1px); }
         
         .dr-btn-success { background: var(--dr-success); color: #fff; }
         .dr-btn-success:hover { background: #219150; transform: translateY(-1px); }
@@ -237,11 +248,230 @@
         }
         .dr-btn-outline:hover { background: var(--dr-line); }
 
-        /* 3. Modern Data Table */
+        .dr-btn-icon {
+            width: 42px;
+            height: 42px;
+            padding: 0 !important;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1.5px solid var(--dr-line) !important;
+        }
+
+        /* 3. Segmented Tabs (Premium Style) */
+        .dr-tabs-segmented {
+            display: inline-flex;
+            background: #f1f1f4;
+            padding: 4px;
+            border-radius: 12px;
+            gap: 2px;
+            border: 1px solid var(--dr-line);
+        }
+
+        .dr-tabs-segmented .nav-link {
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 8px 18px !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            color: var(--dr-text-muted) !important;
+            transition: all 0.2s ease !important;
+            background: transparent !important;
+            margin: 0 !important;
+        }
+
+        .dr-tabs-segmented .nav-link.active {
+            background: #ffffff !important;
+            color: var(--dr-text) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        .dr-tabs-segmented .nav-link:hover:not(.active) {
+            color: var(--dr-text) !important;
+            background: rgba(255,255,255,0.5) !important;
+        }
+
+        /* 5. Premium Modal Styling */
+        .modal-backdrop {
+            background-color: rgba(255, 255, 255, 0.4) !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+        }
+
+        .modal-content {
+            background: #ffffff !important;
+            border: 1px solid var(--dr-line) !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08) !important;
+            border-radius: var(--dr-radius) !important;
+        }
+
+        .modal-header {
+            border: none !important;
+            padding: 24px 24px 0 !important;
+        }
+
+        .modal-body {
+            padding: 24px !important;
+        }
+
+        .modal-footer {
+            border: none !important;
+            padding: 0 24px 24px !important;
+        }
+
+        /* 6. Dashboard Components */
+        .dr-stat-card {
+            padding: 14px 18px 12px;
+            min-height: auto;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+            border: 1px solid var(--dr-line);
+            border-radius: var(--dr-radius);
+            box-shadow: var(--dr-shadow);
+            transition: all 0.2s ease;
+        }
+
+        .dr-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(33, 29, 25, 0.08);
+        }
+
+        .dr-stat-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--dr-line);
+        }
+
+        .dr-stat-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--dr-line);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #fbfaf8;
+            color: var(--dr-text);
+            font-size: 16px;
+            flex: 0 0 auto;
+            order: 2;
+        }
+
+        .dr-stat-title {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--dr-text);
+            order: 1;
+        }
+
+        .dr-stat-value {
+            margin: 12px 0 6px;
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+            color: var(--dr-text);
+            letter-spacing: -0.5px;
+        }
+
+        .dr-stat-footer {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--dr-text-muted);
+        }
+
+        /* 4. Header & Hero Components */
+        .dr-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--dr-text-muted);
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .dr-breadcrumb strong {
+            color: var(--dr-text);
+            font-weight: 700;
+        }
+
+        .dr-breadcrumb-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 1px solid var(--dr-line);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--dr-text);
+            font-size: 13px;
+        }
+
+        .dr-hero {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .dr-title {
+            margin: 0 0 10px;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.2;
+            color: var(--dr-text);
+        }
+
+        .dr-subtitle {
+            margin: 0;
+            font-size: 15px;
+            color: var(--dr-text-muted);
+            font-weight: 500;
+        }
+
+        .dr-last-updated {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--dr-text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dr-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .dr-btn--icon {
+            width: 42px !important;
+            height: 42px !important;
+            justify-content: center;
+            padding: 0 !important;
+            background: #1f1f1f !important;
+            color: #fff !important;
+            border-color: #1f1f1f !important;
+        }
+
+        /* 4. Modern Data Table */
         .dr-table-container {
-            border-radius: var(--dr-radius-sm);
+            border-radius: var(--dr-radius);
             overflow: hidden;
             border: 1px solid var(--dr-line);
+            box-shadow: var(--dr-shadow);
+            background: #fff;
         }
 
         .dr-table {
@@ -286,13 +516,15 @@
 
         .dr-input {
             width: 100%;
-            padding: 12px 16px;
+            height: 42px;
+            padding: 0 16px;
             border-radius: var(--dr-radius-sm);
-            border: 1.5px solid var(--dr-line-strong);
+            border: 1.5px solid var(--dr-line);
             font-size: 14px;
             font-weight: 500;
             transition: all 0.2s ease;
             background: #fff;
+            color: var(--dr-text);
         }
 
         .dr-input:focus {
@@ -300,6 +532,86 @@
             border-color: var(--dr-primary);
             box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
         }
+
+        /* 6. Filter Bar Component */
+        .dr-filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 12px;
+            padding: 16px 20px;
+            background: #ffffff; /* Changed to white */
+            border: 1px solid var(--dr-line);
+            border-radius: var(--dr-radius-sm);
+        }
+
+        .dr-filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dr-filter-actions {
+            display: flex;
+            flex-direction: column;
+            margin-left: auto;
+        }
+
+        /* Search Input with Icon Inside */
+        .dr-search-wrap {
+            position: relative;
+        }
+
+        .dr-search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--dr-text-muted);
+            font-size: 16px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .dr-search-input {
+            padding-left: 42px !important;
+        }
+
+        /* TomSelect Integration with .dr-input */
+        .ts-wrapper .ts-control {
+            height: 42px !important;
+            padding: 0 16px !important;
+            display: flex !important;
+            align-items: center !important;
+            border-radius: var(--dr-radius-sm) !important;
+            border: 1.5px solid var(--dr-line) !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            background: #fff !important;
+            min-height: unset !important;
+            box-shadow: none !important;
+            color: var(--dr-text) !important;
+        }
+
+        .ts-wrapper.focus .ts-control,
+        .ts-wrapper.input-active .ts-control {
+            border-color: var(--dr-primary) !important;
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1) !important;
+        }
+
+        .ts-dropdown {
+            border: 1px solid var(--dr-line-strong) !important;
+            border-radius: var(--dr-radius-sm) !important;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08) !important;
+            font-size: 14px !important;
+            z-index: 2000 !important;
+        }
+
+        .ts-dropdown .option:hover,
+        .ts-dropdown .option.active {
+            background: rgba(0, 122, 255, 0.08) !important;
+            color: var(--dr-primary) !important;
+        }
+
 
         /* Mobile Hamburger - Better touch target */
         .mobile-menu-btn {

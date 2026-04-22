@@ -1,57 +1,55 @@
 <div class="tab-pane fade show active" id="tab-produk" role="tabpanel">
 
-    <div class="row g-2 mb-3">
-        <!-- Filter Controls -->
-        <div class="col-md-3">
-            <label class="small fw-bold text-muted">Cari Barang</label>
-            <div class="input-group">
-                <span class="input-group-text"><i class="fa fa-search"></i></span>
-                <input type="text" id="filter-produk-search" class="form-control"
-                    placeholder="Nama atau SKU...">
+    <!-- Modern Filter Controls -->
+    <div class="dr-filter-bar mb-4">
+        <div class="dr-filter-group" style="flex: 2; min-width: 200px;">
+            <label class="dr-label">Cari Barang</label>
+            <div class="dr-search-wrap">
+                <i class="iconoir-search dr-search-icon"></i>
+                <input type="text" id="filter-produk-search" class="dr-input dr-search-input"
+                    placeholder="Ketik nama atau SKU...">
             </div>
         </div>
-        <div class="col-md-2">
-            <label class="small fw-bold text-muted">Supplier</label>
-            <select id="filter-produk-supplier" class="form-select">
-                <option value="">Semua</option>
+        <div class="dr-filter-group" style="flex: 1; min-width: 150px;">
+            <label class="dr-label">Supplier</label>
+            <select id="filter-produk-supplier" class="dr-input">
+                <option value="">Semua Supplier</option>
             </select>
         </div>
-        <div class="col-md-2">
-            <label class="small fw-bold text-muted">Brand</label>
-            <select id="filter-produk-brand" class="form-select">
-                <option value="">Semua</option>
+        <div class="dr-filter-group" style="flex: 1; min-width: 150px;">
+            <label class="dr-label">Brand</label>
+            <select id="filter-produk-brand" class="dr-input">
+                <option value="">Semua Brand</option>
             </select>
         </div>
-        <div class="col-md-2">
-            <label class="small fw-bold text-muted">Kategori</label>
-            <select id="filter-produk-kategori" class="form-select">
-                <option value="">Semua</option>
+        <div class="dr-filter-group" style="flex: 1; min-width: 150px;">
+            <label class="dr-label">Kategori</label>
+            <select id="filter-produk-kategori" class="dr-input">
+                <option value="">Semua Kategori</option>
             </select>
         </div>
-        
-        <!-- Action Buttons -->
-        <div class="col-md-3">
-            <label class="small fw-bold text-muted d-block">&nbsp;</label>
+        <div class="dr-filter-actions">
+            <label class="dr-label" style="visibility: hidden;">-</label>
             <div class="d-flex gap-2">
-                <button onclick="resetFilterProduk()" class="btn btn-outline-secondary" title="Reset Filter">
-                    <i class="fa fa-undo"></i>
+                <button onclick="resetFilterProduk()" class="dr-btn dr-btn-outline" title="Reset Filter">
+                    <i class="iconoir-undo"></i>
                 </button>
-                <div class="vr"></div>
-                <button onclick="exportProduk()" class="btn btn-outline-success" title="Export Excel">
-                    <i class="fa fa-download"></i>
+                <button onclick="exportProduk()" class="dr-btn dr-btn-outline" title="Export Excel">
+                    <i class="iconoir-download"></i>
                 </button>
-                <button class="btn btn-primary w-100 fw-bold" onclick="tambahMassalProduk()">
-                    <i class="fa fa-plus me-1"></i> TAMBAH
+                <button class="dr-btn dr-btn-primary" onclick="tambahMassalProduk()">
+                    <i class="iconoir-plus"></i> TAMBAH
                 </button>
             </div>
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped table-hover align-middle">
-            <thead class="table-light">
+    <!-- Enhanced Data Table -->
+    <div class="dr-table-container mb-4">
+        <table class="dr-table align-middle">
+            <thead>
                 <tr>
-                    <th width="120" style="cursor: pointer;" onclick="toggleSort('sku_kode')">SKU <span id="sort-icon-sku_kode"></span></th>
+                    <th width="120" class="ps-4" style="cursor: pointer;" onclick="toggleSort('sku_kode')">SKU <span id="sort-icon-sku_kode"></span></th>
                     <th>Supplier</th>
                     <th>Brand</th>
                     <th style="cursor: pointer;" onclick="toggleSort('nama_produk')">Nama Produk <span id="sort-icon-nama_produk"></span></th>
@@ -63,21 +61,24 @@
                     <th class="text-end" style="cursor: pointer;" onclick="toggleSort('harga_jual')">Harga Jual <span id="sort-icon-harga_jual"></span></th>
                     <th class="text-end" style="cursor: pointer;" onclick="toggleSort('harga_tempo')">Harga Tempo <span id="sort-icon-harga_tempo"></span></th>
                     <th>COA</th>
-                    <th width="60" class="text-center">Aksi</th>
+                    <th width="60" class="text-center pe-4">Aksi</th>
                 </tr>
             </thead>
             <tbody id="produk-table-body">
                 <tr>
-                    <td colspan="12" class="text-center text-muted">Memuat data...</td>
+                    <td colspan="13" class="text-center text-muted py-5">
+                        <div class="spinner-border spinner-border-sm text-primary me-2"></div> Memuat data...
+                    </td>
                 </tr>
             </tbody>
         </table>
     </div>
 
+    <!-- Pagination -->
     <div class="d-flex justify-content-between align-items-center px-2">
-        <span id="produk-pagination-info" class="text-muted small"></span>
+        <span id="produk-pagination-info" class="text-muted small fw-medium"></span>
         <nav>
-            <ul class="pagination pagination-sm mb-0" id="produk-pagination-container"></ul>
+            <ul class="pagination pagination-sm mb-0 gap-1" id="produk-pagination-container"></ul>
         </nav>
     </div>
 
@@ -87,10 +88,10 @@
 
 <template id="produk-row-display-template">
     <tr>
-        <td class="col-sku fw-bold text-primary"></td>
+        <td class="col-sku fw-bold text-primary ps-4"></td>
         <td class="col-supplier"></td>
         <td class="col-brand"></td>
-        <td class="col-nama"></td>
+        <td class="col-nama fw-semibold"></td>
         <td class="col-kategori"></td>
         <td class="col-kemasan text-center"></td>
         <td class="col-satuan text-center"></td>
@@ -99,21 +100,23 @@
         <td class="col-jual text-end"></td>
         <td class="col-tempo text-end"></td>
         <td class="col-coa text-start"></td>
-        <td class="text-center">
+        <td class="text-center pe-4">
             <div class="dropdown">
-                <button class="btn btn-sm btn-light border shadow-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fa fa-cog text-muted"></i>
+                <button class="dr-btn dr-btn-outline p-2 shadow-none border-0 bg-light-subtle dropdown-toggle no-caret" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="iconoir-more-vert fs-5"></i>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-2" style="border-radius: 12px; min-width: 160px;">
                     <li>
-                        <a class="dropdown-item btn-edit" href="javascript:void(0)">
-                            <i class="fa fa-edit me-2 text-warning"></i> Edit Produk
+                        <a class="dropdown-item btn-edit d-flex align-items-center gap-2 py-2 px-3 rounded-2" href="javascript:void(0)">
+                            <i class="iconoir-edit-pencil text-warning"></i> 
+                            <span class="fw-semibold" style="font-size: 13px;">Edit Produk</span>
                         </a>
                     </li>
-                    <li><hr class="dropdown-divider"></li>
+                    <li><hr class="dropdown-divider opacity-50"></li>
                     <li>
-                        <a class="dropdown-item text-danger btn-delete" href="javascript:void(0)">
-                            <i class="fa fa-trash me-2"></i> Hapus Produk
+                        <a class="dropdown-item text-danger btn-delete d-flex align-items-center gap-2 py-2 px-3 rounded-2" href="javascript:void(0)">
+                            <i class="iconoir-trash"></i>
+                            <span class="fw-semibold" style="font-size: 13px;">Hapus Produk</span>
                         </a>
                     </li>
                 </ul>
