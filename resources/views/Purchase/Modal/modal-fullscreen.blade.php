@@ -267,6 +267,13 @@
                         </div>
                     </div>
                 </div>
+                <!-- Selected Items Chips -->
+                <div id="selectedStockContainer" class="p-3 border-bottom bg-white d-none" style="max-height: 120px; overflow-y: auto;">
+                    <div class="small text-muted mb-2 fw-bold text-uppercase" style="font-size: 10px; letter-spacing: 0.5px;">
+                        Item Terpilih:
+                    </div>
+                    <div class="d-flex flex-wrap gap-2" id="selectedStockList"></div>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0" id="stockTable">
                         <thead class="bg-light sticky-top">
@@ -285,6 +292,8 @@
                         <tbody id="stockBodyList"></tbody>
                     </table>
                 </div>
+                <div id="stockPagination" class="p-3 bg-light border-top d-flex justify-content-center"></div>
+
             </div>
             <div class="modal-footer bg-light border-top py-3">
                 <div class="d-flex justify-content-between w-100 align-items-center">
@@ -473,6 +482,8 @@
         const checkboxes = document.querySelectorAll('.stock-check:not(:disabled)');
         checkboxes.forEach(chk => {
             chk.checked = el.checked;
+            const data = JSON.parse(chk.dataset.raw);
+            toggleStockSelection(data, el.checked);
         });
     }
 
@@ -1240,12 +1251,133 @@
     }
 
     let stockCache = [];
+    let selectedStockItems = [];
+
+    function toggleStockSelection(item, isChecked) {
+        if (isChecked) {
+            if (!selectedStockItems.find(x => String(x.id) === String(item.id))) {
+                selectedStockItems.push(item);
+            }
+        } else {
+            selectedStockItems = selectedStockItems.filter(x => String(x.id) !== String(item.id));
+        }
+        renderSelectedStockBadges();
+    }
+
+    function renderSelectedStockBadges() {
+        const container = document.getElementById('selectedStockContainer');
+        const list = document.getElementById('selectedStockList');
+        
+        if (selectedStockItems.length === 0) {
+            container.classList.add('d-none');
+            return;
+        }
+
+        container.classList.remove('d-none');
+        list.innerHTML = '';
+
+        selectedStockItems.forEach(item => {
+            const badge = document.createElement('div');
+            badge.className = 'badge bg-primary d-flex align-items-center gap-2 py-2 px-3 rounded-pill shadow-sm animate__animated animate__fadeIn';
+            badge.style.fontSize = '12px';
+            badge.innerHTML = `
+                <span>${item.nama_produk}</span>
+                <i class="fa fa-times-circle cursor-pointer" onclick="deselectStockItem('${item.id}')" style="font-size: 14px; opacity: 0.8;"></i>
+            `;
+            list.appendChild(badge);
+        });
+    }
+
+    window.deselectStockItem = function(id) {
+        selectedStockItems = selectedStockItems.filter(x => String(x.id) !== String(id));
+        renderSelectedStockBadges();
+        
+        const checkboxes = document.querySelectorAll('.stock-check');
+        checkboxes.forEach(chk => {
+            if (String(chk.value) === String(id)) chk.checked = false;
+        });
+    }
+
+    async function fetchStockPage(page = 1) {
+        const searchInput = document.getElementById('stockSearchInput');
+        const categoryFilter = document.getElementById('stockCategoryFilter');
+        const searchTerm = searchInput ? searchInput.value.trim() : '';
+        const categoryId = categoryFilter ? categoryFilter.value : '';
+
+        const tbody = document.getElementById('stockBodyList');
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4"><div class="spinner-border text-primary"></div></td></tr>';
+
+        try {
+            let url = `/api/product-api`;
+            let params = new URLSearchParams({
+                page: page,
+                per_page: 10
+            });
+            if (searchTerm) params.append('search', searchTerm);
+            if (categoryId) params.append('category', categoryId);
+            
+            const res = await fetch(url + '?' + params.toString());
+            const result = await res.json();
+            
+            if (result.success) {
+                const data = result.data.data || result.data;
+                renderStockList(data);
+                if (typeof renderPaginationControls === 'function') {
+                    renderPaginationControls(result.data, 'stockPagination', fetchStockPage);
+                }
+            }
+        } catch (e) {
+            console.error('Fetch stock page failed:', e);
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger p-4">Gagal memuat data</td></tr>';
+        }
+    }
+
+    function renderPaginationControls(data, containerId, fetchFn, arg) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+
+        if (data.last_page <= 1) {
+            container.classList.add('d-none');
+            return;
+        }
+        container.classList.remove('d-none');
+
+        const argStr = (arg !== undefined && arg !== null) ? `${arg}, ` : '';
+
+        let html = '<ul class="pagination pagination-sm mb-0">';
+        html += `<li class="page-item ${data.current_page === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="javascript:void(0)" onclick="${fetchFn.name}(${argStr}${data.current_page - 1})">Prev</a>
+        </li>`;
+
+        for (let i = 1; i <= data.last_page; i++) {
+            if (i === 1 || i === data.last_page || (i >= data.current_page - 2 && i <= data.current_page + 2)) {
+                html += `<li class="page-item ${data.current_page === i ? 'active' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="${fetchFn.name}(${argStr}${i})">${i}</a>
+                </li>`;
+            } else if (i === data.current_page - 3 || i === data.current_page + 3) {
+                html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+            }
+        }
+
+        html += `<li class="page-item ${data.current_page === data.last_page ? 'disabled' : ''}">
+            <a class="page-link" href="javascript:void(0)" onclick="${fetchFn.name}(${argStr}${data.current_page + 1})">Next</a>
+        </li>`;
+
+        html += '</ul>';
+        container.innerHTML = html;
+    }
 
     async function openStockModal() {
         const modalEl = document.getElementById('stockModal');
         const modal = new bootstrap.Modal(modalEl);
+        
+        // Reset selection for this session
+        selectedStockItems = [];
+        renderSelectedStockBadges();
+        
         document.getElementById('stockBodyList').innerHTML =
-            '<tr><td colspan="6" class="text-center p-4"><div class="spinner-border text-primary"></div></td></tr>';
+            '<tr><td colspan="7" class="text-center p-4"><div class="spinner-border text-primary"></div></td></tr>';
         
         showCustomBackdrop();
         modal.show();
@@ -1254,30 +1386,14 @@
             hideCustomBackdrop();
         }, { once: true });
 
-        try {
-            // Gunakan product-api dengan per_page besar untuk mengambil semua stok
-            const res = await fetch('/api/product-api?per_page=1000');
-            const result = await res.json();
-            console.log('Product API Response:', result); // Debug log
+        // Load Categories once
+        loadStockCategories();
+        
+        // Setup Search Listeners
+        setupStockSearch();
 
-            if (result.success) {
-                stockCache = result.data.data || result.data; // Handle pagination structure
-                console.log('Stock Cache:', stockCache); // Debug log
-                renderStockList(stockCache);
-
-                // Load kategori saat modal dibuka
-                loadStockCategories();
-            } else {
-                document.getElementById('stockBodyList').innerHTML =
-                    '<tr><td colspan="6" class="text-center text-danger p-4">API Error: ' + (result.message ||
-                        'Unknown error') + '</td></tr>';
-            }
-        } catch (e) {
-            console.error('Product API Error:', e); // Debug log
-            document.getElementById('stockBodyList').innerHTML =
-                '<tr><td colspan="6" class="text-center text-danger p-4">Gagal load produk: ' + e.message +
-                '</td></tr>';
-        }
+        // Fetch first page
+        fetchStockPage(1);
     }
 
     function renderStockList(data) {
@@ -1293,23 +1409,24 @@
             const tr = clone.querySelector('tr');
             const chk = clone.querySelector('.stock-check');
 
-            // Set Data Checkbox
             chk.value = item.id;
             chk.dataset.raw = JSON.stringify(item);
 
             const qty = Number(item.qty || 0);
 
-            if (existingIds.includes(String(item.id))) {
+            if (selectedStockItems.find(x => String(x.id) === String(item.id)) || existingIds.includes(String(item.id))) {
                 chk.checked = true;
             }
 
-            // Isi Konten
+            chk.addEventListener('change', function() {
+                toggleStockSelection(item, this.checked);
+            });
+
             clone.querySelector('.col-stock-nama').textContent = item.nama_produk;
             clone.querySelector('.col-stock-sku').textContent = item.sku_kode || item.kode_produk || '-';
             clone.querySelector('.col-stock-supplier').textContent = item.supplier?.nama || '-';
             clone.querySelector('.col-stock-kategori').textContent = item.category?.nama_kategori || '-';
-            clone.querySelector('.col-stock-qty').textContent =
-                `${qty} ${item.unit?.nama_unit || ''}`;
+            clone.querySelector('.col-stock-qty').textContent = `${qty} ${item.unit?.nama_unit || ''}`;
             clone.querySelector('.col-stock-harga').textContent = window.financeApp.formatIDR(item.harga_jual);
 
             const trackBadge = clone.querySelector('.col-stock-track');
@@ -1323,61 +1440,29 @@
         if (masterChk) masterChk.checked = false;
     }
 
-    // Setup search functionality - server side search
     function setupStockSearch() {
         const searchInput = document.getElementById('stockSearchInput');
         const categoryFilter = document.getElementById('stockCategoryFilter');
 
-        loadStockCategories();
-
         let stockSearchTimer = null;
         if (searchInput) {
-            searchInput.addEventListener('input', function() {
+            const newSearchInput = searchInput.cloneNode(true);
+            searchInput.parentNode.replaceChild(newSearchInput, searchInput);
+            
+            newSearchInput.addEventListener('input', function() {
                 clearTimeout(stockSearchTimer);
-                const searchTerm = this.value ? this.value.trim() : '';
-                const categoryId = categoryFilter ? categoryFilter.value : '';
-
-                stockSearchTimer = setTimeout(async () => {
-                    try {
-                        let url = `/api/product-api`;
-                        let params = new URLSearchParams();
-                        if (searchTerm) params.append('search', searchTerm);
-                        if (categoryId) params.append('category', categoryId);
-                        
-                        const fullUrl = url + (params.toString() ? '?' + params.toString() : '');
-                        const res = await fetch(fullUrl);
-                        const result = await res.json();
-
-                        if (result.success) {
-                            const data = result.data.data || result.data;
-                            renderStockList(data);
-                        }
-                    } catch (e) {
-                        console.error('Search failed:', e);
-                    }
+                stockSearchTimer = setTimeout(() => {
+                    fetchStockPage(1);
                 }, 500);
             });
         }
 
         if (categoryFilter) {
-            categoryFilter.addEventListener('change', function() {
-                const searchTerm = searchInput ? (searchInput.value ? searchInput.value.trim() : '') : '';
-                const categoryId = this.value ? this.value : '';
-
-                let url = `/api/product-api`;
-                let params = new URLSearchParams();
-                if (searchTerm) params.append('search', searchTerm);
-                if (categoryId) params.append('category', categoryId);
-
-                fetch(url + (params.toString() ? '?' + params.toString() : ''))
-                    .then(res => res.json())
-                    .then(result => {
-                        if (result.success) {
-                            const data = result.data.data || result.data;
-                            renderStockList(data);
-                        }
-                    })
-                    .catch(e => console.error('Filter failed:', e));
+            const newCategoryFilter = categoryFilter.cloneNode(true);
+            categoryFilter.parentNode.replaceChild(newCategoryFilter, categoryFilter);
+            
+            newCategoryFilter.addEventListener('change', function() {
+                fetchStockPage(1);
             });
         }
     }
@@ -1438,7 +1523,6 @@
     });
 
     function addSelectedStocks() {
-        const checked = document.querySelectorAll('.stock-check:checked');
         const target = window.activeStockTarget || 'main'; // 'main' or 'bulk'
 
         let existingIds = [];
@@ -1454,7 +1538,6 @@
                 .map(input => input.value);
         }
 
-        // Smart Placeholder Removal logic
         const tbody = document.getElementById(tbodyId);
         if (tbody) {
             const rows = tbody.querySelectorAll('tr');
@@ -1480,8 +1563,7 @@
             }
         }
 
-        checked.forEach(chk => {
-            const data = JSON.parse(chk.dataset.raw);
+        selectedStockItems.forEach(data => {
             const productId = String(data.id);
 
             if (!existingIds.includes(productId)) {
@@ -1501,7 +1583,7 @@
                         product_id: data.id,
                         id: data.id,
                         nama_produk_manual: data.nama_produk,
-                        harga_jual: data.harga_beli, // Use Purchase Price
+                        harga_jual: data.harga_beli,
                         qty: 1,
                         unit: data.unit?.nama_unit || 'Pcs',
                         product: data

@@ -279,6 +279,13 @@
                         </div>
                     </div>
                 </div>
+                <!-- Selected Items Chips -->
+                <div id="selectedStockContainer" class="p-3 border-bottom bg-white d-none" style="max-height: 120px; overflow-y: auto;">
+                    <div class="small text-muted mb-2 fw-bold text-uppercase" style="font-size: 10px; letter-spacing: 0.5px;">
+                        Item Terpilih:
+                    </div>
+                    <div class="d-flex flex-wrap gap-2" id="selectedStockList"></div>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0" id="stockTable">
                         <thead class="bg-light sticky-top">
@@ -297,6 +304,8 @@
                         <tbody id="stockBodyList"></tbody>
                     </table>
                 </div>
+                <div id="stockPagination" class="p-3 bg-light border-top d-flex justify-content-center"></div>
+
             </div>
             <div class="modal-footer bg-light border-top py-3">
                 <div class="d-flex justify-content-between w-100 align-items-center">
@@ -712,27 +721,34 @@
 
     function renderPaginationControls(data, containerId, fetchFn, arg) {
         const container = document.getElementById(containerId);
+        if (!container) return;
         container.innerHTML = '';
 
-        if (data.last_page <= 1) return;
+        if (data.last_page <= 1) {
+            container.classList.add('d-none');
+            return;
+        }
+        container.classList.remove('d-none');
+
+        const argStr = (arg !== undefined && arg !== null) ? `${arg}, ` : '';
 
         let html = '<ul class="pagination pagination-sm mb-0">';
         html += `<li class="page-item ${data.current_page === 1 ? 'disabled' : ''}">
-            <a class="page-link" href="javascript:void(0)" onclick="${fetchFn.name}(${arg}, ${data.current_page - 1})">Prev</a>
+            <a class="page-link" href="javascript:void(0)" onclick="${fetchFn.name}(${argStr}${data.current_page - 1})">Prev</a>
         </li>`;
 
         for (let i = 1; i <= data.last_page; i++) {
-            if (i === 1 || i === data.last_page || (i >= data.current_page - 1 && i <= data.current_page + 1)) {
+            if (i === 1 || i === data.last_page || (i >= data.current_page - 2 && i <= data.current_page + 2)) {
                 html += `<li class="page-item ${data.current_page === i ? 'active' : ''}">
-                    <a class="page-link" href="javascript:void(0)" onclick="${fetchFn.name}(${arg}, ${i})">${i}</a>
+                    <a class="page-link" href="javascript:void(0)" onclick="${fetchFn.name}(${argStr}${i})">${i}</a>
                 </li>`;
-            } else if (i === data.current_page - 2 || i === data.current_page + 2) {
+            } else if (i === data.current_page - 3 || i === data.current_page + 3) {
                 html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
             }
         }
 
         html += `<li class="page-item ${data.current_page === data.last_page ? 'disabled' : ''}">
-            <a class="page-link" href="javascript:void(0)" onclick="${fetchFn.name}(${arg}, ${data.current_page + 1})">Next</a>
+            <a class="page-link" href="javascript:void(0)" onclick="${fetchFn.name}(${argStr}${data.current_page + 1})">Next</a>
         </li>`;
 
         html += '</ul>';
@@ -788,6 +804,9 @@
         const checkboxes = document.querySelectorAll('.stock-check:not(:disabled)');
         checkboxes.forEach(chk => {
             chk.checked = el.checked;
+            // Trigger manual change to update selectedStockItems
+            const data = JSON.parse(chk.dataset.raw);
+            toggleStockSelection(data, el.checked);
         });
     }
 
@@ -1622,12 +1641,99 @@
 
     // --- Stock Modal Logic ---
     let stockCache = [];
+    let selectedStockItems = []; // Array of product objects: {id, nama_produk, ...}
+
+    function toggleStockSelection(item, isChecked) {
+        if (isChecked) {
+            // Check if already in array to avoid duplicates
+            if (!selectedStockItems.find(x => String(x.id) === String(item.id))) {
+                selectedStockItems.push(item);
+            }
+        } else {
+            selectedStockItems = selectedStockItems.filter(x => String(x.id) !== String(item.id));
+        }
+        renderSelectedStockBadges();
+    }
+
+    function renderSelectedStockBadges() {
+        const container = document.getElementById('selectedStockContainer');
+        const list = document.getElementById('selectedStockList');
+        
+        if (selectedStockItems.length === 0) {
+            container.classList.add('d-none');
+            return;
+        }
+
+        container.classList.remove('d-none');
+        list.innerHTML = '';
+
+        selectedStockItems.forEach(item => {
+            const badge = document.createElement('div');
+            badge.className = 'badge bg-primary d-flex align-items-center gap-2 py-2 px-3 rounded-pill shadow-sm animate__animated animate__fadeIn';
+            badge.style.fontSize = '12px';
+            badge.innerHTML = `
+                <span>${item.nama_produk}</span>
+                <i class="fa fa-times-circle cursor-pointer" onclick="deselectStockItem('${item.id}')" style="font-size: 14px; opacity: 0.8;"></i>
+            `;
+            list.appendChild(badge);
+        });
+    }
+
+    window.deselectStockItem = function(id) {
+        selectedStockItems = selectedStockItems.filter(x => String(x.id) !== String(id));
+        renderSelectedStockBadges();
+        
+        // Uncheck the checkbox if it's currently visible in the table
+        const checkboxes = document.querySelectorAll('.stock-check');
+        checkboxes.forEach(chk => {
+            if (String(chk.value) === String(id)) {
+                chk.checked = false;
+            }
+        });
+    }
+
+    async function fetchStockPage(page = 1) {
+        const searchInput = document.getElementById('stockSearchInput');
+        const categoryFilter = document.getElementById('stockCategoryFilter');
+        const searchTerm = searchInput ? searchInput.value.trim() : '';
+        const categoryId = categoryFilter ? categoryFilter.value : '';
+
+        const tbody = document.getElementById('stockBodyList');
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4"><div class="spinner-border text-primary"></div></td></tr>';
+
+        try {
+            let url = `/api/product-api`;
+            let params = new URLSearchParams({
+                page: page,
+                per_page: 10
+            });
+            if (searchTerm) params.append('search', searchTerm);
+            if (categoryId) params.append('category', categoryId);
+            
+            const res = await fetch(url + '?' + params.toString());
+            const result = await res.json();
+            
+            if (result.success) {
+                const data = result.data.data || result.data;
+                renderStockList(data);
+                renderPaginationControls(result.data, 'stockPagination', fetchStockPage);
+            }
+        } catch (e) {
+            console.error('Fetch stock page failed:', e);
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger p-4">Gagal memuat data</td></tr>';
+        }
+    }
 
     async function openStockModal() {
         const modalEl = document.getElementById('stockModal');
         const modal = new bootstrap.Modal(modalEl);
+        
+        // Reset selection for this session
+        selectedStockItems = [];
+        renderSelectedStockBadges();
+        
         document.getElementById('stockBodyList').innerHTML =
-            '<tr><td colspan="6" class="text-center p-4"><div class="spinner-border text-primary"></div></td></tr>';
+            '<tr><td colspan="7" class="text-center p-4"><div class="spinner-border text-primary"></div></td></tr>';
         
         showCustomBackdrop();
         modal.show();
@@ -1636,95 +1742,40 @@
             hideCustomBackdrop();
         }, { once: true });
 
-        try {
-            // Gunakan product-api seperti di halaman barang
-            const res = await fetch('/api/product-api');
-            const result = await res.json();
-            console.log('Product API Response:', result); // Debug log
+        // Load Categories once
+        loadStockCategories();
+        
+        // Setup Search Listeners
+        setupStockSearch();
 
-            if (result.success) {
-                stockCache = result.data.data || result.data; // Handle pagination structure
-                console.log('Stock Cache:', stockCache); // Debug log
-                renderStockList(stockCache);
-
-                // Setup search functionality
-                setupStockSearch();
-            } else {
-                document.getElementById('stockBodyList').innerHTML =
-                    '<tr><td colspan="6" class="text-center text-danger p-4">API Error: ' + (result.message ||
-                        'Unknown error') + '</td></tr>';
-            }
-        } catch (e) {
-            console.error('Product API Error:', e); // Debug log
-            document.getElementById('stockBodyList').innerHTML =
-                '<tr><td colspan="6" class="text-center text-danger p-4">Gagal load produk: ' + e.message +
-                '</td></tr>';
-        }
+        // Fetch first page
+        fetchStockPage(1);
     }
 
     function setupStockSearch() {
-        // Setup search input untuk pencarian real-time
         const searchInput = document.getElementById('stockSearchInput');
         const categoryFilter = document.getElementById('stockCategoryFilter');
 
-        // Load kategori options
-        loadStockCategories();
-
         let stockSearchTimer = null;
         if (searchInput) {
-            searchInput.addEventListener('input', function() {
+            // Remove old listeners to avoid duplicates if re-called
+            const newSearchInput = searchInput.cloneNode(true);
+            searchInput.parentNode.replaceChild(newSearchInput, searchInput);
+            
+            newSearchInput.addEventListener('input', function() {
                 clearTimeout(stockSearchTimer);
-                const searchTerm = this.value ? this.value.trim() : '';
-                const categoryId = categoryFilter ? categoryFilter.value : '';
-
-                stockSearchTimer = setTimeout(async () => {
-                    console.log('Search triggered after debounce:', { searchTerm, categoryId });
-                    try {
-                        let url = `/api/product-api`;
-                        let params = new URLSearchParams();
-                        if (searchTerm) params.append('search', searchTerm);
-                        if (categoryId) params.append('category', categoryId);
-                        
-                        const fullUrl = url + (params.toString() ? '?' + params.toString() : '');
-                        console.log('Search URL:', fullUrl);
-                        
-                        const res = await fetch(fullUrl);
-                        const result = await res.json();
-                        if (result.success) {
-                            const data = result.data.data || result.data;
-                            renderStockList(data);
-                        }
-                    } catch (e) {
-                        console.error('Search failed:', e);
-                    }
-                }, 500); // 500ms debounce
+                stockSearchTimer = setTimeout(() => {
+                    fetchStockPage(1);
+                }, 500);
             });
         }
 
-        // Setup category filter
         if (categoryFilter) {
-            categoryFilter.addEventListener('change', function() {
-                const searchTerm = searchInput ? (searchInput.value ? searchInput.value.trim() : '') : '';
-                const categoryId = this.value ? this.value : '';
-
-                // Filter tanpa minimal karakter
-                let url = `/api/product-api`;
-                if (searchTerm) {
-                    url += `?search=${encodeURIComponent(searchTerm)}`;
-                }
-                if (categoryId) {
-                    url += searchTerm ? `&category=${categoryId}` : `?category=${categoryId}`;
-                }
-
-                fetch(url)
-                    .then(res => res.json())
-                    .then(result => {
-                        if (result.success) {
-                            const data = result.data.data || result.data;
-                            renderStockList(data);
-                        }
-                    })
-                    .catch(e => console.error('Filter failed:', e));
+            const newCategoryFilter = categoryFilter.cloneNode(true);
+            categoryFilter.parentNode.replaceChild(newCategoryFilter, categoryFilter);
+            
+            newCategoryFilter.addEventListener('change', function() {
+                fetchStockPage(1);
             });
         }
     }
@@ -1791,7 +1842,6 @@
             const tr = clone.querySelector('tr');
             const chk = clone.querySelector('.stock-check');
 
-            // Set Data Checkbox
             chk.value = item.id;
             chk.dataset.raw = JSON.stringify(item);
 
@@ -1803,17 +1853,22 @@
                 chk.disabled = true;
             }
 
-            if (existingIds.includes(String(item.id))) {
+            // Check if it's already in the selection array OR already in the main table
+            if (selectedStockItems.find(x => String(x.id) === String(item.id)) || existingIds.includes(String(item.id))) {
                 chk.checked = true;
+                // If it's already in the table but NOT in selectedStockItems yet, we might want to add it?
+                // But usually we only care about new selections.
             }
 
-            // Isi Konten
+            chk.addEventListener('change', function() {
+                toggleStockSelection(item, this.checked);
+            });
+
             clone.querySelector('.col-stock-nama').textContent = item.nama_produk;
             clone.querySelector('.col-stock-sku').textContent = item.sku_kode || item.kode_produk || '-';
             clone.querySelector('.col-stock-supplier').textContent = item.supplier?.nama || '-';
             clone.querySelector('.col-stock-kategori').textContent = item.category?.nama_kategori || '-';
-            clone.querySelector('.col-stock-qty').textContent =
-                `${qty} ${item.unit?.nama_unit || ''}`;
+            clone.querySelector('.col-stock-qty').textContent = `${qty} ${item.unit?.nama_unit || ''}`;
             clone.querySelector('.col-stock-harga').textContent = window.financeApp.formatIDR(item.harga_jual);
 
             const trackBadge = clone.querySelector('.col-stock-track');
@@ -1845,7 +1900,6 @@
     });
 
     function addSelectedStocks() {
-        const checked = document.querySelectorAll('.stock-check:checked');
         const target = window.activeStockTarget || 'main'; // 'main' or 'bulk'
 
         let existingIds = [];
@@ -1865,34 +1919,30 @@
         const tbody = document.getElementById(tbodyId);
         if (tbody) {
             const rows = tbody.querySelectorAll('tr');
-            // If only 1 row exists and it has no product ID selected (empty/placeholder)
             if (rows.length === 1) {
                 const idVal = rows[0].querySelector('.prod-id').value;
                 if (!idVal) {
-                    // It's a placeholder, remove it
                     if (target === 'bulk') {
                         if (typeof bulkRemoveProductRow === 'function') {
-                            // Helper to remove safely
                             const btn = rows[0].querySelector('.btn-remove-row');
                             if (btn) bulkRemoveProductRow(btn);
                             else rows[0].remove();
                         }
                     } else {
-                        // Standard remove
                         const btn = rows[0].querySelector('.btn-remove-row');
                         if (btn) {
-                            btn.click(); // Trigger destroy of TomSelect
+                            btn.click();
                         } else {
                             rows[0].remove();
                         }
                     }
-                    existingIds = []; // Clear IDs since we removed the only row
+                    existingIds = [];
                 }
             }
         }
 
-        checked.forEach(chk => {
-            const data = JSON.parse(chk.dataset.raw);
+        // Use selectedStockItems as the source of truth
+        selectedStockItems.forEach(data => {
             const productId = String(data.id);
 
             if (!existingIds.includes(productId)) {
