@@ -240,6 +240,224 @@
 </div>
 </div>
 
+<!-- Modal Mitra -->
+<div class="modal fade" id="mitraModal" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <!-- Header -->
+            <div class="modal-header bg-white bg-opacity-95 backdrop-blur border-bottom px-4 py-3 sticky-top shadow-lg">
+                <div class="d-flex align-items-center">
+                    <div class="bg-gradient-primary text-white p-3 rounded-3 me-3 shadow-lg">
+                        <i class="fa fa-user-tie me-2 text-primary"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark mb-0" id="mitraModalTitle">Formulir Mitra Bisnis</h5>
+                        <p class="text-muted small mb-0">Kelola informasi supplier, vendor, atau klien perusahaan.</p>
+                    </div>
+                </div>
+                <div class="ms-auto d-flex align-items-center gap-3">
+                    <button type="button" class="btn btn-light border text-secondary fw-semibold px-4 rounded-2 shadow-sm"
+                        data-bs-dismiss="modal">
+                        <i class="fa fa-times me-2"></i>Batalkan
+                    </button>
+                    <button type="button" class="btn btn-gradient-primary px-4 fw-bold shadow-lg rounded-2" onclick="saveMitra()">
+                        <i class="fa fa-save me-2"></i>Simpan Data
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-body p-4 bg-white bg-opacity-95 backdrop-blur">
+                <form id="mitraForm">
+                    <input type="hidden" id="mitra_form_mode" value="create">
+                    <input type="hidden" id="edit_mitra_id" value="">
+
+                    <div class="row g-4 justify-content-center">
+                        <!-- Card 1: Informasi Perusahaan -->
+                        <div class="col-lg-4">
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="bg-gradient-primary text-white p-2 rounded-2 me-2 shadow">
+                                        <i class="fa fa-user-tie me-2 text-primary"></i>
+                                    </div>
+                                    <h6 class="fw-bold text-dark mb-0">Informasi Perusahaan</h6>
+                                </div>
+                                <div class="border-bottom border-2 border-primary opacity-25"></div>
+                            </div>
+                            <div class="card border-0 shadow-lg rounded-4 bg-white bg-opacity-90 backdrop-blur border border-primary border-opacity-25">
+                                <div class="card-body p-4">
+                                    <div class="mb-3">
+                                        <label class="f-label text-danger fw-bold">Tipe Mitra <span class="badge bg-danger text-white fs-6 ms-1">Wajib</span></label>
+                                        <div class="d-flex gap-3 mt-1 align-items-center flex-wrap">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="tipe_mitra"
+                                                    id="typeSupplier" value="Supplier" checked>
+                                                <label class="form-check-label small fw-bold"
+                                                    for="typeSupplier">Supplier / Vendor</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="tipe_mitra"
+                                                    id="typeClient" value="Client">
+                                                <label class="form-check-label small fw-bold" for="typeClient">Client /
+                                                    Customer</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="tipe_mitra"
+                                                    id="typeBoth" value="Both">
+                                                <label class="form-check-label small fw-bold"
+                                                    for="typeBoth">Keduanya</label>
+                                            </div>
+                                        </div>
+                                        <div class="form-check mt-2 pt-1 border-top">
+                                            <input class="form-check-input" type="checkbox" id="modal_is_cash_customer">
+                                            <label class="form-check-label small fw-bold text-primary"
+                                                for="modal_is_cash_customer">
+                                                Apakah Pelanggan Cash?
+                                            </label>
+                                            <div class="form-text x-small text-muted" style="font-size: 11px;">
+                                                Pelanggan cash membeli langsung (tanpa piutang/tempo).
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="f-label text-danger fw-bold">Usaha <span class="badge bg-danger text-white fs-6 ms-1">Wajib</span></label>
+                                            <select id="modal_badan_usaha" class="form-select f-input" required>
+                                                <option value="PT">PT</option>
+                                                <option value="CV">CV</option>
+                                                <option value="UD">UD</option>
+                                                <option value="Perorangan">Perorangan</option>
+                                                <option value="Lainnya">Lainnya</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <label class="f-label text-danger fw-bold">Nama Perusahaan / Mitra <span class="badge bg-danger text-white fs-6 ms-1">Wajib</span></label>
+                                            <input type="text" id="modal_nama" class="form-control f-input fw-bold"
+                                                placeholder="Nama Lengkap" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <label class="f-label">Nomor ID Mitra (Opsional)</label>
+                                        <input type="text" id="modal_nomor_mitra" class="form-control f-input bg-light"
+                                            placeholder="Auto-generated jika kosong">
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <label class="f-label text-danger fw-bold">No. KTP / NPWP <span class="badge bg-danger text-white fs-6 ms-1">Wajib</span></label>
+                                        <input type="text" id="modal_ktp_npwp" class="form-control f-input"
+                                            placeholder="Nomor Identitas (NIK / NPWP)" required>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <label class="f-label text-danger fw-bold">Alamat Lengkap <span class="badge bg-danger text-white fs-6 ms-1">Wajib</span></label>
+                                        <textarea id="modal_alamat" class="form-control f-input" rows="3"
+                                            placeholder="Masukkan alamat lengkap..." required></textarea>
+
+                                            <!-- Map Section -->
+                                            <div class="mt-3">
+                                                <label class="f-label d-flex justify-content-between align-items-center">
+                                                    <span>Lokasi Peta</span>
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-link text-decoration-none p-0 fw-bold"
+                                                        onclick="geocodeAddress()" style="font-size: 11px;">
+                                                        <i class="fa fa-search-location me-1"></i>Cari dari Alamat
+                                                    </button>
+                                                </label>
+                                                <div id="mitraMap" class="w-100 rounded-3 border"
+                                                    style="height: 250px; z-index: 0;"></div>
+                                                
+                                                <input type="hidden" id="modal_latitude">
+                                                <input type="hidden" id="modal_longitude">
+                                            </div>
+                                    </div>
+
+                                    <div class="row g-3 mt-1">
+                                        <div class="col-md-6">
+                                            <label class="f-label">Email Perusahaan</label>
+                                            <input type="email" id="modal_email" class="form-control f-input"
+                                                placeholder="email@company.com">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="f-label">No. Telepon Kantor</label>
+                                            <input type="text" id="modal_no_hp" class="form-control f-input"
+                                                placeholder="021-xxxxxx">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Kontak Person -->
+                        <div class="col-lg-4">
+                            <h6 class="fw-bold text-dark mb-3 text-uppercase small ls-1"><i
+                                    class="fa fa-user-tie me-2 text-primary"></i>Kontak Person (PIC)</h6>
+                            <div class="card border-0 shadow-sm rounded-3">
+                                <div class="card-body p-4">
+                                    <div class="row g-3">
+                                        <div class="col-md-7">
+                                            <label class="f-label text-danger fw-bold">Nama PIC <span class="badge bg-danger text-white fs-6 ms-1">Wajib</span></label>
+                                            <input type="text" id="modal_kontak_nama" class="form-control f-input"
+                                                placeholder="Nama Narahubung" required>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <label class="f-label">Jabatan</label>
+                                            <input type="text" id="modal_kontak_jabatan" class="form-control f-input"
+                                                placeholder="Misal: Manager">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="f-label text-danger fw-bold">No. HP PIC <span class="badge bg-danger text-white fs-6 ms-1">Wajib</span></label>
+                                            <input type="text" id="modal_kontak_no_hp" class="form-control f-input"
+                                                placeholder="08xxxxxxxxxx" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="f-label">Email PIC</label>
+                                            <input type="email" id="modal_kontak_email" class="form-control f-input"
+                                                placeholder="pic@email.com">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Sales Person -->
+                        <div class="col-lg-4">
+                            <h6 class="fw-bold text-dark mb-3 text-uppercase small ls-1"><i
+                                    class="fa fa-user me-2 text-primary"></i>Sales Person</h6>
+                            <div class="card border-0 shadow-sm rounded-3">
+                                <div class="card-body p-4">
+                                    <div class="alert alert-soft-info py-2 px-3 small border-0 mb-3">
+                                        <i class="fa fa-info-circle me-1"></i> Pilih salesperson yang akan menangani mitra ini.
+                                    </div>
+                                    
+                                    <div class="mt-3">
+                                        <label class="f-label">Salesperson</label>
+                                        <select id="modal_salesperson_id" class="form-select f-input">
+                                            <option value="0">Tanpa Sales Person</option>
+                                            <option value="">Pilih Sales...</option>
+                                            @foreach ($salesUsers ?? [] as $u)
+                                                <option value="{{ $u->id }}"
+                                                    @if ($u->id == auth()->id()) selected @endif>
+                                                    {{ $u->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <div class="text-center py-4 border border-dashed rounded bg-light">
+                                            <i class="fa fa-user-plus mb-2 fs-4 text-secondary"></i>
+                                            <div class="small text-muted">Salesperson akan otomatis terisi saat membuat invoice</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="stockModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg rounded-4" style="height: 90vh;">
@@ -370,6 +588,34 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
 <style>
+    .ls-1 {
+        letter-spacing: 1px;
+    }
+
+    .f-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .f-input {
+        border: 1px solid #e2e8f0;
+        padding: 0.6rem 0.8rem;
+        border-radius: 6px;
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+
+    .f-input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+
     .f-input {
         padding: 0.75rem 1rem !important;
         font-size: 14px !important;
@@ -1597,24 +1843,255 @@
         if (modal) modal.hide();
     }
 
-    function openMitraModal() {
-        // Check if mitra modal exists in parent/global scope or needs to be included
-        // Assuming there is a global function or modal for creating mitra
-        if (typeof window.openMitraModalGlobal === 'function') {
-            window.openMitraModalGlobal('Supplier');
+    // Mitra Modal JavaScript Functions
+let mitraMap = null;
+let mitraMarker = null;
+let leafletIconFixed = false;
+
+function fixLeafletDefaultIcon() {
+    if (leafletIconFixed) return;
+    if (!window.L || !L.Icon) {
+        setTimeout(fixLeafletDefaultIcon, 200);
+        return;
+    }
+    leafletIconFixed = true;
+    delete L.Icon.Default.prototype._getIconUrl;
+    L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    });
+}
+
+function initMitraMap(lat = -6.200000, lng = 106.816666) {
+    // Ensure container exists
+    if (!document.getElementById('mitraMap')) return;
+    fixLeafletDefaultIcon();
+
+    if (!mitraMap) {
+        mitraMap = L.map('mitraMap').setView([lat, lng], 13);
+        addBestTileLayer(mitraMap);
+
+        mitraMap.on('click', function (e) {
+            updateMarker(e.latlng.lat, e.latlng.lng);
+        });
+    } else {
+        mitraMap.setView([lat, lng], 13);
+    }
+
+    updateMarker(lat, lng);
+
+    // Fix Leaflet sizing issue in modal
+    setTimeout(() => {
+        mitraMap.invalidateSize();
+    }, 500);
+}
+
+function updateMarker(lat, lng) {
+    if (mitraMarker) {
+        mitraMarker.setLatLng([lat, lng]);
+    } else {
+        mitraMarker = L.marker([lat, lng], { draggable: true }).addTo(mitraMap);
+        mitraMarker.on('dragend', function (e) {
+            const position = e.target.getLatLng();
+            document.getElementById('modal_latitude').value = position.lat.toFixed(8);
+            document.getElementById('modal_longitude').value = position.lng.toFixed(8);
+        });
+    }
+    document.getElementById('modal_latitude').value = parseFloat(lat).toFixed(8);
+    document.getElementById('modal_longitude').value = parseFloat(lng).toFixed(8);
+}
+
+async function geocodeAddress() {
+    const address = document.getElementById('modal_alamat').value;
+    if (!address) {
+        alert('Mohon isi alamat terlebih dahulu');
+        return;
+    }
+
+    const btn = document.querySelector('button[onclick="geocodeAddress()"]');
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i>Mencari...';
+    btn.disabled = true;
+
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`);
+        const data = await response.json();
+
+        if (data && data.length > 0) {
+            const lat = parseFloat(data[0].lat);
+            const lon = parseFloat(data[0].lon);
+            mitraMap.setView([lat, lon], 16);
+            updateMarker(lat, lon);
         } else {
-            // Fallback if no global helper, try to find the modal directly
-            const mitraModal = document.getElementById('mitraModal');
-            if (mitraModal) {
-                const modal = new bootstrap.Modal(mitraModal);
-                // Reset form if check
-                document.getElementById('mitraForm')?.reset();
-                const typeInput = document.getElementById('mitra_tipe');
-                if (typeInput) typeInput.value = 'Supplier';
-                modal.show();
+            alert('Lokasi tidak ditemukan. Silakan geser marker secara manual.');
+        }
+    } catch (error) {
+        console.error('Geocoding error:', error);
+        alert('Gagal koneksi ke layanan peta.');
+    } finally {
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+    }
+}
+
+function addBestTileLayer(mapInstance) {
+    const localUrl = '/assets/tiles/{z}/{x}/{y}.png';
+    const remoteUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    let layer = L.tileLayer(localUrl, { attribution: '© OpenStreetMap contributors' });
+    let switched = false;
+    layer.on('tileerror', function () {
+        if (switched) return;
+        switched = true;
+        mapInstance.removeLayer(layer);
+        layer = L.tileLayer(remoteUrl, { attribution: '© OpenStreetMap contributors' });
+        layer.addTo(mapInstance);
+    });
+    layer.addTo(mapInstance);
+}
+
+async function openMitraModal(id = null) {
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('mitraModal'));
+    document.getElementById('mitraForm').reset();
+
+    // Default Jakarta
+    let lat = -6.200000;
+    let lng = 106.816666;
+
+    if (id) {
+        document.getElementById('mitraModalTitle').innerText = 'Edit Data Mitra';
+        document.getElementById('mitra_form_mode').value = 'edit';
+        document.getElementById('edit_mitra_id').value = id;
+
+        try {
+            const res = await fetch(`/api/mitra-api/${id}`);
+            const json = await res.json();
+            if (json.success) {
+                const data = json.data;
+                document.querySelector(`input[name="tipe_mitra"][value="${data.tipe_mitra}"]`).checked = true;
+                document.getElementById('modal_is_cash_customer').checked = data.is_cash_customer ? true : false;
+                document.getElementById('modal_badan_usaha').value = data.badan_usaha || 'PT';
+                document.getElementById('modal_nama').value = data.nama;
+                document.getElementById('modal_nomor_mitra').value = data.nomor_mitra || '';
+                document.getElementById('modal_ktp_npwp').value = data.ktp_npwp || '';
+                document.getElementById('modal_alamat').value = data.alamat || '';
+                document.getElementById('modal_email').value = data.email || '';
+                document.getElementById('modal_no_hp').value = data.no_hp || '';
+
+                document.getElementById('modal_kontak_nama').value = data.kontak_nama || '';
+                document.getElementById('modal_kontak_jabatan').value = data.kontak_jabatan || '';
+                document.getElementById('modal_kontak_no_hp').value = data.kontak_no_hp || '';
+                document.getElementById('modal_kontak_email').value = data.kontak_email || '';
+                document.getElementById('modal_salesperson_id').value = data.salesperson_id || '';
+
+                if (data.latitude && data.longitude) {
+                    lat = parseFloat(data.latitude);
+                    lng = parseFloat(data.longitude);
+                }
+            }
+        } catch (e) { console.error(e); alert('Gagal load data mitra'); return; }
+
+    } else {
+        document.getElementById('mitraModalTitle').innerText = 'Tambah Mitra Baru';
+        document.getElementById('mitra_form_mode').value = 'create';
+        document.getElementById('modal_nomor_mitra').value = '';
+        document.getElementById('modal_ktp_npwp').value = '';
+        document.getElementById('modal_is_cash_customer').checked = false;
+        // Default to Supplier for Purchase modal
+        document.getElementById('typeSupplier').checked = true;
+    }
+
+    modal.show();
+
+    // Initialize map after modal show
+    document.getElementById('mitraModal').addEventListener('shown.bs.modal', function () {
+        initMitraMap(lat, lng);
+    }, { once: true });
+
+    // Also call it immediately if modal is already shown (edge case) or use timeout
+    setTimeout(() => initMitraMap(lat, lng), 200);
+}
+
+async function saveMitra() {
+    const mode = document.getElementById('mitra_form_mode').value;
+    const id = document.getElementById('edit_mitra_id').value;
+    const url = mode === 'edit' ? `/api/mitra-api/${id}` : '/api/mitra-api';
+    const method = mode === 'edit' ? 'PUT' : 'POST';
+
+    const payload = {
+        tipe_mitra: document.querySelector('input[name="tipe_mitra"]:checked').value,
+        is_cash_customer: document.getElementById('modal_is_cash_customer').checked ? 1 : 0,
+        badan_usaha: document.getElementById('modal_badan_usaha').value,
+        nama: document.getElementById('modal_nama').value,
+        nomor_mitra: document.getElementById('modal_nomor_mitra').value,
+        ktp_npwp: document.getElementById('modal_ktp_npwp').value,
+        alamat: document.getElementById('modal_alamat').value,
+        email: document.getElementById('modal_email').value,
+        no_hp: document.getElementById('modal_no_hp').value,
+        kontak_nama: document.getElementById('modal_kontak_nama').value,
+        kontak_jabatan: document.getElementById('modal_kontak_jabatan').value,
+        kontak_no_hp: document.getElementById('modal_kontak_no_hp').value,
+        kontak_email: document.getElementById('modal_kontak_email').value,
+        salesperson_id: document.getElementById('modal_salesperson_id').value || null,
+        latitude: document.getElementById('modal_latitude').value,
+        longitude: document.getElementById('modal_longitude').value
+    };
+
+    const missing = [];
+    if (!payload.tipe_mitra) missing.push('Tipe Mitra');
+    if (!payload.badan_usaha) missing.push('Bentuk Usaha');
+    if (!payload.nama) missing.push('Nama Perusahaan / Mitra');
+    if (!payload.ktp_npwp) missing.push('No. KTP / NPWP');
+    if (!payload.alamat) missing.push('Alamat Lengkap');
+    if (!payload.kontak_nama) missing.push('Nama PIC');
+    if (!payload.kontak_no_hp) missing.push('No. HP PIC');
+
+    if (missing.length) {
+        alert('Mohon lengkapi field wajib:\n- ' + missing.join('\n- '));
+        return;
+    }
+
+    try {
+        const res = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+            },
+            body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+
+        if (result.success) {
+            alert('Data Mitra berhasil disimpan.');
+            bootstrap.Modal.getInstance(document.getElementById('mitraModal')).hide();
+            if (typeof loadMitraData === 'function') loadMitraData();
+            
+            // Update TomSelect in Purchase modal
+            if (tomSelectMitraModal) {
+                const opt = {
+                    id: result.data.id,
+                    nama: result.data.nama,
+                    info: [result.data.no_hp, result.data.alamat].filter(Boolean).join(' \u2022 ') || ''
+                };
+                tomSelectMitraModal.addOption(opt);
+                tomSelectMitraModal.addItem(result.data.id);
             } else {
-                alert('Fitur Tambah Mitra belum terhubung. Pastikan Modal Mitra dimuat.');
+                initTomSelectMitraModal(result.data.id);
+            }
+            
+            // Trigger event for external listeners
+            document.dispatchEvent(new CustomEvent('mitra-saved', { detail: result.data }));
+        } else {
+            if (result.errors && typeof result.errors === 'object') {
+                const messages = Object.values(result.errors).flat().join('\n');
+                alert('Validasi gagal:\n' + messages);
+            } else {
+                alert('Gagal: ' + (result.message || 'Terjadi kesalahan.'));
             }
         }
+    } catch (e) {
+        console.error(e); alert('Terjadi kesalahan sistem.');
     }
+}
 </script>

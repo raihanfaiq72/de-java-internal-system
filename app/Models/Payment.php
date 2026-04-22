@@ -24,6 +24,10 @@ class Payment extends Model
         'catatan',
     ];
 
+    protected $casts = [
+        'tgl_pembayaran' => 'date',
+    ];
+
     public function invoice()
     {
         return $this->belongsTo(Invoice::class, 'invoice_id');
