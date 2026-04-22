@@ -161,7 +161,7 @@ class InvoiceReportController extends Controller
             ->whereYear('tgl_pembayaran', $year)
             ->get()
             ->groupBy(function ($payment) {
-                return $payment->tgl_pembayaran->format('n');
+                return \Carbon\Carbon::parse($payment->tgl_pembayaran)->format('n');
             })
             ->map(function ($group) {
                 return $group->sum('jumlah_bayar');
@@ -177,7 +177,7 @@ class InvoiceReportController extends Controller
             ->whereYear('tgl_pembayaran', $year)
             ->get()
             ->groupBy(function ($payment) {
-                return $payment->tgl_pembayaran->format('n');
+                return \Carbon\Carbon::parse($payment->tgl_pembayaran)->format('n');
             })
             ->map(function ($group) {
                 return $group->sum('jumlah_bayar');
@@ -213,33 +213,27 @@ class InvoiceReportController extends Controller
 
     private function getPaymentsData(Request $request, $startDate, $endDate, $officeId, $mitraId, $search)
     {
-        // Get total qty for each invoice using Eloquent
+        // Ambil data pendukung
         $itemsData = InvoiceItem::whereNull('deleted_at')
             ->get()
             ->groupBy('invoice_id')
-            ->map(function ($group) {
-                return $group->sum('qty');
-            });
+            ->map(fn($group) => $group->sum('qty'));
 
-        // Get total paid for each invoice using Eloquent
         $totalPaidData = Payment::whereNull('deleted_at')
             ->get()
             ->groupBy('invoice_id')
-            ->map(function ($group) {
-                return $group->sum('jumlah_bayar');
-            });
+            ->map(fn($group) => $group->sum('jumlah_bayar'));
 
-        // Get latest payment method for each invoice using Eloquent
         $latestPaymentData = Payment::whereNull('deleted_at')
             ->get()
             ->groupBy('invoice_id')
-            ->map(function ($group) {
-                return $group->sortByDesc('id')->first()->metode_pembayaran;
-            });
+            ->map(fn($group) => $group->sortByDesc('id')->first()->metode_pembayaran);
 
-        $paymentsQuery = Invoice::with(['mitra'])
+        // Query invoice
+        $payments = Invoice::with(['mitra'])
             ->where('office_id', $officeId)
             ->whereBetween('tgl_invoice', [$startDate, $endDate])
+            ->whereNull('deleted_at')
             ->get()
             ->map(function ($invoice) use ($itemsData, $totalPaidData, $latestPaymentData) {
                 return (object) [
@@ -251,25 +245,78 @@ class InvoiceReportController extends Controller
                     'tipe_invoice' => $invoice->tipe_invoice,
                     'jumlah_bayar' => $totalPaidData->get($invoice->id, 0),
                     'metode_pembayaran' => $latestPaymentData->get($invoice->id, 'Belum Bayar'),
-                    'nama_mitra' => $invoice->mitra ? $invoice->mitra->nama : null,
-                    'nomor_mitra' => $invoice->mitra ? $invoice->mitra->nomor_mitra : null,
+                    'nama_mitra' => optional($invoice->mitra)->nama,
+                    'nomor_mitra' => optional($invoice->mitra)->nomor_mitra,
                     'total_qty' => $itemsData->get($invoice->id, 0),
                 ];
             });
 
-        $this->applyCommonFilters($paymentsQuery, $request, $mitraId, $search, true);
-        
-        // Calculate totals for the entire set before pagination
-        $allPayments = (clone $paymentsQuery)->get();
-        $totalPaymentAmount = $allPayments->sum('jumlah_bayar');
-        $totalNotaAmount = $allPayments->sum('total_akhir');
-        $totalUniqueInvoices = $allPayments->count();
+        /*
+        |--------------------------------------------------------------------------
+        | FILTER COLLECTION (karena sudah get())
+        |--------------------------------------------------------------------------
+        */
 
-        // Paginate for display
-        $this->applySorting($paymentsQuery, $request, 'invoices.tgl_invoice', 'desc');
-        $payments = $paymentsQuery->paginate(10)->withQueryString();
+        if (!empty($mitraId)) {
+            $payments = $payments->whereIn('id', function ($item) use ($mitraId) {
+                return in_array($item->id, $mitraId);
+            });
+        }
 
-        return compact('payments', 'totalPaymentAmount', 'totalNotaAmount', 'totalUniqueInvoices');
+        if ($search) {
+            $payments = $payments->filter(function ($item) use ($search) {
+                return str_contains(strtolower($item->nomor_invoice), strtolower($search)) ||
+                    str_contains(strtolower($item->nama_mitra ?? ''), strtolower($search)) ||
+                    str_contains(strtolower($item->nomor_mitra ?? ''), strtolower($search));
+            });
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SORTING
+        |--------------------------------------------------------------------------
+        */
+
+        $sortBy  = $request->sort_by ?? 'tgl_pembayaran';
+        $sortDir = $request->sort_dir ?? 'desc';
+
+        $payments = $sortDir === 'asc'
+            ? $payments->sortBy($sortBy)
+            : $payments->sortByDesc($sortBy);
+
+        /*
+        |--------------------------------------------------------------------------
+        | TOTAL
+        |--------------------------------------------------------------------------
+        */
+
+        $totalPaymentAmount = $payments->sum('jumlah_bayar');
+        $totalNotaAmount    = $payments->sum('total_akhir');
+        $totalUniqueInvoices = $payments->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | PAGINATION MANUAL
+        |--------------------------------------------------------------------------
+        */
+
+        $page = request()->get('page', 1);
+        $perPage = 10;
+
+        $payments = new \Illuminate\Pagination\LengthAwarePaginator(
+            $payments->forPage($page, $perPage)->values(),
+            $payments->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        return compact(
+            'payments',
+            'totalPaymentAmount',
+            'totalNotaAmount',
+            'totalUniqueInvoices'
+        );
     }
 
     private function getPaymentsWithDetailsData(Request $request, $startDate, $endDate, $officeId, $mitraId, $search)
@@ -987,6 +1034,9 @@ class InvoiceReportController extends Controller
         if ($payStatusFilter) {
             $query->where('invoices.status_pembayaran', $payStatusFilter);
         }
+        
+        // Return the query object to ensure it can be cloned
+        return $query;
 
         // Apply product filter
         if (! empty($prodIdFilter)) {
