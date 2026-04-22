@@ -29,12 +29,13 @@ class CheckModuleAccess
             return redirect()->route('syo')->with('error', 'Silahkan pilih kantor terlebih dahulu.');
         }
 
-        $hasAccess = DB::table('user_office_roles')
-            ->join('role_permissions', 'user_office_roles.role_id', '=', 'role_permissions.role_id')
-            ->join('permissions', 'role_permissions.permission_id', '=', 'permissions.id')
-            ->where('user_office_roles.user_id', $user->id)
-            ->where('user_office_roles.office_id', $officeId)
-            ->where('permissions.name', $routeName)
+        $hasAccess = \App\Models\UserOfficeRole::where('user_id', $user->id)
+            ->where('office_id', $officeId)
+            ->whereHas('role', function ($query) use ($routeName) {
+                $query->whereHas('permissions', function ($query) use ($routeName) {
+                    $query->where('name', $routeName);
+                });
+            })
             ->exists();
 
         if ($hasAccess) {
