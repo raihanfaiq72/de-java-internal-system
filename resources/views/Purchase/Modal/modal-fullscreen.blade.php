@@ -110,8 +110,7 @@
                                                         class="form-control f-input">
                                                 </div>
                                                 <div class="col-12">
-                                                    <label class="f-label">Purchasing Staff <span
-                                                            class="text-danger">*</span></label>
+                                                    <label class="f-label">Purchasing Staff</label>
                                                     <select id="modal_sales_id" class="form-select f-input">
                                                         <option value="">Pilih Staff...</option>
                                                     </select>
@@ -432,12 +431,10 @@
                                     <div class="mt-3">
                                         <label class="f-label">Salesperson</label>
                                         <select id="modal_salesperson_id" class="form-select f-input">
-                                            <option value="0">Tanpa Sales Person</option>
+                                            <option value="0" selected>Tanpa Sales Person</option>
                                             <option value="">Pilih Sales...</option>
                                             @foreach ($salesUsers ?? [] as $u)
-                                                <option value="{{ $u->id }}"
-                                                    @if ($u->id == auth()->id()) selected @endif>
-                                                    {{ $u->name }}</option>
+                                                <option value="{{ $u->id }}">{{ $u->name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -1452,10 +1449,6 @@
             alert('Harap isi Tanggal Invoice!');
             return;
         }
-        if (!payload.invoice.sales_id) {
-            alert('Harap pilih Purchasing Staff!');
-            return;
-        }
         if (!payload.invoice.nomor_invoice) {
             alert('Nomor invoice belum diisi.');
             return;
@@ -1997,6 +1990,7 @@ async function openMitraModal(id = null) {
         document.getElementById('modal_nomor_mitra').value = '';
         document.getElementById('modal_ktp_npwp').value = '';
         document.getElementById('modal_is_cash_customer').checked = false;
+        document.getElementById('modal_salesperson_id').value = '0';
         // Default to Supplier for Purchase modal
         document.getElementById('typeSupplier').checked = true;
     }
@@ -2032,7 +2026,7 @@ async function saveMitra() {
         kontak_jabatan: document.getElementById('modal_kontak_jabatan').value,
         kontak_no_hp: document.getElementById('modal_kontak_no_hp').value,
         kontak_email: document.getElementById('modal_kontak_email').value,
-        salesperson_id: document.getElementById('modal_salesperson_id').value || null,
+        salesperson_id: document.getElementById('modal_salesperson_id').value === '0' ? null : (document.getElementById('modal_salesperson_id').value || null),
         latitude: document.getElementById('modal_latitude').value,
         longitude: document.getElementById('modal_longitude').value
     };
