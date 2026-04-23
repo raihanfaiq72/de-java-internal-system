@@ -246,32 +246,33 @@ class InvoiceReportController extends Controller
         $totalNotaAmount = $totals->total_nota ?? 0;
         $totalUniqueInvoices = $totals->total_count ?? 0;
 
-        // Paginate for display
+        // Get all results without pagination limit
         $this->applySorting($paymentsQuery, $request, 'invoices.tgl_invoice', 'desc');
-        $payments = $paymentsQuery->paginate(10)->withQueryString();
+        $allPayments = $paymentsQuery->get();
 
         /*
         |--------------------------------------------------------------------------
-        | TOTAL
+        | TOTAL (calculated from full dataset)
         |--------------------------------------------------------------------------
         */
 
-        $totalPaymentAmount = $payments->sum('jumlah_bayar');
-        $totalNotaAmount    = $payments->sum('total_akhir');
-        $totalUniqueInvoices = $payments->count();
+        $totalPaymentAmount = $allPayments->sum('jumlah_bayar');
+        $totalNotaAmount    = $allPayments->sum('total_akhir');
+        $totalUniqueInvoices = $allPayments->count();
 
         /*
         |--------------------------------------------------------------------------
-        | PAGINATION MANUAL
+        | PAGINATION (show all results)
         |--------------------------------------------------------------------------
         */
 
+        // Create a paginator with all results to maintain pagination UI compatibility
+        $perPage = 50; // Increased from 10 to 50 for better user experience
         $page = request()->get('page', 1);
-        $perPage = 10;
-
+        
         $payments = new \Illuminate\Pagination\LengthAwarePaginator(
-            $payments->forPage($page, $perPage)->values(),
-            $payments->count(),
+            $allPayments->forPage($page, $perPage)->values(),
+            $allPayments->count(),
             $perPage,
             $page,
             ['path' => request()->url(), 'query' => request()->query()]
