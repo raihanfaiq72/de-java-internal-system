@@ -375,7 +375,10 @@
     <tr class="border-bottom border-light product-row">
         <td class="ps-4 py-3">
             <input type="hidden" class="prod-id">
+            <input type="hidden" class="prod-initial-id" value="">
+            <input type="hidden" class="prod-initial-qty" value="0">
             <input type="hidden" class="prod-max-stok" value="0">
+            <input type="hidden" class="prod-original-qty" value="0">
             <div class="mb-1">
                 <select class="prod-select-item"></select>
             </div>
@@ -1248,7 +1251,10 @@
         const qtyInput = tr.querySelector('.prod-qty');
         const discInput = tr.querySelector('.prod-disc');
         const idInput = tr.querySelector('.prod-id');
+        const initialIdInput = tr.querySelector('.prod-initial-id');
+        const initialQtyInput = tr.querySelector('.prod-initial-qty');
         const maxStokInput = tr.querySelector('.prod-max-stok');
+        const originalQtyInput = tr.querySelector('.prod-original-qty');
         const unitLabel = tr.querySelector('.prod-unit-label');
         const descInput = tr.querySelector('.prod-desc');
 
@@ -1261,16 +1267,24 @@
 
         qtyInput.addEventListener('input', function() {
             const maxVal = parseFloat(maxStokInput.value) || 0;
+            const originalVal = parseFloat(originalQtyInput.value) || 0;
             let currentVal = parseFloat(this.value) || 0;
 
-            if (currentVal > maxVal) {
+            // Jika qty baru <= qty lama, tidak perlu cek stok (selalu aman)
+            if (currentVal <= originalVal) {
+                calculateInvoiceTotal();
+                return;
+            }
+
+            // Jika qty baru > qty lama, cek apakah selisihnya tersedia di stok
+            if (currentVal > (maxVal + originalVal)) {
                 const selectedId = selectEl.value;
                 const product = masterProduk.find(p => p.id == selectedId);
                 const isTracked = product ? (product.track_stock == 1) : true;
 
                 if (isTracked) {
-                    alert(`Stok tidak mencukupi! Maksimum stok tersedia adalah ${maxVal}.`);
-                    this.value = maxVal;
+                    alert(`Stok tidak mencukupi! Maksimum stok tersedia adalah ${maxVal + originalVal}.`);
+                    this.value = maxVal + originalVal;
                 }
                 calculateInvoiceTotal();
             } else {
@@ -1315,6 +1329,13 @@
                     const isTempo = tr.querySelector('.prod-is-tempo').checked;
                     const product = masterProduk.find(p => String(p.id) === String(val));
 
+                    // Jika produk berubah dari awal, reset original qty allowance
+                    if (val !== initialIdInput.value) {
+                        originalQtyInput.value = 0;
+                    } else {
+                        originalQtyInput.value = initialQtyInput.value;
+                    }
+
                     idInput.value = selected.id;
                     maxStokInput.value = selected.qty;
 
@@ -1325,10 +1346,11 @@
                     unitLabel.innerText = selected.unit;
                     
                     // Check if current qty (default 1) > stock
-                    if (parseFloat(qtyInput.value) > selected.qty) {
-                        qtyInput.value = selected.qty;
-                        if (selected.qty > 0) {
-                            alert(`Stok terbatas! Qty disesuaikan ke ${selected.qty}.`);
+                    const originalVal = parseFloat(originalQtyInput.value) || 0;
+                    if (parseFloat(qtyInput.value) > (selected.qty + originalVal)) {
+                        qtyInput.value = selected.qty + originalVal;
+                        if ((selected.qty + originalVal) > 0) {
+                            alert(`Stok terbatas! Qty disesuaikan ke ${selected.qty + originalVal}.`);
                         }
                     }
                     
@@ -1365,9 +1387,13 @@
                 }
 
                 idInput.value = prodId;
+                initialIdInput.value = prodId;
+                initialQtyInput.value = parseFloat(data.qty) || 0;
+                originalQtyInput.value = parseFloat(data.qty) || 0;
                 maxStokInput.value = masterItem ? (masterItem.qty || 0) : 999999;
 
                 qtyInput.value = parseFloat(data.qty) || 1;
+                originalQtyInput.value = parseFloat(data.qty) || 0;
 
                 const rawPrice = parseFloat(data.harga_satuan ?? data.harga_jual ?? 0);
                 const rawDisc = parseFloat(data.diskon_item ?? data.diskon_nilai ?? 0);
