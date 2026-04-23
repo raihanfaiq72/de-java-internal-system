@@ -792,7 +792,6 @@
                                                data-location-id="${loc.id}" 
                                                data-current="${loc.current_qty}"
                                                value="${Math.round(loc.current_qty)}" 
-                                               min="0"
                                                step="1"
                                                oninput="calculateAdjustTotal()">
                                     </td>

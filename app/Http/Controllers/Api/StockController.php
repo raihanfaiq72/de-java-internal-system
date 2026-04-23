@@ -391,9 +391,11 @@ class StockController extends Controller
                 ELSE 0 END) as total')
             ->value('total') ?? 0;
 
-        $unlocatedQty = (float) ($product->qty ?? 0) - $totalMutationQty;
+        $unlocatedQty = round((float) ($product->qty ?? 0) - $totalMutationQty, 2);
 
-        $data = $locationStock->map(function($item) {
+        $data = $locationStock->filter(function($item) {
+            return round((float) $item->current_qty, 2) != 0;
+        })->map(function($item) {
             return [
                 'id' => $item->id,
                 'name' => $item->name,
@@ -401,10 +403,10 @@ class StockController extends Controller
                 'current_qty' => (float) $item->current_qty,
                 'is_unlocated' => false
             ];
-        })->toArray();
+        })->values()->toArray();
 
-        // 3. Add virtual row for unlocated stock if it exists
-        if ($unlocatedQty != 0) {
+        // 3. Add virtual row for unlocated stock if it exists (Plus or Minus allowed, hide only if 0)
+        if (abs($unlocatedQty) > 0.001) {
             $data[] = [
                 'id' => null, // Special marker
                 'name' => 'Stok Tanpa Lokasi (Lama)',
