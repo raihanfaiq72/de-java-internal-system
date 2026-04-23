@@ -3,6 +3,45 @@
 @section('main')
 @push('css')
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        /* TomSelect Custom Styling for Stock Adjustment */
+        #modalAdjustStock .ts-wrapper {
+            width: 100% !important;
+        }
+        #modalAdjustStock .ts-control {
+            border: 1.5px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 10px 12px !important;
+            background-color: #f8fafc !important;
+            font-size: 14px !important;
+            box-shadow: none !important;
+            transition: all 0.2s ease !important;
+        }
+        #modalAdjustStock .ts-control input {
+            display: inline-block !important;
+            opacity: 1 !important;
+            position: relative !important;
+        }
+        #modalAdjustStock .ts-wrapper.focus .ts-control {
+            border-color: #4f46e5 !important;
+            background-color: #ffffff !important;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
+        }
+        #modalAdjustStock .ts-dropdown {
+            border-radius: 10px !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+            border: 1px solid #e2e8f0 !important;
+            margin-top: 5px !important;
+        }
+        #modalAdjustStock .ts-dropdown .active {
+            background-color: #4f46e5 !important;
+            color: white !important;
+        }
+        #modalAdjustStock .ts-wrapper.disabled .ts-control {
+            background-color: #f1f5f9 !important;
+            opacity: 0.7;
+        }
+    </style>
 @endpush
     <div class="page-wrapper">
         <div class="page-content bg-white">
@@ -438,6 +477,15 @@
             }, 500);
         }
 
+        let adjustStockTS = null;
+        function initAdjustStockTS() {
+            if (adjustStockTS) adjustStockTS.destroy();
+            adjustStockTS = new TomSelect('#adjust-stock-location', {
+                allowEmptyOption: false,
+                placeholder: 'Pilih Lokasi Gudang...',
+            });
+        }
+
         function loadStockData(page = 1) {
             currentPage = page;
             const search = document.getElementById('filter-stock-search').value;
@@ -674,6 +722,8 @@
             document.getElementById('adjust-stock-id').value = id;
             document.getElementById('adjust-stock-sku').value = sku;
             document.getElementById('adjust-stock-name').value = name;
+            
+            // Initial current qty might be global or local depending on filter
             document.getElementById('adjust-stock-current').value = currentQty;
             document.getElementById('adjust-stock-new').value = currentQty;
             document.getElementById('adjust-stock-note').value = '';
@@ -681,7 +731,7 @@
             // Populate Location Dropdown from Filter options
             const filterLoc = document.getElementById('filter-stock-location');
             const modalLoc = document.getElementById('adjust-stock-location');
-            modalLoc.innerHTML = '<option value="">-- Pilih Lokasi (Opsional) --</option>';
+            modalLoc.innerHTML = '<option value="">Pilih Lokasi...</option>';
 
             // Copy options skipping the first one ("Semua Lokasi")
             for (let i = 1; i < filterLoc.options.length; i++) {
@@ -692,22 +742,62 @@
                 modalLoc.appendChild(newOpt);
             }
 
+            initAdjustStockTS();
+
             // Set selected if filter is active
             if (filterLoc.value) {
-                modalLoc.value = filterLoc.value;
+                adjustStockTS.setValue(filterLoc.value);
+                // Trigger update of current qty for this specific location
+                updateCurrentStockForLocation(id, filterLoc.value);
             }
+
+            // Listen for changes to update current stock display
+            adjustStockTS.on('change', function(value) {
+                if (value) {
+                    updateCurrentStockForLocation(id, value);
+                } else {
+                    document.getElementById('adjust-stock-current').value = '0';
+                }
+            });
 
             const modal = new bootstrap.Modal(document.getElementById('modalAdjustStock'));
             modal.show();
+        }
+
+        function updateCurrentStockForLocation(productId, locationId) {
+            const currentInput = document.getElementById('adjust-stock-current');
+            const newInput = document.getElementById('adjust-stock-new');
+            currentInput.value = '...';
+            
+            fetch(`{{ url('api/stock-api') }}?product_id=${productId}&location_id=${locationId}&all=1`)
+                .then(res => res.json())
+                .then(res => {
+                    let qty = 0;
+                    if (res.success) {
+                        const items = Array.isArray(res.data) ? res.data : (res.data.data || []);
+                        if (items.length > 0) {
+                            const item = items[0];
+                            qty = item.location_qty !== null ? parseFloat(item.location_qty) : 0;
+                        }
+                    }
+                    currentInput.value = qty;
+                })
+                .catch(() => {
+                    currentInput.value = '0';
+                });
         }
 
         function submitAdjustStock() {
             const id = document.getElementById('adjust-stock-id').value;
             const newQty = document.getElementById('adjust-stock-new').value;
             const note = document.getElementById('adjust-stock-note').value;
-            const locationId = document.getElementById('adjust-stock-location').value;
+            const locationId = adjustStockTS.getValue();
 
             if (!id) return;
+            if (!locationId) {
+                alert('Silahkan pilih lokasi gudang terlebih dahulu');
+                return;
+            }
 
             fetch(`{{ url('api/stock-api') }}/${id}`, {
                     method: 'PUT',
@@ -718,7 +808,7 @@
                     body: JSON.stringify({
                         qty: newQty,
                         notes: note,
-                        stock_location_id: locationId || null
+                        stock_location_id: locationId
                     })
                 })
                 .then(res => res.json())

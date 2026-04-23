@@ -38,6 +38,10 @@ class StockController extends Controller
             $query->where('product_category_id', $request->category);
         }
 
+        if ($request->product_id) {
+            $query->where('id', $request->product_id);
+        }
+
         // Hapus filter track_stock agar semua produk muncul
         // $query->where('track_stock', true);
 
@@ -312,7 +316,7 @@ class StockController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'qty' => 'required|numeric|min:0',
-            'stock_location_id' => 'nullable|exists:stock_locations,id',
+            'stock_location_id' => 'required|exists:stock_locations,id',
             'notes' => 'nullable|string',
         ]);
 

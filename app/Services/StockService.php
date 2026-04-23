@@ -102,13 +102,20 @@ class StockService
      */
     public function adjustStock($productId, $newTotalQty, $stockLocationId = null, $notes = null)
     {
-        // For total calculation, we need to know the current qty in that specific location
-        $currentQty = StockMutation::where('product_id', $productId)
-            ->where('stock_location_id', $stockLocationId)
-            ->selectRaw('SUM(CASE WHEN type = "IN" THEN qty ELSE -qty END) as total')
-            ->first()->total ?? 0;
-
-        $diff = $newTotalQty - $currentQty;
+        // Calculate current quantity for the specific location to ensure local accuracy
+        $query = StockMutation::where('product_id', $productId);
+        
+        // Filter by location (required by new UI rules)
+        $query->where('stock_location_id', $stockLocationId);
+        
+        $currentQty = (float) $query->selectRaw('SUM(CASE 
+                WHEN type = "IN" THEN qty 
+                WHEN type = "ADJUSTMENT" THEN qty 
+                WHEN type = "OUT" THEN -qty 
+                ELSE 0 END) as total')
+            ->value('total') ?? 0;
+    
+        $diff = (float) $newTotalQty - $currentQty;
 
         if ($diff > 0) {
             $product = Product::find($productId);
