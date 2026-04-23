@@ -672,8 +672,8 @@
         // Adjust Stock
         function showAdjustStockModal(id, name, sku, currentQty) {
             document.getElementById('adjust-stock-id').value = id;
-            document.getElementById('adjust-stock-sku').innerText = sku;
-            document.getElementById('adjust-stock-name').innerText = name;
+            document.getElementById('adjust-stock-sku').value = sku;
+            document.getElementById('adjust-stock-name').value = name;
             document.getElementById('adjust-stock-current').value = currentQty;
             document.getElementById('adjust-stock-new').value = currentQty;
             document.getElementById('adjust-stock-note').value = '';

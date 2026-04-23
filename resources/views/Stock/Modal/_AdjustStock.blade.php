@@ -40,6 +40,13 @@
                     </div>
                 </div>
                 
+                <div class="mb-4">
+                    <label class="dr-label mb-2">Lokasi Stok (Optional)</label>
+                    <select id="adjust-stock-location" class="dr-input">
+                        <option value="">-- Pilih Lokasi (Opsional) --</option>
+                    </select>
+                </div>
+
                 <div class="mb-0">
                     <label class="dr-label mb-2">Catatan (Optional)</label>
                     <textarea id="adjust-stock-note" class="dr-input" rows="3" style="height: auto;" placeholder="Alasan penyesuaian..."></textarea>
