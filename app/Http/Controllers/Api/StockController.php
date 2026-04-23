@@ -381,15 +381,17 @@ class StockController extends Controller
             ->get();
 
         // 2. Check if there's stock with NULL location (Legacy/Global stock)
-        $unlocatedQty = StockMutation::where('product_id', $id)
-            ->where('office_id', $officeId)
-            ->whereNull('stock_location_id')
+        // Also account for discrepancies between product->qty and total mutations (legacy data)
+        $product = Product::find($id);
+        $totalMutationQty = StockMutation::where('product_id', $id)
             ->selectRaw('SUM(CASE 
                 WHEN type = "IN" THEN qty 
                 WHEN type = "ADJUSTMENT" THEN qty 
                 WHEN type = "OUT" THEN -qty 
                 ELSE 0 END) as total')
             ->value('total') ?? 0;
+
+        $unlocatedQty = (float) ($product->qty ?? 0) - $totalMutationQty;
 
         $data = $locationStock->map(function($item) {
             return [

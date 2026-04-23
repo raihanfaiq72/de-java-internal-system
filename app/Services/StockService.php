@@ -342,6 +342,9 @@ class StockService
                 $results[] = $this->adjustStock($productId, $newQty, $locationId, $notes);
             }
 
+            // CRITICAL: Recalculate global product qty to ensure unlocated discrepancies are resolved
+            $this->updateProductTotalQty($productId);
+
             return $results;
         });
     }
