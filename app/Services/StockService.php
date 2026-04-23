@@ -129,6 +129,84 @@ class StockService
     }
 
     /**
+     * Bulk adjust stock across multiple locations
+     */
+    /**
+     * Bulk adjust stock across multiple locations
+     */
+    public function adjustStockByLocations($productId, array $adjustments, $notes = null)
+    {
+        return DB::transaction(function () use ($productId, $adjustments, $notes) {
+            $results = [];
+            
+            // Find unlocated adjustment
+            $unlocatedAdjIndex = -1;
+            foreach ($adjustments as $index => $adj) {
+                if (!isset($adj['location_id']) || $adj['location_id'] === null || $adj['location_id'] === 'null' || $adj['location_id'] === '') {
+                    $unlocatedAdjIndex = $index;
+                    break;
+                }
+            }
+
+            // Handle moving unlocated stock to Gudang ID 1 (Primary Warehouse)
+            if ($unlocatedAdjIndex !== -1) {
+                $unlocatedAdj = $adjustments[$unlocatedAdjIndex];
+                unset($adjustments[$unlocatedAdjIndex]);
+
+                $targetForUnlocated = (float)($unlocatedAdj['qty'] ?? 0);
+
+                // 1. Get current NULL stock to clear it
+                $currentNull = StockMutation::where('product_id', $productId)
+                    ->whereNull('stock_location_id')
+                    ->selectRaw('SUM(CASE 
+                        WHEN type = "IN" THEN qty 
+                        WHEN type = "ADJUSTMENT" THEN qty 
+                        WHEN type = "OUT" THEN -qty 
+                        ELSE 0 END) as total')
+                    ->value('total') ?? 0;
+
+                if ($currentNull != 0) {
+                    // Set NULL location to 0
+                    $this->adjustStock($productId, 0, null, 'Auto-consolidation: Moving to primary warehouse. ' . ($notes ?? ''));
+                }
+
+                // 2. Add the target amount for unlocated stock to Gudang ID 1
+                $foundGudang1 = false;
+                foreach ($adjustments as &$adj) {
+                    if ($adj['location_id'] == 1) {
+                        $adj['qty'] = (float)$adj['qty'] + $targetForUnlocated;
+                        $foundGudang1 = true;
+                        break;
+                    }
+                }
+                if (!$foundGudang1) {
+                    // Get current Gudang 1 stock to calculate the new total
+                    $currentG1 = StockMutation::where('product_id', $productId)
+                        ->where('stock_location_id', 1)
+                        ->selectRaw('SUM(CASE 
+                            WHEN type = "IN" THEN qty 
+                            WHEN type = "ADJUSTMENT" THEN qty 
+                            WHEN type = "OUT" THEN -qty 
+                            ELSE 0 END) as total')
+                        ->value('total') ?? 0;
+                        
+                    $adjustments[] = [
+                        'location_id' => 1,
+                        'qty' => (float)$currentG1 + $targetForUnlocated
+                    ];
+                }
+            }
+
+            foreach ($adjustments as $adj) {
+                $locationId = $adj['location_id'] ?? null;
+                $newQty = $adj['qty'] ?? 0;
+                $results[] = $this->adjustStock($productId, $newQty, $locationId, $notes);
+            }
+            return $results;
+        });
+    }
+
+    /**
      * Recalculate and update product total quantity based on mutations
      */
     public function recalculateProductStock($productId)

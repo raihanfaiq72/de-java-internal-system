@@ -112,6 +112,7 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::post('/opening-stock', [StockController::class, 'openingStock'])->name('opening-stock');
             Route::post('/stock-opname', [StockController::class, 'stockOpname'])->name('stock-opname');
             Route::put('/{id}', [StockController::class, 'updateStock'])->name('update-stock');
+            Route::get('/{id}/locations', [StockController::class, 'productLocations'])->name('product-locations');
             Route::get('/{id}/fifo', [StockController::class, 'fifo'])->name('fifo');
         });
 

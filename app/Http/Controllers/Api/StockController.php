@@ -314,6 +314,28 @@ class StockController extends Controller
 
     public function updateStock(Request $request, $id)
     {
+        // Handle Bulk Adjustments (New)
+        if ($request->has('adjustments')) {
+            $validator = Validator::make($request->all(), [
+                'adjustments' => 'required|array',
+                'adjustments.*.location_id' => 'nullable|exists:stock_locations,id',
+                'adjustments.*.qty' => 'required|numeric|min:0',
+                'notes' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
+            }
+
+            try {
+                $this->stockService->adjustStockByLocations($id, $request->adjustments, $request->notes);
+                return apiResponse(true, 'Semua stok berhasil diperbarui');
+            } catch (\Exception $e) {
+                return apiResponse(false, 'Gagal memperbarui stok: ' . $e->getMessage(), null, null, 500);
+            }
+        }
+
+        // Handle Single Adjustment (Old/Legacy)
         $validator = Validator::make($request->all(), [
             'qty' => 'required|numeric|min:0',
             'stock_location_id' => 'required|exists:stock_locations,id',
@@ -330,16 +352,6 @@ class StockController extends Controller
             return apiResponse(false, 'Produk tidak ditemukan', null, null, 404);
         }
 
-        // Validate Location ownership if provided
-        if ($request->stock_location_id) {
-            $location = StockLocation::where('id', $request->stock_location_id)
-                ->where('office_id', session('active_office_id'))
-                ->first();
-            if (! $location) {
-                return apiResponse(false, 'Lokasi stok tidak valid', null, null, 422);
-            }
-        }
-
         try {
             $this->stockService->adjustStock($id, $request->qty, $request->stock_location_id, $request->notes);
 
@@ -347,6 +359,60 @@ class StockController extends Controller
         } catch (\Exception $e) {
             return apiResponse(false, 'Gagal memperbarui stok: '.$e->getMessage(), null, null, 500);
         }
+    }
+
+    public function productLocations($id)
+    {
+        $officeId = session('active_office_id');
+        
+        // 1. Get stock for all defined locations
+        $locationStock = StockLocation::where('stock_locations.office_id', $officeId)
+            ->leftJoin('stock_mutations', function($join) use ($id) {
+                $join->on('stock_locations.id', '=', 'stock_mutations.stock_location_id')
+                    ->where('stock_mutations.product_id', '=', $id);
+            })
+            ->select('stock_locations.id', 'stock_locations.name', 'stock_locations.type')
+            ->selectRaw('SUM(CASE 
+                WHEN stock_mutations.type = "IN" THEN stock_mutations.qty 
+                WHEN stock_mutations.type = "ADJUSTMENT" THEN stock_mutations.qty 
+                WHEN stock_mutations.type = "OUT" THEN -stock_mutations.qty 
+                ELSE 0 END) as current_qty')
+            ->groupBy('stock_locations.id', 'stock_locations.name', 'stock_locations.type')
+            ->get();
+
+        // 2. Check if there's stock with NULL location (Legacy/Global stock)
+        $unlocatedQty = StockMutation::where('product_id', $id)
+            ->where('office_id', $officeId)
+            ->whereNull('stock_location_id')
+            ->selectRaw('SUM(CASE 
+                WHEN type = "IN" THEN qty 
+                WHEN type = "ADJUSTMENT" THEN qty 
+                WHEN type = "OUT" THEN -qty 
+                ELSE 0 END) as total')
+            ->value('total') ?? 0;
+
+        $data = $locationStock->map(function($item) {
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'type' => $item->type,
+                'current_qty' => (float) $item->current_qty,
+                'is_unlocated' => false
+            ];
+        })->toArray();
+
+        // 3. Add virtual row for unlocated stock if it exists
+        if ($unlocatedQty != 0) {
+            $data[] = [
+                'id' => null, // Special marker
+                'name' => 'Stok Tanpa Lokasi (Lama)',
+                'type' => 'SYSTEM',
+                'current_qty' => (float) $unlocatedQty,
+                'is_unlocated' => true
+            ];
+        }
+
+        return apiResponse(true, 'Data stok per lokasi', $data);
     }
 
     public function openingStock(Request $request)
