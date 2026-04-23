@@ -763,52 +763,66 @@
                 document.getElementById('adjust-stock-note').value = '';
 
                 const listContainer = document.getElementById('adjust-stock-location-list');
-                listContainer.innerHTML =
-                    '<tr><td colspan="3" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div> Loading data gudang...</td></tr>';
+                listContainer.innerHTML = '<tr><td colspan="3" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div> Loading data gudang...</td></tr>';
 
                 const modalEl = document.getElementById('modalAdjustStock');
                 let modal = bootstrap.Modal.getInstance(modalEl);
                 if (!modal) modal = new bootstrap.Modal(modalEl);
                 modal.show();
 
-                fetch(`{{ url('api/stock-api') }}/${id}/locations`)
-                    .then(res => res.json())
-                    .then(res => {
-                        if (res.success) {
-                            listContainer.innerHTML = '';
-                            res.data.forEach(loc => {
-                                const row = `
-                                <tr>
-                                    <td class="ps-3">
-                                        <div class="fw-medium">${loc.name}</div>
-                                        <div class="text-muted small text-uppercase">${loc.type || 'Warehouse'}</div>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-light text-dark border">${Math.round(loc.current_qty)}</span>
-                                    </td>
-                                    <td class="pe-3">
-                                        <input type="number" 
-                                               class="dr-input text-center py-1 px-2 adjust-qty-input" 
-                                               data-location-id="${loc.id}" 
-                                               data-current="${loc.current_qty}"
-                                               value="${Math.round(loc.current_qty)}" 
-                                               step="1"
-                                               oninput="calculateAdjustTotal()">
-                                    </td>
-                                </tr>
-                            `;
-                                listContainer.insertAdjacentHTML('beforeend', row);
-                            });
-                            calculateAdjustTotal();
-                        } else {
-                            listContainer.innerHTML =
-                                '<tr><td colspan="3" class="text-center text-danger">Gagal memuat data lokasi</td></tr>';
+                Promise.all([
+                    fetch(`{{ route('stock-location-api.index') }}?per_page=1000`).then(res => res.json()),
+                    fetch(`{{ url('api/stock-api') }}/${id}/locations`).then(res => res.json())
+                ])
+                .then(([locationsRes, stockRes]) => {
+                    listContainer.innerHTML = '';
+
+                    if (locationsRes.data) {
+                        const allLocations = locationsRes.data.data || locationsRes.data;
+                        const stockData = stockRes.success ? stockRes.data : [];
+
+                        if (allLocations.length === 0) {
+                            listContainer.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">Belum ada lokasi gudang yang didaftarkan.</td></tr>';
+                            return;
                         }
-                    })
-                    .catch(() => {
-                        listContainer.innerHTML =
-                            '<tr><td colspan="3" class="text-center text-danger">Kesalahan koneksi</td></tr>';
-                    });
+
+                        allLocations.forEach(loc => {
+                            const existingStock = stockData.find(s => s.id === loc.id || s.location_id === loc.id);
+                            const currentQty = existingStock ? parseFloat(existingStock.current_qty) : 0;
+
+                            const row = `
+                            <tr>
+                                <td class="ps-3 py-3">
+                                    <div class="fw-medium">${loc.name}</div>
+                                    <div class="text-muted small text-uppercase">${loc.type || 'Warehouse'}</div>
+                                </td>
+                                <td class="text-center py-3">
+                                    <span class="badge bg-light text-dark border">${Math.round(currentQty)}</span>
+                                </td>
+                                <td class="pe-3 py-3 text-end">
+                                    <input type="number"
+                                        class="dr-input text-center py-1 px-2 adjust-qty-input"
+                                        style="width: 100px; display: inline-block;"
+                                        data-location-id="${loc.id}"
+                                        data-current="${currentQty}"
+                                        value="${Math.round(currentQty)}"
+                                        step="1"
+                                        oninput="calculateAdjustTotal()">
+                                </td>
+                            </tr>
+                            `;
+                            listContainer.insertAdjacentHTML('beforeend', row);
+                        });
+
+                        calculateAdjustTotal();
+                    } else {
+                        listContainer.innerHTML = '<tr><td colspan="3" class="text-center text-danger">Gagal memuat data lokasi</td></tr>';
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    listContainer.innerHTML = '<tr><td colspan="3" class="text-center text-danger">Kesalahan koneksi</td></tr>';
+                });
             }
 
             function calculateAdjustTotal() {
