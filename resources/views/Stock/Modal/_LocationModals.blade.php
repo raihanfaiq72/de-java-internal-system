@@ -6,7 +6,6 @@
                 <h5 class="dr-card-title fs-5" id="location-modal-title">
                     <i class="iconoir-map-pin me-2 text-primary"></i> Buat Lokasi Stok
                 </h5>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="location-id">
@@ -22,9 +21,13 @@
                     </select>
                 </div>
             </div>
-            <div class="modal-footer gap-2">
-                <button class="dr-btn dr-btn-outline grow justify-content-center" data-bs-dismiss="modal">Batal</button>
-                <button class="dr-btn dr-btn-primary grow justify-content-center" onclick="submitLocation()">Simpan</button>
+            <div class="modal-footer d-flex gap-2">
+                <button class="dr-btn-modal dr-btn-modal-cancel grow justify-content-center" data-bs-dismiss="modal">
+                    <i class="iconoir-xmark"></i> Batal
+                </button>
+                <button class="dr-btn-modal dr-btn-modal-save grow justify-content-center" onclick="submitLocation()">
+                    <i class="iconoir-check"></i> Simpan
+                </button>
             </div>
         </div>
     </div>
@@ -38,14 +41,13 @@
                 <h5 class="dr-card-title fs-5">
                     <i class="iconoir-add-database me-2 text-success"></i> Persediaan Awal
                 </h5>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="opening-stock-location-id">
                 <div class="mb-4">
                     <label class="dr-label mb-2">Lokasi Terpilih</label>
                     <div class="position-relative">
-                        <input type="text" id="opening-stock-location-name" class="dr-input bg-light" style="background-color: #f1f1f4 !important;" readonly>
+                        <input type="text" id="opening-stock-location-name" class="dr-input" style="background-color: var(--dr-panel-soft) !important;" readonly>
                         <i class="iconoir-lock position-absolute end-0 top-50 translate-middle-y me-3 text-muted small"></i>
                     </div>
                 </div>
@@ -69,9 +71,13 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer gap-2">
-                <button class="dr-btn dr-btn-outline grow justify-content-center" data-bs-dismiss="modal">Batal</button>
-                <button class="dr-btn dr-btn-primary grow justify-content-center" onclick="submitOpeningStock()">Simpan</button>
+            <div class="modal-footer d-flex gap-2">
+                <button class="dr-btn-modal dr-btn-modal-cancel grow justify-content-center" data-bs-dismiss="modal">
+                    <i class="iconoir-xmark"></i> Batal
+                </button>
+                <button class="dr-btn-modal dr-btn-modal-save grow justify-content-center" onclick="submitOpeningStock()">
+                    <i class="iconoir-check"></i> Simpan
+                </button>
             </div>
         </div>
     </div>
@@ -85,14 +91,13 @@
                 <h5 class="dr-card-title fs-5">
                     <i class="iconoir-search-window me-2 text-warning"></i> Stok Opname
                 </h5>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="opname-location-id">
                 <div class="mb-4">
                     <label class="dr-label mb-2">Lokasi Terpilih</label>
                     <div class="position-relative">
-                        <input type="text" id="opname-location-name" class="dr-input bg-light" style="background-color: #f1f1f4 !important;" readonly>
+                        <input type="text" id="opname-location-name" class="dr-input" style="background-color: var(--dr-panel-soft) !important;" readonly>
                         <i class="iconoir-lock position-absolute end-0 top-50 translate-middle-y me-3 text-muted small"></i>
                     </div>
                 </div>
@@ -105,7 +110,7 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <label class="dr-label mb-2">Stok Tercatat</label>
-                        <input type="text" id="opname-qty-current" class="dr-input bg-light" style="background-color: #f1f1f4 !important;" readonly value="0">
+                        <input type="text" id="opname-qty-current" class="dr-input" style="background-color: var(--dr-panel-soft) !important;" readonly value="0">
                     </div>
                     <div class="col-md-6">
                         <label class="dr-label mb-2">Stok Fisik</label>
@@ -117,9 +122,13 @@
                     <textarea id="opname-note" class="dr-input" rows="2" style="height: auto;" placeholder="Alasan perbedaan stok..."></textarea>
                 </div>
             </div>
-            <div class="modal-footer gap-2">
-                <button class="dr-btn dr-btn-outline grow justify-content-center" data-bs-dismiss="modal">Batal</button>
-                <button class="dr-btn dr-btn-primary grow justify-content-center" onclick="submitStockOpname()">Simpan</button>
+            <div class="modal-footer d-flex gap-2">
+                <button class="dr-btn-modal dr-btn-modal-cancel grow justify-content-center" data-bs-dismiss="modal">
+                    <i class="iconoir-xmark"></i> Batal
+                </button>
+                <button class="dr-btn-modal dr-btn-modal-save grow justify-content-center" onclick="submitStockOpname()">
+                    <i class="iconoir-check-circle"></i> Simpan
+                </button>
             </div>
         </div>
     </div>

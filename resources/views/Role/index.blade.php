@@ -7,161 +7,128 @@
     <style>
         .page-wrapper {
             font-family: 'Inter', sans-serif;
-            background: #f8fafc;
-        }
-
-        .f-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            font-weight: 700;
-            color: #64748b;
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        .f-mono {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-        }
-
-        #roleTable thead th {
-            border-bottom: 1px solid #e2e8f0;
-            border-top: 1px solid #e2e8f0;
-            background: #f8fafc;
-            padding-top: 12px;
-            padding-bottom: 12px;
-            font-size: 11px;
-            text-transform: uppercase;
-            font-weight: 700;
-            color: #64748b;
-            letter-spacing: 0.5px;
-        }
-
-        #roleTable tbody td {
-            font-size: 13px;
-            color: #334155;
-            padding-top: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #f1f5f9;
-            vertical-align: middle;
-        }
-
-        .role-badge {
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 600;
+            background: #ffffff;
         }
 
         .permission-group h6 {
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
             font-weight: 700;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
-            color: #334155;
+            color: var(--dr-text-muted);
+            border-bottom: 1px solid var(--dr-line);
+            padding-bottom: 8px;
+            margin-bottom: 15px;
         }
 
         .form-check-label {
             font-size: 13px;
-            color: #475569;
+            color: var(--dr-text);
+        }
+        
+        .role-icon-box {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            border: 1px solid var(--dr-line);
+            border-radius: 8px;
+            color: var(--dr-primary);
         }
     </style>
 @endpush
 
 @section('main')
     <div class="page-wrapper">
-        <div class="page-content">
-            <div class="container-fluid">
+        <div class="page-content bg-white">
+            <div class="dr-page-shell">
+                <div class="container-fluid p-0">
+                    <!-- Breadcrumb -->
+                    <div class="dr-breadcrumb">
+                        <span>Main Menu</span>
+                        <span>/</span>
+                        <span class="dr-breadcrumb-icon"><i class="iconoir-user-shield"></i></span>
+                        <strong>Roles & Permissions</strong>
+                    </div>
 
-                <div class="row">
-                    <div class="col-sm-12">
-                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
-                            <h4 class="page-title">Admin: Roles</h4>
-                            <ol class="breadcrumb mb-0">
-                                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
-                                <li class="breadcrumb-item active">Roles</li>
-                            </ol>
+                    <!-- Hero Header -->
+                    <div class="dr-hero">
+                        <div>
+                            <h1 class="dr-title">Role Management</h1>
+                            <p class="dr-subtitle">Kelola tingkatan akses dan hak izin pengguna sistem secara terpusat.</p>
+                        </div>
+                        <div class="dr-actions">
+                            <button onclick="location.reload()" class="dr-btn dr-btn-outline">
+                                <i class="iconoir-refresh"></i> Refresh
+                            </button>
+                            <button onclick="openRoleModal()" class="dr-btn dr-btn-primary">
+                                <i class="iconoir-plus-circle"></i> Buat Role Baru
+                            </button>
                         </div>
                     </div>
-                </div>
 
-                <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
-                    <div class="card-header bg-white border-bottom py-3 px-4">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0 fw-bold text-dark">Daftar Role Tersedia</h6>
-                            <div class="text-end">
-                                <button onclick="location.reload()"
-                                    class="btn btn-white border fw-bold px-3 shadow-sm text-dark me-2">
-                                    <i class="fa fa-sync me-1 text-primary"></i> Refresh
-                                </button>
-                                <button onclick="openRoleModal()" class="btn btn-primary fw-bold px-4 shadow-sm">
-                                    <i class="fa fa-plus-circle me-1"></i> Buat Role Baru
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body p-0">
+                    <div class="dr-card p-0 overflow-hidden bg-white">
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="roleTable">
+                            <table class="dr-table align-middle mb-0" id="roleTable">
                                 <thead>
                                     <tr>
-                                        <th width="50" class="ps-4 text-center">#</th>
+                                        <th width="60" class="text-center">#</th>
                                         <th width="250">Nama Role</th>
                                         <th>Deskripsi</th>
-                                        <th width="200" class="text-center">Jumlah Izin</th>
-                                        <th width="200" class="text-center">Dibuat Pada</th>
-                                        <th width="200" class="text-end pe-4">Aksi</th>
+                                        <th width="150" class="text-center">Jumlah Izin</th>
+                                        <th width="150" class="text-center">Dibuat Pada</th>
+                                        <th width="150" class="text-end pe-4">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse($roles as $index => $role)
                                         <tr>
-                                            <td class="text-center ps-4 text-muted small">{{ $index + 1 }}</td>
+                                            <td class="text-center text-muted small">{{ $index + 1 }}</td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <div class="bg-light rounded text-primary me-3 border d-flex align-items-center justify-content-center"
-                                                        style="width:32px; height:32px;">
-                                                        <i class="fa fa-shield-alt"></i>
+                                                    <div class="role-icon-box me-3">
+                                                        <i class="iconoir-shield"></i>
                                                     </div>
                                                     <span class="fw-bold text-dark">{{ $role->name }}</span>
                                                 </div>
                                             </td>
                                             <td class="text-muted small">{{ $role->description ?: '-' }}</td>
                                             <td class="text-center">
-                                                <span
-                                                    class="role-badge bg-soft-info text-info border border-info border-opacity-25">{{ $role->permissions_count }}
-                                                    Modul</span>
+                                                <span class="dr-badge bg-soft-primary text-primary">
+                                                    {{ $role->permissions_count }} Modul
+                                                </span>
                                             </td>
-                                            <td class="text-center text-muted small f-mono">
+                                            <td class="text-center text-muted small">
                                                 {{ $role->created_at->format('d/m/Y') }}
                                             </td>
                                             <td class="text-end pe-4">
-                                                <button onclick="openRoleModal({{ $role->id }})"
-                                                    class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-primary me-1"
-                                                    title="Edit Role">
-                                                    <i class="fa fa-pencil"></i>
-                                                </button>
-                                                <form action="{{ route('roles.destroy', $role->id) }}" method="POST"
-                                                    class="d-inline"
-                                                    onsubmit="event.preventDefault(); const form = this; (async () => { if (await macConfirm('Hapus role {{ $role->name }}? User yang menggunakan role ini akan kehilangan akses.')) form.submit() })();">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit"
-                                                        class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-danger"
-                                                        title="Hapus Role">
-                                                        <i class="fa fa-trash"></i>
+                                                <div class="d-flex justify-content-end gap-1">
+                                                    <button onclick="openRoleModal({{ $role->id }})"
+                                                        class="dr-btn-icon dr-btn-icon-edit" title="Edit Role">
+                                                        <i class="iconoir-edit-pencil"></i>
                                                     </button>
-                                                </form>
+                                                    <form action="{{ route('roles.destroy', $role->id) }}" method="POST"
+                                                        class="d-inline"
+                                                        onsubmit="event.preventDefault(); const form = this; (async () => { if (await macConfirm('Hapus role {{ $role->name }}?', 'User yang menggunakan role ini akan kehilangan akses.')) form.submit() })();">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="dr-btn-icon dr-btn-icon-delete"
+                                                            title="Hapus Role">
+                                                            <i class="iconoir-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
                                             <td colspan="6" class="text-center py-5">
-                                                <p class="text-muted small">Belum ada role yang dibuat.</p>
+                                                <div class="text-muted small py-4">
+                                                    <i class="iconoir-shield-off fa-2x mb-2 opacity-25"></i>
+                                                    <p>Belum ada role yang dibuat.</p>
+                                                </div>
                                             </td>
                                         </tr>
                                     @endforelse
@@ -170,7 +137,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -179,96 +145,94 @@
     <div class="modal fade" id="roleModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-fullscreen">
             <form id="roleForm" action="{{ route('roles.store') }}" method="POST" class="modal-content"
-                style="background-color: #f8fafc;">
+                style="background-color: #ffffff;">
                 @csrf
                 <input type="hidden" name="_method" id="formMethod" value="POST">
 
-                <div class="modal-header bg-white border-bottom px-4 py-3 sticky-top shadow-sm">
+                <div class="modal-header bg-white border-bottom px-4 sticky-top d-flex align-items-center" style="padding-top: 20px !important; padding-bottom: 20px !important; box-shadow: var(--dr-shadow);">
                     <div class="d-flex align-items-center">
-                        <div class="bg-dark text-white p-2 rounded-2 me-3">
-                            <i class="fa fa-user-shield fa-lg"></i>
+                        <div class="me-3">
+                            <i class="iconoir-user-shield text-dark" style="font-size: 28px;"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title fw-bold text-dark mb-0" id="roleModalTitle">Buat Role Baru</h5>
-                            <p class="text-muted small mb-0">Tentukan nama role dan centang izin akses yang diberikan.</p>
+                            <h5 class="dr-title mb-1" id="roleModalTitle" style="font-size: 18px;">Buat Role Baru</h5>
+                            <p class="dr-subtitle" style="font-size: 13px;">Tentukan nama role dan centang izin akses yang diberikan.</p>
                         </div>
                     </div>
-                    <div class="ms-auto d-flex align-items-center gap-3">
-                        <button type="button" class="btn btn-link text-secondary text-decoration-none fw-semibold"
-                            data-bs-dismiss="modal">Batalkan</button>
-                        <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">
-                            <i class="fa fa-save me-2"></i>Simpan Role
+                    <div class="ms-auto d-flex align-items-center gap-2">
+                        <button type="button" class="dr-btn-modal" data-bs-dismiss="modal">
+                            <i class="iconoir-xmark text-danger"></i> Batal
+                        </button>
+                        <button type="submit" class="dr-btn-modal">
+                            <i class="iconoir-check text-success"></i> Simpan Role
                         </button>
                     </div>
                 </div>
 
                 <div class="modal-body p-4">
-                    <div class="row g-4 justify-content-center">
-                        <div class="col-lg-4">
-                            <h6 class="fw-bold text-dark mb-3 text-uppercase small ls-1"><i
-                                    class="fa fa-info-circle me-2 text-primary"></i>Informasi Dasar</h6>
-                            <div class="card border-0 shadow-sm rounded-3">
-                                <div class="card-body p-4">
-                                    <div class="mb-3">
-                                        <label class="f-label">Nama Role *</label>
-                                        <input type="text" name="name" id="roleName" class="form-control fw-bold"
-                                            placeholder="Misal: Admin Gudang" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="f-label">Deskripsi</label>
-                                        <textarea name="description" id="roleDesc" class="form-control" rows="3"
-                                            placeholder="Deskripsi tugas role ini..."></textarea>
-                                    </div>
+                    <div class="row g-4">
+                        <div class="col-lg-3">
+                            <div class="d-flex align-items-center mb-3" style="height: 32px;">
+                                <h6 class="fw-bold text-dark mb-0 text-uppercase small ls-1">
+                                    <i class="iconoir-info-circle me-2 text-primary"></i>Informasi Dasar
+                                </h6>
+                            </div>
+                            <div class="dr-card">
+                                <div class="mb-3">
+                                    <label class="dr-label mb-2">Nama Role *</label>
+                                    <input type="text" name="name" id="roleName" class="dr-input fw-bold"
+                                        placeholder="Misal: Admin Gudang" required>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="dr-label mb-2">Deskripsi</label>
+                                    <textarea name="description" id="roleDesc" class="dr-input" rows="4"
+                                        placeholder="Deskripsi tugas role ini..."></textarea>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-lg-8">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="fw-bold text-dark mb-0 text-uppercase small ls-1"><i
-                                        class="fa fa-lock me-2 text-primary"></i>Hak Akses (Permissions)</h6>
-                                <button type="button" class="btn btn-sm btn-light border small"
+                        <div class="col-lg-9">
+                            <div class="d-flex justify-content-between align-items-center mb-3" style="height: 32px;">
+                                <h6 class="fw-bold text-dark mb-0 text-uppercase small ls-1">
+                                    <i class="iconoir-lock me-2 text-primary"></i>Hak Akses (Permissions)
+                                </h6>
+                                <button type="button" class="dr-btn dr-btn-outline py-1 px-3" style="font-size: 11px;"
                                     onclick="toggleAllPermissions()">Pilih Semua</button>
                             </div>
 
-                            <div class="card border-0 shadow-sm rounded-3">
-                                <div class="card-body p-4">
-                                    <div class="row g-4">
-                                        @php
-                                            $prefixes = \App\Models\Prefix::with('permissions')->orderBy('name')->get();
-                                        @endphp
-                                        @foreach ($prefixes as $prefix)
-                                            <div class="col-md-6 permission-group">
-                                                <div
-                                                    class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
-                                                    <h6 class="mb-0 text-primary">{{ $prefix->name }}</h6>
-
-                                                    <div class="form-check form-switch">
-
-                                                        <input class="form-check-input" type="checkbox"
-                                                            id="check-all-{{ $prefix->id }}"
-                                                            onchange="toggleGroup('{{ $prefix->id }}', this)">
-                                                        <label class="form-check-label small text-muted"
-                                                            for="check-all-{{ $prefix->id }}">All</label>
-                                                    </div>
+                            <div class="row g-3">
+                                @php
+                                    $prefixes = \App\Models\Prefix::with('permissions')->orderBy('name')->get();
+                                @endphp
+                                @foreach ($prefixes as $prefix)
+                                    <div class="col-md-6 col-xl-4">
+                                        <div class="dr-card p-0 overflow-hidden h-100">
+                                            <div class="bg-white d-flex justify-content-between align-items-center py-2 px-3 border-bottom">
+                                                <span class="fw-bold text-primary small" style="letter-spacing: 0.5px;">{{ strtoupper($prefix->name) }}</span>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="check-all-{{ $prefix->id }}"
+                                                        onchange="toggleGroup('{{ $prefix->id }}', this)">
                                                 </div>
-                                                <div class="d-flex flex-wrap gap-2">
+                                            </div>
+                                            <div class="p-3">
+                                                <div class="d-flex flex-column gap-2">
                                                     @foreach ($prefix->permissions as $perm)
-                                                        <div class="form-check me-2 mb-1">
+                                                        <div class="form-check">
                                                             <input
                                                                 class="form-check-input permission-checkbox group-{{ $prefix->id }}"
                                                                 type="checkbox" name="permissions[]" value="{{ $perm->id }}"
                                                                 id="perm-{{ $perm->id }}">
-                                                            <label class="form-check-label small" for="perm-{{ $perm->id }}">
+                                                            <label class="form-check-label small" for="perm-{{ $perm->id }}" style="font-size: 12px; cursor: pointer;">
                                                                 {{ $perm->description ?: $perm->name }}
                                                             </label>
                                                         </div>
                                                     @endforeach
                                                 </div>
                                             </div>
-                                        @endforeach
+                                        </div>
                                     </div>
-                                </div>
+                                @endforeach
                             </div>
                         </div>
                     </div>

@@ -1,62 +1,54 @@
 <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content border-0" style="background-color: #f8fafc;">
-            <div class="modal-header bg-white border-bottom px-5 py-4 sticky-top shadow-sm">
-                <div class="d-flex align-items-center">
-                    <div class="bg-primary text-white p-2 rounded-2 me-3">
-                        <i class="fa fa-user-lock fa-lg"></i>
-                    </div>
-                    <div>
-                        <h5 class="modal-title fw-bold text-dark mb-0" id="userModalTitle">Formulir User</h5>
-                        <p class="text-muted small mb-0">Kelola akun pengguna sistem.</p>
-                    </div>
-                </div>
-                <div class="ms-auto d-flex align-items-center gap-3">
-                    <button type="button" class="btn btn-link text-secondary text-decoration-none fw-semibold" data-bs-dismiss="modal">Batalkan</button>
-                    <button type="button" class="btn btn-primary px-4 fw-bold shadow-sm" onclick="saveUser()">
-                        <i class="fa fa-save me-2"></i>Simpan
-                    </button>
-                </div>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="dr-card-title fs-5" id="userModalTitle">Tambah User Baru</h5>
             </div>
 
-            <div class="modal-body p-4">
+            <div class="modal-body">
                 <form id="userForm">
                     <input type="hidden" id="user_form_mode" value="create">
                     <input type="hidden" id="edit_user_id" value="">
 
-                    <div class="card border-0 shadow-sm rounded-3">
-                        <div class="card-body p-4">
-                            <div class="row g-3">
-                                <div class="col-md-12">
-                                    <label class="f-label">Nama Lengkap *</label>
-                                    <input type="text" id="modal_user_name" class="form-control f-input fw-bold" placeholder="Nama Lengkap">
+                    <div class="row g-4">
+                        <div class="col-md-12">
+                            <label class="dr-label mb-2">Nama Lengkap *</label>
+                            <input type="text" id="modal_user_name" class="dr-input fw-bold" placeholder="Nama Lengkap">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="dr-label mb-2">Username *</label>
+                            <input type="text" id="modal_user_username" class="dr-input" placeholder="Username Login">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="dr-label mb-2">Email *</label>
+                            <input type="email" id="modal_user_email" class="dr-input" placeholder="email@example.com">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="dr-label mb-2">Password</label>
+                            <div class="p-3 border mb-3" style="background-color: var(--dr-panel-soft); border-radius: var(--dr-radius-sm);">
+                                <div class="d-flex align-items-center gap-2 text-muted small mb-3">
+                                    <i class="iconoir-info-empty text-primary"></i>
+                                    <span>Kosongkan password jika tidak ingin mengubah (saat edit).</span>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="f-label">Username *</label>
-                                    <input type="text" id="modal_user_username" class="form-control f-input" placeholder="Username Login">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="f-label">Email *</label>
-                                    <input type="email" id="modal_user_email" class="form-control f-input" placeholder="email@example.com">
-                                </div>
-                                <div class="col-md-12">
-                                    <div class="alert alert-soft-warning border-0 small py-2 mb-2">
-                                        <i class="fa fa-info-circle me-1"></i> Kosongkan password jika tidak ingin mengubah (saat edit).
-                                    </div>
-                                    <label class="f-label">Password</label>
-                                    <input type="password" id="modal_user_password" class="form-control f-input" placeholder="Password...">
-                                </div>
-                                                            </div>
+                                <input type="password" id="modal_user_password" class="dr-input bg-white" placeholder="Password baru...">
+                            </div>
                         </div>
                     </div>
                 </form>
+            </div>
+            <div class="modal-footer d-flex gap-2">
+                <button type="button" class="dr-btn-modal dr-btn-modal-cancel grow justify-content-center" data-bs-dismiss="modal">
+                    <i class="iconoir-xmark"></i> Batal
+                </button>
+                <button type="button" class="dr-btn-modal dr-btn-modal-save grow justify-content-center" onclick="saveUser()">
+                    <i class="iconoir-check"></i> Simpan User
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Include Users/Modal/modal-fullscreen specific logic here or in index
     async function openUserModal(id = null) {
         const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('userModal'));
         document.getElementById('userForm').reset();
@@ -102,6 +94,11 @@
         if(pass) payload.password = pass;
 
         try {
+            const btn = event.currentTarget;
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...';
+
             const res = await fetch(url, {
                 method: method,
                 headers: {
@@ -112,8 +109,10 @@
             });
             const result = await res.json();
             
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+
             if(result.success) {
-                alert('Data User berhasil disimpan.');
                 bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
                 loadUserData();
             } else {

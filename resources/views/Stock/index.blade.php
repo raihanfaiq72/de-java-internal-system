@@ -505,11 +505,11 @@
                                 <td class="text-end text-muted font-monospace">${formatCurrency(qty * (item.harga_jual || 0))}</td>
                                 <td class="text-end pe-4">
                                     <div class="d-flex justify-content-end gap-1">
-                                        <button class="dr-btn dr-btn-outline" style="padding: 6px 10px; min-height: unset; border-radius: 8px;" onclick="showFifoDetail(${item.id})" title="Detail FIFO">
-                                            <i class="iconoir-list" style="font-size: 16px;"></i>
+                                        <button class="dr-btn-icon dr-btn-icon-view" onclick="showFifoDetail(${item.id})" title="Detail FIFO">
+                                            <i class="iconoir-list"></i>
                                         </button>
-                                        <button class="dr-btn dr-btn-primary" style="padding: 6px 10px; min-height: unset; border-radius: 8px;" onclick="showAdjustStockModal(${item.id}, '${item.nama_produk}', '${item.sku_kode}', ${qty})" title="Adjust">
-                                            <i class="iconoir-edit-pencil" style="font-size: 16px;"></i>
+                                        <button class="dr-btn-icon dr-btn-icon-edit" onclick="showAdjustStockModal(${item.id}, '${item.nama_produk}', '${item.sku_kode}', ${qty})" title="Adjust">
+                                            <i class="iconoir-edit-pencil"></i>
                                         </button>
                                     </div>
                                 </td>
@@ -903,38 +903,43 @@
                 .then(res => {
                     if (res.success) {
                         let html = `
-                                                                                                                <div class="alert alert-light border mb-3">
-                                                                                                                    <h6 class="mb-0 fw-bold">${res.data.product.nama_produk}</h6>
-                                                                                                                    <small class="text-muted">Total Stok: ${new Intl.NumberFormat('id-ID').format(res.data.total_stock)} ${res.data.product.satuan}</small>
-                                                                                                                </div>
-                                                                                                                <h6 class="small fw-bold text-uppercase text-muted mb-2">Batch Stok (FIFO)</h6>
-                                                                                                                <div class="table-responsive border rounded">
-                                                                                                                    <table class="table table-sm table-striped mb-0">
-                                                                                                                        <thead class="bg-light">
-                                                                                                                            <tr>
-                                                                                                                                <th>Tgl Masuk</th>
-                                                                                                                                <th>Harga Beli</th>
-                                                                                                                                <th>Sisa Qty</th>
-                                                                                                                                <th>Lokasi</th>
-                                                                                                                            </tr>
-                                                                                                                        </thead>
-                                                                                                                        <tbody>
-                                                                                                            `;
+                            <div class="p-3 border mb-4 d-flex align-items-center gap-3" style="background-color: var(--dr-panel-soft); border-radius: var(--dr-radius-sm);">
+                                <div class="bg-white border d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; border-radius: 8px;">
+                                    <i class="iconoir-box-iso text-primary fs-5"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-bold text-dark">${res.data.product.nama_produk}</h6>
+                                    <small class="text-muted">Total Stok: <strong class="text-dark">${new Intl.NumberFormat('id-ID').format(res.data.total_stock)}</strong> ${res.data.product.satuan}</small>
+                                </div>
+                            </div>
+
+                            <h6 class="small fw-bold text-uppercase text-muted mb-3 tracking-wider" style="letter-spacing: 0.5px;">Batch Stok (FIFO)</h6>
+                            <div class="dr-table-container border rounded overflow-hidden">
+                                <table class="dr-table align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th style="font-size: 10px; padding: 10px 15px;">Tgl Masuk</th>
+                                            <th style="font-size: 10px; padding: 10px 15px;">Harga Beli</th>
+                                            <th style="font-size: 10px; padding: 10px 15px;">Sisa Qty</th>
+                                            <th style="font-size: 10px; padding: 10px 15px;">Lokasi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        `;
 
                         if (res.data.batches.length > 0) {
                             res.data.batches.forEach(b => {
                                 html += `
-                                                                                                                        <tr>
-                                                                                                                            <td>${new Date(b.created_at).toLocaleDateString('id-ID')}</td>
-                                                                                                                            <td>${formatCurrency(b.cost_price)}</td>
-                                                                                                                            <td class="fw-bold text-success">${b.remaining_qty}</td>
-                                                                                                                            <td>${b.stock_location?.name || '-'}</td>
-                                                                                                                        </tr>
-                                                                                                                    `;
+                                    <tr>
+                                        <td class="small text-muted" style="padding: 12px 15px;">${new Date(b.created_at).toLocaleDateString('id-ID')}</td>
+                                        <td class="font-monospace small" style="padding: 12px 15px;">${formatCurrency(b.cost_price)}</td>
+                                        <td class="fw-bold text-dark" style="padding: 12px 15px;">${b.remaining_qty}</td>
+                                        <td class="small text-muted" style="padding: 12px 15px;">${b.stock_location?.name || '-'}</td>
+                                    </tr>
+                                `;
                             });
                         } else {
-                            html +=
-                                `<tr><td colspan="4" class="text-center text-muted py-3">Tidak ada batch aktif.</td></tr>`;
+                            html += `<tr><td colspan="4" class="text-center text-muted py-4 small">Tidak ada batch aktif untuk produk ini.</td></tr>`;
                         }
 
                         html += `</tbody></table></div>`;

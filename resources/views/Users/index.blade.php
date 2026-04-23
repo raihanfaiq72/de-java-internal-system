@@ -4,79 +4,62 @@
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
 
     <div class="page-wrapper">
-        <div class="page-content">
-            <div class="container-fluid">
-
-                <div class="row">
-                    <div class="col-sm-12">
-                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
-                            <h4 class="page-title">Manajemen Pengguna</h4>
-                            <ol class="breadcrumb mb-0">
-                                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
-                                <li class="breadcrumb-item active">Users</li>
-                            </ol>
-                        </div>
+        <div class="page-content bg-white">
+            <div class="dr-page-shell">
+                <div class="container-fluid p-0">
+                    <!-- Hero Header -->
+                    <div class="dr-breadcrumb">
+                        <span>Sistem</span>
+                        <span>/</span>
+                        <span class="dr-breadcrumb-icon"><i class="iconoir-user"></i></span>
+                        <strong>Manajemen Pengguna</strong>
                     </div>
-                </div>
 
-                <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
-                    <div class="card-header bg-white border-bottom py-3 px-4">
-                        <h6 class="mb-0 fw-bold text-dark">Daftar Pengguna</h6>
-                        <div class="ms-auto text-end">
-                            <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openUserModal()">
-                                <i class="fa fa-plus-circle me-1"></i> Tambah User Baru
+                    <div class="dr-hero">
+                        <div>
+                            <h1 class="dr-title">Daftar Pengguna</h1>
+                            <p class="dr-subtitle">Kelola hak akses dan profil pengguna sistem secara terpusat.</p>
+                        </div>
+                        <div class="dr-actions">
+                            <div class="position-relative" style="width: 300px;">
+                                <i class="iconoir-search text-muted position-absolute start-0 top-50 translate-middle-y ms-3" style="font-size: 16px;"></i>
+                                <input type="text" id="filter-search" class="dr-input ps-5" placeholder="Cari nama, username..." onkeyup="if(event.key === 'Enter') loadUserData()">
+                            </div>
+                            <button class="dr-btn dr-btn-outline" onclick="loadUserData()">
+                                <i class="iconoir-refresh"></i> Refresh
+                            </button>
+                            <button class="dr-btn dr-btn-primary" onclick="openUserModal()">
+                                <i class="iconoir-plus-circle"></i> Tambah User
                             </button>
                         </div>
                     </div>
 
-                    <div class="card-body p-4 bg-white">
-                        <!-- Filter Section -->
-                        <div class="row g-2 mb-4 align-items-end bg-light p-3 rounded border">
-                            <div class="col-lg-5">
-                                <label class="f-label">Pencarian</label>
-                                <div class="input-group input-group-finance">
-                                    <span class="input-group-text bg-white border-end-0"><i
-                                            class="fa fa-search text-muted"></i></span>
-                                    <input type="text" id="filter-search"
-                                        class="form-control border-start-0 ps-0 shadow-none"
-                                        placeholder="Nama, Username, atau Email...">
-                                </div>
-                            </div>
-                            <div class="col-lg-7 text-end">
-                                <button onclick="loadUserData()"
-                                    class="btn btn-dark fw-bold py-2 px-4 shadow-sm btn-sm">FILTER</button>
-                                <button onclick="resetFilter()"
-                                    class="btn btn-light border fw-bold text-dark py-2 btn-sm">RESET</button>
-                            </div>
-                        </div>
-
-                        <!-- Table Structure -->
+                    <!-- Main Table Card -->
+                    <div class="dr-card p-0 overflow-hidden">
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="userTable">
-                                <thead class="bg-light text-uppercase text-secondary fw-bold"
-                                    style="font-size: 11px; letter-spacing: 0.5px;">
+                            <table class="dr-table align-middle mb-0" id="userTable">
+                                <thead>
                                     <tr>
-                                        <th width="50" class="ps-4 text-center">#</th>
-                                        <th width="200">Nama Lengkap</th>
-                                        <th width="150">Username</th>
-                                        <th width="200">Email</th>
-                                        <th width="120" class="text-center">Status</th>
-                                        <th width="150" class="text-center">Terdaftar</th>
-                                        <th width="200" class="text-end pe-4">Aksi</th>
+                                        <th width="60" class="text-center">#</th>
+                                        <th>Pengguna</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center">Terdaftar</th>
+                                        <th width="150" class="text-end pe-4">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody id="userTableBody" class="border-top-0">
+                                <tbody id="userTableBody">
                                     <!-- Rows injected by JS -->
                                 </tbody>
                             </table>
                         </div>
 
                         <!-- Pagination -->
-                        <div
-                            class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center px-4 py-3 bg-light border-top">
                             <span id="pagination-info" class="text-muted small fw-medium"></span>
                             <nav>
-                                <ul class="pagination pagination-sm mb-0 shadow-sm" id="pagination-container"></ul>
+                                <ul class="pagination pagination-sm mb-0 gap-1" id="pagination-container"></ul>
                             </nav>
                         </div>
                     </div>
@@ -90,59 +73,18 @@
 
 @push('css')
     <style>
-        .f-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
+        .user-avatar-text {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: var(--dr-panel-soft);
+            color: var(--dr-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-weight: 700;
-            color: #64748b;
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        .f-mono {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-        }
-
-        #userTable thead th {
-            border-bottom: 1px solid #e2e8f0;
-            border-top: 1px solid #e2e8f0;
-            background: #f8fafc;
-            padding-top: 12px;
-            padding-bottom: 12px;
-        }
-
-        #userTable tbody td {
-            font-size: 13px;
-            color: #334155;
-            padding-top: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .clickable-row {
-            cursor: pointer;
-            transition: background-color 0.1s;
-        }
-
-        .clickable-row:hover {
-            background-color: #f1f5f9 !important;
-        }
-
-        .f-badge {
-            font-size: 10px;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: inline-block;
-        }
-
-        .f-active {
-            background: #dcfce7;
-            color: #166534;
+            font-size: 14px;
+            border: 1px solid var(--dr-line);
         }
     </style>
 @endpush
@@ -153,8 +95,7 @@
 
         async function loadUserData(url = USER_API_URL, page = 1) {
             const tbody = document.getElementById('userTableBody');
-            tbody.innerHTML =
-                '<tr><td colspan="7" class="text-center p-5"><div class="spinner-border spinner-border-sm text-primary"></div><p class="mt-2 text-muted small mb-0">Memuat data user...</p></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center p-5"><div class="spinner-border spinner-border-sm text-dark"></div><p class="mt-2 text-muted small mb-0">Memuat data user...</p></td></tr>';
 
             try {
                 const searchVal = document.getElementById('filter-search').value;
@@ -176,8 +117,7 @@
                 }
             } catch (error) {
                 console.error(error);
-                tbody.innerHTML =
-                    '<tr><td colspan="7" class="text-center text-danger p-4">Gagal memuat data.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger p-4 small">Gagal memuat data. Periksa koneksi atau hubungi admin.</td></tr>';
             }
         }
 
@@ -186,36 +126,46 @@
             tbody.innerHTML = '';
 
             if (!data || data.length === 0) {
-                tbody.innerHTML =
-                    '<tr><td colspan="7" class="text-center p-5 text-muted fst-italic">Data user tidak ditemukan.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center p-5 text-muted fst-italic small">Data user tidak ditemukan.</td></tr>';
                 return;
             }
 
             data.forEach((item, index) => {
+                const initials = item.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
                 const tr = `
-                                    <tr class="clickable-row">
-                                        <td class="text-center ps-4 text-muted small">${index + 1}</td>
-                                        <td class="fw-bold text-dark">${item.name}</td>
-                                        <td class="text-muted">${item.username}</td>
-                                        <td class="text-muted"><i class="fa fa-envelope me-1 small"></i> ${item.email}</td>
-                                        <td class="text-center">
-                                            ${item.email_verified_at 
-                                                ? '<span class="f-badge f-active text-success"><i class="fa fa-check-circle me-1"></i>Verified</span>' 
-                                                : '<span class="f-badge bg-soft-secondary text-secondary"><i class="fa fa-clock me-1"></i>Unverified</span>'}
-                                        </td>
-                                        <td class="text-center text-muted small">${new Date(item.created_at).toLocaleDateString('id-ID')}</td>
-                                        <td class="text-end pe-4">
-                                            <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-primary me-1" onclick="openUserModal(${item.id})"><i class="fa fa-pencil"></i></button>
-                                            <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-danger" onclick="deleteUser(${item.id})"><i class="fa fa-trash"></i></button>
-                                        </td>
-                                    </tr>
-                                `;
+                    <tr>
+                        <td class="text-center text-muted small">${index + 1}</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="user-avatar-text">${initials}</div>
+                                <div>
+                                    <div class="fw-bold text-dark">${item.name}</div>
+                                    <div class="text-muted small" style="font-size: 11px;">ID: #${item.id}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="font-monospace small bg-light px-2 py-1 rounded">${item.username}</span></td>
+                        <td><div class="text-muted small"><i class="iconoir-mail me-1"></i> ${item.email}</div></td>
+                        <td class="text-center">
+                            ${item.email_verified_at 
+                                ? '<span class="dr-badge bg-soft-success text-success"><i class="iconoir-check-circle me-1"></i>Verified</span>' 
+                                : '<span class="dr-badge bg-soft-secondary text-secondary"><i class="iconoir-clock me-1"></i>Pending</span>'}
+                        </td>
+                        <td class="text-center text-muted small">${new Date(item.created_at).toLocaleDateString('id-ID')}</td>
+                        <td class="text-end pe-4">
+                            <div class="d-flex justify-content-end gap-1">
+                                <button class="dr-btn-icon dr-btn-icon-edit" onclick="openUserModal(${item.id})"><i class="iconoir-edit-pencil"></i></button>
+                                <button class="dr-btn-icon dr-btn-icon-delete" onclick="deleteUser(${item.id})"><i class="iconoir-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
                 tbody.insertAdjacentHTML('beforeend', tr);
             });
         }
 
         async function deleteUser(id) {
-            if (!await macConfirm('Hapus User', 'Hapus user ini?')) return;
+            if (!await macConfirm('Hapus User', 'Apakah Anda yakin ingin menghapus user ini secara permanen?')) return;
             try {
                 const res = await fetch(`${USER_API_URL}/${id}`, {
                     method: 'DELETE',
@@ -226,7 +176,6 @@
                 });
                 const dat = await res.json();
                 if (dat.success) {
-                    alert('Berhasil dihapus');
                     loadUserData();
                 } else alert(dat.message);
             } catch (e) {
@@ -256,10 +205,11 @@
                 }
 
                 const onclick = link.url ? `onclick="loadUserData(undefined, ${pageNum})"` : '';
+                const label = link.label.includes('Previous') ? '<i class="iconoir-nav-arrow-left"></i>' : (link.label.includes('Next') ? '<i class="iconoir-nav-arrow-right"></i>' : link.label);
 
                 container.insertAdjacentHTML('beforeend', `
                     <li class="page-item ${activeClass} ${disabledClass}">
-                        <button class="page-link border-0 mx-1 rounded shadow-sm fw-bold" ${onclick}>${link.label}</button>
+                        <button class="page-link border-0 mx-0 rounded shadow-none fw-bold" ${onclick}>${label}</button>
                     </li>`);
             });
         }

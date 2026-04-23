@@ -11,15 +11,17 @@
         :root {
             --dr-bg: #ffffff;
             --dr-panel: #ffffff;
-            --dr-panel-soft: #fbfaf8;
-            --dr-line: #e7e2dc;
-            --dr-line-strong: #d8d0c7;
+            --dr-panel-soft: #f9fafb;
+            --dr-line: #f0f0f0;
+            --dr-line-strong: #e5e5e5;
             --dr-text: #181818;
             --dr-muted: #8f8a83;
             --dr-muted-2: #a9a39c;
             --dr-green: #0b9d68;
             --dr-red: #ea544b;
             --dr-amber: #d7a238;
+            --dr-radius: 12px;
+            --dr-radius-sm: 8px;
             --dr-shadow: 0 22px 50px rgba(34, 28, 21, 0.08);
         }
 
@@ -106,7 +108,7 @@
         .dr-btn,
         .dr-select {
             height: 42px;
-            border-radius: 12px;
+            border-radius: var(--dr-radius-sm);
             border: 1px solid var(--dr-line-strong);
             background: #fff;
             color: var(--dr-text);
@@ -131,7 +133,7 @@
         .dr-card {
             background: var(--dr-panel);
             border: 1px solid var(--dr-line-strong);
-            border-radius: 16px;
+            border-radius: var(--dr-radius);
             box-shadow: 0 8px 24px rgba(33, 29, 25, 0.04);
         }
 
@@ -154,7 +156,7 @@
         .dr-stat-icon {
             width: 36px;
             height: 36px;
-            border-radius: 10px;
+            border-radius: var(--dr-radius-sm);
             border: 1px solid var(--dr-line);
             display: inline-flex;
             align-items: center;
@@ -337,8 +339,8 @@
             width: 100%;
             max-width: 58px;
             margin: 0 auto;
-            border-radius: 14px;
-            border: 1px solid #e7e2dc;
+            border-radius: var(--dr-radius-sm);
+            border: 1px solid var(--dr-line);
             background:
                 repeating-linear-gradient(
                     -25deg,
@@ -375,7 +377,7 @@
             bottom: calc(100% + 12px);
             transform: translateX(-50%);
             padding: 6px 10px;
-            border-radius: 10px;
+            border-radius: var(--dr-radius-sm);
             background: #232323;
             color: #fff;
             min-width: 85px;
@@ -429,9 +431,16 @@
             box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
         }
 
-        .dr-table-card,
+        .dr-table-card {
+            padding: 0;
+            overflow: hidden;
+            border-radius: var(--dr-radius);
+        }
+
         .dr-feed-card {
             padding: 14px 18px;
+            border-radius: var(--dr-radius);
+            overflow: hidden;
         }
 
         .dr-table-card .table-responsive {
@@ -502,6 +511,13 @@
             color: var(--dr-text);
         }
 
+        .dr-customer-thumb {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--dr-radius-sm);
+            background: var(--dr-panel-soft);
+        }
+
         .dr-check {
             width: 16px;
             height: 16px;
@@ -570,7 +586,7 @@
         .dr-feed-thumb {
             width: 44px;
             height: 44px;
-            border-radius: 12px;
+            border-radius: var(--dr-radius-sm);
             border: 1px solid var(--dr-line);
             background:
                 linear-gradient(140deg, rgba(255, 255, 255, 0.82), rgba(246, 241, 235, 0.9)),
@@ -618,6 +634,13 @@
             padding: 0 10px;
             border-radius: 999px;
             font-size: 12px;
+            font-weight: 700;
+        }
+
+        .dr-badge {
+            padding: 5px 10px;
+            border-radius: var(--dr-radius-sm);
+            font-size: 13px;
             font-weight: 700;
         }
 
@@ -709,7 +732,7 @@
         .dr-action-card {
             background: #ffffff;
             border: 1px solid var(--dr-line-strong);
-            border-radius: 16px;
+            border-radius: var(--dr-radius);
             padding: 14px 18px;
             display: flex;
             align-items: center;
@@ -734,7 +757,7 @@
         .dr-inv-metric {
             background: #fbfaf8;
             border: 1px solid var(--dr-line-strong);
-            border-radius: 12px;
+            border-radius: var(--dr-radius);
             padding: 12px;
             margin-bottom: 12px;
             display: flex;
@@ -762,7 +785,7 @@
 
         .dr-inv-sub {
             padding: 10px;
-            border-radius: 10px;
+            border-radius: var(--dr-radius-sm);
             border: 1px solid var(--dr-line-strong);
             text-align: center;
             background: #fff;
@@ -797,7 +820,7 @@
             width: 36px;
             height: 36px;
             background: #fbfaf8;
-            border-radius: 10px;
+            border-radius: var(--dr-radius-sm);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -831,7 +854,7 @@
         .dr-alert-item {
             background: #fff5de;
             border: 1px solid #f9e6bc;
-            border-radius: 12px;
+            border-radius: var(--dr-radius);
             padding: 10px 16px;
             display: flex;
             align-items: center;
@@ -910,8 +933,8 @@
             height: 42px !important;
         }
         .ts-wrapper.tom-select-standard .ts-control {
-            border-radius: 12px !important;
             border: 1px solid var(--dr-line-strong) !important;
+            border-radius: var(--dr-radius-sm) !important;
             padding: 0 16px !important;
             height: 42px !important;
             display: flex !important;

@@ -17,21 +17,24 @@ class UserPlotController extends Controller
         $offices = Office::all();
         $roles = Roles::all();
         $plots = UserOfficeRole::with(['user', 'office', 'role'])
-            ->get()
-            ->map(function ($plot) {
-                return (object) [
-                    'id' => $plot->id,
-                    'user_id' => $plot->user_id,
-                    'office_id' => $plot->office_id,
-                    'role_id' => $plot->role_id,
-                    'user_name' => $plot->user ? $plot->user->name : null,
-                    'office_name' => $plot->office ? $plot->office->name : null,
-                    'role_name' => $plot->role ? $plot->role->name : null,
-                    'is_sales' => $plot->user ? $plot->user->is_sales : false,
-                    'created_at' => $plot->created_at,
-                    'updated_at' => $plot->updated_at,
-                ];
-            });
+            ->latest()
+            ->paginate(10);
+            
+        // Map the paginator's items
+        $plots->getCollection()->transform(function ($plot) {
+            return (object) [
+                'id' => $plot->id,
+                'user_id' => $plot->user_id,
+                'office_id' => $plot->office_id,
+                'role_id' => $plot->role_id,
+                'user_name' => $plot->user ? $plot->user->name : null,
+                'office_name' => $plot->office ? $plot->office->name : null,
+                'role_name' => $plot->role ? $plot->role->name : null,
+                'is_sales' => $plot->user ? $plot->user->is_sales : false,
+                'created_at' => $plot->created_at,
+                'updated_at' => $plot->updated_at,
+            ];
+        });
 
         return view('UserPlot.index', compact('users', 'offices', 'roles', 'plots'));
     }

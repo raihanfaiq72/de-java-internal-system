@@ -277,34 +277,77 @@
         }
 
         .dr-btn-primary { background: var(--dr-primary); color: #fff; }
-        .dr-btn-primary:hover { background: #333333; transform: translateY(-1px); }
-        
-        .dr-btn-success { background: var(--dr-success); color: #fff; }
-        .dr-btn-success:hover { background: #219150; transform: translateY(-1px); }
+        .dr-btn-primary { background: var(--dr-primary) !important; color: #ffffff !important; border: none !important; }
+        .dr-btn-primary:hover { background: #333333 !important; transform: translateY(-1px); }
 
-        .dr-btn-danger { background: var(--dr-danger); color: #fff; }
-        .dr-btn-danger:hover { background: #b32626; transform: translateY(-1px); }
+        .dr-btn-outline { background: #ffffff !important; color: var(--dr-text) !important; border: 1.5px solid var(--dr-line) !important; }
+        .dr-btn-outline:hover { background: var(--dr-panel-soft) !important; border-color: var(--dr-line-strong) !important; transform: translateY(-1px); }
 
-        .dr-btn-outline {
-            background: transparent;
-            border: 1.5px solid var(--dr-line-strong);
-            color: var(--dr-text);
+        /* Premium Save & Cancel Buttons */
+        .dr-btn-save {
+            background: #ffffff !important;
+            color: #007AFF !important;
+            border: 1.5px solid #007AFF !important;
+            font-weight: 700 !important;
+            gap: 10px !important;
         }
-
-        .dr-btn-outline:hover {
-            background: var(--dr-line);
+        .dr-btn-save:hover {
+            background: #f0f7ff !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.15);
         }
+        .dr-btn-save i { color: #007AFF !important; font-size: 18px; }
+
+        .dr-btn-cancel {
+            background: #ffffff !important;
+            color: var(--dr-text-muted) !important;
+            border: 1.5px solid var(--dr-line) !important;
+            font-weight: 700 !important;
+            gap: 10px !important;
+        }
+        .dr-btn-cancel:hover {
+            background: #f8f9fa !important;
+            color: var(--dr-text) !important;
+            border-color: var(--dr-line-strong) !important;
+            transform: translateY(-1px);
+        }
+        .dr-btn-cancel i { color: var(--dr-text-muted) !important; font-size: 18px; }
 
         .dr-btn-icon {
-            width: 42px;
-            height: 42px;
+            width: 34px;
+            height: 34px;
             padding: 0 !important;
             display: inline-flex !important;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            border: 1.5px solid var(--dr-line) !important;
+            border: 1px solid var(--dr-line) !important;
+            border-radius: 8px !important;
+            background: #ffffff !important;
+            color: var(--dr-text-muted) !important;
+            transition: all 0.2s ease !important;
+            cursor: pointer;
         }
+
+        .dr-btn-icon i {
+            font-size: 16px;
+        }
+
+        .dr-btn-icon:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            background: #ffffff !important;
+        }
+
+        /* Action Variants */
+        .dr-btn-icon-edit { color: #007AFF !important; border-color: #e6f0ff !important; }
+        .dr-btn-icon-edit:hover { background: #f0f7ff !important; border-color: #007AFF !important; }
+        
+        .dr-btn-icon-delete { color: #FF3B30 !important; border-color: #fff0f0 !important; }
+        .dr-btn-icon-delete:hover { background: #fff5f5 !important; border-color: #FF3B30 !important; }
+
+        .dr-btn-icon-view { color: #34C759 !important; border-color: #f0fff4 !important; }
+        .dr-btn-icon-view:hover { background: #f0fff4 !important; border-color: #34C759 !important; }
 
         /* 3. Segmented Tabs (Premium Style) */
         .dr-tabs-segmented {
@@ -334,6 +377,24 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
         }
 
+        /* 4. Badges (Premium Style) */
+        .dr-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: var(--dr-radius-sm);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .bg-soft-success { background: #e6f4ea !important; color: #1e7e34 !important; }
+        .bg-soft-secondary { background: #f1f3f5 !important; color: #495057 !important; }
+        .bg-soft-danger { background: #fee2e2 !important; color: #b91c1c !important; }
+        .bg-soft-warning { background: #fef3c7 !important; color: #92400e !important; }
+        .bg-soft-primary { background: #e0f2fe !important; color: #0369a1 !important; }
+
         .dr-tabs-segmented .nav-link:hover:not(.active) {
             color: var(--dr-text) !important;
             background: rgba(255,255,255,0.5) !important;
@@ -356,6 +417,47 @@
         .modal-header {
             border: none !important;
             padding: 24px 24px 0 !important;
+            background: transparent !important;
+            color: var(--dr-text) !important;
+        }
+
+        .modal-header .btn-close {
+            display: none !important;
+        }
+
+        /* 5. Modal Footer Buttons (Premium Minimalist v2) */
+        .dr-btn-modal {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px !important;
+            background: #ffffff !important;
+            border: 1.5px solid var(--dr-line) !important;
+            border-radius: 12px !important;
+            color: var(--dr-text) !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            transition: all 0.2s ease !important;
+            min-height: 40px !important;
+        }
+
+        .dr-btn-modal:hover {
+            background: var(--dr-panel-soft) !important;
+            border-color: var(--dr-line-strong) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .dr-btn-modal i {
+            font-size: 18px;
+        }
+
+        .dr-btn-modal-save i {
+            color: #22c55e !important; /* Green Check */
+        }
+
+        .dr-btn-modal-cancel i {
+            color: #ef4444 !important; /* Red X */
         }
 
         .modal-body {
@@ -452,15 +554,12 @@
         }
 
         .dr-breadcrumb-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 6px;
-            border: 1px solid var(--dr-line);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            color: var(--dr-text);
-            font-size: 13px;
+            color: var(--dr-text-muted);
+            font-size: 20px;
+            margin: 0 8px 0 4px;
         }
 
         .dr-hero {
