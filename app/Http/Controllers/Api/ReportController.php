@@ -398,7 +398,7 @@ class ReportController extends Controller
         $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfMonth();
         $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfMonth();
 
-        $query = Product::leftJoin('category', 'products.product_category_id', '=', 'category.id')
+        $query = Product::leftJoin('product_categories', 'products.product_category_id', '=', 'product_categories.id')
             ->leftJoin('stock_mutations', function ($join) use ($officeId, $request) {
                 $join->on('products.id', '=', 'stock_mutations.product_id')
                     ->where('stock_mutations.office_id', '=', $officeId)
@@ -414,7 +414,7 @@ class ReportController extends Controller
                 'products.nama_produk',
                 'products.sku_kode',
                 'products.satuan',
-                'category.nama_kategori',
+                'product_categories.nama_kategori',
                 \DB::raw("SUM(CASE WHEN stock_mutations.created_at < '$startDate' AND stock_mutations.type = 'IN' THEN stock_mutations.qty WHEN stock_mutations.created_at < '$startDate' AND stock_mutations.type = 'OUT' THEN -stock_mutations.qty ELSE 0 END) as opening_qty"),
                 \DB::raw("SUM(CASE WHEN stock_mutations.created_at BETWEEN '$startDate' AND '$endDate' AND stock_mutations.type = 'IN' THEN stock_mutations.qty ELSE 0 END) as qty_in"),
                 \DB::raw("SUM(CASE WHEN stock_mutations.created_at BETWEEN '$startDate' AND '$endDate' AND stock_mutations.type = 'OUT' THEN stock_mutations.qty ELSE 0 END) as qty_out"),
@@ -422,7 +422,7 @@ class ReportController extends Controller
                 \DB::raw("SUM(CASE WHEN stock_mutations.created_at BETWEEN '$startDate' AND '$endDate' AND stock_mutations.type = 'IN' THEN stock_mutations.qty * stock_mutations.cost_price ELSE 0 END) as value_in"),
                 \DB::raw("SUM(CASE WHEN stock_mutations.created_at BETWEEN '$startDate' AND '$endDate' AND stock_mutations.type = 'OUT' THEN stock_mutations.qty * stock_mutations.cost_price ELSE 0 END) as value_out"),
             )
-            ->groupBy('products.id', 'products.nama_produk', 'products.sku_kode', 'products.satuan', 'category.nama_kategori');
+            ->groupBy('products.id', 'products.nama_produk', 'products.sku_kode', 'products.satuan', 'product_categories.nama_kategori');
 
         if ($request->category_id) {
             $query->where('products.product_category_id', $request->category_id);
@@ -640,10 +640,10 @@ class ReportController extends Controller
             $q->where('office_id', $officeId);
         })->get();
 
-        $groups = COA::join('coa_types', 'coas.coa_type_id', '=', 'coa_types.id')
-            ->join('coa_groups', 'coa_types.coa_group_id', '=', 'coa_groups.id')
-            ->where('coas.office_id', $officeId)
-            ->select('coas.*', 'coa_types.nama_tipe', 'coa_groups.nama_kelompok')
+        $groups = COA::join('coa_type', 'chart_of_accounts.tipe_id', '=', 'coa_type.id')
+            ->join('coa_group', 'coa_type.kelompok_id', '=', 'coa_group.id')
+            ->where('chart_of_accounts.office_id', $officeId)
+            ->select('chart_of_accounts.*', 'coa_type.nama_tipe', 'coa_group.nama_kelompok')
             ->get();
 
         $groupedAccounts = $groups->groupBy('nama_kelompok')->map(function ($items) {

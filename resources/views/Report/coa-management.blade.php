@@ -49,7 +49,7 @@
                                                     <div class="accordion-item">
                                                         <h2 class="accordion-header">
                                                             <button
-                                                                class="accordion-button collapsed ps-4 fw-semibold text-secondary"
+                                                                class="accordion-button collapsed ps-4 fw-bold text-dark bg-white"
                                                                 type="button" data-bs-toggle="collapse"
                                                                 data-bs-target="#collapse-{{ $tipeId }}">
                                                                 {{ $tipe }}
@@ -62,10 +62,10 @@
                                                             <div class="accordion-body p-0">
                                                                 <div class="table-responsive">
                                                                     <table class="table table-hover align-middle mb-0">
-                                                                        <thead class="bg-light">
+                                                                        <thead style="background-color: #edf2f7;">
                                                                             <tr>
-                                                                                <th class="ps-5">Kode & Nama Akun</th>
-                                                                                <th class="text-center" width="150">Aksi</th>
+                                                                                <th class="ps-5 fw-bold text-muted small text-uppercase">Kode & Nama Akun</th>
+                                                                                <th class="text-center fw-bold text-muted small text-uppercase" width="150">Aksi</th>
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
