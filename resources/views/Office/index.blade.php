@@ -1,151 +1,96 @@
 @extends('Layout.main')
 
 @push('css')
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
-        rel="stylesheet">
-    <style>
-        .page-wrapper {
-            font-family: 'Inter', sans-serif;
-            background: #f8fafc;
-        }
-
-        .f-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            font-weight: 700;
-            color: #64748b;
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        .f-mono {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-        }
-
-        #officeTable thead th {
-            border-bottom: 1px solid #e2e8f0;
-            border-top: 1px solid #e2e8f0;
-            background: #f8fafc;
-            padding-top: 12px;
-            padding-bottom: 12px;
-            font-size: 11px;
-            text-transform: uppercase;
-            font-weight: 700;
-            color: #64748b;
-            letter-spacing: 0.5px;
-        }
-
-        #officeTable tbody td {
-            font-size: 13px;
-            color: #334155;
-            padding-top: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #f1f5f9;
-            vertical-align: middle;
-        }
-
-        .badge-code {
-            background: #fee2e2;
-            color: #b91c1c;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            border: 1px solid #fecaca;
-        }
-
-        .f-input {
-            border: 1px solid #e2e8f0;
-            padding: 0.6rem 0.8rem;
-            border-radius: 6px;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
-
-        .f-input:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-            outline: none;
-        }
-    </style>
 @endpush
 
 @section('main')
     <div class="page-wrapper">
-        <div class="page-content">
-            <div class="container-fluid">
-
-                <div class="row">
-                    <div class="col-sm-12">
-                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
-                            <h4 class="page-title">Admin: Offices</h4>
-                            <ol class="breadcrumb mb-0">
-                                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
-                                <li class="breadcrumb-item active">Offices</li>
-                            </ol>
-                        </div>
+        <div class="page-content bg-white">
+            <div class="dr-page-shell">
+                <div class="container-fluid p-0">
+                    <!-- Breadcrumb -->
+                    <div class="dr-breadcrumb">
+                        <i class="iconoir-home dr-breadcrumb-icon"></i>
+                        <a href="{{ route('dashboard') }}" class="text-decoration-none text-muted">Dashboard</a>
+                        <i class="iconoir-nav-arrow-right dr-breadcrumb-icon" style="font-size: 14px;"></i>
+                        <strong>Daftar Kantor (Outlet)</strong>
                     </div>
-                </div>
 
-                <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
-                    <div class="card-header bg-white border-bottom py-3 px-4">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0 fw-bold text-dark">Data Kantor</h6>
-                            <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openOfficeModal()">
-                                <i class="fa fa-plus-circle me-1"></i> Tambah Kantor Baru
+                    <!-- Hero Header -->
+                    <div class="dr-hero">
+                        <div>
+                            <h4 class="dr-title">Manajemen Kantor</h4>
+                            <p class="dr-subtitle">Kelola daftar cabang, gudang, dan outlet operasional sistem.</p>
+                        </div>
+                        <div class="dr-actions">
+                            <form id="searchForm" action="{{ route('offices.index') }}" method="GET" class="d-flex gap-2">
+                                <div class="position-relative" style="width: 250px;">
+                                    <i class="iconoir-search text-muted position-absolute start-0 top-50 translate-middle-y ms-3" style="font-size: 16px;"></i>
+                                    <input type="text" name="search" id="searchInput" class="dr-input ps-5" placeholder="Cari nama atau kode..." value="{{ request('search') }}" autocomplete="off">
+                                </div>
+                            </form>
+                            <button class="dr-btn dr-btn-primary" onclick="openOfficeModal()">
+                                <i class="iconoir-plus-circle"></i> Tambah Kantor Baru
                             </button>
                         </div>
                     </div>
-                    <div class="card-body p-0">
+
+                    <div class="dr-card p-0 overflow-hidden bg-white mt-4">
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="officeTable">
+                            <table class="dr-table align-middle mb-0" id="officeTable">
                                 <thead>
                                     <tr>
                                         <th width="150" class="ps-4">Kode Kantor</th>
                                         <th>Nama Kantor</th>
-                                        <th width="330" class="text-center">Tanggal Dibuat</th>
-                                        <th width="330" class="text-end pe-4">Aksi</th>
+                                        <th width="200" class="text-center">Tanggal Dibuat</th>
+                                        <th width="150" class="text-end pe-4">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse($offices as $o)
                                         <tr>
                                             <td class="ps-4">
-                                                <span class="badge-code">{{ $o->code }}</span>
+                                                <span class="dr-badge bg-soft-danger text-danger fw-bold font-monospace">{{ $o->code }}</span>
                                             </td>
                                             <td>
-                                                <span class="fw-bold text-dark">{{ $o->name }}</span>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-soft-primary p-2 rounded-3 me-3">
+                                                        <i class="iconoir-city text-primary" style="font-size: 18px;"></i>
+                                                    </div>
+                                                    <span class="fw-bold text-dark">{{ $o->name }}</span>
+                                                </div>
                                             </td>
-                                            <td class="text-center text-muted small f-mono">
-                                                {{ $o->created_at->format('d/m/Y H:i') }}
+                                            <td class="text-center text-muted small">
+                                                {{ $o->created_at->format('d/m/Y') }}
                                             </td>
                                             <td class="text-end pe-4">
-                                                <button onclick="openOfficeModal({{ $o->id }})"
-                                                    class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-primary me-1"
-                                                    title="Edit Kantor">
-                                                    <i class="fa fa-pencil"></i>
-                                                </button>
-                                                <form action="{{ route('offices.destroy', $o->id) }}" method="POST"
-                                                    class="d-inline"
-                                                    onsubmit="event.preventDefault(); const form = this; (async () => { if (await macConfirm('Hapus Kantor', 'Hapus kantor ini? Data terkait mungkin akan error.')) form.submit() })();">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit"
-                                                        class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-danger"
-                                                        title="Hapus Kantor">
-                                                        <i class="fa fa-trash"></i>
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    <button onclick="openOfficeModal({{ $o->id }})"
+                                                        class="dr-btn-icon dr-btn-icon-edit"
+                                                        title="Edit Kantor">
+                                                        <i class="iconoir-edit-pencil"></i>
                                                     </button>
-                                                </form>
+                                                    <form action="{{ route('offices.destroy', $o->id) }}" method="POST"
+                                                        id="delete-form-{{ $o->id }}" class="d-none">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                    </form>
+                                                    <button type="button"
+                                                        onclick="deleteOffice({{ $o->id }}, '{{ $o->name }}')"
+                                                        class="dr-btn-icon dr-btn-icon-delete"
+                                                        title="Hapus Kantor">
+                                                        <i class="iconoir-trash"></i>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
                                             <td colspan="4" class="text-center py-5">
-                                                <i class="fa fa-building fa-3x mb-3 opacity-25"></i>
-                                                <p class="text-muted small">Belum ada data kantor.</p>
+                                                <div class="py-4">
+                                                    <i class="iconoir-city text-muted mb-3" style="font-size: 48px; opacity: 0.3;"></i>
+                                                    <p class="text-muted mb-0">Data tidak ditemukan.</p>
+                                                </div>
                                             </td>
                                         </tr>
                                     @endforelse
@@ -160,39 +105,90 @@
 
     <div class="modal fade" id="officeModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <form id="officeForm" action="{{ route('offices.store') }}" method="POST"
-                class="modal-content border-0 shadow-lg">
-                @csrf
-                <input type="hidden" name="_method" id="formMethod" value="POST">
+            <div class="modal-content border-0 bg-white">
+                <form id="officeForm" action="{{ route('offices.store') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="_method" id="formMethod" value="POST">
 
-                <div class="modal-header bg-white border-bottom px-4 py-3">
-                    <h5 class="modal-title fw-bold text-dark" id="officeModalTitle">Tambah Kantor Baru</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="mb-3">
-                        <label class="f-label">Nama Kantor</label>
-                        <input type="text" name="name" id="officeName" class="form-control f-input fw-bold"
-                            placeholder="Misal: Kantor Pusat Semarang" required>
+                    <div class="modal-header bg-white px-4 py-4 d-flex align-items-center justify-content-between border-0">
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="iconoir-city text-dark" style="font-size: 20px;"></i>
+                            <div>
+                                <h5 class="dr-title mb-1" id="officeModalTitle" style="font-size: 16px;">Tambah Kantor Baru</h5>
+                                <p class="dr-subtitle mb-0" style="font-size: 12px;">Kelola informasi cabang dan kode identitas kantor.</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="mb-3">
-                        <label class="f-label">Kode Kantor (Singkatan)</label>
-                        <input type="text" name="code" id="officeCode" class="form-control f-input f-mono"
-                            placeholder="Misal: KCP-SMG" required>
-                        <small class="text-muted font-11">Kode unik untuk identifikasi sistem.</small>
+
+                    <div class="modal-body px-4 pb-4 pt-0 bg-white">
+                        <div class="mb-3">
+                            <label class="dr-label mb-2">Nama Kantor *</label>
+                            <input type="text" name="name" id="officeName" class="dr-input fw-bold"
+                                placeholder="Misal: Kantor Pusat Semarang" required>
+                        </div>
+                        <div class="mb-0">
+                            <label class="dr-label mb-2">Kode Kantor (Singkatan) *</label>
+                            <input type="text" name="code" id="officeCode" class="dr-input font-monospace text-uppercase"
+                                placeholder="Misal: KCP-SMG" required>
+                            <div class="d-flex align-items-center gap-2 mt-2 text-muted small" style="font-size: 11px;">
+                                <i class="iconoir-info-circle"></i>
+                                <span>Kode unik untuk identifikasi sistem di laporan.</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="modal-footer border-top px-4 py-3 bg-light">
-                    <button type="button" class="btn btn-link text-decoration-none text-secondary fw-bold"
-                        data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary fw-bold px-4 shadow-sm">Simpan Data</button>
-                </div>
-            </form>
+
+                    <div class="modal-footer bg-white border-0 px-4 py-4 d-flex justify-content-end gap-2">
+                        <button type="button" class="dr-btn-modal" data-bs-dismiss="modal">
+                            <i class="iconoir-xmark text-danger"></i> Batal
+                        </button>
+                        <button type="submit" class="dr-btn-modal">
+                            <i class="iconoir-check text-success"></i> Simpan Kantor
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     @push('js')
         <script>
+            // Dynamic Search
+            let searchTimeout;
+            const searchInput = document.getElementById('searchInput');
+            const searchForm = document.getElementById('searchForm');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        searchForm.submit();
+                    }, 500);
+                });
+
+                if (searchInput.value) {
+                    searchInput.focus();
+                    const val = searchInput.value;
+                    searchInput.value = '';
+                    searchInput.value = val;
+                }
+            }
+
+            async function deleteOffice(id, name) {
+                if (typeof macConfirm === 'function') {
+                    const confirmed = await macConfirm(
+                        'Hapus Kantor', 
+                        `Apakah Anda yakin ingin menghapus kantor "${name}"? Data terkait mungkin akan terpengaruh.`, 
+                        'danger'
+                    );
+                    if (confirmed) document.getElementById(`delete-form-${id}`).submit();
+                } else {
+                    if (confirm(`Hapus kantor ${name}?`)) {
+                        document.getElementById(`delete-form-${id}`).submit();
+                    }
+                }
+            }
+
             async function openOfficeModal(id = null) {
                 const form = document.getElementById('officeForm');
                 const modalTitle = document.getElementById('officeModalTitle');

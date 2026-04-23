@@ -5,154 +5,151 @@
     <link rel="stylesheet" href="/assets/libs/leaflet/leaflet.css" />
 
     <div class="page-wrapper">
-        <div class="page-content">
-            <div class="container-fluid">
-
-                <div class="row">
-                    <div class="col-sm-12">
-                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
-                            <h4 class="page-title">Manajemen Mitra</h4>
-                            <ol class="breadcrumb mb-0">
-                                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
-                                <li class="breadcrumb-item active">Mitra</li>
-                            </ol>
-                        </div>
+        <div class="page-content bg-white">
+            <div class="dr-page-shell pt-3">
+                <div class="container-fluid p-0">
+                    <!-- Breadcrumb -->
+                    <div class="dr-breadcrumb">
+                        <i class="iconoir-home dr-breadcrumb-icon"></i>
+                        <a href="{{ route('dashboard') }}" class="text-decoration-none text-muted">Dashboard</a>
+                        <i class="iconoir-nav-arrow-right dr-breadcrumb-icon" style="font-size: 14px;"></i>
+                        <strong>Manajemen Mitra</strong>
                     </div>
-                </div>
 
-                <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
-                    <div
-                        class="card-header bg-white border-bottom py-0 px-4 d-flex align-items-center justify-content-between">
-                        <ul class="nav nav-tabs nav-tabs-finance" role="tablist">
-                            <li class="nav-item"><a class="nav-link active fw-bold py-3" data-bs-toggle="tab"
-                                    href="#mitra-active">Mitra Aktif</a></li>
-                            <li class="nav-item"><a class="nav-link fw-bold py-3" data-bs-toggle="tab"
-                                    href="#mitra-deleted">Mitra Terhapus</a></li>
-                        </ul>
-                        <div class="text-end">
-                            <button class="btn btn-white border fw-bold px-3 me-2 shadow-sm text-dark"
-                                onclick="exportMitra()">
-                                <i class="fa fa-file-excel me-1 text-success"></i> Export .xls
+                    <!-- Hero Header -->
+                    <div class="dr-hero mb-3">
+                        <div>
+                            <h4 class="dr-title">Daftar Mitra & Rekanan</h4>
+                            <p class="dr-subtitle">Kelola data supplier, klien, dan rekanan bisnis secara terpusat.</p>
+                        </div>
+                        <div class="dr-actions">
+                            <button class="dr-btn dr-btn-outline" onclick="exportMitra()">
+                                <i class="iconoir-download"></i> Export
                             </button>
-                            <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openMitraModal()">
-                                <i class="fa fa-plus-circle me-1"></i> Tambah Mitra Baru
+                            <button class="dr-btn dr-btn-primary" onclick="openMitraModal()">
+                                <i class="iconoir-plus-circle"></i> Tambah Mitra
                             </button>
                         </div>
                     </div>
 
-                    <div class="card-body p-4 bg-white">
+                    <!-- Main Content Card -->
+                    <div class="dr-card p-0 overflow-hidden bg-white mt-3">
+                        <div class="dr-card-header border-bottom px-4 py-2 bg-white d-flex align-items-center justify-content-between">
+                            <ul class="nav dr-tabs-segmented my-2" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#mitra-active" type="button" role="tab">
+                                        <i class="iconoir-group me-2"></i> Mitra Aktif
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#mitra-deleted" type="button" role="tab">
+                                        <i class="iconoir-trash me-2"></i> Terhapus
+                                    </button>
+                                </li>
+                            </ul>
+                            <div class="d-flex align-items-center gap-2">
+                                <button class="dr-btn-icon" title="Refresh Data" onclick="loadMitraData()">
+                                    <i class="iconoir-refresh"></i>
+                                </button>
+                            </div>
+                        </div>
+
                         <div class="tab-content">
-                            <div class="tab-pane active" id="mitra-active">
-
-                                <!-- Filter Section -->
-                                <div class="row g-2 mb-4 p-3 rounded-3 align-items-end bg-light border">
-                                    <div class="col-lg-4">
-                                        <label class="f-label">Pencarian</label>
-                                        <div class="input-group input-group-finance">
-                                            <span class="input-group-text bg-white border-end-0"><i
-                                                    class="fa fa-search text-muted"></i></span>
-                                            <input type="text" id="filter-search"
-                                                class="form-control border-start-0 ps-0 shadow-none"
-                                                placeholder="Nama, No. Mitra, atau Email...">
+                            <!-- TAB 1: MITRA AKTIF -->
+                            <div class="tab-pane fade show active" id="mitra-active" role="tabpanel">
+                                <!-- Filter Bar -->
+                                <div class="dr-filter-bar px-4 py-3 bg-light-subtle border-bottom gap-3">
+                                    <div class="dr-filter-group grow" style="min-width: 200px;">
+                                        <label class="dr-label">Cari Mitra</label>
+                                        <div class="dr-search-wrap">
+                                            <i class="iconoir-search dr-search-icon"></i>
+                                            <input type="text" id="filter-search" class="dr-input dr-search-input" placeholder="Nama, telepon, atau alamat...">
                                         </div>
                                     </div>
-                                    <div class="col-lg-2">
-                                        <label class="f-label">Tipe Mitra</label>
-                                        <select id="filter-type" class="tom-select-init">
+                                    <div class="dr-filter-group" style="min-width: 180px;">
+                                        <label class="dr-label">Tipe Mitra</label>
+                                        <select id="filter-type" class="dr-input" onchange="loadMitraData()">
                                             <option value="">Semua Tipe</option>
                                             <option value="Supplier">Supplier</option>
                                             <option value="Client">Client</option>
                                             <option value="Both">Both</option>
                                         </select>
                                     </div>
-                                    <div class="col-lg-6 text-end">
-                                        <button onclick="loadMitraData()"
-                                            class="btn btn-dark fw-bold py-2 px-4 shadow-sm btn-sm">FILTER</button>
-                                        <button onclick="resetFilter()"
-                                            class="btn btn-light border fw-bold text-dark py-2 btn-sm">RESET</button>
+                                    <div class="dr-filter-actions">
+                                        <label class="dr-label" style="visibility: hidden;">-</label>
+                                        <div class="d-flex gap-1">
+                                            <button onclick="resetFilter()" class="dr-btn-icon" title="Reset Filter">
+                                                <i class="iconoir-undo"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- Table Structure -->
                                 <div class="table-responsive">
-                                    <table class="table table-hover align-middle mb-0" id="mitraTable">
-                                        <thead class="bg-light text-uppercase text-secondary fw-bold"
-                                            style="font-size: 11px; letter-spacing: 0.5px;">
+                                    <table class="dr-table align-middle mb-0" id="mitraTable">
+                                        <thead>
                                             <tr>
-                                                <th width="40" class="ps-3 text-center">#</th>
+                                                <th width="40" class="ps-4 text-center">#</th>
                                                 <th width="120">No. Mitra</th>
-                                                <th width="150">No. KTP/NPWP</th>
-                                                <th width="250">Nama Perusahaan</th>
+                                                <th width="150">Identitas</th>
+                                                <th width="250">Perusahaan</th>
                                                 <th width="100" class="text-center">Tipe</th>
-                                                <th width="200">Kontak Utama</th>
-                                                <th width="200">Email & Telepon</th>
-                                                <th width="80" class="text-end pe-3">Aksi</th>
+                                                <th width="200">Kontak Person</th>
+                                                <th width="200">Info Kontak</th>
+                                                <th width="80" class="text-end pe-4">Aksi</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="mitraTableBody" class="border-top-0">
+                                        <tbody id="mitraTableBody">
                                             <!-- Rows injected by JS -->
                                         </tbody>
                                     </table>
                                 </div>
 
                                 <!-- Pagination -->
-                                <div
-                                    class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top">
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center px-4 py-3 border-top">
                                     <span id="pagination-info" class="text-muted small fw-medium"></span>
                                     <nav>
-                                        <ul class="pagination pagination-sm mb-0 shadow-sm" id="pagination-container"></ul>
+                                        <ul class="pagination pagination-sm mb-0 gap-1" id="pagination-container"></ul>
                                     </nav>
                                 </div>
                             </div>
 
-                            <div class="tab-pane" id="mitra-deleted">
-                                <!-- Filter Section (Deleted) -->
-                                <div class="row g-2 mb-4 p-3 rounded-3 align-items-end bg-light border">
-                                    <div class="col-lg-4">
-                                        <label class="f-label">Pencarian</label>
-                                        <div class="input-group input-group-finance">
-                                            <span class="input-group-text bg-white border-end-0"><i
-                                                    class="fa fa-search text-muted"></i></span>
-                                            <input type="text" id="filter-search-deleted"
-                                                class="form-control border-start-0 ps-0 shadow-none"
-                                                placeholder="Nama, No. Mitra, atau Email...">
-                                        </div>
+                            <!-- TAB 2: MITRA TERHAPUS -->
+                            <div class="tab-pane fade" id="mitra-deleted" role="tabpanel">
+                                <!-- Filter Bar (Deleted) -->
+                                <div class="px-4 py-3 bg-light-subtle border-bottom d-flex align-items-center gap-3">
+                                    <div class="position-relative" style="width: 300px;">
+                                        <i class="iconoir-search text-muted position-absolute start-0 top-50 translate-middle-y ms-3" style="font-size: 16px;"></i>
+                                        <input type="text" id="filter-search-deleted" class="dr-input ps-5" placeholder="Cari di arsip..." autocomplete="off">
                                     </div>
-                                    <div class="col-lg-6 text-end">
-                                        <button onclick="loadMitraData()"
-                                            class="btn btn-dark fw-bold py-2 px-4 shadow-sm btn-sm">FILTER</button>
-                                        <button onclick="resetFilter()"
-                                            class="btn btn-light border fw-bold text-dark py-2 btn-sm">RESET</button>
-                                    </div>
+                                    <button class="dr-btn dr-btn-outline btn-sm py-1" onclick="resetFilter()">Reset</button>
                                 </div>
 
-                                <!-- Table Structure (Deleted) -->
                                 <div class="table-responsive">
-                                    <table class="table table-hover align-middle mb-0" id="mitraTableDeleted">
-                                        <thead class="bg-light text-uppercase text-secondary fw-bold"
-                                            style="font-size: 11px; letter-spacing: 0.5px;">
+                                    <table class="dr-table align-middle mb-0" id="mitraTableDeleted">
+                                        <thead>
                                             <tr>
-                                                <th width="40" class="ps-3 text-center">#</th>
+                                                <th width="40" class="ps-4 text-center">#</th>
                                                 <th width="120">No. Mitra</th>
-                                                <th width="150">No. KTP/NPWP</th>
-                                                <th width="250">Nama Perusahaan</th>
+                                                <th width="150">Identitas</th>
+                                                <th width="250">Perusahaan</th>
                                                 <th width="100" class="text-center">Tipe</th>
-                                                <th width="200">Kontak Utama</th>
-                                                <th width="200">Email & Telepon</th>
-                                                <th width="100" class="text-end pe-3">Aksi</th>
+                                                <th width="200">Kontak Person</th>
+                                                <th width="200">Info Kontak</th>
+                                                <th width="100" class="text-end pe-4">Aksi</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="mitraTableBodyDeleted" class="border-top-0"></tbody>
+                                        <tbody id="mitraTableBodyDeleted">
+                                            <!-- Rows injected by JS -->
+                                        </tbody>
                                     </table>
                                 </div>
 
                                 <!-- Pagination (Deleted) -->
-                                <div
-                                    class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top">
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center px-4 py-3 border-top">
                                     <span id="pagination-info-deleted" class="text-muted small fw-medium"></span>
                                     <nav>
-                                        <ul class="pagination pagination-sm mb-0 shadow-sm"
-                                            id="pagination-container-deleted"></ul>
+                                        <ul class="pagination pagination-sm mb-0 gap-1" id="pagination-container-deleted"></ul>
                                     </nav>
                                 </div>
                             </div>
@@ -171,96 +168,9 @@
 
 @push('css')
     <style>
-        .f-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            font-weight: 700;
-            color: #64748b;
-            margin-bottom: 5px;
-            display: block;
-        }
-
         .f-mono {
             font-family: 'JetBrains Mono', monospace;
             font-size: 13px;
-        }
-
-        /* Table Styling */
-        #mitraTable thead th {
-            border-bottom: 1px solid #e2e8f0;
-            border-top: 1px solid #e2e8f0;
-            background: #f8fafc;
-            padding-top: 12px;
-            padding-bottom: 12px;
-        }
-
-        #mitraTable tbody td {
-            font-size: 13px;
-            color: #334155;
-            padding-top: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .clickable-row {
-            cursor: pointer;
-            transition: background-color 0.1s;
-        }
-
-        .clickable-row:hover {
-            background-color: #f1f5f9 !important;
-        }
-
-        /* Badges */
-        .f-badge {
-            font-size: 10px;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: inline-block;
-        }
-
-        .f-supplier {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        /* Red for expense related */
-        .f-client {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        /* Green for income related */
-        .f-both {
-            background: #e0f2fe;
-            color: #075985;
-        }
-
-        /* Blue for both */
-
-        /* Dropdown */
-        .dropdown-menu-finance {
-            border: none;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            min-width: 140px;
-            border-top: 3px solid #3b82f6;
-        }
-
-        .dropdown-menu-finance .dropdown-item {
-            font-size: 13px;
-            font-weight: 600;
-            color: #475569;
-            padding: 6px 12px;
-        }
-
-        .dropdown-menu-finance .dropdown-item:hover {
-            background-color: #f1f5f9;
-            color: #3b82f6;
         }
     </style>
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
@@ -403,64 +313,62 @@
             }
 
             data.forEach((item, index) => {
-                let typeClass = 'f-both';
-                if (item.tipe_mitra === 'Supplier') typeClass = 'f-supplier';
-                if (item.tipe_mitra === 'Client') typeClass = 'f-client';
+                let typeClass = 'bg-soft-info text-info';
+                if (item.tipe_mitra === 'Supplier') typeClass = 'bg-soft-danger text-danger';
+                if (item.tipe_mitra === 'Client') typeClass = 'bg-soft-success text-success';
 
                 let actionButtons = '';
 
                 if (isDeleted) {
-                    // Actions for deleted items: Restore, Force Delete
                     actionButtons = `
-                                                    <div class="dropdown">
-                                                         <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-muted" data-bs-toggle="dropdown"><i class="fa fa-ellipsis-h"></i></button>
-                                                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-finance">
-                                                            <li><a class="dropdown-item text-success" href="javascript:void(0)" onclick="restoreMitra(${item.id})"><i class="fa fa-undo me-2"></i> Pulihkan</a></li>
-                                                            <li><hr class="dropdown-divider"></li>
-                                                            <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="forceDeleteMitra(${item.id})"><i class="fa fa-trash me-2"></i> Hapus Permanen</a></li>
-                                                        </ul>
-                                                    </div>
-                                                `;
+                        <div class="d-flex justify-content-end gap-1">
+                            <button class="dr-btn-icon dr-btn-icon-view" onclick="restoreMitra(${item.id})" title="Pulihkan">
+                                <i class="iconoir-undo"></i>
+                            </button>
+                            <button class="dr-btn-icon dr-btn-icon-delete" onclick="forceDeleteMitra(${item.id})" title="Hapus Permanen">
+                                <i class="iconoir-xmark"></i>
+                            </button>
+                        </div>
+                    `;
                 } else {
-                    // Actions for active items: Edit, Soft Delete
                     actionButtons = `
-                                                    <div class="dropdown">
-                                                         <button class="btn btn-sm btn-white border shadow-sm py-1 px-2 text-muted" data-bs-toggle="dropdown"><i class="fa fa-ellipsis-h"></i></button>
-                                                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-finance">
-                                                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="openMitraModal(${item.id})"><i class="fa fa-pencil text-primary me-2"></i> Edit Data</a></li>
-                                                            <li><hr class="dropdown-divider"></li>
-                                                            <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="deleteMitra(${item.id})"><i class="fa fa-trash me-2"></i> Hapus</a></li>
-                                                        </ul>
-                                                    </div>
-                                                `;
+                        <div class="d-flex justify-content-end gap-1">
+                            <button class="dr-btn-icon dr-btn-icon-view" onclick="openMitraModal(${item.id})" title="Edit Data">
+                                <i class="iconoir-edit-pencil"></i>
+                            </button>
+                            <button class="dr-btn-icon dr-btn-icon-delete" onclick="deleteMitra(${item.id})" title="Hapus">
+                                <i class="iconoir-trash"></i>
+                            </button>
+                        </div>
+                    `;
                 }
 
                 const tr = `
-                                            <tr class="clickable-row">
-                                                <td class="text-center ps-3 text-muted small">${index + 1}</td>
-                                                <td class="fw-bold text-dark font-monospace" style="font-size:12px;">${item.nomor_mitra || 'Belum diset'}</td>
-                                                <td class="font-monospace small text-muted">${item.ktp_npwp || 'Belum diset'}</td>
-                                                <td>
-                                                    <div class="fw-bold text-dark mb-0">${item.nama}</div>
-                                                    <div class="small text-muted">${item.badan_usaha || 'Belum diset'}</div>
-                                                </td>
-                                                <td class="text-center">
-                                                    <span class="f-badge ${typeClass}">${item.tipe_mitra}</span>
-                                                    ${item.is_cash_customer ? '<div class="mt-1"><span class="badge bg-success text-white" style="font-size:9px;">CASH</span></div>' : ''}
-                                                </td>
-                                                <td>
-                                                    <div class="fw-bold text-dark small">${item.kontak_nama || 'Belum diset'}</div>
-                                                    <div class="small text-muted">${item.kontak_jabatan || ''}</div>
-                                                </td>
-                                                <td>
-                                                    <div class="text-dark small"><i class="fa fa-envelope me-1 text-muted"></i> ${item.email || 'Belum diset'}</div>
-                                                    <div class="text-dark small mt-1"><i class="fa fa-phone me-1 text-muted"></i> ${item.no_hp || 'Belum diset'}</div>
-                                                </td>
-                                                <td class="text-end pe-3">
-                                                    ${actionButtons}
-                                                </td>
-                                            </tr>
-                                        `;
+                    <tr>
+                        <td class="text-center ps-4 text-muted small">${index + 1}</td>
+                        <td class="fw-bold text-dark font-monospace" style="font-size:12px;">${item.nomor_mitra || '-'}</td>
+                        <td class="font-monospace small text-muted">${item.ktp_npwp || '-'}</td>
+                        <td>
+                            <div class="fw-bold text-dark mb-0">${item.nama}</div>
+                            <div class="small text-muted">${item.badan_usaha || '-'}</div>
+                        </td>
+                        <td class="text-center">
+                            <span class="dr-badge ${typeClass}">${item.tipe_mitra}</span>
+                            ${item.is_cash_customer ? '<div class="mt-1"><span class="dr-badge bg-soft-success text-success" style="font-size:9px;">CASH</span></div>' : ''}
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark small">${item.kontak_nama || '-'}</div>
+                            <div class="small text-muted">${item.kontak_jabatan || ''}</div>
+                        </td>
+                        <td>
+                            <div class="text-dark small"><i class="iconoir-mail me-1 text-muted"></i> ${item.email || '-'}</div>
+                            <div class="text-dark small mt-1"><i class="iconoir-phone me-1 text-muted"></i> ${item.no_hp || '-'}</div>
+                        </td>
+                        <td class="text-end pe-4">
+                            ${actionButtons}
+                        </td>
+                    </tr>
+                `;
                 tbody.insertAdjacentHTML('beforeend', tr);
             });
         }
@@ -537,7 +445,7 @@
             if (!meta || !meta.links) return;
 
             if (info) {
-                info.innerText = `${meta.from || 0}-${meta.to || 0} dari ${meta.total} data`;
+                info.innerText = `Menampilkan ${meta.from || 0} - ${meta.to || 0} dari ${meta.total} data`;
             }
 
             c.innerHTML = '';
@@ -555,10 +463,11 @@
                 }
 
                 const onclick = l.url ? `onclick="loadMitraData(undefined, '${type}', ${pageNum})"` : '';
+                const label = l.label.includes('Previous') ? '<i class="iconoir-nav-arrow-left"></i>' : (l.label.includes('Next') ? '<i class="iconoir-nav-arrow-right"></i>' : l.label);
 
                 c.insertAdjacentHTML('beforeend', `
                     <li class="page-item ${activeClass} ${disabledClass}">
-                        <button class="page-link border-0 mx-1 rounded shadow-sm fw-bold" ${onclick}>${l.label}</button>
+                        <button class="page-link border-0 mx-0 rounded shadow-none fw-bold" ${onclick}>${label}</button>
                     </li>`);
             });
         }
@@ -577,15 +486,26 @@
             loadMitraData();
         }
 
+        let debounceTimer;
         document.addEventListener('DOMContentLoaded', () => {
             initFilters();
             loadMitraData();
 
+            // Search with Debounce
+            ['filter-search', 'filter-search-deleted'].forEach(id => {
+                document.getElementById(id).addEventListener('keyup', () => {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        loadMitraData();
+                    }, 500);
+                });
+            });
+
             // Tab Change Listener
-            const tabEls = document.querySelectorAll('a[data-bs-toggle="tab"]');
+            const tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]');
             tabEls.forEach(el => {
                 el.addEventListener('shown.bs.tab', function(event) {
-                    if (event.target.getAttribute('href') === '#mitra-deleted') {
+                    if (event.target.getAttribute('data-bs-target') === '#mitra-deleted') {
                         activeTab = 'deleted';
                         loadMitraData(undefined, 'deleted');
                     } else {

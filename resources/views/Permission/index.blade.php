@@ -2,6 +2,7 @@
 
 @push('css')
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<<<<<<< Updated upstream
 <style>
     .page-wrapper { font-family: 'Inter', sans-serif; background: #f8fafc; }
     .f-mono { font-family: 'JetBrains Mono', monospace; font-size: 13px; }
@@ -18,6 +19,54 @@
     
     .badge-module { font-size: 11px; padding: 5px 10px; border-radius: 6px; font-weight: 600; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
 </style>
+=======
+    <style>
+        .page-wrapper {
+            background: #ffffff;
+        }
+
+        .permission-module-card {
+            border: 1px solid var(--dr-line);
+            background: #fff;
+            border-radius: var(--dr-radius);
+            overflow: hidden;
+            box-shadow: var(--dr-shadow);
+            transition: all 0.2s ease;
+        }
+
+        .permission-module-card:hover {
+            box-shadow: var(--dr-shadow-lg);
+            border-color: var(--dr-line-strong);
+        }
+
+        .module-header {
+            background: #ffffff;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            border-bottom: 1px solid var(--dr-line);
+        }
+
+        .module-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--dr-text);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .system-route {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            background: var(--dr-panel-soft);
+            color: #ef4444;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+    </style>
+>>>>>>> Stashed changes
 @endpush
 
 @section('main')

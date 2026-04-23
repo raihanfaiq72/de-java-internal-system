@@ -2,6 +2,7 @@
 
 @section('main')
     <div class="page-wrapper">
+<<<<<<< Updated upstream
         <div class="page-content">
             <div class="container-fluid">
                 <div class="row">
@@ -55,8 +56,62 @@
 
                                 </div>
                             </div>
+=======
+        <div class="page-content bg-white">
+            <div class="dr-page-shell pt-3">
+                <div class="container-fluid p-0">
+                    <!-- Breadcrumb -->
+                    <div class="dr-breadcrumb">
+                        <i class="iconoir-home dr-breadcrumb-icon"></i>
+                        <a href="{{ route('dashboard') }}" class="text-decoration-none text-muted">Dashboard</a>
+                        <i class="iconoir-nav-arrow-right dr-breadcrumb-icon" style="font-size: 14px;"></i>
+                        <strong>Inventaris Barang</strong>
+                    </div>
+
+                    <!-- Hero Header -->
+                    <div class="dr-hero mb-3">
+                        <div>
+                            <h4 class="dr-title">Manajemen Barang</h4>
+                            <p class="dr-subtitle">Kelola daftar produk, inventaris, serta brand & merk dagang secara terpadu.</p>
+                        </div>
+                        <div class="dr-actions">
+                            <button onclick="location.reload()" class="dr-btn dr-btn-outline">
+                                <i class="iconoir-refresh"></i> Refresh
+                            </button>
                         </div>
                     </div>
+
+                <div class="dr-card p-0 overflow-hidden bg-white mt-3">
+                    <div class="dr-card-header border-bottom px-4 py-2 bg-white d-flex align-items-center justify-content-between">
+                        <ul class="nav dr-tabs-segmented my-2" id="barangTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="produk-tab" data-bs-toggle="tab" data-bs-target="#tab-produk" type="button" role="tab">
+                                    <i class="iconoir-box-iso me-2"></i> Daftar Produk
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="brand-tab" data-bs-toggle="tab" data-bs-target="#tab-brand" type="button" role="tab">
+                                    <i class="iconoir-tag me-2"></i> Brand & Merk
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="d-flex align-items-center gap-2">
+                             <button class="dr-btn-icon" title="Refresh Data" onclick="location.reload()">
+                                <i class="iconoir-refresh"></i>
+                             </button>
+>>>>>>> Stashed changes
+                        </div>
+                    </div>
+
+                    <div class="tab-content">
+                        {{-- TAB 1: PRODUK --}}
+                        @include('Barang.Tab._Produk')
+
+                        {{-- TAB 2: BRAND --}}
+                        @include('Barang.Tab._Brand')
+                    </div>
+                </div>
                 </div>
             </div>
         </div>
@@ -69,6 +124,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
 
     <style>
+<<<<<<< Updated upstream
         .nav-pills .nav-link.active {
             background-color: #0d6efd;
             color: white;
@@ -88,6 +144,8 @@
             background-color: #fcfcfc;
             position: relative;
         }
+=======
+>>>>>>> Stashed changes
 
         /* Resizer Handle Styling */
         .resizer {
@@ -378,9 +436,13 @@
                 
                 // Initialize Excel-like Resizable Columns
                 if (typeof initResizableTable === 'function') {
-                    initResizableTable();
+                    initResizableTable('#table-produk');
                 }
             }
+
+            document.getElementById('brand-tab').addEventListener('shown.bs.tab', () => {
+                if (typeof loadBrandData === 'function') loadBrandData();
+            });
 
             document.getElementById('btnSaveBrand')
                 .addEventListener('click', saveBrand);

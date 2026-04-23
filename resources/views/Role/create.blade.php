@@ -1,12 +1,28 @@
 @extends('Layout.main')
 
 @section('main')
+<<<<<<< Updated upstream
 <div class="page-wrapper">
     <div class="page-content">
         <div class="page-title-box d-flex align-items-center justify-content-between mb-3">
             <h4 class="page-title fw-bold">Tambah Role Baru</h4>
             <a href="{{ route('roles.index') }}" class="btn btn-sm btn-secondary">Kembali</a>
         </div>
+=======
+    <div class="page-wrapper">
+        <div class="page-content bg-white">
+            <div class="dr-page-shell">
+                <div class="container-fluid p-0">
+                    <!-- Breadcrumb -->
+                    <div class="dr-breadcrumb">
+                        <i class="iconoir-home dr-breadcrumb-icon"></i>
+                        <a href="{{ route('dashboard') }}" class="text-decoration-none text-muted">Dashboard</a>
+                        <i class="iconoir-nav-arrow-right dr-breadcrumb-icon" style="font-size: 14px;"></i>
+                        <a href="{{ route('roles.index') }}" class="text-decoration-none text-muted">Role Management</a>
+                        <i class="iconoir-nav-arrow-right dr-breadcrumb-icon" style="font-size: 14px;"></i>
+                        <strong>Tambah Role Baru</strong>
+                    </div>
+>>>>>>> Stashed changes
 
         <form action="{{ route('roles.store') }}" method="POST">
             @csrf

@@ -1,84 +1,72 @@
 <div class="modal fade" id="mitraModal" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen">
-        <div class="modal-content border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="modal-content border-0 bg-white">
             <!-- Header -->
-            <div class="modal-header bg-white bg-opacity-95 backdrop-blur border-bottom px-4 py-3 sticky-top shadow-lg">
+            <div class="modal-header bg-white border-bottom px-4 py-3 sticky-top d-flex align-items-center justify-content-between" style="padding: 20px 24px !important;">
                 <div class="d-flex align-items-center">
-                    <div class="bg-gradient-primary text-white p-3 rounded-3 me-3 shadow-lg">
-                        <i class="fa fa-user-tie me-2 text-primary"></i>
+                    <div class="bg-soft-primary text-primary d-flex align-items-center justify-content-center rounded-circle me-3" style="width: 40px; height: 40px;">
+                        <i class="iconoir-group" style="font-size: 20px;"></i>
                     </div>
-                    <div>
-                        <h5 class="modal-title fw-bold text-dark mb-0" id="mitraModalTitle">Formulir Mitra Bisnis</h5>
-                        <p class="text-muted small mb-0">Kelola informasi supplier, vendor, atau klien perusahaan.</p>
+                    <div class="d-flex flex-column justify-content-center">
+                        <h5 class="dr-title mb-0" id="mitraModalTitle" style="line-height: 1.2;">Formulir Mitra Bisnis</h5>
+                        <p class="dr-subtitle mb-0" style="line-height: 1.2;">Kelola informasi supplier, vendor, atau klien perusahaan.</p>
                     </div>
                 </div>
-                <div class="ms-auto d-flex align-items-center gap-3">
-                    <button type="button" class="btn btn-light border text-secondary fw-semibold px-4 rounded-2 shadow-sm"
-                        data-bs-dismiss="modal">
-                        <i class="fa fa-times me-2"></i>Batalkan
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="dr-btn-modal" data-bs-dismiss="modal">
+                        <i class="iconoir-xmark text-danger"></i> Batalkan
                     </button>
-                    <button type="button" class="btn btn-gradient-primary px-4 fw-bold shadow-lg rounded-2" onclick="saveMitra()">
-                        <i class="fa fa-save me-2"></i>Simpan Data
+                    <button type="button" class="dr-btn-modal" onclick="saveMitra()">
+                        <i class="iconoir-check text-success"></i> Simpan Mitra
                     </button>
                 </div>
             </div>
 
-            <div class="modal-body p-4 bg-white bg-opacity-95 backdrop-blur">
-                <form id="mitraForm">
-                    <input type="hidden" id="mitra_form_mode" value="create">
-                    <input type="hidden" id="edit_mitra_id" value="">
+            <div class="modal-body p-0 bg-white">
+                <div class="container py-5">
+                    <form id="mitraForm">
+                        <input type="hidden" id="mitra_form_mode" value="create">
+                        <input type="hidden" id="edit_mitra_id" value="">
 
-                    <div class="row g-4 justify-content-center">
-                        <!-- Card 1: Informasi Perusahaan -->
-                        <div class="col-lg-4">
-                            <div class="mb-3">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="bg-gradient-primary text-white p-2 rounded-2 me-2 shadow">
-                                        <i class="fa fa-user-tie me-2 text-primary"></i>
+                        <div class="row g-4">
+                            <!-- Section 1: Informasi Dasar -->
+                            <div class="col-lg-7">
+                                <div class="bg-white p-4 border rounded-3">
+                                    <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
+                                        <i class="iconoir-box-iso text-dark me-2 fs-5"></i>
+                                        <h6 class="fw-bold mb-0">Informasi Perusahaan</h6>
                                     </div>
-                                    <h6 class="fw-bold text-dark mb-0">Informasi Perusahaan</h6>
-                                </div>
-                                <div class="border-bottom border-2 border-primary opacity-25"></div>
-                            </div>
-                            <div class="card border-0 shadow-lg rounded-4 bg-white bg-opacity-90 backdrop-blur border border-primary border-opacity-25">
-                                <div class="card-body p-4">
-                                    <div class="mb-3">
-                                        <label class="f-label text-danger fw-bold">Tipe Mitra <span class="badge bg-danger text-white fs-6 ms-1">Wajib</span></label>
-                                        <div class="d-flex gap-3 mt-1 align-items-center flex-wrap">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="tipe_mitra"
-                                                    id="typeSupplier" value="Supplier" checked>
-                                                <label class="form-check-label small fw-bold"
-                                                    for="typeSupplier">Supplier / Vendor</label>
+                                    
+                                    <div class="mb-4">
+                                        <label class="dr-label mb-2">Tipe Mitra <span class="text-danger">*</span></label>
+                                        <div class="d-flex gap-4 mt-2">
+                                            <div class="form-check custom-radio">
+                                                <input class="form-check-input" type="radio" name="tipe_mitra" id="typeSupplier" value="Supplier" checked>
+                                                <label class="form-check-label fw-medium" for="typeSupplier">Supplier / Vendor</label>
                                             </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="tipe_mitra"
-                                                    id="typeClient" value="Client">
-                                                <label class="form-check-label small fw-bold" for="typeClient">Client /
-                                                    Customer</label>
+                                            <div class="form-check custom-radio">
+                                                <input class="form-check-input" type="radio" name="tipe_mitra" id="typeClient" value="Client">
+                                                <label class="form-check-label fw-medium" for="typeClient">Client / Customer</label>
                                             </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="tipe_mitra"
-                                                    id="typeBoth" value="Both">
-                                                <label class="form-check-label small fw-bold"
-                                                    for="typeBoth">Keduanya</label>
+                                            <div class="form-check custom-radio">
+                                                <input class="form-check-input" type="radio" name="tipe_mitra" id="typeBoth" value="Both">
+                                                <label class="form-check-label fw-medium" for="typeBoth">Keduanya</label>
                                             </div>
                                         </div>
-                                        <div class="form-check mt-2 pt-1 border-top">
-                                            <input class="form-check-input" type="checkbox" id="modal_is_cash_customer">
-                                            <label class="form-check-label small fw-bold text-primary"
-                                                for="modal_is_cash_customer">
-                                                Apakah Pelanggan Cash?
-                                            </label>
-                                            <div class="form-text x-small text-muted" style="font-size: 11px;">
-                                                Pelanggan cash membeli langsung (tanpa piutang/tempo).
+                                        <div class="mt-3 pt-3 border-top">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="modal_is_cash_customer">
+                                                <label class="form-check-label fw-medium text-dark" for="modal_is_cash_customer">
+                                                    Pelanggan Cash (Tanpa Piutang)
+                                                </label>
                                             </div>
                                         </div>
                                     </div>
+
                                     <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <label class="f-label text-danger fw-bold">Usaha <span class="badge bg-danger text-white fs-6 ms-1">Wajib</span></label>
-                                            <select id="modal_badan_usaha" class="form-select f-input" required>
+                                        <div class="col-md-3">
+                                            <label class="dr-label">Badan Usaha <span class="text-danger">*</span></label>
+                                            <select id="modal_badan_usaha" class="dr-input" required>
                                                 <option value="PT">PT</option>
                                                 <option value="CV">CV</option>
                                                 <option value="UD">UD</option>
@@ -86,187 +74,101 @@
                                                 <option value="Lainnya">Lainnya</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-8">
-                                            <label class="f-label text-danger fw-bold">Nama Perusahaan / Mitra <span class="badge bg-danger text-white fs-6 ms-1">Wajib</span></label>
-                                            <input type="text" id="modal_nama" class="form-control f-input fw-bold"
-                                                placeholder="Nama Lengkap" required>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-3">
-                                        <label class="f-label">Nomor ID Mitra (Opsional)</label>
-                                        <input type="text" id="modal_nomor_mitra" class="form-control f-input bg-light"
-                                            placeholder="Auto-generated jika kosong">
-                                    </div>
-
-                                    <div class="mt-3">
-                                        <label class="f-label text-danger fw-bold">No. KTP / NPWP <span class="badge bg-danger text-white fs-6 ms-1">Wajib</span></label>
-                                        <input type="text" id="modal_ktp_npwp" class="form-control f-input"
-                                            placeholder="Nomor Identitas (NIK / NPWP)" required>
-                                    </div>
-
-                                    <div class="mt-3">
-                                        <label class="f-label text-danger fw-bold">Alamat Lengkap <span class="badge bg-danger text-white fs-6 ms-1">Wajib</span></label>
-                                        <!-- <div class="alert alert-soft-primary border-0 p-3 mb-2 rounded-3">
-                                            <div class="d-flex gap-2">
-                                                <i class="fa fa-info-circle mt-1 text-primary"></i>
-                                                <div>
-                                                    <h6 class="fw-bold small text-dark mb-1">Panduan Pengisian Alamat
-                                                        OpenStreetMap</h6>
-                                                    <p class="small text-muted mb-0"
-                                                        style="font-size: 11px; line-height: 1.4;">
-                                                        Agar lokasi peta akurat, ikuti panduan berikut:
-                                                    </p>
-                                                    <ul class="mb-0 ps-3 mt-1 small text-muted"
-                                                        style="font-size: 11px;">
-                                                        <li>Gunakan format lengkap: <b>Nama Jalan, Kecamatan, Kota,
-                                                                Provinsi</b>.</li>
-                                                        <li>Contoh: <i>Jl. Jend. Sudirman No. 1, Tanah Abang, Jakarta
-                                                                Pusat, DKI Jakarta</i>.</li>
-                                                        <li>Setelah mengetik alamat, klik tombol <b>"Cari dari
-                                                                Alamat"</b> untuk menitikkan lokasi otomatis.</li>
-                                                        <li>Jika titik kurang pas, Anda dapat menggeser peta atau
-                                                            mencari lokasi manual di peta.</li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div> -->
-                                        <textarea id="modal_alamat" class="form-control f-input" rows="3"
-                                            placeholder="Masukkan alamat lengkap..." required></textarea>
-
-                                            <!-- Map Section -->
-                                            <div class="mt-3">
-                                                <label class="f-label d-flex justify-content-between align-items-center">
-                                                    <span>Lokasi Peta</span>
-                                                    <button type="button"
-                                                        class="btn btn-sm btn-link text-decoration-none p-0 fw-bold"
-                                                        onclick="geocodeAddress()" style="font-size: 11px;">
-                                                        <i class="fa fa-search-location me-1"></i>Cari dari Alamat
-                                                    </button>
-                                                </label>
-                                                <div id="mitraMap" class="w-100 rounded-3 border"
-                                                    style="height: 250px; z-index: 0;"></div>
-                                                
-                                                <input type="hidden" id="modal_latitude">
-                                                <input type="hidden" id="modal_longitude">
-                                            </div>
-                                    </div>
-
-                                    <div class="row g-3 mt-1">
-                                        <div class="col-md-6">
-                                            <label class="f-label">Email Perusahaan</label>
-                                            <input type="email" id="modal_email" class="form-control f-input"
-                                                placeholder="email@company.com">
+                                        <div class="col-md-9">
+                                            <label class="dr-label">Nama Perusahaan <span class="text-danger">*</span></label>
+                                            <input type="text" id="modal_nama" class="dr-input fw-bold" placeholder="Nama Lengkap" required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="f-label">No. Telepon Kantor</label>
-                                            <input type="text" id="modal_no_hp" class="form-control f-input"
-                                                placeholder="021-xxxxxx">
+                                            <label class="dr-label">No. ID Mitra (Opsional)</label>
+                                            <input type="text" id="modal_nomor_mitra" class="dr-input" placeholder="Auto-generated">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="dr-label">No. KTP / NPWP <span class="text-danger">*</span></label>
+                                            <input type="text" id="modal_ktp_npwp" class="dr-input" placeholder="NIK / NPWP" required>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="dr-label">Alamat Lengkap <span class="text-danger">*</span></label>
+                                            <textarea id="modal_alamat" class="dr-input" rows="3" placeholder="Masukkan alamat lengkap..." required></textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="dr-label">Email Kantor</label>
+                                            <input type="email" id="modal_email" class="dr-input" placeholder="office@company.com">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="dr-label">Telepon Kantor</label>
+                                            <input type="text" id="modal_no_hp" class="dr-input" placeholder="021-xxxxxx">
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Card 2: Kontak Person -->
-                        <div class="col-lg-4">
-                            <h6 class="fw-bold text-dark mb-3 text-uppercase small ls-1"><i
-                                    class="fa fa-user-tie me-2 text-primary"></i>Kontak Person (PIC)</h6>
-                            <div class="card border-0 shadow-sm rounded-3">
-                                <div class="card-body p-4">
+                            <!-- Section 2: Kontak PIC & Peta -->
+                            <div class="col-lg-5">
+                                <div class="bg-white p-4 mb-4 border rounded-3">
+                                    <div class="d-flex align-items-center mb-4">
+                                        <i class="iconoir-user-badge text-dark me-2" style="font-size: 20px;"></i>
+                                        <h6 class="fw-bold text-dark mb-0 small text-uppercase ls-1">Kontak Person (PIC)</h6>
+                                    </div>
                                     <div class="row g-3">
-                                        <div class="col-md-7">
-                                            <label class="f-label text-danger fw-bold">Nama PIC <span class="badge bg-danger text-white fs-6 ms-1">Wajib</span></label>
-                                            <input type="text" id="modal_kontak_nama" class="form-control f-input"
-                                                placeholder="Nama Narahubung" required>
-                                        </div>
-                                        <div class="col-md-5">
-                                            <label class="f-label">Jabatan</label>
-                                            <input type="text" id="modal_kontak_jabatan" class="form-control f-input"
-                                                placeholder="Misal: Manager">
+                                        <div class="col-12">
+                                            <label class="dr-label">Nama PIC <span class="text-danger">*</span></label>
+                                            <input type="text" id="modal_kontak_nama" class="dr-input" placeholder="Nama Narahubung" required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="f-label text-danger fw-bold">No. HP PIC <span class="badge bg-danger text-white fs-6 ms-1">Wajib</span></label>
-                                            <input type="text" id="modal_kontak_no_hp" class="form-control f-input"
-                                                placeholder="08xxxxxxxxxx" required>
+                                            <label class="dr-label">No. HP PIC <span class="text-danger">*</span></label>
+                                            <input type="text" id="modal_kontak_no_hp" class="dr-input font-monospace" placeholder="08xxxxxxxxxx" required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="f-label">Email PIC</label>
-                                            <input type="email" id="modal_kontak_email" class="form-control f-input"
-                                                placeholder="pic@email.com">
+                                            <label class="dr-label">Jabatan</label>
+                                            <input type="text" id="modal_kontak_jabatan" class="dr-input" placeholder="Manager/Sales/Dll">
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="dr-label">Email PIC</label>
+                                            <input type="email" id="modal_kontak_email" class="dr-input" placeholder="pic@email.com">
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="dr-label">Salesperson Penanggung Jawab</label>
+                                            <select id="modal_salesperson_id" class="dr-input">
+                                                <option value="0">Tanpa Sales Person</option>
+                                                @foreach ($salesUsers ?? [] as $u)
+                                                    <option value="{{ $u->id }}" @if ($u->id == auth()->id()) selected @endif>
+                                                        {{ $u->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <!-- Card 3: Sales Person -->
-                        <div class="col-lg-4">
-                            <h6 class="fw-bold text-dark mb-3 text-uppercase small ls-1"><i
-                                    class="fa fa-user me-2 text-primary"></i>Sales Person</h6>
-                            <div class="card border-0 shadow-sm rounded-3">
-                                <div class="card-body p-4">
-                                    <div class="alert alert-soft-info py-2 px-3 small border-0 mb-3">
-                                        <i class="fa fa-info-circle me-1"></i> Pilih salesperson yang akan menangani mitra ini.
-                                    </div>
-                                    
-                                    <div class="mt-3">
-                                        <label class="f-label">Salesperson</label>
-                                        <select id="modal_salesperson_id" class="form-select f-input">
-                                            <option value="0">Tanpa Sales Person</option>
-                                            <option value="">Pilih Sales...</option>
-                                            @foreach ($salesUsers ?? [] as $u)
-                                                <option value="{{ $u->id }}"
-                                                    @if ($u->id == auth()->id()) selected @endif>
-                                                    {{ $u->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                    <div class="mt-4">
-                                        <div class="text-center py-4 border border-dashed rounded bg-light">
-                                            <i class="fa fa-user-plus mb-2 fs-4 text-secondary"></i>
-                                            <div class="small text-muted">Salesperson akan otomatis terisi saat membuat invoice</div>
+                                <div class="bg-white p-4 border rounded-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="iconoir-map-pin text-dark me-2 fs-5"></i>
+                                            <h6 class="fw-bold mb-0">Lokasi Peta</h6>
                                         </div>
+                                        <button type="button" class="btn btn-sm btn-light border" onclick="geocodeAddress()">
+                                            <i class="iconoir-search-window me-1"></i>Cari dari Alamat
+                                        </button>
                                     </div>
+                                    <div id="mitraMap" class="w-100 rounded-3 border" style="height: 250px; z-index: 0;"></div>
+                                    <input type="hidden" id="modal_latitude">
+                                    <input type="hidden" id="modal_longitude">
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
+
+            <!-- Footer removed because actions moved to header -->
         </div>
     </div>
 </div>
 
 <style>
-    .ls-1 {
-        letter-spacing: 1px;
-    }
-
-    .f-label {
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-        font-weight: 700;
-        color: #64748b;
-        margin-bottom: 6px;
-        display: block;
-    }
-
-    .f-input {
-        border: 1px solid #e2e8f0;
-        padding: 0.6rem 0.8rem;
-        border-radius: 6px;
-        font-size: 13px;
-        transition: all 0.2s;
-    }
-
-    .f-input:focus {
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        outline: none;
-    }
+    #mitraModal .modal-content { box-shadow: none !important; }
+    #mitraModal .dr-card { border: 1px solid #f1f5f9; box-shadow: none !important; }
+    .custom-radio .form-check-input:checked { background-color: var(--dr-primary); border-color: var(--dr-primary); }
 </style>
 
 <script>

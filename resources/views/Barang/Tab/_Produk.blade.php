@@ -1,5 +1,6 @@
 <div class="tab-pane fade show active" id="tab-produk" role="tabpanel">
 
+<<<<<<< Updated upstream
     <div class="row g-2 mb-3">
         <!-- Filter Controls -->
         <div class="col-md-3">
@@ -7,6 +8,15 @@
             <div class="input-group">
                 <span class="input-group-text"><i class="fa fa-search"></i></span>
                 <input type="text" id="filter-produk-search" class="form-control"
+=======
+    <!-- Modern Filter Controls -->
+    <div class="dr-filter-bar px-4 py-3 bg-light-subtle border-bottom gap-3">
+        <div class="dr-filter-group" style="flex: 2; min-width: 200px;">
+            <label class="dr-label">Cari Barang</label>
+            <div class="dr-search-wrap">
+                <i class="iconoir-search dr-search-icon"></i>
+                <input type="text" id="filter-produk-search" class="dr-input dr-search-input"
+>>>>>>> Stashed changes
                     placeholder="Nama atau SKU...">
             </div>
         </div>
@@ -28,6 +38,7 @@
                 <option value="">Semua</option>
             </select>
         </div>
+<<<<<<< Updated upstream
         
         <!-- Action Buttons -->
         <div class="col-md-3">
@@ -42,28 +53,52 @@
                 </button>
                 <button class="btn btn-primary w-100 fw-bold" onclick="tambahMassalProduk()">
                     <i class="fa fa-plus me-1"></i> TAMBAH
+=======
+        <div class="dr-filter-actions">
+            <label class="dr-label" style="visibility: hidden;">-</label>
+            <div class="d-flex gap-1">
+                <button onclick="resetFilterProduk()" class="dr-btn-icon" title="Reset Filter">
+                    <i class="iconoir-undo"></i>
+                </button>
+                <button onclick="exportProduk()" class="dr-btn-icon" title="Export Excel">
+                    <i class="iconoir-download"></i>
+                </button>
+                <button class="dr-btn dr-btn-primary ms-2" onclick="tambahMassalProduk()">
+                    <i class="iconoir-plus-circle me-1"></i> Tambah Produk
+>>>>>>> Stashed changes
                 </button>
             </div>
         </div>
     </div>
 
+<<<<<<< Updated upstream
     <div class="table-responsive">
         <table class="table table-bordered table-striped table-hover align-middle">
             <thead class="table-light">
+=======
+    <!-- Enhanced Data Table -->
+    <div class="dr-table-container">
+        <table class="dr-table align-middle mb-0" id="table-produk">
+            <thead>
+>>>>>>> Stashed changes
                 <tr>
                     <th width="120" style="cursor: pointer;" onclick="toggleSort('sku_kode')">SKU <span id="sort-icon-sku_kode"></span></th>
                     <th>Supplier</th>
                     <th>Brand</th>
                     <th style="cursor: pointer;" onclick="toggleSort('nama_produk')">Nama Produk <span id="sort-icon-nama_produk"></span></th>
                     <th>Kategori</th>
-                    <th class="text-center" style="cursor: pointer;" onclick="toggleSort('kemasan')">Kemasan <span id="sort-icon-kemasan"></span></th>
-                    <th class="text-center" style="cursor: pointer;" onclick="toggleSort('satuan')">Satuan <span id="sort-icon-satuan"></span></th>
+                    <th class="text-center" style="cursor: pointer;" onclick="toggleSort('kemasan')">Kms <span id="sort-icon-kemasan"></span></th>
+                    <th class="text-center" style="cursor: pointer;" onclick="toggleSort('satuan')">Sat <span id="sort-icon-satuan"></span></th>
                     <th class="text-center" style="cursor: pointer;" onclick="toggleSort('qty')">Qty <span id="sort-icon-qty"></span></th>
-                    <th class="text-end" style="cursor: pointer;" onclick="toggleSort('harga_beli')">Harga Beli <span id="sort-icon-harga_beli"></span></th>
-                    <th class="text-end" style="cursor: pointer;" onclick="toggleSort('harga_jual')">Harga Jual <span id="sort-icon-harga_jual"></span></th>
-                    <th class="text-end" style="cursor: pointer;" onclick="toggleSort('harga_tempo')">Harga Tempo <span id="sort-icon-harga_tempo"></span></th>
+                    <th class="text-end" style="cursor: pointer;" onclick="toggleSort('harga_beli')">Beli <span id="sort-icon-harga_beli"></span></th>
+                    <th class="text-end" style="cursor: pointer;" onclick="toggleSort('harga_jual')">Jual <span id="sort-icon-harga_jual"></span></th>
+                    <th class="text-end" style="cursor: pointer;" onclick="toggleSort('harga_tempo')">Tempo <span id="sort-icon-harga_tempo"></span></th>
                     <th>COA</th>
+<<<<<<< Updated upstream
                     <th width="60" class="text-center">Aksi</th>
+=======
+                    <th width="60" class="text-end pe-4">Aksi</th>
+>>>>>>> Stashed changes
                 </tr>
             </thead>
             <tbody id="produk-table-body">
@@ -74,8 +109,14 @@
         </table>
     </div>
 
+<<<<<<< Updated upstream
     <div class="d-flex justify-content-between align-items-center px-2">
         <span id="produk-pagination-info" class="text-muted small"></span>
+=======
+    <!-- Pagination -->
+    <div class="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-white">
+        <span id="produk-pagination-info" class="text-muted small fw-bold"></span>
+>>>>>>> Stashed changes
         <nav>
             <ul class="pagination pagination-sm mb-0" id="produk-pagination-container"></ul>
         </nav>
@@ -87,6 +128,7 @@
 
 <template id="produk-row-display-template">
     <tr>
+<<<<<<< Updated upstream
         <td class="col-sku fw-bold text-primary"></td>
         <td class="col-supplier"></td>
         <td class="col-brand"></td>
@@ -117,6 +159,28 @@
                         </a>
                     </li>
                 </ul>
+=======
+        <td class="col-sku fw-bold text-primary ps-4 font-monospace small"></td>
+        <td class="col-supplier small"></td>
+        <td class="col-brand small"></td>
+        <td class="col-nama fw-bold text-dark small"></td>
+        <td class="col-kategori small"></td>
+        <td class="col-kemasan text-center small"></td>
+        <td class="col-satuan text-center small"></td>
+        <td class="col-qty text-center small"></td>
+        <td class="col-beli text-end font-monospace small"></td>
+        <td class="col-jual text-end font-monospace small"></td>
+        <td class="col-tempo text-end font-monospace small"></td>
+        <td class="col-coa text-start small"></td>
+        <td class="text-end pe-4">
+            <div class="d-flex justify-content-end gap-1">
+                <button class="dr-btn-icon dr-btn-icon-edit btn-edit" title="Edit Produk">
+                    <i class="iconoir-edit-pencil"></i>
+                </button>
+                <button class="dr-btn-icon dr-btn-icon-delete btn-delete" title="Hapus Produk">
+                    <i class="iconoir-trash"></i>
+                </button>
+>>>>>>> Stashed changes
             </div>
         </td>
     </tr>
@@ -155,8 +219,9 @@
         }
 
         // Resizable Column Logic
-        function initResizableTable() {
-            const table = document.querySelector('.table');
+        function initResizableTable(selector = '.dr-table') {
+            const table = document.querySelector(selector);
+            if (!table) return;
             const cols = table.querySelectorAll('th');
             
             cols.forEach((col) => {
@@ -594,7 +659,7 @@
 
         function renderProductPagination(meta) {
             document.getElementById('produk-pagination-info').innerText =
-                `Menampilkan ${meta.from || 0} ke ${meta.to || 0} dari ${meta.total} data`;
+                `Menampilkan ${meta.from || 0} - ${meta.to || 0} dari ${meta.total} data`;
 
             const container = document.getElementById('produk-pagination-container');
             container.innerHTML = '';
@@ -602,15 +667,14 @@
             meta.links.forEach(link => {
                 const active = link.active ? 'active' : '';
                 const disabled = !link.url ? 'disabled' : '';
-                const label = link.label.replace('&laquo;', '').replace('&raquo;', '');
+                const label = link.label.includes('Previous') ? '<i class="iconoir-nav-arrow-left"></i>' : (link.label.includes('Next') ? '<i class="iconoir-nav-arrow-right"></i>' : link.label);
 
                 container.insertAdjacentHTML('beforeend', `
                     <li class="page-item ${active} ${disabled}">
-                        <a class="page-link shadow-none"
-                           href="javascript:void(0)"
+                        <button class="page-link border-0 mx-0 rounded shadow-none fw-bold"
                            onclick="loadProductData('${link.url}')">
                             ${label}
-                        </a>
+                        </button>
                     </li>
                 `);
             });

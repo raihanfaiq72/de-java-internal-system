@@ -1,5 +1,6 @@
 <div class="tab-pane fade show" id="tab-brand" role="tabpanel">
 
+<<<<<<< Updated upstream
     <div class="row g-2 mb-3">
         <!-- Filter Controls -->
         <div class="col-md-4">
@@ -20,17 +21,46 @@
                 <div class="vr"></div>
                 <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="openBrandModal()">
                     <i class="fa fa-plus me-1"></i> TAMBAH BRAND
+=======
+    <div class="dr-filter-bar px-4 py-3 bg-light-subtle border-bottom gap-3">
+        <div class="dr-filter-group" style="flex: 1; min-width: 250px;">
+            <label class="dr-label">Cari Brand</label>
+            <div class="dr-search-wrap">
+                <i class="iconoir-search dr-search-icon"></i>
+                <input type="text" id="filter-brand-search" class="dr-input dr-search-input"
+                    placeholder="Ketik nama brand...">
+            </div>
+        </div>
+        
+        <div class="dr-filter-actions">
+            <label class="dr-label" style="visibility: hidden;">-</label>
+            <div class="d-flex gap-1">
+                <button onclick="resetFilterBrand()" class="dr-btn-icon" title="Reset Filter">
+                    <i class="iconoir-undo"></i>
+                </button>
+                <button class="dr-btn dr-btn-primary ms-2" onclick="openBrandModal()">
+                    <i class="iconoir-plus-circle me-1"></i> Tambah Brand
+>>>>>>> Stashed changes
                 </button>
             </div>
         </div>
     </div>
 
+<<<<<<< Updated upstream
     <div class="table-responsive">
         <table class="table table-sm table-bordered align-middle">
             <thead class="table-light">
                 <tr>
                     <th>Nama Brand</th>
                     <th width="80" class="text-center">Aksi</th>
+=======
+    <div class="dr-table-container">
+        <table class="dr-table align-middle mb-0" id="table-brand">
+            <thead>
+                <tr>
+                    <th class="ps-4">Nama Brand</th>
+                    <th width="80" class="text-end pe-4">Aksi</th>
+>>>>>>> Stashed changes
                 </tr>
             </thead>
             <tbody id="brand-table-body">
@@ -41,8 +71,13 @@
         </table>
     </div>
 
+<<<<<<< Updated upstream
     <div class="d-flex justify-content-between align-items-center px-2">
         <span id="brand-pagination-info" class="text-muted small"></span>
+=======
+    <div class="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-white">
+        <span id="brand-pagination-info" class="text-muted small fw-bold"></span>
+>>>>>>> Stashed changes
         <nav>
             <ul class="pagination pagination-sm mb-0" id="brand-pagination-container"></ul>
         </nav>
@@ -52,6 +87,7 @@
 
 <template id="brand-row-template">
     <tr>
+<<<<<<< Updated upstream
         <td class="brand-name"></td>
         <td class="text-center">
             <div class="dropdown">
@@ -71,6 +107,17 @@
                         </a>
                     </li>
                 </ul>
+=======
+        <td class="brand-name ps-4 fw-bold text-dark small"></td>
+        <td class="text-end pe-4">
+            <div class="d-flex justify-content-end gap-1">
+                <button class="dr-btn-icon dr-btn-icon-edit btn-edit" title="Edit Brand">
+                    <i class="iconoir-edit-pencil"></i>
+                </button>
+                <button class="dr-btn-icon dr-btn-icon-delete btn-delete" title="Hapus Brand">
+                    <i class="iconoir-trash"></i>
+                </button>
+>>>>>>> Stashed changes
             </div>
         </td>
     </tr>
@@ -99,11 +146,12 @@
         }
 
         function syncSupplierOptions() {
-            if (!tsSupplier) return;
-            if (tsSupplier.options.length === 0 && masterSuppliers.length > 0) {
-                tsSupplier.addOptions(masterSuppliers);
+            if (typeof tsBrandSupplier === 'undefined' || !tsBrandSupplier) return;
+            const suppliers = window.masterSuppliers || (typeof masterSuppliers !== 'undefined' ? masterSuppliers : []);
+            if (tsBrandSupplier.options.length === 0 && suppliers.length > 0) {
+                tsBrandSupplier.addOptions(suppliers);
             }
-            tsSupplier.refreshOptions(false);
+            tsBrandSupplier.refreshOptions(false);
         }
 
         async function loadBrandData(url = BRAND_URL) {
@@ -157,14 +205,14 @@
 
             // Initialize Draggable Columns for Brand Table
             if (typeof initResizableTable === 'function') {
-                initResizableTable();
+                initResizableTable('#table-brand');
             }
         }
 
         function renderBrandPagination(meta) {
             const info = document.getElementById('brand-pagination-info');
             if (info) {
-                info.innerText = `Menampilkan ${meta.from || 0} ke ${meta.to || 0} dari ${meta.total} data`;
+                info.innerText = `Menampilkan ${meta.from || 0} - ${meta.to || 0} dari ${meta.total} data`;
             }
 
             const container = document.getElementById('brand-pagination-container');
@@ -174,11 +222,11 @@
                 meta.links.forEach(link => {
                     const active = link.active ? 'active' : '';
                     const disabled = !link.url ? 'disabled' : '';
-                    const label = link.label.replace('&laquo;', '').replace('&raquo;', '');
+                    const label = link.label.includes('Previous') ? '<i class="iconoir-nav-arrow-left"></i>' : (link.label.includes('Next') ? '<i class="iconoir-nav-arrow-right"></i>' : link.label);
 
                     const li = document.createElement('li');
                     li.className = `page-item ${active} ${disabled}`;
-                    li.innerHTML = `<a class="page-link shadow-none" href="javascript:void(0)">${label}</a>`;
+                    li.innerHTML = `<button class="page-link border-0 mx-0 rounded shadow-none fw-bold">${label}</button>`;
 
                     if (link.url && !link.active) {
                         li.onclick = () => loadBrandData(link.url);
@@ -189,144 +237,6 @@
             }
         }
 
-        async function editBrand(id) {
-            const form = document.getElementById('formBrand');
-            form.reset();
-            document.getElementById('brandModalTitle').innerText = 'Edit Brand';
-            document.getElementById('brandId').value = id;
-
-            try {
-                const res = await fetch(`${BRAND_URL}/${id}`);
-                const result = await res.json();
-
-                if (result.success) {
-                    const brand = result.data;
-                    document.getElementById('nama_brand').value = brand.nama_brand;
-
-                    if (tsSupplier) {
-                        tsSupplier.clear();
-                        syncSupplierOptions();
-                        if (brand.suppliers && Array.isArray(brand.suppliers)) {
-                            const ids = brand.suppliers.map(s => String(s.id));
-                            tsSupplier.setValue(ids);
-                        }
-                    }
-
-                    new bootstrap.Modal(document.getElementById('modalBrand')).show();
-                }
-            } catch (error) {
-                console.error('Edit error:', error);
-                alert('Terjadi kesalahan saat memuat data brand.');
-            }
-        }
-
-        async function deleteBrand(id) {
-            if (!await macConfirm('Hapus brand', 'Yakin ingin menghapus brand ini?')) return;
-
-            try {
-                const res = await fetch(`${BRAND_URL}/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
-                            'content') || ''
-                    }
-                });
-                const result = await res.json();
-
-                if (result.success) {
-                    loadBrandData();
-                } else {
-                    alert('Gagal: ' + result.message);
-                }
-            } catch (error) {
-                console.error('Delete error:', error);
-            }
-        }
-
-        async function loadSupplier() {
-            if (!tsSupplier) return;
-
-            try {
-                const res = await fetch(SUPPLIER_URL + '?per_page=1000');
-                const result = await res.json();
-
-                if (!result.success) return;
-
-                const data = result.data.data || result.data;
-
-                tsSupplier.clearOptions();
-                tsSupplier.addOptions(data);
-
-                tsSupplier.refreshOptions(false);
-            } catch (error) {
-                console.error('Gagal load supplier: ', error);
-            }
-        }
-
-        async function openBrandModal() {
-            document.getElementById('formBrand').reset();
-            document.getElementById('brandId').value = '';
-            document.getElementById('brandModalTitle').innerText = 'Tambah Brand Baru';
-
-            if (tsSupplier) {
-                tsSupplier.clear();
-                syncSupplierOptions();
-            }
-
-            new bootstrap.Modal(document.getElementById('modalBrand')).show();
-        }
-
-        async function saveBrand() {
-            const btn = document.getElementById('btnSaveBrand');
-            const brandId = document.getElementById('brandId').value;
-            const brandName = document.getElementById('nama_brand').value;
-            const selectedSuppliers = tsSupplier.getValue();
-
-            if (!brandName) {
-                alert('Nama Brand wajib diisi!');
-                return;
-            }
-
-            const url = brandId ? `${BRAND_URL}/${brandId}` : BRAND_URL;
-            const method = brandId ? 'PUT' : 'POST';
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute(
-                'content') || '';
-
-            const payload = {
-                nama_brand: brandName,
-                supplier_ids: selectedSuppliers
-            };
-
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...';
-
-            try {
-                const res = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': token
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await res.json();
-
-                if (result.success) {
-                    bootstrap.Modal.getInstance(document.getElementById('modalBrand')).hide();
-                    alert('Data berhasil disimpan!');
-                    loadBrandData();
-                } else {
-                    alert('Gagal: ' + (result.message || 'Terjadi kesalahan'));
-                }
-            } catch (error) {
-                console.error('Save error:', error);
-                alert('Terjadi kesalahan sistem saat menyimpan.');
-            } finally {
-                btn.disabled = false;
-                btn.innerText = 'Simpan';
-            }
-        }
+        // Fungsi editBrand, openBrandModal, dan saveBrand sudah ada di Modal/_Brand.blade.php
     </script>
 @endpush

@@ -74,8 +74,21 @@
 
 @section('main')
     <div class="page-wrapper">
+<<<<<<< Updated upstream
         <div class="page-content">
             <div class="container-fluid">
+=======
+        <div class="page-content bg-white">
+            <div class="dr-page-shell pt-3">
+                <div class="container-fluid p-0">
+                    <!-- Breadcrumb -->
+                    <div class="dr-breadcrumb">
+                        <i class="iconoir-home dr-breadcrumb-icon"></i>
+                        <a href="{{ route('dashboard') }}" class="text-decoration-none text-muted">Dashboard</a>
+                        <i class="iconoir-nav-arrow-right dr-breadcrumb-icon" style="font-size: 14px;"></i>
+                        <strong>Roles & Permissions</strong>
+                    </div>
+>>>>>>> Stashed changes
 
                 <div class="row">
                     <div class="col-sm-12">
@@ -183,6 +196,7 @@
                 @csrf
                 <input type="hidden" name="_method" id="formMethod" value="POST">
 
+<<<<<<< Updated upstream
                 <div class="modal-header bg-white border-bottom px-4 py-3 sticky-top shadow-sm">
                     <div class="d-flex align-items-center">
                         <div class="bg-dark text-white p-2 rounded-2 me-3">
@@ -198,6 +212,24 @@
                             data-bs-dismiss="modal">Batalkan</button>
                         <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">
                             <i class="fa fa-save me-2"></i>Simpan Role
+=======
+                <div class="modal-header bg-white border-bottom px-4 py-3 sticky-top d-flex align-items-center justify-content-between" style="padding: 20px 24px !important;">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-soft-primary text-primary d-flex align-items-center justify-content-center rounded-circle me-3" style="width: 40px; height: 40px;">
+                            <i class="iconoir-user-shield" style="font-size: 20px;"></i>
+                        </div>
+                        <div class="d-flex flex-column justify-content-center">
+                            <h5 class="dr-title mb-0" id="roleModalTitle" style="line-height: 1.2;">Buat Role Baru</h5>
+                            <p class="dr-subtitle mb-0" style="line-height: 1.2;">Tentukan nama role dan centang izin akses yang diberikan.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="dr-btn-modal" data-bs-dismiss="modal">
+                            <i class="iconoir-xmark text-danger"></i> Batalkan
+                        </button>
+                        <button type="submit" class="dr-btn-modal">
+                            <i class="iconoir-check text-success"></i> Simpan Role
+>>>>>>> Stashed changes
                         </button>
                     </div>
                 </div>
@@ -273,6 +305,7 @@
                         </div>
                     </div>
                 </div>
+
             </form>
         </div>
     </div>

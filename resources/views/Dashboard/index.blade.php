@@ -970,9 +970,7 @@
             <div class="dashboard-reference-shell">
                 <div class="container-fluid">
                     <div class="dr-breadcrumb">
-                        <span>Main Menu</span>
-                        <span>/</span>
-                        <span class="dr-breadcrumb-icon"><i class="iconoir-view-grid"></i></span>
+                        <i class="iconoir-home dr-breadcrumb-icon"></i>
                         <strong>Dashboard</strong>
                     </div>
 

@@ -2,98 +2,98 @@
 
 @section('main')
     <div class="page-wrapper">
-        <div class="page-content">
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-sm-12">
-                        <div class="page-title-box d-md-flex justify-content-between align-items-center">
-                            <h4 class="page-title">Manajemen Karyawan</h4>
-                            <ol class="breadcrumb mb-0">
-                                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
-                                <li class="breadcrumb-item active">Employees</li>
-                            </ol>
-                        </div>
+        <div class="page-content bg-white">
+            <div class="dr-page-shell">
+                <div class="container-fluid p-0">
+                    <!-- Breadcrumb -->
+                    <div class="dr-breadcrumb">
+                        <i class="iconoir-home dr-breadcrumb-icon"></i>
+                        <a href="{{ route('dashboard') }}" class="text-decoration-none text-muted">Dashboard</a>
+                        <i class="iconoir-nav-arrow-right dr-breadcrumb-icon" style="font-size: 14px;"></i>
+                        <strong>Data Karyawan</strong>
                     </div>
-                </div>
 
-                <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
-                    <div class="card-header bg-white border-bottom py-3 px-4">
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <h5 class="mb-0 fw-bold text-dark">Daftar Karyawan</h5>
-                            </div>
-                            <div class="col-md-6 d-flex justify-content-end">
-                                <button type="button" class="btn btn-primary fw-bold me-3 shadow-sm" data-bs-toggle="modal"
-                                    data-bs-target="#createModal">
-                                    <i class="fa fa-plus-circle me-1"></i> Tambah Karyawan
-                                </button>
-                                <form action="{{ route('employees.index') }}" method="GET">
-                                    <div class="input-group">
-                                        <input type="text" name="search"
-                                            class="form-control form-control-sm border-end-0"
-                                            placeholder="Cari nama atau NIK..." value="{{ request('search') }}">
-                                        <button class="btn btn-sm btn-secondary border-start-0 ps-3 pe-3" type="submit">
-                                            <i class="fa fa-search"></i>
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
+                    <!-- Hero Header -->
+                    <div class="dr-hero">
+                        <div>
+                            <h1 class="dr-title">Manajemen Karyawan</h1>
+                            <p class="dr-subtitle">Kelola database karyawan, jabatan, dan informasi penggajian harian.</p>
+                        </div>
+                        <div class="dr-actions">
+                            <form id="searchForm" action="{{ route('employees.index') }}" method="GET" class="d-flex gap-2">
+                                <div class="position-relative" style="width: 250px;">
+                                    <i class="iconoir-search text-muted position-absolute start-0 top-50 translate-middle-y ms-3" style="font-size: 16px;"></i>
+                                    <input type="text" name="search" id="searchInput" class="dr-input ps-5" placeholder="Cari nama atau NIK..." value="{{ request('search') }}" autocomplete="off">
+                                </div>
+                                {{-- Tombol filter disembunyikan karena sudah otomatis --}}
+                            </form>
+                            <button type="button" class="dr-btn dr-btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+                                <i class="iconoir-plus-circle"></i> Tambah Karyawan
+                            </button>
                         </div>
                     </div>
-                    <div class="card-body p-4 bg-white">
+
+                    <div class="dr-card p-0 overflow-hidden bg-white">
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="bg-light text-uppercase text-secondary fw-bold"
-                                    style="font-size: 11px; letter-spacing: 0.5px;">
+                            <table class="dr-table align-middle mb-0">
+                                <thead>
                                     <tr>
-                                        <th>NIK</th>
-                                        <th>Nama</th>
+                                        <th width="120" class="ps-4">NIK</th>
+                                        <th>Nama Karyawan</th>
                                         <th>Jabatan</th>
-                                        <th>Gaji Harian</th>
-                                        <th>Premi</th>
-                                        <th>Status</th>
+                                        <th class="text-end">Gaji Harian</th>
+                                        <th class="text-end">Premi</th>
+                                        <th class="text-center">Status</th>
                                         <th>User Akun</th>
-                                        <th class="text-end pe-4">Aksi</th>
+                                        <th width="120" class="text-end pe-4">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody class="border-top-0">
+                                <tbody>
                                     @forelse($employees as $employee)
                                         <tr>
-                                            <td class="fw-bold text-dark">{{ $employee->nik }}</td>
-                                            <td>{{ $employee->name }}</td>
-                                            <td>{{ $employee->position }}</td>
-                                            <td>Rp {{ number_format($employee->daily_salary, 0, ',', '.') }}</td>
-                                            <td>Rp {{ number_format($employee->premi, 0, ',', '.') }}</td>
+                                            <td class="ps-4">
+                                                <span class="dr-badge bg-soft-secondary text-secondary font-monospace">{{ $employee->nik }}</span>
+                                            </td>
                                             <td>
-                                                <span
-                                                    class="badge bg-{{ $employee->status == 'active' ? 'success' : 'secondary' }} rounded-pill px-3">
-                                                    {{ $employee->status == 'active' ? 'Aktif' : 'Non-Aktif' }}
-                                                </span>
+                                                <span class="fw-bold text-dark">{{ $employee->name }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="text-muted small fw-medium">{{ $employee->position }}</span>
+                                            </td>
+                                            <td class="text-end fw-bold">
+                                                <span class="small text-muted fw-normal me-1">Rp</span>{{ number_format($employee->daily_salary, 0, ',', '.') }}
+                                            </td>
+                                            <td class="text-end fw-bold">
+                                                <span class="small text-muted fw-normal me-1">Rp</span>{{ number_format($employee->premi, 0, ',', '.') }}
+                                            </td>
+                                            <td class="text-center">
+                                                @if($employee->status == 'active')
+                                                    <span class="dr-badge bg-soft-success text-success">Aktif</span>
+                                                @else
+                                                    <span class="dr-badge bg-soft-secondary text-secondary">Non-Aktif</span>
+                                                @endif
                                             </td>
                                             <td>
                                                 @if ($employee->user)
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="avatar-xs me-2">
-                                                            <span
-                                                                class="avatar-title rounded-circle bg-light text-primary font-size-10">
-                                                                {{ substr($employee->user->name, 0, 1) }}
-                                                            </span>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div class="user-avatar-text" style="width: 24px; height: 24px; font-size: 10px;">
+                                                            {{ substr($employee->user->name, 0, 2) }}
                                                         </div>
-                                                        <span>{{ $employee->user->name }}</span>
+                                                        <span class="small fw-medium text-dark">{{ $employee->user->name }}</span>
                                                     </div>
                                                 @else
-                                                    <span class="text-muted small">-</span>
+                                                    <span class="text-muted italic small">- belum terhubung -</span>
                                                 @endif
                                             </td>
                                             <td class="text-end pe-4">
-                                                <div class="btn-group">
-                                                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal"
-                                                        data-bs-target="#editModal{{ $employee->id }}">
-                                                        <i class="fa fa-pencil"></i>
+                                                <div class="d-flex justify-content-end gap-1">
+                                                    <button class="dr-btn-icon dr-btn-icon-edit" data-bs-toggle="modal"
+                                                        data-bs-target="#editModal{{ $employee->id }}" title="Edit Karyawan">
+                                                        <i class="iconoir-edit-pencil"></i>
                                                     </button>
-                                                    <button type="button" class="btn btn-sm btn-outline-danger"
-                                                        onclick="deleteEmployee({{ $employee->id }}, '{{ $employee->name }}')">
-                                                        <i class="fa fa-trash"></i>
+                                                    <button type="button" class="dr-btn-icon dr-btn-icon-delete"
+                                                        onclick="deleteEmployee({{ $employee->id }}, '{{ $employee->name }}')" title="Hapus">
+                                                        <i class="iconoir-trash"></i>
                                                     </button>
                                                 </div>
                                                 <form id="delete-{{ $employee->id }}"
@@ -108,111 +108,103 @@
                                         <!-- Edit Modal -->
                                         <div class="modal fade" id="editModal{{ $employee->id }}" tabindex="-1"
                                             aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content border-0 shadow-lg">
+                                            <div class="modal-dialog modal-xl modal-dialog-centered">
+                                                <div class="modal-content border-0 bg-white">
                                                     <form action="{{ route('employees.update', $employee->id) }}"
                                                         method="POST">
                                                         @csrf
                                                         @method('PUT')
-                                                        <div class="modal-header border-bottom-0 pb-0">
-                                                            <h5 class="modal-title fw-bold">Edit Karyawan</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                                aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body p-4">
-                                                            <div class="mb-3">
-                                                                <label
-                                                                    class="form-label fw-bold small text-uppercase text-muted">NIK</label>
-                                                                <input type="text" name="nik" class="form-control"
-                                                                    value="{{ $employee->nik }}" required>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label
-                                                                    class="form-label fw-bold small text-uppercase text-muted">Nama</label>
-                                                                <input type="text" name="name" class="form-control"
-                                                                    value="{{ $employee->name }}" required>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label
-                                                                    class="form-label fw-bold small text-uppercase text-muted">Jabatan</label>
-                                                                <input type="text" name="position" class="form-control"
-                                                                    value="{{ $employee->position }}" required>
-                                                            </div>
-                                                            <div class="row">
-                                                                <div class="col-md-6 mb-3">
-                                                                    <label
-                                                                        class="form-label fw-bold small text-uppercase text-muted">Gaji
-                                                                        Harian</label>
-                                                                    <div class="input-group">
-                                                                        <span
-                                                                            class="input-group-text bg-light border-end-0">Rp</span>
-                                                                        <input type="text"
-                                                                            class="form-control border-start-0 ps-0 rupiah-input"
-                                                                            value="{{ number_format($employee->daily_salary, 0, ',', '.') }}"
-                                                                            placeholder="0" onkeyup="syncInput(this)">
-
-                                                                        <input type="hidden" name="daily_salary"
-                                                                            class="real-value"
-                                                                            value="{{ $employee->daily_salary }}">
-                                                                    </div>
-                                                                </div>
-                                                                <div class="col-md-6 mb-3">
-                                                                    <label
-                                                                        class="form-label fw-bold small text-uppercase text-muted">Premi</label>
-                                                                    <div class="input-group">
-                                                                        <span
-                                                                            class="input-group-text bg-light border-end-0">Rp</span>
-                                                                        <input type="text"
-                                                                            class="form-control border-start-0 ps-0 rupiah-input"
-                                                                            value="{{ number_format($employee->premi, 0, ',', '.') }}"
-                                                                            placeholder="0" onkeyup="syncInput(this)">
-
-                                                                        <input type="hidden" name="premi"
-                                                                            class="real-value"
-                                                                            value="{{ $employee->premi }}">
-                                                                    </div>
+                                                        <div class="modal-header bg-white px-4 py-4 d-flex align-items-center justify-content-between border-0">
+                                                            <div class="d-flex align-items-center gap-3">
+                                                                <i class="iconoir-edit-pencil text-dark" style="font-size: 20px;"></i>
+                                                                <div>
+                                                                    <h5 class="dr-title mb-1" style="font-size: 16px;">Edit Data Karyawan</h5>
+                                                                    <p class="dr-subtitle mb-0" style="font-size: 12px;">Perbarui profil dan detail operasional.</p>
                                                                 </div>
                                                             </div>
-                                                            <div class="mb-3">
-                                                                <label
-                                                                    class="form-label fw-bold small text-uppercase text-muted">Tanggal
-                                                                    Bergabung</label>
-                                                                <input type="date" name="join_date"
-                                                                    class="form-control"
-                                                                    value="{{ $employee->join_date ? $employee->join_date->format('Y-m-d') : '' }}">
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label
-                                                                    class="form-label fw-bold small text-uppercase text-muted">Status</label>
-                                                                <select name="status" class="form-select" required>
-                                                                    <option value="active"
-                                                                        {{ $employee->status == 'active' ? 'selected' : '' }}>
-                                                                        Aktif</option>
-                                                                    <option value="inactive"
-                                                                        {{ $employee->status == 'inactive' ? 'selected' : '' }}>
-                                                                        Non-Aktif</option>
-                                                                </select>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label
-                                                                    class="form-label fw-bold small text-uppercase text-muted">Hubungkan
-                                                                    Akun User (Opsional)</label>
-                                                                <select name="user_id" class="form-select">
-                                                                    <option value="">-- Pilih User --</option>
-                                                                    @foreach ($users as $user)
-                                                                        <option value="{{ $user->id }}"
-                                                                            {{ $employee->user_id == $user->id ? 'selected' : '' }}>
-                                                                            {{ $user->name }}</option>
-                                                                    @endforeach
-                                                                </select>
+                                                            <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+
+                                                        <div class="modal-body px-4 pb-4 pt-0 bg-white">
+                                                            <div class="row g-4">
+                                                                <!-- Kolom Kiri -->
+                                                                <div class="col-md-6 border-end">
+                                                                    <div class="d-flex align-items-center mb-4">
+                                                                        <i class="iconoir-vcard text-dark me-2" style="font-size: 20px;"></i>
+                                                                        <h6 class="fw-bold text-dark mb-0 small text-uppercase ls-1">Informasi Personal</h6>
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label class="dr-label mb-2">NIK *</label>
+                                                                        <input type="text" name="nik" class="dr-input font-monospace" value="{{ $employee->nik }}" required>
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label class="dr-label mb-2">Nama Lengkap *</label>
+                                                                        <input type="text" name="name" class="dr-input fw-bold" value="{{ $employee->name }}" required>
+                                                                    </div>
+                                                                    <div class="mb-0">
+                                                                        <label class="dr-label mb-2">Jabatan / Posisi *</label>
+                                                                        <input type="text" name="position" class="dr-input" value="{{ $employee->position }}" required>
+                                                                    </div>
+                                                                </div>
+
+                                                                <!-- Kolom Kanan -->
+                                                                <div class="col-md-6">
+                                                                    <div class="d-flex align-items-center mb-4 ms-md-2">
+                                                                        <i class="iconoir-reports text-dark me-2" style="font-size: 20px;"></i>
+                                                                        <h6 class="fw-bold text-dark mb-0 small text-uppercase ls-1">Detail Operasional</h6>
+                                                                    </div>
+                                                                    <div class="ms-md-2">
+                                                                        <div class="row g-3 mb-3">
+                                                                            <div class="col-md-6">
+                                                                                <label class="dr-label mb-2">Gaji Harian *</label>
+                                                                                <div class="input-group">
+                                                                                    <span class="input-group-text bg-light border-end-0 px-3" style="border-radius: 12px 0 0 12px; border: 1.5px solid var(--dr-line); font-size: 11px;">Rp</span>
+                                                                                    <input type="text" class="dr-input border-start-0 ps-3 rupiah-input" value="{{ number_format($employee->daily_salary, 0, ',', '.') }}" style="border-radius: 0 12px 12px 0;" onkeyup="syncInput(this)" onfocus="clearZero(this)">
+                                                                                    <input type="hidden" name="daily_salary" class="real-value" value="{{ $employee->daily_salary }}">
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-md-6">
+                                                                                <label class="dr-label mb-2">Premi Kehadiran *</label>
+                                                                                <div class="input-group">
+                                                                                    <span class="input-group-text bg-light border-end-0 px-3" style="border-radius: 12px 0 0 12px; border: 1.5px solid var(--dr-line); font-size: 11px;">Rp</span>
+                                                                                    <input type="text" class="dr-input border-start-0 ps-3 rupiah-input" value="{{ number_format($employee->premi, 0, ',', '.') }}" style="border-radius: 0 12px 12px 0;" onkeyup="syncInput(this)" onfocus="clearZero(this)">
+                                                                                    <input type="hidden" name="premi" class="real-value" value="{{ $employee->premi }}">
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row g-3 mb-3">
+                                                                            <div class="col-md-6">
+                                                                                <label class="dr-label mb-2">Join Date</label>
+                                                                                <input type="date" name="join_date" class="dr-input" value="{{ $employee->join_date ? $employee->join_date->format('Y-m-d') : '' }}">
+                                                                            </div>
+                                                                            <div class="col-md-6">
+                                                                                <label class="dr-label mb-2">Status</label>
+                                                                                <select name="status" class="dr-input" required>
+                                                                                    <option value="active" {{ $employee->status == 'active' ? 'selected' : '' }}>Aktif</option>
+                                                                                    <option value="inactive" {{ $employee->status == 'inactive' ? 'selected' : '' }}>Non-Aktif</option>
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="mb-0">
+                                                                            <label class="dr-label mb-2">Hubungkan Akun User</label>
+                                                                            <select name="user_id" class="dr-input">
+                                                                                <option value="">-- Pilih User --</option>
+                                                                                @foreach ($users as $user)
+                                                                                    <option value="{{ $user->id }}" {{ $employee->user_id == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
+                                                                                @endforeach
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        <div class="modal-footer border-top-0 pt-0 pb-4 pe-4">
-                                                            <button type="button" class="btn btn-light fw-bold"
-                                                                data-bs-dismiss="modal">Batal</button>
-                                                            <button type="submit"
-                                                                class="btn btn-primary fw-bold px-4">Simpan
-                                                                Perubahan</button>
+                                                        <div class="modal-footer bg-white border-0 px-4 py-4 d-flex justify-content-end gap-2">
+                                                            <button type="button" class="dr-btn-modal" data-bs-dismiss="modal">
+                                                                <i class="iconoir-xmark text-danger"></i> Batal
+                                                            </button>
+                                                            <button type="submit" class="dr-btn-modal">
+                                                                <i class="iconoir-check text-success"></i> Simpan Perubahan
+                                                            </button>
                                                         </div>
                                                     </form>
                                                 </div>
@@ -232,8 +224,13 @@
                             </table>
                         </div>
 
-                        <div class="d-flex justify-content-end mt-4">
-                            {{ $employees->links() }}
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center px-4 py-3 bg-white border-top">
+                            <span id="pagination-info" class="text-muted small fw-medium">
+                                Menampilkan {{ $employees->firstItem() }} sampai {{ $employees->lastItem() }} dari {{ $employees->total() }} data
+                            </span>
+                            <nav>
+                                {{ $employees->links('pagination::bootstrap-4') }}
+                            </nav>
                         </div>
                     </div>
                 </div>
@@ -243,78 +240,102 @@
 
     <!-- Create Modal -->
     <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content border-0 bg-white">
                 <form action="{{ route('employees.store') }}" method="POST">
                     @csrf
-                    <div class="modal-header border-bottom-0 pb-0">
-                        <h5 class="modal-title fw-bold">Tambah Karyawan Baru</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body p-4">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small text-uppercase text-muted">NIK</label>
-                            <input type="text" name="nik" class="form-control" required
-                                placeholder="Contoh: 2024001">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small text-uppercase text-muted">Nama</label>
-                            <input type="text" name="name" class="form-control" required
-                                placeholder="Nama Lengkap">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small text-uppercase text-muted">Jabatan</label>
-                            <input type="text" name="position" class="form-control" required
-                                placeholder="Contoh: Staff Admin">
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold small text-uppercase text-muted">Gaji
-                                    Harian</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">Rp</span>
-                                    <input type="text" class="form-control border-start-0 ps-0 rupiah-input"
-                                        value="0" placeholder="0" onkeyup="syncInput(this)">
-
-                                    <input type="hidden" name="daily_salary" class="real-value" value="0">
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold small text-uppercase text-muted">Premi</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">Rp</span>
-                                    <input type="text" class="form-control border-start-0 ps-0 rupiah-input"
-                                        value="0" placeholder="0" onkeyup="syncInput(this)">
-
-                                    <input type="hidden" name="premi" class="real-value" value="0">
-                                </div>
+                    <div class="modal-header px-4 py-4 d-flex align-items-center justify-content-between border-0">
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="iconoir-user-plus" style="font-size: 20px;"></i>
+                            <div>
+                                <h5 class="dr-title mb-1" style="font-size: 16px;">Tambah Karyawan Baru</h5>
+                                <p class="dr-subtitle mb-0" style="font-size: 12px;">Lengkapi data personal dan sistem penggajian.</p>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small text-uppercase text-muted">Tanggal Bergabung</label>
-                            <input type="date" name="join_date" class="form-control" value="{{ date('Y-m-d') }}">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small text-uppercase text-muted">Status</label>
-                            <select name="status" class="form-select" required>
-                                <option value="active" selected>Aktif</option>
-                                <option value="inactive">Non-Aktif</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small text-uppercase text-muted">Hubungkan Akun User
-                                (Opsional)</label>
-                            <select name="user_id" class="form-select">
-                                <option value="">-- Pilih User --</option>
-                                @foreach ($users as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                @endforeach
-                            </select>
+                        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body px-4 pb-4 pt-0">
+                        <div class="row g-4">
+                            <!-- Kolom Kiri: Data Personal -->
+                            <div class="col-md-6 border-end">
+                                <div class="d-flex align-items-center mb-4">
+                                    <i class="iconoir-vcard me-2" style="font-size: 20px;"></i>
+                                    <h6 class="fw-bold text-dark mb-0 small text-uppercase ls-1">Informasi Personal</h6>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="dr-label mb-2">NIK *</label>
+                                    <input type="text" name="nik" class="dr-input font-monospace" required placeholder="Contoh: 2024001">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="dr-label mb-2">Nama Lengkap *</label>
+                                    <input type="text" name="name" class="dr-input fw-bold" required placeholder="Nama Sesuai KTP">
+                                </div>
+                                <div class="mb-0">
+                                    <label class="dr-label mb-2">Jabatan / Posisi *</label>
+                                    <input type="text" name="position" class="dr-input" required placeholder="Contoh: Staff Produksi">
+                                </div>
+                            </div>
+
+                            <!-- Kolom Kanan: Penggajian & Sistem -->
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center mb-4 ms-md-2">
+                                    <i class="iconoir-reports text-dark me-2" style="font-size: 20px;"></i>
+                                    <h6 class="fw-bold text-dark mb-0 small text-uppercase ls-1">Detail Operasional</h6>
+                                </div>
+                                <div class="ms-md-2">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6">
+                                            <label class="dr-label mb-2">Gaji Harian *</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light border-end-0 px-3" style="border-radius: 12px 0 0 12px; border: 1.5px solid var(--dr-line); font-size: 11px;">Rp</span>
+                                                <input type="text" class="dr-input border-start-0 ps-3 rupiah-input" value="0" style="border-radius: 0 12px 12px 0;" onkeyup="syncInput(this)" onfocus="clearZero(this)">
+                                                <input type="hidden" name="daily_salary" class="real-value" value="0">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="dr-label mb-2">Premi Kehadiran *</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light border-end-0 px-3" style="border-radius: 12px 0 0 12px; border: 1.5px solid var(--dr-line); font-size: 11px;">Rp</span>
+                                                <input type="text" class="dr-input border-start-0 ps-3 rupiah-input" value="0" style="border-radius: 0 12px 12px 0;" onkeyup="syncInput(this)" onfocus="clearZero(this)">
+                                                <input type="hidden" name="premi" class="real-value" value="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6">
+                                            <label class="dr-label mb-2">Join Date</label>
+                                            <input type="date" name="join_date" class="dr-input" value="{{ date('Y-m-d') }}">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="dr-label mb-2">Status</label>
+                                            <select name="status" class="dr-input" required>
+                                                <option value="active" selected>Aktif</option>
+                                                <option value="inactive">Non-Aktif</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="mb-0">
+                                        <label class="dr-label mb-2">Hubungkan Akun User</label>
+                                        <select name="user_id" class="dr-input">
+                                            <option value="">-- Pilih User --</option>
+                                            @foreach ($users as $user)
+                                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer border-top-0 pt-0 pb-4 pe-4">
-                        <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary fw-bold px-4">Simpan</button>
+
+                    <div class="modal-footer bg-white border-0 px-4 py-4 d-flex justify-content-end gap-2">
+                        <button type="button" class="dr-btn-modal" data-bs-dismiss="modal">
+                            <i class="iconoir-xmark text-danger"></i> Batal
+                        </button>
+                        <button type="submit" class="dr-btn-modal">
+                            <i class="iconoir-check text-success"></i> Simpan Karyawan
+                        </button>
                     </div>
                 </form>
             </div>
@@ -344,6 +365,12 @@
             if (!angka) return '';
             let cleaned = String(angka).replace(/[^0-9,]/g, '');
             return cleaned.replace(',', '.');
+        }
+
+        function clearZero(input) {
+            if (input.value === '0') {
+                input.value = '';
+            }
         }
 
         function syncInput(displayInput) {
@@ -395,5 +422,26 @@
                 });
             }
         })
+        // Dynamic Search
+        let searchTimeout;
+        const searchInput = document.getElementById('searchInput');
+        const searchForm = document.getElementById('searchForm');
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    searchForm.submit();
+                }, 500); // Tunggu 500ms setelah berhenti mengetik
+            });
+
+            // Fokuskan cursor ke akhir teks saat halaman load (jika ada input search)
+            if (searchInput.value) {
+                searchInput.focus();
+                const val = searchInput.value;
+                searchInput.value = '';
+                searchInput.value = val;
+            }
+        }
     </script>
 @endpush

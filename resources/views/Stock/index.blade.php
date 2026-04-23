@@ -1,6 +1,7 @@
 @extends('Layout.main')
 
 @section('main')
+<<<<<<< Updated upstream
     <div class="page-wrapper">
         <div class="page-content">
             <div class="container-fluid">
@@ -15,6 +16,110 @@
                             <div class="d-flex gap-2">
                                 <button class="btn btn-outline-primary" onclick="loadStockData()">
                                     <i class="iconoir-refresh me-1"></i> Refresh
+=======
+@push('css')
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        .dr-table-container { margin-top: 0 !important; }
+        .tab-content { padding: 0 !important; }
+        .dr-card .tab-pane { padding: 0 !important; }
+    </style>
+@endpush
+    <div class="page-wrapper">
+        <div class="page-content bg-white">
+            <div class="dr-page-shell pt-3">
+                <div class="container-fluid p-0">
+                <!-- Breadcrumb -->
+                <div class="dr-breadcrumb">
+                    <i class="iconoir-home dr-breadcrumb-icon"></i>
+                    <a href="{{ route('dashboard') }}" class="text-decoration-none text-muted">Dashboard</a>
+                    <i class="iconoir-nav-arrow-right dr-breadcrumb-icon" style="font-size: 14px;"></i>
+                    <strong>Manajemen Stok</strong>
+                </div>
+
+                <div class="dr-hero mb-3">
+                    <div>
+                        <h4 class="dr-title">Monitoring Inventori</h4>
+                        <p class="dr-subtitle">Monitor persediaan, lokasi, dan mutasi barang secara real-time.</p>
+                        <div class="dr-last-updated">
+                            <i class="iconoir-refresh"></i>
+                            Terakhir update: <span id="stockLastUpdated">-</span>
+                        </div>
+                    </div>
+                    <div class="dr-actions">
+                        <div class="d-flex gap-2">
+                             <select id="filter-stock-location" class="dr-input" style="width: 200px;" onchange="handleFilterChange()">
+                                <option value="" selected>Semua Cabang</option>
+                            </select>
+                            <button class="dr-btn dr-btn-primary" onclick="window.location.href='{{ route('report.stock') }}'">
+                                <i class="iconoir-stats-report"></i> Laporan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI Summary Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-md-3">
+                        <div class="dr-stat-card bg-white">
+                            <div class="dr-stat-head">
+                                <h4 class="dr-stat-title">Total Produk</h4>
+                                <div class="dr-stat-icon"><i class="iconoir-box-iso"></i></div>
+                            </div>
+                            <div class="dr-stat-value" id="stat-total-items">0</div>
+                            <div class="dr-stat-footer">
+                                <span>Unit: <strong id="stat-total-qty" class="text-dark">0</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="dr-stat-card bg-white">
+                            <div class="dr-stat-head">
+                                <h4 class="dr-stat-title">Perlu Restock</h4>
+                                <div class="dr-stat-icon text-danger"><i class="iconoir-warning-triangle"></i></div>
+                            </div>
+                            <div class="dr-stat-value text-danger" id="stat-restock-count">0</div>
+                            <div class="dr-stat-footer">
+                                <span>Habis: <strong id="stat-out-stock" class="text-danger">0</strong></span>
+                                <span class="mx-1">·</span>
+                                <span>Low: <strong id="stat-low-stock" class="text-warning">0</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="dr-stat-card bg-white">
+                            <div class="dr-stat-head">
+                                <h4 class="dr-stat-title">Valuasi Stok</h4>
+                                <div class="dr-stat-icon text-success"><i class="iconoir-wallet"></i></div>
+                            </div>
+                            <div class="dr-stat-value text-success" style="font-size: 20px;" id="stat-inventory-value">Rp 0</div>
+                            <div class="dr-stat-footer">
+                                <span>Nilai aset saat ini</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="dr-stat-card bg-white">
+                            <div class="dr-stat-head">
+                                <h4 class="dr-stat-title">Akan Masuk</h4>
+                                <div class="dr-stat-icon text-info"><i class="iconoir-delivery-truck"></i></div>
+                            </div>
+                            <div class="dr-stat-value" style="font-size: 20px;" id="stat-pending-receive">Rp 0</div>
+                            <div class="dr-stat-footer">
+                                <span>Dari Pembelian (PO)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Section -->
+                <div class="dr-card p-0 overflow-hidden bg-white mt-3">
+                    <div class="dr-card-header border-bottom px-4 py-2 bg-white d-flex align-items-center justify-content-between">
+                        <ul class="nav dr-tabs-segmented my-2" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-persediaan" type="button" role="tab">
+                                    <i class="iconoir-box-iso me-2"></i> Daftar Stok
+>>>>>>> Stashed changes
                                 </button>
                                 <button class="btn btn-primary"
                                     onclick="window.location.href='{{ route('report.stock') }}'">
@@ -170,6 +275,7 @@
                                     <i class="fa fa-cubes me-2"></i>Daftar Stok
                                 </a>
                             </li>
+<<<<<<< Updated upstream
                             <li class="nav-item">
                                 <a class="nav-link fw-bold py-3" data-bs-toggle="tab" href="#tab-lokasi" role="tab">
                                     <i class="fa fa-location-pin me-2"></i>Lokasi & Gudang
@@ -412,6 +518,164 @@
                                         <ul class="pagination pagination-sm mb-0" id="mutation-pagination-container"></ul>
                                     </nav>
                                 </div>
+=======
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-lokasi" type="button" role="tab">
+                                    <i class="iconoir-map-pin me-2"></i> Lokasi
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-dokumen" type="button" role="tab">
+                                    <i class="iconoir-clock-rotate-right me-2"></i> Riwayat
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <div class="d-flex align-items-center gap-2">
+                             <button class="dr-btn-icon" title="Refresh Data" onclick="loadStockData()">
+                                <i class="iconoir-refresh"></i>
+                             </button>
+                        </div>
+                    </div>
+
+                    <div class="tab-content">
+                        <!-- TAB 1: DAFTAR STOK -->
+                        <div class="tab-pane fade show active" id="tab-persediaan" role="tabpanel">
+                            <div class="dr-filter-bar px-4 py-3 bg-light-subtle border-bottom gap-3">
+                                <div class="dr-filter-group grow" style="max-width: 400px;">
+                                    <label class="dr-label">Cari Stok</label>
+                                    <div class="dr-search-wrap">
+                                        <i class="iconoir-search dr-search-icon"></i>
+                                        <input type="text" id="filter-stock-search" class="dr-input dr-search-input" placeholder="Nama atau SKU..." onkeyup="handleFilterChange()">
+                                    </div>
+                                </div>
+                                <div class="dr-filter-group" style="min-width: 180px;">
+                                    <label class="dr-label">Kategori</label>
+                                    <select id="filter-stock-kategori" class="dr-input" onchange="handleFilterChange()">
+                                        <option value="">Semua Kategori</option>
+                                    </select>
+                                </div>
+                                <div class="dr-filter-group" style="min-width: 150px;">
+                                    <label class="dr-label">Status Stok</label>
+                                    <select id="filter-stock-status" class="dr-input" onchange="handleFilterChange()">
+                                        <option value="">Semua Status</option>
+                                        <option value="safe">Aman</option>
+                                        <option value="low">Menipis</option>
+                                        <option value="empty">Habis</option>
+                                    </select>
+                                </div>
+                                <div class="dr-filter-actions">
+                                    <label class="dr-label" style="visibility: hidden;">-</label>
+                                    <div class="d-flex gap-1">
+                                        <button class="dr-btn-icon" title="Export Excel" onclick="exportStock()">
+                                            <i class="iconoir-download"></i>
+                                        </button>
+                                        <button class="dr-btn-icon" title="Print Laporan" onclick="printStock()">
+                                            <i class="iconoir-printer"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="dr-table align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-4" style="width:30%;">Produk</th>
+                                            <th style="width:12%;">Supplier</th>
+                                            <th class="text-center" style="width:10%;">Status</th>
+                                            <th class="text-center" style="width:10%;">Stok Fisik</th>
+                                            <th class="text-end" style="width:12%;">Nilai Aset</th>
+                                            <th class="text-end" style="width:12%;">Nilai Jual</th>
+                                            <th class="text-end pe-4" style="width:10%;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="stock-table-body">
+                                        <tr>
+                                            <td colspan="7" class="text-center py-5 text-muted">
+                                                <div class="spinner-border spinner-border-sm text-dark opacity-25 me-2"></div>
+                                                Memuat data stok...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center px-4 py-3 border-top" id="persediaan-pagination-wrapper">
+                                <span id="stock-pagination-info" class="text-muted small fw-medium"></span>
+                                <nav><ul class="pagination pagination-sm mb-0 gap-1" id="stock-pagination-container"></ul></nav>
+                            </div>
+                        </div>
+
+                        <!-- TAB 2: LOKASI -->
+                        <div class="tab-pane fade" id="tab-lokasi" role="tabpanel">
+                            <div class="px-4 py-3 bg-light-subtle border-bottom d-flex align-items-center justify-content-between">
+                                <p class="mb-0 fw-bold text-dark">Daftar Lokasi & Gudang Penyimpanan</p>
+                                <button class="dr-btn dr-btn-primary" onclick="showCreateLocationModal()">
+                                    <i class="iconoir-plus"></i> Tambah Lokasi
+                                </button>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="dr-table align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-4">Nama Lokasi</th>
+                                            <th>Tipe</th>
+                                            <th class="text-end pe-4">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="location-table-body">
+                                        <!-- Rows injected by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- TAB 3: RIWAYAT MUTASI -->
+                        <div class="tab-pane fade" id="tab-dokumen" role="tabpanel">
+                            <div class="px-4 py-3 bg-light-subtle border-bottom">
+                                <div class="d-flex align-items-center gap-3 flex-wrap">
+                                    <div class="position-relative" style="width: 250px;">
+                                        <i class="iconoir-search text-muted position-absolute start-0 top-50 translate-middle-y ms-3" style="font-size: 16px;"></i>
+                                        <input type="text" id="filter-mutation-search" class="dr-input ps-5" placeholder="Cari produk..." onkeyup="loadMutationData()">
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="date" id="filter-mutation-start" class="dr-input" style="width: 150px;" onchange="loadMutationData()">
+                                        <span class="text-muted">-</span>
+                                        <input type="date" id="filter-mutation-end" class="dr-input" style="width: 150px;" onchange="loadMutationData()">
+                                    </div>
+                                    <select id="filter-mutation-type" class="dr-input" style="width: 150px;" onchange="loadMutationData()">
+                                        <option value="">Semua Mutasi</option>
+                                        <option value="IN">Masuk (IN)</option>
+                                        <option value="OUT">Keluar (OUT)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="dr-table align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-4">Tanggal</th>
+                                            <th>Produk</th>
+                                            <th class="text-center">Tipe</th>
+                                            <th class="text-center">Qty</th>
+                                            <th>Lokasi</th>
+                                            <th>Referensi</th>
+                                            <th>User</th>
+                                            <th class="pe-4">Catatan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="mutation-table-body">
+                                        <!-- Rows injected by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center px-4 py-3 border-top">
+                                <span id="mutation-pagination-info" class="text-muted small fw-medium"></span>
+                                <nav><ul class="pagination pagination-sm mb-0 gap-1" id="mutation-pagination-container"></ul></nav>
+>>>>>>> Stashed changes
                             </div>
                         </div>
                     </div>
@@ -427,12 +691,25 @@
     <!-- FIFO Modal (New) -->
     <div class="modal fade" id="modalFifo" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
+<<<<<<< Updated upstream
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Detail Stok (FIFO)</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+=======
+            <div class="modal-content border-0 bg-white">
+                <div class="modal-header bg-white px-4 py-4 d-flex align-items-center justify-content-between border-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="iconoir-list-select text-dark" style="font-size: 20px;"></i>
+                        <div>
+                            <h5 class="dr-title mb-1" style="font-size: 16px;">Detail Stok (FIFO)</h5>
+                            <p class="dr-subtitle mb-0" style="font-size: 12px;">Informasi batch persediaan berdasarkan urutan masuk.</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+>>>>>>> Stashed changes
                 </div>
-                <div class="modal-body">
+                <div class="modal-body px-4 pb-4 pt-0 bg-white">
                     <div id="fifo-content"></div>
                 </div>
             </div>
@@ -541,6 +818,7 @@
 
                             let statusBadge = '';
                             if (qty <= 0) {
+<<<<<<< Updated upstream
                                 statusBadge =
                                     '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">Habis</span>';
                             } else if (qty < 5) {
@@ -549,6 +827,13 @@
                             } else {
                                 statusBadge =
                                     '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">Aman</span>';
+=======
+                                statusBadge = '<span class="dr-badge bg-soft-danger text-danger">Habis</span>';
+                            } else if (qty < 5) {
+                                statusBadge = '<span class="dr-badge bg-soft-warning text-warning">Low</span>';
+                            } else {
+                                statusBadge = '<span class="dr-badge bg-soft-success text-success">Aman</span>';
+>>>>>>> Stashed changes
                             }
 
                             // Optional: Client-side filter for status (simple implementation)
@@ -558,6 +843,7 @@
 
                             const tr = document.createElement('tr');
                             tr.innerHTML = `
+<<<<<<< Updated upstream
                                                                                                                     <td class="ps-4">
                                                                                                                         <div class="d-flex align-items-center">
                                                                                                                             <div class="flex-shrink-0">
@@ -584,6 +870,38 @@
                                                                                                                         </div>
                                                                                                                     </td>
                                                                                                                 `;
+=======
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            ${item.foto_produk
+                                                ? `<img src="/storage/${item.foto_produk}" class="rounded border" style="width: 48px; height: 48px; object-fit: cover;">`
+                                                : `<div class="bg-light rounded d-flex align-items-center justify-content-center text-muted border" style="width: 48px; height: 48px;"><i class="iconoir-box-iso fs-4"></i></div>`
+                                            }
+                                        </div>
+                                        <div class="grow ms-3">
+                                            <h6 class="mb-0 fw-bold text-dark">${item.nama_produk}</h6>
+                                            <small class="text-muted d-block">${item.sku_kode} <span class="mx-1">•</span> <span class="badge bg-light text-secondary border fw-medium">${item.category?.nama_kategori || '-'}</span></small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="small text-muted">${item.supplier?.nama || '-'}</td>
+                                <td class="text-center">${statusBadge}</td>
+                                <td class="text-center fw-bold fs-6">${new Intl.NumberFormat('id-ID').format(qty)} <small class="text-muted fw-normal">${item.satuan}</small></td>
+                                <td class="text-end text-muted font-monospace">${formatCurrency(qty * item.harga_beli)}</td>
+                                <td class="text-end text-muted font-monospace">${formatCurrency(qty * (item.harga_jual || 0))}</td>
+                                <td class="text-end pe-4">
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <button class="dr-btn-icon dr-btn-icon-view" onclick="showFifoDetail(${item.id})" title="Detail FIFO">
+                                            <i class="iconoir-list"></i>
+                                        </button>
+                                        <button class="dr-btn-icon dr-btn-icon-edit" onclick="showAdjustStockModal(${item.id}, '${item.nama_produk}', '${item.sku_kode}', ${qty})" title="Adjust">
+                                            <i class="iconoir-edit-pencil"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            `;
+>>>>>>> Stashed changes
                             tbody.appendChild(tr);
                         });
 
@@ -655,8 +973,12 @@
                                                                                                             <td class="ps-4 fw-bold">${loc.name}</td>
                                                                                                             <td><span class="badge bg-light text-dark border">${loc.type || 'Gudang'}</span></td>
                                                                                                             <td class="text-end pe-4">
-                                                                                                                <button class="btn btn-sm btn-light border" onclick="editLocation(${loc.id}, '${loc.name}', '${loc.type}')"><i class="iconoir-edit-pencil"></i></button>
-                                                                                                                <button class="btn btn-sm btn-light border text-danger" onclick="deleteLocation(${loc.id})"><i class="iconoir-trash"></i></button>
+                                                                                                                <button class="dr-btn-icon dr-btn-icon-edit" onclick="editLocation(${loc.id}, '${loc.name}', '${loc.type}')" title="Edit Lokasi">
+                                                                                                                    <i class="iconoir-edit-pencil"></i>
+                                                                                                                </button>
+                                                                                                                <button class="dr-btn-icon dr-btn-icon-delete" onclick="deleteLocation(${loc.id})" title="Hapus Lokasi">
+                                                                                                                    <i class="iconoir-trash"></i>
+                                                                                                                </button>
                                                                                                             </td>
                                                                                                         `;
                     tbody.appendChild(tr);
@@ -929,7 +1251,11 @@
             if (!data || !data.links) return;
 
             if (info) {
+<<<<<<< Updated upstream
                 info.innerText = `Menampilkan ${data.from || 0} sampai ${data.to || 0} dari ${data.total} data`;
+=======
+                info.innerText = `Menampilkan ${data.from || 0} - ${data.to || 0} dari ${data.total} data`;
+>>>>>>> Stashed changes
             }
 
             let html = '';
@@ -937,7 +1263,13 @@
                 const activeClass = link.active ? 'active' : '';
                 const disabledClass = !link.url ? 'disabled' : '';
 
+<<<<<<< Updated upstream
                 // Extract page number from URL
+=======
+                // Label adjustments
+                const label = link.label.includes('Previous') ? '<i class="iconoir-nav-arrow-left"></i>' : (link.label.includes('Next') ? '<i class="iconoir-nav-arrow-right"></i>' : link.label);
+
+>>>>>>> Stashed changes
                 let pageNum = 1;
                 if (link.url) {
                     const url = new URL(link.url);
@@ -948,7 +1280,11 @@
 
                 html += `
                     <li class="page-item ${activeClass} ${disabledClass}">
+<<<<<<< Updated upstream
                         <button class="page-link" ${onclick}>${link.label}</button>
+=======
+                        <button class="page-link border-0 mx-0 rounded shadow-none fw-bold" ${onclick}>${label}</button>
+>>>>>>> Stashed changes
                     </li>`;
             });
 

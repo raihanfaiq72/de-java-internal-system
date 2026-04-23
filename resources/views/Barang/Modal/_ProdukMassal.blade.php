@@ -2,11 +2,24 @@
 <div class="modal fade" id="modalProdukMassal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fa fa-layer-group me-2 text-primary"></i>Tambah Massal Produk
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-white border-bottom px-4 py-3 sticky-top d-flex align-items-center justify-content-between" style="padding: 20px 24px !important;">
+                <div class="d-flex align-items-center">
+                    <div class="dr-icon-box bg-soft-primary text-primary me-3" style="width: 40px; height: 40px;">
+                        <i class="iconoir-page-flip" style="font-size: 20px;"></i>
+                    </div>
+                    <div class="d-flex flex-column justify-content-center">
+                        <h5 class="dr-title mb-0" id="modalProdukMassalTitle" style="line-height: 1.2;">Input Produk Massal</h5>
+                        <p class="dr-subtitle mb-0" style="line-height: 1.2;">Tambahkan beberapa produk sekaligus ke dalam sistem inventaris.</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="dr-btn-modal" data-bs-dismiss="modal">
+                        <i class="iconoir-xmark text-danger"></i> Batal
+                    </button>
+                    <button type="button" class="dr-btn-modal" onclick="saveMassalProducts()">
+                        <i class="iconoir-check text-success"></i> Simpan Semua Data
+                    </button>
+                </div>
             </div>
 
             <div class="modal-body">
@@ -39,8 +52,8 @@
 
                 <!-- Product Table -->
                 <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
-                    <table class="table table-bordered table-sm" id="massalProductTable">
-                        <thead class="table-light sticky-top">
+                    <table class="dr-table table-bordered table-sm" id="massalProductTable">
+                        <thead class="bg-light sticky-top">
                             <tr>
                                 <th width="50" class="text-center">#</th>
                                 <th width="120">SKU</th>
@@ -72,24 +85,6 @@
                 </div>
             </div>
 
-            <div class="modal-footer bg-light">
-                <div class="d-flex justify-content-between w-100">
-                    <div>
-                        <small class="text-muted">
-                            <i class="fa fa-info-circle me-1"></i>
-                            Pastikan semua field wajib diisi sebelum menyimpan
-                        </small>
-                    </div>
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                            <i class="fa fa-times me-2"></i> Batal
-                        </button>
-                        <button type="button" class="btn btn-primary" onclick="saveMassalProducts()">
-                            <i class="fa fa-save me-2"></i> Simpan Semua Produk
-                        </button>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>

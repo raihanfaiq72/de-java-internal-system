@@ -1,4 +1,5 @@
 <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+<<<<<<< Updated upstream
     <div class="modal-dialog modal-xl">
         <div class="modal-content border-0" style="background-color: #f8fafc;">
             <div class="modal-header bg-white border-bottom px-5 py-4 sticky-top shadow-sm">
@@ -20,10 +21,27 @@
             </div>
 
             <div class="modal-body p-4">
+=======
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 bg-white">
+            <div class="modal-header bg-white px-4 py-4 d-flex align-items-center justify-content-between border-0">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="iconoir-user text-dark" style="font-size: 20px;"></i>
+                    <div>
+                        <h5 class="dr-title mb-1" id="userModalTitle" style="font-size: 16px;">Tambah User Baru</h5>
+                        <p class="dr-subtitle mb-0" style="font-size: 12px;">Kelola profil pengguna dan kredensial login sistem.</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body px-4 pb-4 pt-0 bg-white">
+>>>>>>> Stashed changes
                 <form id="userForm">
                     <input type="hidden" id="user_form_mode" value="create">
                     <input type="hidden" id="edit_user_id" value="">
 
+<<<<<<< Updated upstream
                     <div class="card border-0 shadow-sm rounded-3">
                         <div class="card-body p-4">
                             <div class="row g-3">
@@ -47,10 +65,43 @@
                                     <input type="password" id="modal_user_password" class="form-control f-input" placeholder="Password...">
                                 </div>
                                                             </div>
+=======
+                    <div class="row g-4">
+                        <div class="col-md-12">
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="dr-label mb-2">Nama Lengkap *</label>
+                                    <input type="text" id="modal_user_name" class="dr-input fw-bold" placeholder="Nama Lengkap sesuai KTP">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="dr-label mb-2">Username *</label>
+                                    <input type="text" id="modal_user_username" class="dr-input" placeholder="Contoh: ricky_admin">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="dr-label mb-2">Email Aktif *</label>
+                                    <input type="email" id="modal_user_email" class="dr-input" placeholder="ricky@djava.com">
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="form-check form-switch dr-checkbox-wrapper mt-1">
+                                        <input class="form-check-input" type="checkbox" id="modal_user_is_sales">
+                                        <label class="form-check-label ms-2 text-dark fw-medium" for="modal_user_is_sales" style="font-size: 13px;">User ini adalah bagian dari tim Sales</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="dr-label mb-2">Keamanan & Password</label>
+                            <input type="password" id="modal_user_password" class="dr-input" placeholder="Masukkan password baru...">
+                            <div class="mt-2 text-muted small" style="font-size: 11px;">
+                                <i class="iconoir-info-circle"></i> Kosongkan password jika tidak ingin mengubah (saat edit).
+                            </div>
+>>>>>>> Stashed changes
                         </div>
                     </div>
                 </form>
             </div>
+<<<<<<< Updated upstream
         </div>
     </div>
 </div>
@@ -124,3 +175,17 @@
         }
     }
 </script>
+=======
+
+            <div class="modal-footer bg-white border-0 px-4 py-4 d-flex justify-content-end gap-2">
+                <button type="button" class="dr-btn-modal" data-bs-dismiss="modal">
+                    <i class="iconoir-xmark text-danger"></i> Batal
+                </button>
+                <button type="button" class="dr-btn-modal" onclick="saveUser()">
+                    <i class="iconoir-check text-success"></i> Simpan User
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+>>>>>>> Stashed changes

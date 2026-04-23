@@ -227,12 +227,245 @@
         .dr-btn-success { background: var(--dr-success); color: #fff; }
         .dr-btn-success:hover { background: #219150; transform: translateY(-1px); }
 
+<<<<<<< Updated upstream
         .dr-btn-danger { background: var(--dr-danger); color: #fff; }
         .dr-btn-danger:hover { background: #b32626; transform: translateY(-1px); }
 
         .dr-btn-outline {
             background: transparent;
             border: 1.5px solid var(--dr-line-strong);
+=======
+        .dr-btn-icon-view { color: #34C759 !important; border-color: #e6f9eb !important; }
+        .dr-btn-icon-view:hover { background: #f0fff4 !important; border-color: #34C759 !important; }
+
+        /* 3. Segmented Tabs (Premium Style) */
+        .dr-tabs-segmented {
+            display: inline-flex;
+            background: #f1f1f4;
+            padding: 4px;
+            border-radius: 12px;
+            gap: 2px;
+            border: 1px solid var(--dr-line);
+        }
+
+        .dr-tabs-segmented .nav-link {
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 8px 18px !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            color: var(--dr-text-muted) !important;
+            transition: all 0.2s ease !important;
+            background: transparent !important;
+            margin: 0 !important;
+        }
+
+        .dr-tabs-segmented .nav-link.active {
+            background: #ffffff !important;
+            color: var(--dr-text) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        /* 4. Badges (Premium Style) */
+        .dr-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: var(--dr-radius-sm);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .bg-soft-success { background: #e6f4ea !important; color: #1e7e34 !important; }
+        .bg-soft-secondary { background: #f1f3f5 !important; color: #495057 !important; }
+        .bg-soft-danger { background: #fee2e2 !important; color: #b91c1c !important; }
+        .bg-soft-warning { background: #fef3c7 !important; color: #92400e !important; }
+        .bg-soft-primary { background: #e0f2fe !important; color: #0369a1 !important; }
+
+        .dr-tabs-segmented .nav-link:hover:not(.active) {
+            color: var(--dr-text) !important;
+            background: rgba(255,255,255,0.5) !important;
+        }
+
+        /* 5. Premium Modal Styling */
+        .modal-backdrop {
+            background-color: rgba(255, 255, 255, 0.4) !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+        }
+
+        .modal-content {
+            background: #ffffff !important;
+            border: 1px solid var(--dr-line) !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08) !important;
+            border-radius: var(--dr-radius) !important;
+        }
+
+        .modal-header {
+            border: none !important;
+            padding: 24px 24px 0 !important;
+            background: transparent !important;
+            color: var(--dr-text) !important;
+        }
+
+        .modal-header .btn-close {
+            display: none !important;
+        }
+
+        /* 5. Modal Footer Buttons (Premium Minimalist v2) */
+        .dr-btn-modal {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px !important;
+            background: #ffffff !important;
+            border: 1.5px solid var(--dr-line) !important;
+            border-radius: 12px !important;
+            color: var(--dr-text) !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            transition: all 0.2s ease !important;
+            min-height: 40px !important;
+            white-space: nowrap !important;
+        }
+
+        .dr-btn-modal:hover {
+            background: var(--dr-panel-soft) !important;
+            border-color: var(--dr-line-strong) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .dr-btn-modal i {
+            font-size: 18px;
+        }
+
+        .dr-btn-modal-save i {
+            color: #22c55e !important; /* Green Check */
+        }
+
+        .dr-btn-modal-cancel i {
+            color: #ef4444 !important; /* Red X */
+        }
+
+        .modal-body {
+            padding: 24px !important;
+        }
+
+        .modal-footer {
+            border: none !important;
+            padding: 0 24px 24px !important;
+        }
+
+        /* 6. Dashboard Components */
+        .dr-stat-card {
+            padding: 14px 18px 12px;
+            min-height: auto;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+            border: 1px solid var(--dr-line);
+            border-radius: var(--dr-radius);
+            box-shadow: var(--dr-shadow);
+            transition: all 0.2s ease;
+        }
+
+        .dr-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(33, 29, 25, 0.08);
+        }
+
+        .dr-stat-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--dr-line);
+        }
+
+        .dr-stat-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--dr-line);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #fbfaf8;
+            color: var(--dr-text);
+            font-size: 16px;
+            flex: 0 0 auto;
+            order: 2;
+        }
+
+        .dr-stat-title {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--dr-text);
+            order: 1;
+        }
+
+        .dr-stat-value {
+            margin: 12px 0 6px;
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+            color: var(--dr-text);
+            letter-spacing: -0.5px;
+        }
+
+        .dr-stat-footer {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--dr-text-muted);
+        }
+
+        /* 4. Header & Hero Components */
+        .dr-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--dr-text-muted);
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .dr-breadcrumb strong {
+            color: var(--dr-text);
+            font-weight: 700;
+        }
+
+        .dr-breadcrumb-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--dr-text-muted);
+            font-size: 20px;
+            margin: 0 8px 0 4px;
+        }
+
+        .dr-hero {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .dr-title {
+            margin: 0 0 10px;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.2;
+>>>>>>> Stashed changes
             color: var(--dr-text);
         }
         .dr-btn-outline:hover { background: var(--dr-line); }
@@ -251,7 +484,7 @@
         }
 
         .dr-table th {
-            background: #fbfaf8;
+            background: #fff;
             padding: 14px 16px;
             font-size: 12px;
             font-weight: 700;
@@ -293,6 +526,11 @@
             font-weight: 500;
             transition: all 0.2s ease;
             background: #fff;
+        }
+
+        .input-group > .dr-input {
+            flex: 1 1 auto !important;
+            width: 1% !important;
         }
 
         .dr-input:focus {
