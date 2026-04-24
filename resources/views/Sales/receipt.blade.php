@@ -606,9 +606,9 @@
 
                 const inputBayar = clone.querySelector('.tpl-input-bayar');
                 inputBayar.value = formatRupiahSimple(inv.bayar);
-                inputBayar.onkeyup = (e) => {
+                inputBayar.oninput = (e) => {
                     formatRupiahInput(e.target);
-                    updateBayar(index, e.target.value);
+                    updateBayar(index, e.target.value, e.target);
                 };
 
                 const btnRemove = clone.querySelector('.tpl-btn-remove');
@@ -621,10 +621,18 @@
         }
 
 
-        function updateBayar(index, val) {
+        function updateBayar(index, val, element) {
             // Remove dots to get raw number
-            const rawValue = val.replace(/\./g, '');
-            selectedInvoices[index].bayar = rawValue;
+            let rawValue = val.replace(/\D/g, '');
+            const inv = selectedInvoices[index];
+
+            if (parseFloat(rawValue) > inv.tertagih) {
+                alert(`Jumlah bayar tidak boleh melebihi sisa tagihan (${formatIDR(inv.tertagih)})`);
+                rawValue = inv.tertagih;
+                if (element) element.value = formatRupiahSimple(rawValue);
+            }
+
+            selectedInvoices[index].bayar = rawValue || 0;
             renderSelectedTableCountOnly(); // Don't re-render whole table or we lose focus/cursor
         }
 

@@ -182,6 +182,8 @@ class PaymentController extends Controller
             'metode_pembayaran' => 'required|string|max:255',
             'jumlah_bayar' => 'required|numeric|min:0.01',
             'catatan' => 'nullable|string|max:1000',
+            'ref_no' => 'nullable|string|max:255',
+            'akun_keuangan_id' => 'required|exists:financial_accounts,id',
         ]);
 
         if ($validator->fails()) {
@@ -230,6 +232,8 @@ class PaymentController extends Controller
                 'metode_pembayaran' => $request->metode_pembayaran,
                 'jumlah_bayar' => $newJumlahBayar,
                 'catatan' => $request->catatan,
+                'ref_no' => $request->ref_no,
+                'akun_keuangan_id' => $request->akun_keuangan_id,
             ]);
 
             // Update invoice status
