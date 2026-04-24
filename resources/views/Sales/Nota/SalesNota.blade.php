@@ -371,7 +371,7 @@
 
                     document.getElementById('tgl_invoice').innerText = formatDate(data.tgl_invoice);
                     document.getElementById('nomor_invoice').innerText = data.nomor_invoice;
-                    document.getElementById('ref_no').innerText = ': ' + (data.ref_no || '-');
+                    document.getElementById('ref_no').innerText = ': ' + (data.sales?.name || '-');
                     document.getElementById('mitra_nama').innerText = ': ' + (data.mitra?.nama || '-');
                     document.getElementById('mitra_alamat').innerText = ': ' + (data.mitra?.alamat || '-');
                     document.getElementById('status_pembayaran').innerText = data.status_pembayaran || 'CASH';
