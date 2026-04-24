@@ -636,7 +636,9 @@
             // Signature handle
             clearSignature();
 
-            const bModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditReceipt'));
+            const bModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditReceipt'), {
+                focus: false
+            });
             bModal.show();
         }
 
@@ -748,6 +750,12 @@
         }
 
         async function openInvoiceSelection() {
+            // Force close TomSelect to prevent it from popping up when modal focus shifts
+            if (typeof tomMitra !== 'undefined' && tomMitra) {
+                tomMitra.close();
+                tomMitra.blur();
+            }
+
             const mitraId = document.getElementById('edit-mitra_id').value;
             if (!mitraId) {
                 alert('Pilih Pelanggan terlebih dahulu!');
@@ -757,7 +765,9 @@
             const container = document.getElementById('selection-list-container');
             container.innerHTML = '<div class="text-center"><div class="spinner-border"></div></div>';
 
-            const modal = new bootstrap.Modal(document.getElementById('modalInvoiceSelection'));
+            const modal = new bootstrap.Modal(document.getElementById('modalInvoiceSelection'), {
+                focus: false
+            });
             modal.show();
 
             try {

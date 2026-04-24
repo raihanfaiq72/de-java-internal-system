@@ -467,7 +467,9 @@
             document.getElementById('upload-signature-area').classList.remove('d-none');
             document.getElementById('signature-preview').classList.add('d-none');
 
-            const modal = new bootstrap.Modal(document.getElementById('modalCreateReceipt'));
+            const modal = new bootstrap.Modal(document.getElementById('modalCreateReceipt'), {
+                focus: false
+            });
             modal.show();
         }
 
@@ -479,6 +481,12 @@
 
         // --- INVOICE SELECTION ---
         async function openInvoiceSelection() {
+            // Force close TomSelect to prevent it from popping up when modal focus shifts
+            if (typeof tomMitra !== 'undefined' && tomMitra) {
+                tomMitra.close();
+                tomMitra.blur();
+            }
+
             const mitraId = document.getElementById('mitra_id').value;
             if (!mitraId) {
                 alert('Pilih Pelanggan terlebih dahulu!');
@@ -501,7 +509,9 @@
             const container = document.getElementById('selection-list-container');
             container.innerHTML = '<div class="text-center"><div class="spinner-border"></div></div>';
 
-            const modal = new bootstrap.Modal(document.getElementById('modalInvoiceSelection'));
+            const modal = new bootstrap.Modal(document.getElementById('modalInvoiceSelection'), {
+                focus: false
+            });
             modal.show();
 
             try {
