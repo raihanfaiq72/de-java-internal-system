@@ -113,6 +113,7 @@
                             <div class="col-md-3">
                                 <label class="form-label fw-bold text-muted small">Metode Pembayaran</label>
                                 <select id="metode_pembayaran" name="metode_pembayaran" class="form-select">
+                                    <option value="" disabled selected>Pilih Metode Pembayaran</option>
                                     <option value="Transfer">Transfer</option>
                                     <option value="Cash">Cash</option>
                                     <option value="Cek/Giro">Cek/Giro</option>
@@ -455,7 +456,7 @@
         const API_MITRA = '{{ url('api/mitra-api') }}';
         const API_FIN_ACC = '{{ url('api/financial-account-api') }}';
         const SGD_RATE = 13128.53;
-        let tomMitra;
+        let tomMitra, tomFin;
         let selectedInvoices = [];
 
         // --- MODAL FUNCTIONS ---
@@ -464,6 +465,11 @@
             selectedInvoices = [];
             renderSelectedTable();
             if (tomMitra) tomMitra.clear();
+            if (tomFin) tomFin.clear();
+
+            // Reset payment method explicitly just in case
+            document.getElementById('metode_pembayaran').value = '';
+
             document.getElementById('upload-signature-area').classList.remove('d-none');
             document.getElementById('signature-preview').classList.add('d-none');
 
@@ -732,6 +738,9 @@
                     alert('Semua pembayaran berhasil disimpan!');
                     bootstrap.Modal.getInstance(document.getElementById('modalCreateReceipt')).hide();
                     loadReceiptData();
+                    // Reset requested fields after success
+                    document.getElementById('metode_pembayaran').value = '';
+                    if (tomFin) tomFin.clear();
                 } else {
                     alert(`Berhasil menyimpan ${successCount} dari ${selectedInvoices.length} pembayaran.`);
                     loadReceiptData();
@@ -981,7 +990,8 @@
                         `<option value="${acc.id}">${accName} ${accCode ? `(${accCode})` : ''}</option>`;
                 });
 
-                new TomSelect("#akun_keuangan_id", {
+                // Initialize TomSelect for Account
+                tomFin = new TomSelect("#akun_keuangan_id", {
                     create: false,
                     sortField: {
                         field: "text",

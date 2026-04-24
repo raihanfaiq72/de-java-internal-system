@@ -459,7 +459,7 @@
         const API_MITRA = '{{ url('api/mitra-api') }}';
         const API_FIN_ACC = '{{ url('api/financial-account-api') }}';
         let currentPaymentData = null;
-        let tomMitra;
+        let tomMitra, tomFin;
         let selectedInvoices = [];
 
         async function loadPaymentDetail() {
@@ -606,9 +606,8 @@
             }
 
             // Set TomSelect Account
-            const coaSelect = document.getElementById('edit-akun_keuangan_id');
-            if (coaSelect && coaSelect.tomselect && currentPaymentData.akun_keuangan_id) {
-                coaSelect.tomselect.setValue(currentPaymentData.akun_keuangan_id);
+            if (tomFin && currentPaymentData.akun_keuangan_id) {
+                tomFin.setValue(currentPaymentData.akun_keuangan_id);
             }
 
             // Add the currently linked invoice to selectedInvoices
@@ -742,7 +741,7 @@
                     coaSelect.innerHTML += `<option value="${acc.id}">${accName}</option>`;
                 });
 
-                new TomSelect("#edit-akun_keuangan_id", { create: false });
+                tomFin = new TomSelect("#edit-akun_keuangan_id", { create: false });
 
             } catch (e) {
                 console.error("Failed to load dropdowns:", e);
