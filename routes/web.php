@@ -124,6 +124,8 @@ Route::middleware(['auth'])->group(function () {
         // Finance
         Route::get('finance', [FinanceController::class, 'index'])->name('finance.index');
         Route::post('finance/transaction', [FinanceController::class, 'storeTransaction'])->name('finance.transaction.store');
+        Route::put('finance/transaction/{id}', [FinanceController::class, 'updateTransaction'])->name('finance.transaction.update');
+        Route::delete('finance/transaction/{id}', [FinanceController::class, 'destroyTransaction'])->name('finance.transaction.destroy');
         Route::post('finance/account', [FinanceController::class, 'storeAccount'])->name('finance.account.store');
         Route::delete('finance/account/{id}', [FinanceController::class, 'destroyAccount'])->name('finance.account.destroy');
         Route::get('finance/next-code', [FinanceController::class, 'getNextCode'])->name('finance.account.next-code');

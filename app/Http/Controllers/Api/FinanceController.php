@@ -282,6 +282,63 @@ class FinanceController extends Controller
         }
     }
 
+    public function updateTransaction(Request $request, $id)
+    {
+        $request->validate([
+            'transaction_date' => 'required|date',
+            'type' => 'required|in:transfer,income,expense',
+            'amount' => 'required|numeric|min:0',
+            'description' => 'nullable|string',
+            'status' => 'required|in:posted,draft,canceled',
+            'from_account_id' => 'required_if:type,transfer,expense|nullable|exists:financial_accounts,id',
+            'to_account_id' => 'required_if:type,transfer,income|nullable|exists:financial_accounts,id',
+        ]);
+
+        try {
+            DB::beginTransaction();
+            $transaction = FinancialTransaction::where('office_id', session('active_office_id'))->findOrFail($id);
+            $old = $transaction->toArray();
+
+            $input = $request->only(['transaction_date', 'type', 'amount', 'description', 'status', 'from_account_id', 'to_account_id']);
+
+            // Clear irrelevant account fields based on type
+            if ($request->type === 'income') {
+                $input['from_account_id'] = null;
+            } elseif ($request->type === 'expense') {
+                $input['to_account_id'] = null;
+            }
+
+            if ($request->hasFile('lampiran')) {
+                $file = $request->file('lampiran');
+                $path = $file->store('financial_transactions', 'public');
+                $input['lampiran'] = $path;
+            }
+
+            $transaction->update($input);
+            $this->logActivity('update', 'financial_transactions', $transaction->id, $old, $transaction->toArray());
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Transaksi berhasil diperbarui']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan: '.$e->getMessage()], 500);
+        }
+    }
+
+    public function destroyTransaction($id)
+    {
+        try {
+            $transaction = FinancialTransaction::where('office_id', session('active_office_id'))->findOrFail($id);
+            $this->logActivity('delete', 'financial_transactions', $id, $transaction->toArray(), null);
+            $transaction->delete();
+
+            return response()->json(['success' => true, 'message' => 'Transaksi berhasil dihapus']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan: '.$e->getMessage()], 500);
+        }
+    }
+
     public function storeAccount(Request $request)
     {
         $request->validate([

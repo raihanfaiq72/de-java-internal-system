@@ -455,6 +455,120 @@
     </script>
 @endpush
 
+<!-- Edit Transaction Modal -->
+<div class="modal fade" id="modalEditTransaction" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    <i class="iconoir-edit-pencil me-2"></i>Edit Transaksi
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formEditTransaction" onsubmit="submitEditTransaction(event)">
+                <div class="modal-body">
+                    <input type="hidden" name="_method" value="PUT">
+                    <input type="hidden" name="edit_transaction_id" id="edit_transaction_id">
+
+                    <!-- Type Badge Info -->
+                    <div class="mb-3">
+                        <label class="form-label">Tipe Transaksi</label>
+                        <div id="edit_type_badge"></div>
+                        <input type="hidden" name="type" id="edit_type">
+                    </div>
+
+                    <!-- Transfer: From & To -->
+                    <div id="edit_transfer_fields" class="d-none">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Transfer Dari *</label>
+                                <select class="form-select" name="from_account_id" id="edit_from_account_id">
+                                    <option value="">Pilih Akun</option>
+                                    @foreach ($all_accounts as $acc)
+                                        <option value="{{ $acc->id }}">{{ $acc->code }} - {{ $acc->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Setor Ke *</label>
+                                <select class="form-select" name="to_account_id" id="edit_to_account_id">
+                                    <option value="">Pilih Akun</option>
+                                    @foreach ($all_accounts as $acc)
+                                        <option value="{{ $acc->id }}">{{ $acc->code }} - {{ $acc->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Income: To Account -->
+                    <div id="edit_income_fields" class="d-none">
+                        <div class="mb-3">
+                            <label class="form-label">Masuk Ke Akun *</label>
+                            <select class="form-select" name="to_account_id" id="edit_income_to_account_id">
+                                <option value="">Pilih Akun</option>
+                                @foreach ($all_accounts as $acc)
+                                    <option value="{{ $acc->id }}">{{ $acc->code }} - {{ $acc->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Expense: From Account -->
+                    <div id="edit_expense_fields" class="d-none">
+                        <div class="mb-3">
+                            <label class="form-label">Keluar Dari Akun *</label>
+                            <select class="form-select" name="from_account_id" id="edit_expense_from_account_id">
+                                <option value="">Pilih Akun</option>
+                                @foreach ($all_accounts as $acc)
+                                    <option value="{{ $acc->id }}">{{ $acc->code }} - {{ $acc->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Tanggal Transaksi *</label>
+                        <input type="date" class="form-control" name="transaction_date" id="edit_transaction_date" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Jumlah *</label>
+                        <input type="number" class="form-control" name="amount" id="edit_amount"
+                            placeholder="Isi nominal transaksi" required min="0">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Keterangan</label>
+                        <textarea class="form-control" name="description" id="edit_description" rows="2"
+                            placeholder="Catatan tambahan..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Status *</label>
+                        <select class="form-select" name="status" id="edit_status" required>
+                            <option value="draft">Draft</option>
+                            <option value="posted">Posted</option>
+                            <option value="canceled">Canceled</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Lampiran Baru <small class="text-muted">(kosongkan jika tidak diubah)</small></label>
+                        <input type="file" class="form-control" name="lampiran">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batalkan</button>
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="iconoir-save-floppy-disk me-1"></i> Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Preview Report Modal -->
 <div class="modal fade" id="modalPreviewReport" tabindex="-1">
     <div class="modal-dialog modal-xl">

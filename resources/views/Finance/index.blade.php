@@ -354,7 +354,7 @@
             // Initialize Charts
             document.addEventListener('DOMContentLoaded', function() {
                 // Fix Modal Z-Index Issue by moving them to body
-                const modals = ['modalTransfer', 'modalIncome', 'modalExpense', 'modalCreateAccount'];
+                const modals = ['modalTransfer', 'modalIncome', 'modalExpense', 'modalCreateAccount', 'modalEditTransaction'];
                 modals.forEach(id => {
                     const el = document.getElementById(id);
                     if (el) document.body.appendChild(el);
@@ -631,6 +631,21 @@
 
             // AJAX Filter & Pagination
             $(document).ready(function() {
+                // Restore active tab from URL hash
+                const hash = window.location.hash;
+                if (hash) {
+                    const tabBtn = document.querySelector(`button[data-bs-target="${hash}"]`);
+                    if (tabBtn) {
+                        bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+                    }
+                }
+
+                // Save active tab to URL hash on tab change
+                document.querySelectorAll('#financeTab button[data-bs-toggle="tab"]').forEach(function(btn) {
+                    btn.addEventListener('shown.bs.tab', function(e) {
+                        history.replaceState(null, null, e.target.getAttribute('data-bs-target'));
+                    });
+                });
                 // Filter Form Submit
                 $('#filterForm').on('submit', function(e) {
                     var submitter = e.originalEvent ? e.originalEvent.submitter : null;
@@ -675,5 +690,101 @@
                     });
                 });
             });
+
+            // ===== Edit Transaction =====
+            function openEditTransactionModal(trx) {
+                // Reset form
+                document.getElementById('formEditTransaction').reset();
+
+                // Set ID
+                document.getElementById('edit_transaction_id').value = trx.id;
+
+                // Set type badge & hidden field
+                document.getElementById('edit_type').value = trx.type;
+                const typeBadges = {
+                    transfer: '<span class="badge bg-info bg-opacity-10 text-info border border-info">Transfer</span>',
+                    income:   '<span class="badge bg-success bg-opacity-10 text-success border border-success">Income / Pemasukan</span>',
+                    expense:  '<span class="badge bg-danger bg-opacity-10 text-danger border border-danger">Expense / Pengeluaran</span>',
+                };
+                document.getElementById('edit_type_badge').innerHTML = typeBadges[trx.type] || trx.type;
+
+                // Show/hide account fields based on type
+                document.getElementById('edit_transfer_fields').classList.add('d-none');
+                document.getElementById('edit_income_fields').classList.add('d-none');
+                document.getElementById('edit_expense_fields').classList.add('d-none');
+
+                if (trx.type === 'transfer') {
+                    document.getElementById('edit_transfer_fields').classList.remove('d-none');
+                    document.getElementById('edit_from_account_id').value = trx.from_account_id ?? '';
+                    document.getElementById('edit_to_account_id').value = trx.to_account_id ?? '';
+                } else if (trx.type === 'income') {
+                    document.getElementById('edit_income_fields').classList.remove('d-none');
+                    document.getElementById('edit_income_to_account_id').value = trx.to_account_id ?? '';
+                } else if (trx.type === 'expense') {
+                    document.getElementById('edit_expense_fields').classList.remove('d-none');
+                    document.getElementById('edit_expense_from_account_id').value = trx.from_account_id ?? '';
+                }
+
+                // Fill common fields
+                document.getElementById('edit_transaction_date').value = trx.transaction_date;
+                document.getElementById('edit_amount').value = trx.amount;
+                document.getElementById('edit_description').value = trx.description ?? '';
+                document.getElementById('edit_status').value = trx.status;
+
+                // Show modal
+                const el = document.getElementById('modalEditTransaction');
+                bootstrap.Modal.getOrCreateInstance(el).show();
+            }
+
+            function submitEditTransaction(e) {
+                e.preventDefault();
+                const id = document.getElementById('edit_transaction_id').value;
+                const formData = new FormData(e.target);
+
+                $.ajax({
+                    url: "{{ url('finance/transaction') }}/" + id,
+                    type: "POST",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(res) {
+                        if (res.success) {
+                            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditTransaction')).hide();
+                            location.reload();
+                        } else {
+                            alert(res.message);
+                        }
+                    },
+                    error: function(err) {
+                        alert('Terjadi kesalahan: ' + (err.responseJSON ? err.responseJSON.message : 'Unknown error'));
+                    }
+                });
+            }
+
+            async function deleteTransaction(id) {
+                if (!await macConfirm('Hapus Transaksi', 'Yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan.')) return;
+
+                $.ajax({
+                    url: "{{ url('finance/transaction') }}/" + id,
+                    type: "POST",
+                    data: {
+                        _method: 'DELETE',
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(res) {
+                        if (res.success) {
+                            location.reload();
+                        } else {
+                            alert(res.message);
+                        }
+                    },
+                    error: function(err) {
+                        alert('Terjadi kesalahan: ' + (err.responseJSON ? err.responseJSON.message : 'Unknown error'));
+                    }
+                });
+            }
         </script>
     @endpush

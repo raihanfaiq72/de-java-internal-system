@@ -70,22 +70,17 @@
                         @endif
                     </td>
                     <td>
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                Tindakan
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-sm btn-outline-primary"
+                                onclick='openEditTransactionModal(@json($trx))'
+                                title="Edit Transaksi">
+                                <i class="iconoir-edit-pencil"></i>
                             </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#"><i class="iconoir-eye-alt me-2"></i> Detail</a>
-                                </li>
-                                @if ($trx->status == 'draft')
-                                    <li><a class="dropdown-item text-success" href="#"><i class="iconoir-check me-2"></i> Post</a>
-                                    </li>
-                                @endif
-                                @if ($trx->status != 'canceled')
-                                    <li><a class="dropdown-item text-danger" href="#"><i class="iconoir-cancel me-2"></i> Cancel</a>
-                                    </li>
-                                @endif
-                            </ul>
+                            <button class="btn btn-sm btn-outline-danger"
+                                onclick="deleteTransaction({{ $trx->id }})"
+                                title="Hapus Transaksi">
+                                <i class="iconoir-trash"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
