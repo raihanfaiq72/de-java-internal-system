@@ -79,6 +79,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('pdf-to-excel/client', [PdfToExcelController::class, 'clientSide'])->name('pdf.to.excel.client');
         Route::post('pdf-to-excel/convert', [PdfToExcelController::class, 'convert'])->name('pdf.to.excel.convert');
 
+        // Surat Jalan
+        Route::get('surat-jalan', [App\Http\Controllers\Api\SuratJalanController::class, 'index'])->name('surat-jalan');
+        Route::get('surat-jalan/print/{id}', [App\Http\Controllers\SuratJalanController::class, 'printSuratJalan'])->name('surat-jalan.print');
+        Route::get('surat-jalan/{id}', [App\Http\Controllers\SuratJalanController::class, 'show'])->name('surat-jalan.show');
+
         Route::get('sales', [App\Http\Controllers\Api\SalesController::class, 'index'])->name('sales');
         Route::get('sales/export', [App\Http\Controllers\Api\SalesController::class, 'export'])->name('sales.export');
         Route::get('sales/mass-print', [App\Http\Controllers\Api\SalesController::class, 'massPrint'])->name('sales.mass-print');
