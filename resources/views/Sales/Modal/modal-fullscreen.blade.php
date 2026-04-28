@@ -912,6 +912,7 @@
 
     let tomSelectMitraModal = null;
     let tomSelectSalesModal = null;
+    let originalSalesOptions = null;
 
     function initTomSelectSalesModal(selectedId = null) {
         if (!window.TomSelect) return;
@@ -926,27 +927,26 @@
         const sel = document.getElementById('modal_sales_id');
         if (!sel) return;
 
-        // ONLY initialize TomSelect if the element is a select
-        // If it's an input (hidden/text), we just set the value and return
         if (sel.tagName !== 'SELECT') {
             if (selectedId) sel.value = selectedId;
             return;
         }
 
-        // Gather all available options into a standard format
-        const options = [];
-
-        // 1. Get existing options from Blade
-        if (sel.options) {
-            Array.from(sel.options).forEach(opt => {
-                if (opt.value !== '') {
-                    options.push({
-                        id: opt.value,
-                        name: opt.textContent.trim()
-                    });
-                }
-            });
+        if (!originalSalesOptions) {
+            originalSalesOptions = [];
+            if (sel.options) {
+                Array.from(sel.options).forEach(opt => {
+                    if (opt.value !== '') {
+                        originalSalesOptions.push({
+                            id: opt.value,
+                            name: opt.textContent.trim()
+                        });
+                    }
+                });
+            }
         }
+
+        const options = [...originalSalesOptions];
 
         // 2. Add from masterUsers if missing (e.g. on detail page)
         const staffData = Array.isArray(window.masterUsers) ? window.masterUsers : [];
@@ -980,7 +980,7 @@
             }
         });
 
-        if (selectedId && selectedId != "0" && selectedId != "null") {
+        if (selectedId !== null && selectedId !== "null" && selectedId !== "") {
             tomSelectSalesModal.setValue(String(selectedId), true);
         } else {
             tomSelectSalesModal.clear(true);
@@ -1119,9 +1119,9 @@
                     }
 
                     // Re-init staff with selectedId
-                    initTomSelectSalesModal(inv.sales_id || null);
+                    initTomSelectSalesModal(inv.sales_id || "0");
 
-                    renderMitraDetail();
+                    renderMitraDetail(true);
 
                     // Items
                     if (inv.items) {
@@ -1149,9 +1149,13 @@
                 tomSelectMitraModal.clear(true);
             }
             if (tomSelectSalesModal) {
-                tomSelectSalesModal.clear(true);
+                const superadminOpt = Object.values(tomSelectSalesModal.options).find(o => o.name && o.name.toLowerCase().includes('superadmin'));
+                if (superadminOpt) {
+                    tomSelectSalesModal.setValue(superadminOpt.id, true);
+                } else {
+                    tomSelectSalesModal.clear(true);
+                }
             }
-
 
             addNewProductRow(); // Add 1 empty row
         }
@@ -1159,7 +1163,7 @@
         modal.show();
     }
 
-    function renderMitraDetail() {
+    function renderMitraDetail(skipAutoFillSales = false) {
         const id = document.getElementById('modal_mitra_id').value;
         const disp = document.getElementById('mitra_detail_display');
         const empty = document.getElementById('mitra_empty_state');
@@ -1168,7 +1172,7 @@
             disp.classList.add('d-none');
             empty.classList.remove('d-none');
             // Clear salesperson when no partner selected
-            if (tomSelectSalesModal) {
+            if (tomSelectSalesModal && !skipAutoFillSales) {
                 tomSelectSalesModal.clear(true);
             }
             return;
@@ -1181,13 +1185,15 @@
             document.getElementById('disp_mitra_alamat').innerText = m.alamat || '-';
             document.getElementById('disp_mitra_telp').innerText = m.no_hp || '-';
 
-            // Auto-fill salesperson if partner has assigned salesperson
-            if (m.salesperson_id && tomSelectSalesModal) {
-                tomSelectSalesModal.setValue(String(m.salesperson_id), true);
-            } else {
-                // Clear salesperson if partner has no salesperson
-                if (tomSelectSalesModal) {
-                    tomSelectSalesModal.clear(true);
+            if (!skipAutoFillSales) {
+                // Auto-fill salesperson if partner has assigned salesperson
+                if (m.salesperson_id && tomSelectSalesModal) {
+                    tomSelectSalesModal.setValue(String(m.salesperson_id), true);
+                } else {
+                    // Set to Tanpa Salesperson if partner has no salesperson
+                    if (tomSelectSalesModal) {
+                        tomSelectSalesModal.setValue("0", true);
+                    }
                 }
             }
 

@@ -4,10 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
-use App\Models\Partner;
 use App\Models\Payment;
 use App\Models\User;
-use App\Models\UserOfficeRole;
 use Illuminate\Http\Request;
 
 class SalesController extends Controller
@@ -137,6 +135,7 @@ class SalesController extends Controller
             ->map(function ($invoice) {
                 // Transform to match original structure
                 $payment = $invoice->payment->first(); // Get first payment
+
                 return (object) [
                     'id' => $invoice->id,
                     'nomor_invoice' => $invoice->nomor_invoice,
@@ -191,29 +190,31 @@ class SalesController extends Controller
 
     public function approval()
     {
-        return view($this->views . 'approval');
+        return view($this->views.'approval');
     }
 
     public function approvalDetail($id)
     {
         $invoice = Invoice::where('office_id', session('active_office_id'))->find($id);
-        if (!$invoice) {
+        if (! $invoice) {
             abort(404);
         }
-        return view($this->views . 'approval-detail', compact('invoice', 'id'));
+
+        return view($this->views.'approval-detail', compact('invoice', 'id'));
     }
 
     public function approvalOverdue()
     {
-        return view($this->views . 'approval-overdue');
+        return view($this->views.'approval-overdue');
     }
 
     public function approvalOverdueDetail($id)
     {
         $invoice = Invoice::where('office_id', session('active_office_id'))->find($id);
-        if (!$invoice) {
+        if (! $invoice) {
             abort(404);
         }
-        return view($this->views . 'approval-overdue-detail', compact('invoice', 'id'));
+
+        return view($this->views.'approval-overdue-detail', compact('invoice', 'id'));
     }
 }

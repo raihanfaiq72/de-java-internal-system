@@ -10,7 +10,18 @@ class MitraController extends Controller
 
     public function index()
     {
-        $salesUsers = User::where('is_sales', true)->get();
+        $officeId = session('active_office_id');
+        
+        $salesUsers = collect();
+        if ($officeId) {
+            $salesUsers = User::where('is_sales', true)
+                ->whereHas('plots', function ($query) use ($officeId) {
+                    $query->where('office_id', $officeId);
+                })
+                ->orderBy('name')
+                ->get();
+        }
+
         return view($this->views.'index', compact('salesUsers'));
     }
 }
