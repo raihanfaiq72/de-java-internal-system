@@ -311,8 +311,8 @@
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content shadow-lg border-0 rounded-4">
                 <div class="modal-header border-bottom-0 pt-4 px-4">
-                    <h5 class="modal-title fw-bold" id="modalPrintPreviewLabel">
-                        <i class="fa fa-print text-primary me-2"></i> Preview Cetak Invoice
+                    <h5 class="modal-title fw-bold text-primary" id="modalPrintPreviewLabel">
+                        <i class="fa fa-print me-2"></i> Preview Cetak Invoice
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>

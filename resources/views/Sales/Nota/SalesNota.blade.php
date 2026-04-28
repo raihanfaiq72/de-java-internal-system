@@ -68,6 +68,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 0;
+            font-size: 13px;
         }
 
         .main-table th,
@@ -210,6 +211,10 @@
         }
 
         .total-footer {
+            font-size: 18px !important;
+        }
+
+        .cashback-row td {
             font-size: 16px !important;
         }
 
@@ -307,7 +312,7 @@
                     <td colspan="2" class="text-right" id="biaya_lain_display">0</td>
                 </tr>
                 -->
-                <tr>
+                <tr class="cashback-row">
                     <td class="text-left">Cashback</td>
                     <td colspan="2" class="text-right" id="cashback_display">0</td>
                 </tr>
@@ -327,7 +332,7 @@
     <template id="item-row-template">
         <tr>
             <td class="text-center col-no"></td>
-            <td class="text-center col-supplier-code" style="font-size: 10px;"></td>
+            <td class="text-center col-supplier-code" style="font-size: 12px;"></td>
             <td class="text-left col-nama"></td>
             <td class="text-center col-satuan"></td>
             <td class="text-center col-qty"></td>
