@@ -1,169 +1,323 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Surat Jalan</title>
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; background: #fff; }
-  .page { width: 210mm; min-height: 148mm; margin: 0 auto; padding: 15mm 15mm 10mm; }
-  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; border-bottom: 2px solid #1a1a1a; padding-bottom: 10px; }
-  .company-name { font-size: 18px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
-  .doc-title { font-size: 22px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #1a1a1a; text-align: right; }
-  .doc-number { font-size: 13px; font-weight: 700; color: #555; text-align: right; }
-  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
-  .info-block label { font-size: 9px; text-transform: uppercase; letter-spacing: .8px; color: #888; display: block; margin-bottom: 2px; }
-  .info-block .value { font-weight: 700; font-size: 12px; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
-  thead th { background: #1a1a1a; color: #fff; padding: 6px 8px; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; text-align: left; }
-  tbody td { padding: 6px 8px; border-bottom: 1px solid #e5e7eb; font-size: 11px; vertical-align: top; }
-  tbody tr:nth-child(even) td { background: #f9fafb; }
-  .text-center { text-align: center; }
-  .text-right  { text-align: right; }
-  .sign-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 20px; }
-  .sign-box { text-align: center; }
-  .sign-box .role { font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: #888; margin-bottom: 40px; }
-  .sign-box .line { border-top: 1px solid #1a1a1a; padding-top: 4px; font-size: 10px; }
-  .notes { font-size: 10px; color: #666; margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 8px; }
-  @media print {
-    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .no-print { display: none !important; }
-  }
-</style>
+    <meta charset="UTF-8">
+    <title>Surat Jalan</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+        }
+
+        table {
+            border-collapse: collapse !important;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            color: #000;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+            font-weight: bold;
+        }
+
+        .nota-container {
+            width: 190mm;
+            margin: 10px auto;
+            padding: 10px;
+            border: 2px solid #000;
+            background: #fff;
+        }
+
+        .kop-header {
+            text-align: center;
+            margin-bottom: 5px;
+            border-bottom: 3px double #000;
+            padding-bottom: 5px;
+        }
+
+        .kop-header img {
+            max-width: 100%;
+            max-height: 80px;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .customer-details td {
+            padding: 2px 0;
+            vertical-align: top;
+            font-weight: bold;
+        }
+
+        .invoice-meta {
+            text-align: right;
+            line-height: 1.4;
+        }
+
+        .main-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+            font-size: 14px;
+        }
+
+        .main-table th,
+        .main-table td {
+            border: 2px solid #000;
+            padding: 0px 3px !important;
+            font-weight: bold;
+            line-height: 1.0 !important;
+            /* Extremely tight */
+        }
+
+        .main-table tbody td {
+            border-left: 2px solid #000;
+            border-right: 2px solid #000;
+            border-top: none !important;
+            border-bottom: none !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
+        .main-table tbody tr:last-child td {
+            border-bottom: 2px solid #000 !important;
+        }
+
+        .main-table th {
+            text-transform: uppercase;
+        }
+
+        .text-left {
+            text-align: left !important;
+        }
+
+        .text-right {
+            text-align: right !important;
+        }
+
+        .text-center {
+            text-align: center !important;
+        }
+
+        .signature-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .sig-box {
+            width: 22%;
+            font-size: 12px;
+        }
+
+        .sig-space {
+            height: 50px;
+        }
+
+        #loading {
+            text-align: center;
+            padding: 100px;
+            font-weight: bold;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                background: none;
+            }
+
+            .nota-container {
+                margin: 0;
+                width: 100%;
+                border: 2px solid #000;
+            }
+
+            .no-print {
+                display: none;
+            }
+
+            @page {
+                size: auto;
+                margin: 12mm 15mm 10mm 5mm;
+            }
+        }
+    </style>
 </head>
+
 <body>
-<div class="page" id="print-area">
-  <div class="header">
-    <div>
-      <div class="company-name" id="p-company">Perusahaan</div>
-      <div style="font-size:10px;color:#666;" id="p-company-addr"></div>
+
+    <div id="loading">MENYIAPKAN DOKUMEN...</div>
+
+    <div class="nota-container" id="nota-content" style="display: none;">
+        <div id="kop-section" class="kop-header" style="display: none;"></div>
+
+        <div class="header-info">
+            <div class="customer-details">
+                <table>
+                    <tr>
+                        <td>Kepada Yth</td>
+                        <td id="mitra_nama"></td>
+                    </tr>
+                    <tr>
+                        <td>Alamat</td>
+                        <td id="mitra_alamat"></td>
+                    </tr>
+                    <tr>
+                        <td>Salesman</td>
+                        <td id="ref_no"></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="invoice-meta">
+                <span id="tgl_invoice" style="font-size: 18px; font-weight: bold;"></span><br>
+                <strong style="font-size: 12px;">SURAT JALAN</strong><br>
+                <span style="font-size: 12px;">NO. SJ: <strong id="nomor_invoice"></strong></span>
+            </div>
+        </div>
+
+        <table class="main-table">
+            <thead>
+                <tr>
+                    <th width="5%">NO</th>
+                    <th width="15%">KODE</th>
+                    <th width="40%">NAMA BARANG / DESKRIPSI</th>
+                    <th width="10%">QTY</th>
+                    <th width="10%">SATUAN</th>
+                    <th width="20%">KET</th>
+                </tr>
+            </thead>
+            <tbody id="items-body"></tbody>
+        </table>
+
+        <div class="signature-section">
+            <div class="sig-box">
+                <strong>Penerima</strong>
+                <div class="sig-space"></div>
+                ( . . . . . . . . )
+            </div>
+            <div class="sig-box">
+                <strong>Pengirim</strong>
+                <div class="sig-space"></div>
+                ( . . . . . . . . )
+            </div>
+            <div class="sig-box">
+                <strong>Checker</strong>
+                <div class="sig-space"></div>
+                ( . . . . . . . . )
+            </div>
+            <div class="sig-box">
+                <strong>Admin</strong>
+                <div class="sig-space"></div>
+                ( . . . . . . . . )
+            </div>
+        </div>
     </div>
-    <div>
-      <div class="doc-title">Surat Jalan</div>
-      <div class="doc-number" id="p-nomor">-</div>
-    </div>
-  </div>
 
-  <div class="info-grid">
-    <div>
-      <div class="info-block">
-        <label>Kepada</label>
-        <div class="value" id="p-mitra-nama">-</div>
-        <div style="font-size:10px;color:#666;" id="p-mitra-alamat"></div>
-        <div style="font-size:10px;color:#666;" id="p-mitra-telp"></div>
-      </div>
-    </div>
-    <div>
-      <div class="info-block" style="margin-bottom:6px;">
-        <label>Tanggal</label>
-        <div class="value" id="p-tgl">-</div>
-      </div>
-      <div class="info-block" style="margin-bottom:6px;">
-        <label>Referensi / PO</label>
-        <div class="value" id="p-ref">-</div>
-      </div>
-      <div class="info-block">
-        <label>Sales Person</label>
-        <div class="value" id="p-sales">-</div>
-      </div>
-    </div>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th width="5%">No</th>
-        <th width="45%">Nama Barang</th>
-        <th class="text-center" width="15%">Qty</th>
-        <th class="text-center" width="15%">Satuan</th>
-        <th width="20%">Keterangan</th>
-      </tr>
-    </thead>
-    <tbody id="p-items">
-      <tr><td colspan="5" class="text-center" style="padding:20px;color:#999;">Memuat...</td></tr>
-    </tbody>
-  </table>
-
-  <div class="notes" id="p-notes"></div>
-
-  <div class="sign-grid">
-    <div class="sign-box">
-      <div class="role">Pengirim</div>
-      <div class="line">( ________________ )</div>
-    </div>
-    <div class="sign-box">
-      <div class="role">Pengemudi</div>
-      <div class="line">( ________________ )</div>
-    </div>
-    <div class="sign-box">
-      <div class="role">Penerima</div>
-      <div class="line">( ________________ )</div>
-    </div>
-  </div>
-</div>
-
-<div class="no-print" style="text-align:center;padding:16px;">
-  <button onclick="window.print()" style="padding:8px 24px;background:#1a1a1a;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:700;">
-    🖨 Cetak Sekarang
-  </button>
-</div>
-
-<script>
-const SJ_ID = {{ $id }};
-
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const res    = await fetch(`/api/surat-jalan-api/${SJ_ID}`);
-        const result = await res.json();
-        if (!result.success) { document.body.innerHTML = '<p style="padding:20px;color:red;">Data tidak ditemukan.</p>'; return; }
-        render(result.data);
-    } catch (e) {
-        document.body.innerHTML = '<p style="padding:20px;color:red;">Gagal memuat data.</p>';
-    }
-});
-
-function fmtDate(d) {
-    if (!d) return '-';
-    return new Date(d).toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
-}
-
-function render(sj) {
-    document.title = 'Surat Jalan - ' + sj.nomor_invoice;
-    document.getElementById('p-nomor').textContent = sj.nomor_invoice;
-    document.getElementById('p-tgl').textContent   = fmtDate(sj.tgl_invoice);
-    document.getElementById('p-ref').textContent   = sj.ref_no || '-';
-    document.getElementById('p-sales').textContent = sj.sales ? sj.sales.name : '-';
-
-    if (sj.mitra) {
-        document.getElementById('p-mitra-nama').textContent   = sj.mitra.nama;
-        document.getElementById('p-mitra-alamat').textContent = sj.mitra.alamat || '';
-        document.getElementById('p-mitra-telp').textContent   = sj.mitra.no_hp  || '';
-    }
-
-    if (sj.keterangan) {
-        document.getElementById('p-notes').textContent = 'Catatan: ' + sj.keterangan;
-    }
-
-    const tbody = document.getElementById('p-items');
-    if (!sj.items || sj.items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="padding:20px;color:#999;">Tidak ada barang</td></tr>';
-        return;
-    }
-
-    tbody.innerHTML = sj.items.map((item, i) => `
+    <template id="item-row-template">
         <tr>
-            <td class="text-center">${i + 1}</td>
-            <td>
-                <strong>${item.nama_produk_manual || item.product?.nama_produk || '-'}</strong>
-                ${item.deskripsi_produk ? `<br><span style="font-size:10px;color:#666;">${item.deskripsi_produk}</span>` : ''}
-            </td>
-            <td class="text-center"><strong>${item.qty}</strong></td>
-            <td class="text-center">${item.product?.satuan || 'Pcs'}</td>
-            <td style="color:#666;">${item.deskripsi_produk || ''}</td>
+            <td class="text-center col-no"></td>
+            <td class="text-center col-kode"></td>
+            <td class="text-left col-nama"></td>
+            <td class="text-center col-qty"></td>
+            <td class="text-center col-satuan"></td>
+            <td class="text-left col-ket"></td>
         </tr>
-    `).join('');
-}
-</script>
+    </template>
+
+    <script>
+        const SJ_ID = '{{ $id }}';
+        const API_URL = '{{ url('api/surat-jalan-api') }}/' + SJ_ID;
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric'
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch(API_URL);
+                const result = await response.json();
+
+                if (result.success) {
+                    const data = result.data;
+                    const tbody = document.getElementById('items-body');
+                    const template = document.getElementById('item-row-template');
+                    tbody.innerHTML = '';
+
+                    if (data.is_kop && data.logo_img) {
+                        const kop = document.getElementById('kop-section');
+                        kop.style.display = 'block';
+                        kop.innerHTML = `<img src="{{ asset('') }}${data.logo_img}" alt="Logo">`;
+                    }
+
+                    document.getElementById('tgl_invoice').innerText = formatDate(data.tgl_invoice);
+                    document.getElementById('nomor_invoice').innerText = data.nomor_invoice;
+                    document.getElementById('ref_no').innerText = ': ' + (data.sales?.name || '-');
+                    document.getElementById('mitra_nama').innerText = ': ' + (data.mitra?.nama || '-');
+                    document.getElementById('mitra_alamat').innerText = ': ' + (data.mitra?.alamat || '-');
+
+                    data.items.forEach((item, index) => {
+                        const clone = template.content.cloneNode(true);
+                        const p = item.product || {};
+
+                        clone.querySelector('.col-no').textContent = index + 1;
+
+                        // Robust fetching for Nomor Mitra Supplier
+                        let supplierNo = '-';
+                        if (p && p.supplier) {
+                            supplierNo = p.supplier.nomor_mitra || '-';
+                        }
+
+                        clone.querySelector('.col-kode').textContent = supplierNo;
+
+                        clone.querySelector('.col-nama').innerHTML =
+                            `<strong>${p.nama_produk || item.nama_produk_manual || '-'}</strong>` +
+                            (item.deskripsi_produk ?
+                                `<br><span style="font-size:11px; font-weight:normal;">${item.deskripsi_produk}</span>` :
+                                '');
+                        clone.querySelector('.col-qty').textContent = parseFloat(item.qty)
+                            .toLocaleString('id-ID');
+                        clone.querySelector('.col-satuan').textContent = p.unit?.nama_unit || item
+                            .satuan || 'Pcs';
+                        clone.querySelector('.col-ket').textContent = '';
+                        tbody.appendChild(clone);
+                    });
+
+                    // Fill empty rows (min 15)
+                    for (let i = data.items.length; i < 15; i++) {
+                        tbody.insertAdjacentHTML('beforeend',
+                            `<tr><td class="text-center" style="height:14px; line-height: 1;">${i + 1}</td><td></td><td></td><td></td><td></td><td></td></tr>`
+                        );
+                    }
+
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('nota-content').style.display = 'block';
+
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (!urlParams.get('no_print')) {
+                        setTimeout(() => {
+                            window.print();
+                        }, 500);
+                    }
+                }
+            } catch (error) {
+                console.error(error);
+                document.getElementById('loading').innerText = 'TERJADI KESALAHAN.';
+            }
+        });
+    </script>
 </body>
+
 </html>
