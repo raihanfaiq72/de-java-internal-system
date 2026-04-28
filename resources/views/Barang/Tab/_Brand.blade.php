@@ -1,29 +1,32 @@
 <div class="tab-pane fade" id="tab-brand" role="tabpanel">
 
-    <div class="d-flex flex-wrap align-items-end gap-3 mb-4 bg-light-subtle p-3 border-radius-sm border">
+    <div class="dr-filter-bar mb-4">
         <!-- Filter Controls -->
-        <div style="flex: 1; min-width: 250px;">
-            <label class="dr-label mb-2">Cari Brand</label>
-            <div class="input-group">
-                <span class="input-group-text border-end-0 bg-white"><i class="iconoir-search"></i></span>
-                <input type="text" id="filter-brand-search" class="dr-input border-start-0" style="padding-left: 0;"
+        <div class="dr-filter-group" style="flex: 1; min-width: 250px;">
+            <label class="dr-label">Cari Brand</label>
+            <div class="dr-search-wrap">
+                <i class="iconoir-search dr-search-icon"></i>
+                <input type="text" id="filter-brand-search" class="dr-input dr-search-input"
                     placeholder="Ketik nama brand...">
             </div>
         </div>
         
         <!-- Action Buttons -->
-        <div class="ms-auto d-flex gap-2">
-            <button onclick="resetFilterBrand()" class="dr-btn dr-btn-outline" title="Reset Filter" style="padding: 10px 14px;">
-                <i class="iconoir-undo"></i>
-            </button>
-            <button class="dr-btn dr-btn-primary px-4" onclick="openBrandModal()">
-                <i class="iconoir-plus me-1"></i> TAMBAH BRAND
-            </button>
+        <div class="dr-filter-actions">
+            <label class="dr-label" style="visibility: hidden;">-</label>
+            <div class="d-flex gap-2">
+                <button onclick="resetFilterBrand()" class="dr-btn dr-btn-outline" title="Reset Filter">
+                    <i class="iconoir-undo"></i>
+                </button>
+                <button class="dr-btn dr-btn-primary px-4" onclick="openBrandModal()">
+                    <i class="iconoir-plus me-1"></i> TAMBAH BRAND
+                </button>
+            </div>
         </div>
     </div>
 
-    <div class="dr-table-container mb-4">
-        <table class="dr-table align-middle">
+    <div class="dr-table-container mb-4" style="overflow-x: auto;">
+        <table class="dr-table align-middle" style="min-width: 600px;">
             <thead>
                 <tr>
                     <th class="ps-4">Nama Brand</th>
