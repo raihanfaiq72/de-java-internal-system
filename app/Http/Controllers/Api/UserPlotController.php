@@ -59,7 +59,7 @@ class UserPlotController extends Controller
     {
         $plot = UserOfficeRole::with(['user'])
             ->where('id', $id)
-            ->first()
+            ->get()
             ->map(function ($plot) {
                 return (object) [
                     'id' => $plot->id,
@@ -70,7 +70,8 @@ class UserPlotController extends Controller
                     'created_at' => $plot->created_at,
                     'updated_at' => $plot->updated_at,
                 ];
-            });
+            })
+            ->first();
 
         if (! $plot) {
             return response()->json([
