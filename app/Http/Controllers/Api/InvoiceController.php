@@ -426,6 +426,17 @@ class InvoiceController extends Controller
                 ]);
             }
 
+            // If this is a Sales invoice, check if it was generated from a Surat Jalan
+            if ($invoice->tipe_invoice === 'Sales') {
+                Invoice::where('office_id', session('active_office_id'))
+                    ->where('tipe_invoice', 'SuratJalan')
+                    ->where('ref_no', $invoice->nomor_invoice)
+                    ->update([
+                        'status_dok' => 'Draft',
+                        'ref_no' => null
+                    ]);
+            }
+
             $invoice->delete();
 
             return apiResponse(true, 'Invoice berhasil dihapus (Archive)');

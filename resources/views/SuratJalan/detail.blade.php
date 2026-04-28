@@ -371,8 +371,8 @@
 
             const btnEdit = document.getElementById('btn-edit-header');
             if (btnEdit) {
-                if (isSent) btnEdit.classList.add('d-none');
-                else btnEdit.classList.remove('d-none');
+                if (data.status_dok === 'Draft') btnEdit.classList.remove('d-none');
+                else btnEdit.classList.add('d-none');
             }
 
             // Main Document Info
@@ -640,7 +640,12 @@
                     bootstrap.Modal.getInstance(document.getElementById('convertModal')).hide();
                     const invId = result.data?.invoice?.id;
                     if (invId) {
-                        if (confirm('Invoice berhasil dibuat! Buka halaman invoice sekarang?')) {
+                        const open = await macConfirm('Berhasil', 'Invoice berhasil dibuat! Buka halaman invoice sekarang?', {
+                            confirmText: 'Buka Invoice',
+                            confirmType: 'primary',
+                            cancelText: 'Tutup'
+                        });
+                        if (open) {
                             window.location.href = `/sales/${invId}`;
                         } else {
                             loadSuratJalanDetail();

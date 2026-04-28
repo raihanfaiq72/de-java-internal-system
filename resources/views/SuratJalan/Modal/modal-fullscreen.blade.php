@@ -351,14 +351,17 @@
 
     let sjMasterProduk = [];
     let sjMasterMitra = [];
+    let sjMasterSales = [];
     let sjTomMitra = null;
     let sjTomSales = null;
 
     let selectedStockItems = [];
     let stockCache = [];
+    let isSjModalInitializing = false;
 
     // ── Open Modal ────────────────────────────────────────────────────────────────
     async function openSuratJalanModal(id = null, mode = 'create') {
+        isSjModalInitializing = true;
         const modal = new bootstrap.Modal(document.getElementById('sjModal'));
 
         // Reset form
@@ -370,6 +373,7 @@
         // Load master data if needed
         if (sjMasterProduk.length === 0) await loadSjMasterProduk();
         if (sjMasterMitra.length === 0) await loadSjMasterMitra();
+        if (sjMasterSales.length === 0) await loadSjMasterSales();
 
         initSjTomMitra();
         initSjTomSales();
@@ -393,7 +397,7 @@
                     if (sjTomMitra) sjTomMitra.setValue(String(sj.mitra_id), true);
                     if (sjTomSales) sjTomSales.setValue(String(sj.sales_id || 0), true);
 
-                    renderSjMitraDetail();
+                    renderSjMitraDetail(false);
 
                     (sj.items || []).forEach(item => addSjRow(item));
                 }
@@ -408,9 +412,11 @@
             document.getElementById('sj_tgl').value = new Date().toISOString().split('T')[0];
             document.getElementById('sj_nomor').value = 'SJ/' + new Date().getFullYear() + '/' + Date.now()
                 .toString().slice(-5);
+            renderSjMitraDetail(false);
             addSjRow();
         }
 
+        isSjModalInitializing = false;
         modal.show();
     }
 
@@ -432,6 +438,18 @@
             if (result.success) sjMasterMitra = result.data.data || result.data;
         } catch (e) {
             console.error('Gagal load mitra', e);
+        }
+    }
+
+    async function loadSjMasterSales() {
+        try {
+            const res = await fetch(`/api/user-api?per_page=1000&is_sales=1`);
+            const result = await res.json();
+            if (result.success) {
+                sjMasterSales = result.data.data || result.data || [];
+            }
+        } catch (e) {
+            console.error('Gagal load sales', e);
         }
     }
 
@@ -466,7 +484,7 @@
                     `<div><div class="fw-bold">${esc(d.nama)}</div>${d.info ? `<div class="small text-muted">${esc(d.info)}</div>` : ''}</div>`,
                 item: (d, esc) => `<div>${esc(d.nama)}</div>`
             },
-            onChange: () => renderSjMitraDetail()
+            onChange: () => renderSjMitraDetail(true)
         });
 
         if (selectedId) sjTomMitra.setValue(String(selectedId), true);
@@ -483,7 +501,16 @@
         const sel = document.getElementById('sj_sales_id');
         if (!sel) return;
 
+        sel.innerHTML = '<option value="0">Tanpa Sales Person</option>';
+
         sjTomSales = new TomSelect('#sj_sales_id', {
+            options: [
+                { id: '0', name: 'Tanpa Sales Person' },
+                ...sjMasterSales.map(s => ({ id: String(s.id), name: s.name }))
+            ],
+            valueField: 'id',
+            labelField: 'name',
+            searchField: ['name'],
             allowEmptyOption: true,
             placeholder: 'Pilih Sales...',
             create: false,
@@ -494,7 +521,9 @@
     }
 
     // ── Mitra Detail ──────────────────────────────────────────────────────────────
-    function renderSjMitraDetail() {
+    function renderSjMitraDetail(autoSetSales = true) {
+        if (isSjModalInitializing) autoSetSales = false;
+
         const id = sjTomMitra ? sjTomMitra.getValue() : document.getElementById('sj_mitra_id').value;
         const detail = document.getElementById('sj_mitra_detail');
         const empty = document.getElementById('sj_mitra_empty');
@@ -510,10 +539,31 @@
             document.getElementById('sj_disp_nama').innerText = m.nama;
             document.getElementById('sj_disp_alamat').innerText = m.alamat || '-';
             document.getElementById('sj_disp_telp').innerText = m.no_hp || '-';
-            if (m.salesperson_id && sjTomSales) sjTomSales.setValue(String(m.salesperson_id), true);
+            
+            if (autoSetSales && sjTomSales) {
+                if (m.salesperson_id) {
+                    sjTomSales.setValue(String(m.salesperson_id), true);
+                } else {
+                    sjTomSales.setValue("0", true);
+                }
+            }
+            
             detail.classList.remove('d-none');
             empty.classList.add('d-none');
         }
+    }
+
+    // ── Helper: Get Used Product IDs ──────────────────────────────────────────────
+    function getUsedSjProductIds(excludeTs = null) {
+        const ids = [];
+        document.querySelectorAll('.sj-prod-select').forEach(sel => {
+            if (sel.tomselect) {
+                if (excludeTs && sel.tomselect === excludeTs) return;
+                const val = sel.tomselect.getValue();
+                if (val) ids.push(String(val));
+            }
+        });
+        return ids;
     }
 
     // ── Add Row ───────────────────────────────────────────────────────────────────
@@ -540,6 +590,23 @@
             valueField: 'id',
             labelField: 'nama',
             searchField: ['nama', 'sku'],
+            onDropdownOpen: function() {
+                const usedIds = getUsedSjProductIds(this);
+                // We refresh the options to only show unused ones
+                // But we must keep the currently selected one in the list!
+                const currentVal = this.getValue();
+                
+                this.clearOptions();
+                const filtered = sjMasterProduk.filter(p => !usedIds.includes(String(p.id)) || String(p.id) === String(currentVal));
+                this.addOptions(filtered.map(p => ({
+                    id: String(p.id),
+                    nama: p.nama_produk,
+                    sku: p.sku_kode || '',
+                    unit: p.satuan || 'Pcs',
+                    qty: Number(p.qty || 0)
+                })));
+                this.refreshOptions(false);
+            },
             placeholder: 'Cari barang...',
             create: false,
             dropdownParent: 'body',
@@ -627,17 +694,23 @@
             const qty = parseFloat(qtyEl.value) || 0;
             if (qty <= 0) return;
 
-            // Get product name from TomSelect
+            // Get product name and ID from TomSelect
             const selectEl = row.querySelector('.sj-prod-select');
             let namaProduk = '';
+            let productId = null;
             if (selectEl && selectEl.tomselect) {
                 const val = selectEl.tomselect.getValue();
-                if (val && selectEl.tomselect.options[val]) namaProduk = selectEl.tomselect.options[val]
-                    .nama;
+                if (val && selectEl.tomselect.options[val]) {
+                    namaProduk = selectEl.tomselect.options[val].nama;
+                    productId = val;
+                }
             }
 
+            // Skip if no product selected
+            if (!productId && !namaProduk) return;
+
             items.push({
-                produk_id: idEl.value || null,
+                produk_id: productId,
                 nama_produk_manual: namaProduk,
                 deskripsi_produk: descEl ? descEl.value : '',
                 qty: qty,
@@ -803,7 +876,12 @@
 
         const existingIds = Array.from(document.querySelectorAll('#sjItemBody .sj-prod-id')).map(i => i.value);
 
+        const usedIds = getUsedSjProductIds();
+
         data.forEach(item => {
+            // Exclude already selected items from list
+            if (usedIds.includes(String(item.id))) return;
+
             const clone = template.content.cloneNode(true);
             const tr = clone.querySelector('tr');
             const chk = clone.querySelector('.stock-check');

@@ -410,12 +410,15 @@
                     <li><a class="dropdown-item dropdown-item-finance text-danger" href="javascript:void(0)" onclick="forceDeleteSJ(${sj.id})"><i class="fa fa-trash"></i> Hapus Permanen</a></li>
                 `;
                 } else {
-                    actionsHtml = `
-                    <li><a class="dropdown-item dropdown-item-finance" href="/surat-jalan/${sj.id}"><i class="fa fa-eye text-primary"></i> Lihat Detail</a></li>
-                    <li><a class="dropdown-item dropdown-item-finance" href="javascript:void(0)" onclick="openSuratJalanModal(${sj.id}, 'edit')"><i class="fa fa-pencil text-warning"></i> Edit Data</a></li>
-                    <li><hr class="dropdown-divider opacity-50"></li>
-                    <li><a class="dropdown-item dropdown-item-finance text-danger" href="javascript:void(0)" onclick="deleteSJ(${sj.id})"><i class="fa fa-trash"></i> Hapus</a></li>
-                `;
+                    actionsHtml = `<li><a class="dropdown-item dropdown-item-finance" href="/surat-jalan/${sj.id}"><i class="fa fa-eye text-primary"></i> Lihat Detail</a></li>`;
+                    
+                    if (sj.status_dok === 'Draft') {
+                        actionsHtml += `
+                            <li><a class="dropdown-item dropdown-item-finance" href="javascript:void(0)" onclick="openSuratJalanModal(${sj.id}, 'edit')"><i class="fa fa-pencil text-warning"></i> Edit Data</a></li>
+                            <li><hr class="dropdown-divider opacity-50"></li>
+                            <li><a class="dropdown-item dropdown-item-finance text-danger" href="javascript:void(0)" onclick="deleteSJ(${sj.id})"><i class="fa fa-trash"></i> Hapus</a></li>
+                        `;
+                    }
                 }
 
                 html += `
@@ -474,7 +477,8 @@
 
         // ── Delete / Restore ───────────────────────────────────────────────────────
         async function deleteSJ(id) {
-            if (!confirm('Hapus surat jalan ini?')) return;
+            const ok = await macConfirm('Konfirmasi Hapus', 'Apakah Anda yakin ingin menghapus surat jalan ini?');
+            if (!ok) return;
             const res = await fetch(`${API_SJ}/${id}`, {
                 method: 'DELETE',
                 headers: {
@@ -499,7 +503,8 @@
         }
 
         async function forceDeleteSJ(id) {
-            if (!confirm('Hapus permanen? Data tidak dapat dipulihkan.')) return;
+            const ok = await macConfirm('Hapus Permanen', 'Hapus permanen? Data tidak dapat dipulihkan.');
+            if (!ok) return;
             const res = await fetch(`${API_SJ}/${id}/force-delete`, {
                 method: 'DELETE',
                 headers: {

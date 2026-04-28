@@ -31,7 +31,14 @@ class PartnerController extends Controller
             }
 
             if ($request->filled('tipe_mitra')) {
-                $query->where('tipe_mitra', $request->tipe_mitra);
+                $tipe = $request->tipe_mitra;
+                if ($tipe === 'Client') {
+                    $query->whereIn('tipe_mitra', ['Client', 'Both']);
+                } elseif ($tipe === 'Supplier') {
+                    $query->whereIn('tipe_mitra', ['Supplier', 'Both']);
+                } else {
+                    $query->where('tipe_mitra', $tipe);
+                }
             }
 
             // Handle per_page parameter
