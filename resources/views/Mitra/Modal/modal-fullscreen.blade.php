@@ -213,8 +213,8 @@
                                     <div class="mt-3">
                                         <label class="f-label">Salesperson</label>
                                         <select id="modal_salesperson_id" class="form-select f-input">
+                                            <option value="" disabled>Pilih Sales...</option>
                                             <option value="0">Tanpa Sales Person</option>
-                                            <option value="">Pilih Sales...</option>
                                             @foreach ($salesUsers ?? [] as $u)
                                                 <option value="{{ $u->id }}"
                                                     @if ($u->id == auth()->id()) selected @endif>
@@ -408,7 +408,7 @@
                     document.getElementById('modal_kontak_jabatan').value = data.kontak_jabatan || '';
                     document.getElementById('modal_kontak_no_hp').value = data.kontak_no_hp || '';
                     document.getElementById('modal_kontak_email').value = data.kontak_email || '';
-                    document.getElementById('modal_salesperson_id').value = data.salesperson_id || '';
+                    document.getElementById('modal_salesperson_id').value = data.salesperson_id || '0';
 
                     if (data.latitude && data.longitude) {
                         lat = parseFloat(data.latitude);

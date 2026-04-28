@@ -273,7 +273,7 @@
             <thead>
                 <tr>
                     <th width="5%">NO</th>
-                    <th width="8%">KODE</th>
+                    <th width="12%">KODE</th>
                     <th width="30%">NAMA BARANG</th>
                     <th width="8%">SATUAN</th>
                     <th width="8%">QTY</th>
@@ -287,7 +287,7 @@
                 <tr>
                     <td colspan="5" rowspan="6"
                         style="border: none !important; vertical-align: top; padding-top: 5px !important;">
-                        <div style="font-style: italic; font-size: 11px;">
+                        <div style="font-style: italic; font-size: 10px;">
                             <strong>Catatan: Barang yang sudah dibeli tidak dapat ditukar/dikembalikan.</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-top: 5px;">
@@ -297,6 +297,7 @@
                         </div>
                     </td>
                 </tr>
+                <!--
                 <tr>
                     <td class="text-left">Diskon</td>
                     <td colspan="2" class="text-right" id="diskon_display">0</td>
@@ -305,6 +306,7 @@
                     <td class="text-left">Biaya Lain</td>
                     <td colspan="2" class="text-right" id="biaya_lain_display">0</td>
                 </tr>
+                -->
                 <tr>
                     <td class="text-left">Cashback</td>
                     <td colspan="2" class="text-right" id="cashback_display">0</td>
@@ -325,7 +327,7 @@
     <template id="item-row-template">
         <tr>
             <td class="text-center col-no"></td>
-            <td class="text-center col-supplier-code"></td>
+            <td class="text-center col-supplier-code" style="font-size: 10px;"></td>
             <td class="text-left col-nama"></td>
             <td class="text-center col-satuan"></td>
             <td class="text-center col-qty"></td>
@@ -402,10 +404,10 @@
                         tbody.appendChild(clone);
                     });
 
-                    // Baris kosong (minimal 5 baris)
-                    for (let i = data.items.length; i < 3; i++) {
+                    // Baris kosong (minimal 13 baris)
+                    for (let i = data.items.length; i < 15; i++) {
                         tbody.insertAdjacentHTML('beforeend',
-                            '<tr><td style="height:15px;"></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'
+                            `<tr><td class="text-center" style="height:15px;">${i + 1}</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`
                         );
                     }
 
@@ -422,10 +424,10 @@
                         let nominal = (subtotalItems * discVal / 100);
                         discText = `${discVal}% (${formatNumber(nominal)})`;
                     }
-                    document.getElementById('diskon_display').innerText = discText;
+                    // document.getElementById('diskon_display').innerText = discText;
 
-                    document.getElementById('biaya_lain_display').innerText = formatNumber(data.other_fee ||
-                        data.biaya_kirim || 0);
+                    // document.getElementById('biaya_lain_display').innerText = formatNumber(data.other_fee ||
+                    //     data.biaya_kirim || 0);
                     document.getElementById('cashback_display').innerText = formatNumber(data.cashback || 0);
 
                     document.getElementById('total_akhir').innerText = formatNumber(data.total_akhir);

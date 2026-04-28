@@ -1,10 +1,10 @@
 <!-- Modal Tambah Massal Produk -->
 <div class="modal fade" id="modalProdukMassal" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-dialog modal-fullscreen modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fa fa-layer-group me-2 text-primary"></i>Tambah Massal Produk
+                <h5 class="modal-title text-primary">
+                    <i class="fa fa-layer-group me-2"></i>Tambah Massal Produk
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -13,7 +13,8 @@
                 <div class="alert alert-info d-flex align-items-center">
                     <i class="fa fa-info-circle me-2"></i>
                     <div>
-                        <strong>Tip:</strong> Isi data produk secara massal. Anda bisa menambahkan hingga 20 produk sekaligus.
+                        <strong>Tip:</strong> Isi data produk secara massal. Anda bisa menambahkan hingga 20 produk
+                        sekaligus.
                     </div>
                 </div>
 
@@ -21,7 +22,8 @@
                 <div class="row align-items-center mb-4">
                     <div class="col-md-8">
                         <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-primary px-4 fw-bold shadow-sm" onclick="addProductRow()">
+                            <button type="button" class="btn btn-primary px-4 fw-bold shadow-sm"
+                                onclick="addProductRow()">
                                 <i class="fa fa-plus me-2"></i> Tambah Baris
                             </button>
                             <button type="button" class="btn btn-outline-danger px-4 fw-bold" onclick="clearAllRows()">
@@ -103,19 +105,84 @@
         width: 100%;
         min-height: 38px;
     }
-    
+
     #massalProductTable td {
         padding: 8px 4px !important;
         vertical-align: middle;
     }
-    
+
     .required-field {
         border-left: 4px solid #dc3545;
     }
-    
+
     .row-number {
         font-weight: bold;
         color: #6c757d;
+    }
+
+    .btn-premium-delete {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        margin: 0 auto;
+    }
+
+    .btn-premium-delete:hover {
+        background: #dc3545;
+        color: white;
+        transform: scale(1.1);
+    }
+
+    #massalProductTable .form-control,
+    #massalProductTable .form-select,
+    #massalProductTable .ts-wrapper .ts-control {
+        height: 34px !important;
+        min-height: 34px !important;
+        display: flex;
+        align-items: center;
+        font-size: 13px !important;
+    }
+
+    #massalProductTable input:disabled {
+        background-color: #f8f9fa !important;
+        color: #333333 !important;
+        font-weight: 600;
+        opacity: 1 !important;
+        cursor: not-allowed;
+    }
+
+    #massalProductTable .in-nama-produk-wrap {
+        min-width: 280px;
+    }
+
+    #massalProductTable .in-sku-wrap {
+        min-width: 100px;
+    }
+
+    #massalProductTable .in-qty-wrap {
+        min-width: 80px;
+    }
+
+    .modal-fullscreen .modal-body {
+        overflow-x: hidden !important;
+        padding-bottom: 2rem; /* Add space for the horizontal scrollbar if needed */
+    }
+
+    #massalProductTable {
+        margin-bottom: 0;
+    }
+
+    /* Ensure table-responsive is the primary scroll container */
+    .table-responsive {
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
     }
 </style>
 
@@ -126,7 +193,7 @@
     let categories = [];
     let units = [];
     let coas = [];
-    
+
     let brandTsInstances = [];
     let categoryTsInstances = [];
 
@@ -135,12 +202,12 @@
         try {
             // Load dropdown data using the same pattern as existing system
             const [suppliersRes, brandsRes, categoriesRes, coasRes] = await Promise.all([
-                fetch('{{ route("mitra-api.index") }}' + '?per_page=1000'),
-                fetch('{{ route("brand-api.index") }}'),
-                fetch('{{ route("product-category-api.index") }}'),
-                fetch('{{ route("coa-api.index") }}')
+                fetch('{{ route('mitra-api.index') }}' + '?per_page=1000'),
+                fetch('{{ route('brand-api.index') }}'),
+                fetch('{{ route('product-category-api.index') }}'),
+                fetch('{{ route('coa-api.index') }}')
             ]);
-            
+
             // Debug API responses
             console.log('API Responses:');
             console.log('Suppliers response status:', suppliersRes.status);
@@ -162,7 +229,7 @@
                 console.log('Suppliers response not OK');
                 suppliers = [];
             }
-            
+
             if (brandsRes.ok) {
                 const brandData = await brandsRes.json();
                 console.log('Brands raw data:', brandData);
@@ -176,7 +243,7 @@
                 console.log('Brands response not OK');
                 brands = [];
             }
-            
+
             if (categoriesRes.ok) {
                 const categoryData = await categoriesRes.json();
                 console.log('Categories raw data:', categoryData);
@@ -190,7 +257,7 @@
                 console.log('Categories response not OK');
                 categories = [];
             }
-            
+
             if (coasRes.ok) {
                 const coaData = await coasRes.json();
                 console.log('COAs raw data:', coaData);
@@ -204,42 +271,112 @@
                 console.log('COAs response not OK');
                 coas = [];
             }
-            
+
             // For units, we'll need to create a static array since there's no unit API
-            units = [
-                { id: 'PCS', nama: 'PCS' },
-                { id: 'BOX', nama: 'BOX' },
-                { id: 'PACK', nama: 'PACK' },
-                { id: 'LUSIN', nama: 'LUSIN' },
-                { id: 'KODI', nama: 'KODI' },
-                { id: 'GROSS', nama: 'GROSS' },
-                { id: 'KG', nama: 'KG' },
-                { id: 'GR', nama: 'GR' },
-                { id: 'LITER', nama: 'LITER' },
-                { id: 'ML', nama: 'ML' },
-                { id: 'METER', nama: 'METER' },
-                { id: 'CM', nama: 'CM' }
+            units = [{
+                    id: 'PCS',
+                    nama: 'PCS'
+                },
+                {
+                    id: 'BOX',
+                    nama: 'BOX'
+                },
+                {
+                    id: 'PACK',
+                    nama: 'PACK'
+                },
+                {
+                    id: 'LUSIN',
+                    nama: 'LUSIN'
+                },
+                {
+                    id: 'KODI',
+                    nama: 'KODI'
+                },
+                {
+                    id: 'GROSS',
+                    nama: 'GROSS'
+                },
+                {
+                    id: 'KG',
+                    nama: 'KG'
+                },
+                {
+                    id: 'GR',
+                    nama: 'GR'
+                },
+                {
+                    id: 'LITER',
+                    nama: 'LITER'
+                },
+                {
+                    id: 'ML',
+                    nama: 'ML'
+                },
+                {
+                    id: 'METER',
+                    nama: 'METER'
+                },
+                {
+                    id: 'CM',
+                    nama: 'CM'
+                }
             ];
-            
+
         } catch (error) {
             console.error('Error loading data:', error);
             // Set empty arrays as fallback
             suppliers = [];
             brands = [];
             categories = [];
-            units = [
-                { id: 'PCS', nama: 'PCS' },
-                { id: 'BOX', nama: 'BOX' },
-                { id: 'PACK', nama: 'PACK' },
-                { id: 'LUSIN', nama: 'LUSIN' },
-                { id: 'KODI', nama: 'KODI' },
-                { id: 'GROSS', nama: 'GROSS' },
-                { id: 'KG', nama: 'KG' },
-                { id: 'GR', nama: 'GR' },
-                { id: 'LITER', nama: 'LITER' },
-                { id: 'ML', nama: 'ML' },
-                { id: 'METER', nama: 'METER' },
-                { id: 'CM', nama: 'CM' }
+            units = [{
+                    id: 'PCS',
+                    nama: 'PCS'
+                },
+                {
+                    id: 'BOX',
+                    nama: 'BOX'
+                },
+                {
+                    id: 'PACK',
+                    nama: 'PACK'
+                },
+                {
+                    id: 'LUSIN',
+                    nama: 'LUSIN'
+                },
+                {
+                    id: 'KODI',
+                    nama: 'KODI'
+                },
+                {
+                    id: 'GROSS',
+                    nama: 'GROSS'
+                },
+                {
+                    id: 'KG',
+                    nama: 'KG'
+                },
+                {
+                    id: 'GR',
+                    nama: 'GR'
+                },
+                {
+                    id: 'LITER',
+                    nama: 'LITER'
+                },
+                {
+                    id: 'ML',
+                    nama: 'ML'
+                },
+                {
+                    id: 'METER',
+                    nama: 'METER'
+                },
+                {
+                    id: 'CM',
+                    nama: 'CM'
+                }
             ];
             coas = [];
         }
@@ -249,96 +386,50 @@
     function addProductRow() {
         productRowCount++;
         const currentRowId = productRowCount;
-        
-        console.log('Adding row with data:', {
-            suppliers: suppliers.length,
-            brands: brands.length,
-            categories: categories.length,
-            units: units.length,
-            coas: coas.length
-        });
-        
-        const tbody = document.getElementById('massalProductBody');
-        const row = document.createElement('tr');
+
+        const template = document.getElementById('massal-row-template');
+        const clone = template.content.cloneNode(true);
+        const row = clone.querySelector('tr');
         row.id = `product-row-${productRowCount}`;
-        
-        // Helper function to safely map arrays
-        function safeMap(array, getValue) {
-            if (!Array.isArray(array)) {
-                console.log('Array is not valid:', array);
-                return '';
-            }
-            return array.map(getValue).join('');
+
+        // Set row number sequentially based on current rows
+        const currentRows = document.querySelectorAll('#massalProductBody tr').length;
+        row.querySelector('.row-number').textContent = currentRows + 1;
+
+        // Helper to add row-specific classes for targeting by TomSelect and other logic
+        const setupField = (selector, className) => {
+            const el = row.querySelector(selector);
+            if (el) el.classList.add(`${className}-${productRowCount}`);
+        };
+
+        setupField('.in-sku', 'in-sku');
+        setupField('.in-supplier', 'in-supplier');
+        setupField('.in-brand', 'in-brand');
+        setupField('.in-nama', 'in-nama');
+        setupField('.in-kategori', 'in-kategori');
+        setupField('.in-kemasan', 'in-kemasan');
+        setupField('.in-unit', 'in-unit');
+        setupField('.in-qty', 'in-qty');
+        setupField('.in-beli', 'in-beli');
+        setupField('.in-jual', 'in-jual');
+        setupField('.in-tempo', 'in-tempo');
+        setupField('.in-coa', 'in-coa');
+
+        // Setup delete button
+        const delBtn = row.querySelector('.btn-premium-delete');
+        if (delBtn) {
+            delBtn.onclick = () => removeProductRow(currentRowId);
         }
 
-        row.innerHTML = `
-            <td class="text-center align-middle">
-                <span class="row-number">${productRowCount}</span>
-            </td>
-            <td>
-                <input type="text" class="form-control form-control-sm in-sku-${productRowCount}" placeholder="Auto generate" disabled>
-            </td>
-            <td>
-                <select class="form-select form-select-sm in-supplier-${productRowCount}">
-                    <option value="">-- Pilih --</option>
-                    ${safeMap(suppliers, s => `<option value="${s.id}">${s.nama}</option>`)}
-                </select>
-            </td>
-            <td>
-                <select class="form-select form-select-sm in-brand-${productRowCount}">
-                    <option value="">-- Pilih --</option>
-                    ${safeMap(brands, b => `<option value="${b.id}">${b.nama_brand || b.nama}</option>`)}
-                </select>
-            </td>
-            <td>
-                <input type="text" class="form-control form-control-sm required-field in-nama-${productRowCount}" placeholder="Nama produk wajib diisi">
-            </td>
-            <td>
-                <select class="form-select form-select-sm in-kategori-${productRowCount}">
-                    <option value="">-- Pilih --</option>
-                    ${safeMap(categories, c => `<option value="${c.id}">${c.nama_kategori || c.nama}</option>`)}
-                </select>
-            </td>
-            <td>
-                <input type="text" class="form-control form-control-sm in-kemasan-${productRowCount}" placeholder="Contoh: Box, Botol">
-            </td>
-            <td>
-                <select class="form-select form-select-sm in-unit-${productRowCount}">
-                    <option value="">-- Pilih --</option>
-                    ${safeMap(units, u => `<option value="${u.id}">${u.nama}</option>`)}
-                </select>
-            </td>
-            <td>
-                <input type="number" class="form-control form-control-sm in-qty-${productRowCount}" placeholder="0" value="0" min="0">
-            </td>
-            <td>
-                <input type="text" class="form-control form-control-sm in-beli-${productRowCount}" placeholder="0" value="0">
-            </td>
-            <td>
-                <input type="text" class="form-control form-control-sm in-jual-${productRowCount}" placeholder="0" value="0">
-            </td>
-            <td>
-                <input type="text" class="form-control form-control-sm in-tempo-${productRowCount}" placeholder="0" value="0">
-            </td>
-            <td>
-                <select class="form-select form-select-sm in-coa-${productRowCount}">
-                    <option value="">-- Pilih --</option>
-                    ${safeMap(coas, c => `<option value="${c.id}">${c.nama_akun || c.nama}</option>`)}
-                </select>
-            </td>
-            <td class="text-center align-middle">
-                <button type="button" class="btn-premium btn-premium-delete" onclick="removeProductRow(${productRowCount})" title="Hapus Baris">
-                    <i class="fa fa-times"></i>
-                </button>
-            </td>
-        `;
+        const tbody = document.getElementById('massalProductBody');
+        tbody.appendChild(row);
 
         // Initialize TomSelect for dropdowns like the existing system
         setTimeout(() => {
             try {
                 // Use the row variable that's still in scope
                 const currentRow = row;
-                
+
                 // Initialize supplier dropdown
                 const supplierSelect = currentRow.querySelector(`.in-supplier-${currentRowId}`);
                 if (supplierSelect && typeof TomSelect !== 'undefined') {
@@ -361,35 +452,48 @@
                         searchField: 'nama_brand',
                         options: brands,
                         create: async function(input, callback) {
-                            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-                            const supplierSelect = currentRow.querySelector(`.in-supplier-${currentRowId}`);
-                            const supplierId = supplierSelect && supplierSelect.tomselect ? supplierSelect.tomselect.getValue() : null;
+                            const token = document.querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute('content') || '';
+                            const supplierSelect = currentRow.querySelector(
+                                `.in-supplier-${currentRowId}`);
+                            const supplierId = supplierSelect && supplierSelect.tomselect ?
+                                supplierSelect.tomselect.getValue() : null;
 
                             try {
-                                const res = await fetch('{{ route("brand-api.index") }}', {
+                                const res = await fetch('{{ route('brand-api.index') }}', {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',
                                         'Accept': 'application/json',
                                         'X-CSRF-TOKEN': token
                                     },
-                                    body: JSON.stringify({ nama_brand: input, supplier_ids: [supplierId] })
+                                    body: JSON.stringify({
+                                        nama_brand: input,
+                                        supplier_ids: [supplierId]
+                                    })
                                 });
                                 const data = await res.json();
                                 if (data.status === 'success' || data.success) {
                                     // Add to local brands array
                                     brands.push(data.data);
                                     // Also add to global masterBrands if available
-                                    if (typeof masterBrands !== 'undefined') masterBrands.push(data.data);
-                                    
+                                    if (typeof masterBrands !== 'undefined') masterBrands.push(data
+                                        .data);
+
                                     // Sync all brand TomSelect instances
                                     brandTsInstances.forEach(ts => {
                                         if (ts) {
-                                            ts.addOption({ id: data.data.id, nama_brand: data.data.nama_brand });
+                                            ts.addOption({
+                                                id: data.data.id,
+                                                nama_brand: data.data.nama_brand
+                                            });
                                         }
                                     });
 
-                                    callback({ id: data.data.id, nama_brand: data.data.nama_brand });
+                                    callback({
+                                        id: data.data.id,
+                                        nama_brand: data.data.nama_brand
+                                    });
                                 } else {
                                     alert(data.message || 'Gagal memproses brand');
                                     callback(false);
@@ -414,32 +518,44 @@
                         searchField: 'nama_kategori',
                         options: categories,
                         create: async function(input, callback) {
-                            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                            const token = document.querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute('content') || '';
                             try {
-                                const res = await fetch('{{ route("product-category-api.index") }}', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'Accept': 'application/json',
-                                        'X-CSRF-TOKEN': token
-                                    },
-                                    body: JSON.stringify({ nama_kategori: input })
-                                });
+                                const res = await fetch(
+                                    '{{ route('product-category-api.index') }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Accept': 'application/json',
+                                            'X-CSRF-TOKEN': token
+                                        },
+                                        body: JSON.stringify({
+                                            nama_kategori: input
+                                        })
+                                    });
                                 const data = await res.json();
                                 if (data.success) {
                                     // Add to local categories array
                                     categories.push(data.data);
                                     // Also add to global masterCategories if available
-                                    if (typeof masterCategories !== 'undefined') masterCategories.push(data.data);
+                                    if (typeof masterCategories !== 'undefined') masterCategories
+                                        .push(data.data);
 
                                     // Sync all category TomSelect instances
                                     categoryTsInstances.forEach(ts => {
                                         if (ts) {
-                                            ts.addOption({ id: data.data.id, nama_kategori: data.data.nama_kategori });
+                                            ts.addOption({
+                                                id: data.data.id,
+                                                nama_kategori: data.data
+                                                    .nama_kategori
+                                            });
                                         }
                                     });
 
-                                    callback({ id: data.data.id, nama_kategori: data.data.nama_kategori });
+                                    callback({
+                                        id: data.data.id,
+                                        nama_kategori: data.data.nama_kategori
+                                    });
                                 } else {
                                     alert(data.message || 'Gagal memproses kategori');
                                     callback(false);
@@ -508,7 +624,7 @@
                 console.log('TomSelect initialization error:', error);
             }
         }, 100);
-        
+
         tbody.appendChild(row);
         updateRowCount();
         updateEmptyState();
@@ -525,7 +641,7 @@
                 if (idx !== -1) brandTsInstances.splice(idx, 1);
                 brandSelect.tomselect.destroy();
             }
-            
+
             const categorySelect = row.querySelector(`[class*="in-kategori-"]`);
             if (categorySelect && categorySelect.tomselect) {
                 const idx = categoryTsInstances.indexOf(categorySelect.tomselect);
@@ -534,18 +650,31 @@
             }
 
             row.remove();
+            reindexRows();
             updateRowCount();
             updateEmptyState();
         }
     }
 
+    // Re-index row numbers
+    function reindexRows() {
+        const rows = document.querySelectorAll('#massalProductBody tr');
+        rows.forEach((row, index) => {
+            const rowNumberSpan = row.querySelector('.row-number');
+            if (rowNumberSpan) {
+                rowNumberSpan.textContent = index + 1;
+            }
+        });
+    }
+
     // Clear all rows
     async function clearAllRows(force = false) {
         if (!force) {
-            const confirmed = await macConfirm('Hapus Semua Baris', 'Apakah Anda yakin ingin menghapus semua baris? Semua data yang belum disimpan akan hilang.', {
-                confirmText: 'Hapus Semua',
-                confirmType: 'danger'
-            });
+            const confirmed = await macConfirm('Hapus Semua Baris',
+                'Apakah Anda yakin ingin menghapus semua baris? Semua data yang belum disimpan akan hilang.', {
+                    confirmText: 'Hapus Semua',
+                    confirmType: 'danger'
+                });
             if (!confirmed) return;
         }
 
@@ -568,7 +697,7 @@
         const rows = document.querySelectorAll('#massalProductBody tr').length;
         const emptyState = document.getElementById('emptyState');
         const table = document.querySelector('.table-responsive');
-        
+
         if (rows === 0) {
             emptyState.style.display = 'block';
             table.style.display = 'none';
@@ -587,7 +716,7 @@
         // Collect data from all rows using same logic as existing system
         rows.forEach((row, index) => {
             const rowId = row.id.replace('product-row-', '');
-            
+
             // Get values using the same selectors as existing system
             const skuInput = row.querySelector(`.in-sku-${rowId}`);
             const namaInput = row.querySelector(`.in-nama-${rowId}`);
@@ -610,7 +739,7 @@
             };
 
             const nama = namaInput ? namaInput.value.trim() : '';
-            
+
             if (!nama) {
                 hasError = true;
                 if (namaInput) namaInput.classList.add('is-invalid');
@@ -703,13 +832,16 @@
                 saveBtn.disabled = true;
             }
 
-            const response = await fetch('{{ route("product-api.bulk-store") }}', {
+            const response = await fetch('{{ route('product-api.bulk-store') }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                        'content')
                 },
-                body: JSON.stringify({ products })
+                body: JSON.stringify({
+                    products
+                })
             });
 
             const result = await response.json();
@@ -719,7 +851,7 @@
                 const modalEl = document.getElementById('modalProdukMassal');
                 const modal = bootstrap.Modal.getInstance(modalEl);
                 if (modal) modal.hide();
-                
+
                 clearAllRows(true);
                 // Refresh product table
                 if (typeof loadProductData === 'function') {
@@ -750,7 +882,7 @@
         // Show modal immediately
         const modal = new bootstrap.Modal(document.getElementById('modalProdukMassal'));
         modal.show();
-        
+
         // Initialize data in background
         initializeMassalModal().then(() => {
             console.log('Data loaded successfully');
@@ -768,3 +900,4 @@
         updateEmptyState();
     });
 </script>
+@include('Barang.Modal._RowTemplate')

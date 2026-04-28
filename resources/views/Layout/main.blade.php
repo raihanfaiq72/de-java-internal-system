@@ -31,10 +31,10 @@
             --dr-bg: #ffffff;
             --dr-card-bg: #ffffff;
             --dr-panel-soft: #f9fafb;
-            --dr-text: #181818;
-            --dr-text-muted: #8f8a83;
-            --dr-line: #f0f0f0;
-            --dr-line-strong: #e5e5e5;
+            --dr-text: #111111;
+            --dr-text-muted: #666666;
+            --dr-line: #e5e5e5;
+            --dr-line-strong: #d1d1d1;
             --dr-radius: 12px;
             --dr-radius-sm: 8px;
             --dr-shadow: 0 22px 50px rgba(34, 28, 21, 0.08);

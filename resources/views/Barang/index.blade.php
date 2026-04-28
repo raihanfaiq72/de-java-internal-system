@@ -10,8 +10,10 @@
                         <h1 class="dr-card-title fs-3 mb-1">Manajemen Barang</h1>
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0" style="background: transparent; padding: 0;">
-                                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-muted text-decoration-none">Dashboard</a></li>
-                                <li class="breadcrumb-item active fw-bold text-primary" aria-current="page">Inventaris Barang</li>
+                                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}"
+                                        class="text-muted text-decoration-none">Dashboard</a></li>
+                                <li class="breadcrumb-item active fw-bold text-primary" aria-current="page">Inventaris
+                                    Barang</li>
                             </ol>
                         </nav>
                     </div>
@@ -21,18 +23,19 @@
                 </div>
 
                 <div class="dr-card p-0 overflow-hidden">
-                    <div class="dr-card-header border-bottom px-4 pt-4 pb-0 bg-light-subtle">
+                    <div class="dr-card-header border-bottom pt-2 pb-0 bg-light-subtle">
                         <ul class="nav nav-tabs border-0" id="barangTab" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link active fw-bold px-4 py-3 border-0 border-bottom border-3" 
-                                    id="produk-tab" data-bs-toggle="tab" data-bs-target="#tab-produk" type="button" role="tab">
+                                <button class="nav-link active fw-bold px-4 py-3 border-0 border-bottom border-3"
+                                    id="produk-tab" data-bs-toggle="tab" data-bs-target="#tab-produk" type="button"
+                                    role="tab">
                                     <i class="iconoir-box-iso me-2"></i> Daftar Produk
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link fw-bold px-4 py-3 border-0 border-bottom border-3" 
-                                    id="brand-tab" data-bs-toggle="tab" data-bs-target="#tab-brand" type="button" role="tab">
-                                    <i class="iconoir-tag me-2"></i> Brand & Merk
+                                <button class="nav-link fw-bold px-4 py-3 border-0 border-bottom border-3" id="brand-tab"
+                                    data-bs-toggle="tab" data-bs-target="#tab-brand" type="button" role="tab">
+                                    <i class="iconoir-book me-2"></i> Brand & Merk
                                 </button>
                             </li>
                         </ul>
@@ -65,10 +68,12 @@
             font-size: 14px;
             transition: all 0.2s ease;
         }
+
         .nav-tabs .nav-link:hover {
             color: var(--dr-primary);
             background: rgba(0, 122, 255, 0.05);
         }
+
         .nav-tabs .nav-link.active {
             color: var(--dr-primary) !important;
             border-color: var(--dr-primary) !important;
@@ -86,7 +91,9 @@
             height: 100%;
             z-index: 10;
         }
-        .resizer:hover, .resizing {
+
+        .resizer:hover,
+        .resizing {
             border-right: 3px solid var(--dr-primary);
         }
     </style>
@@ -209,7 +216,7 @@
 
             if (typeof loadProductData === 'function') {
                 await loadProductData();
-                
+
                 // Initialize Excel-like Resizable Columns
                 if (typeof initResizableTable === 'function') {
                     initResizableTable();
@@ -225,16 +232,17 @@
                 if (supplierFilter && masterSuppliers.length > 0) {
                     supplierFilter.innerHTML = '<option value="">Semua Supplier</option>';
                     masterSuppliers.forEach(supplier => {
-                        supplierFilter.innerHTML += `<option value="${supplier.id}">${supplier.nama}</option>`;
+                        supplierFilter.innerHTML +=
+                            `<option value="${supplier.id}">${supplier.nama}</option>`;
                     });
-                    
+
                     window.tsProductSupplierFilter = new TomSelect(supplierFilter, {
                         create: false,
                         allowEmptyOption: true,
                         placeholder: 'Semua Supplier',
                         dropdownParent: 'body',
                         onChange: function() {
-                            if(typeof loadProductData === 'function') loadProductData();
+                            if (typeof loadProductData === 'function') loadProductData();
                         }
                     });
                 }
@@ -243,16 +251,17 @@
                 if (brandFilter && masterBrands.length > 0) {
                     brandFilter.innerHTML = '<option value="">Semua Brand</option>';
                     masterBrands.forEach(brand => {
-                        brandFilter.innerHTML += `<option value="${brand.id}">${brand.nama_brand}</option>`;
+                        brandFilter.innerHTML +=
+                            `<option value="${brand.id}">${brand.nama_brand}</option>`;
                     });
-                    
+
                     window.tsProductBrandFilter = new TomSelect(brandFilter, {
                         create: false,
                         allowEmptyOption: true,
                         placeholder: 'Semua Brand',
                         dropdownParent: 'body',
                         onChange: function() {
-                            if(typeof loadProductData === 'function') loadProductData();
+                            if (typeof loadProductData === 'function') loadProductData();
                         }
                     });
                 }
@@ -261,16 +270,17 @@
                 if (kategoriFilter && masterCategories.length > 0) {
                     kategoriFilter.innerHTML = '<option value="">Semua Kategori</option>';
                     masterCategories.forEach(kategori => {
-                        kategoriFilter.innerHTML += `<option value="${kategori.id}">${kategori.nama_kategori}</option>`;
+                        kategoriFilter.innerHTML +=
+                            `<option value="${kategori.id}">${kategori.nama_kategori}</option>`;
                     });
-                    
+
                     window.tsProductKategoriFilter = new TomSelect(kategoriFilter, {
                         create: false,
                         allowEmptyOption: true,
                         placeholder: 'Semua Kategori',
                         dropdownParent: 'body',
                         onChange: function() {
-                            if(typeof loadProductData === 'function') loadProductData();
+                            if (typeof loadProductData === 'function') loadProductData();
                         }
                     });
                 }

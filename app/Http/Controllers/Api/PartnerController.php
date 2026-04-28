@@ -69,6 +69,10 @@ class PartnerController extends Controller
     public function store(Request $request)
     {
         try {
+            if ($request->salesperson_id === '0') {
+                $request->merge(['salesperson_id' => null]);
+            }
+
             $validator = Validator::make($request->all(), [
                 'nama' => 'required|string|max:150',
                 'tipe_mitra' => 'required|in:Supplier,Client,Both',
@@ -108,6 +112,10 @@ class PartnerController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            if ($request->salesperson_id === '0') {
+                $request->merge(['salesperson_id' => null]);
+            }
+
             $partner = Partner::find($id);
 
             if (! $partner) {
@@ -249,7 +257,7 @@ class PartnerController extends Controller
         $prefix = 'M-'.date('ym').'-';
 
         $lastMitra = Partner::withTrashed()->where('nomor_mitra', 'LIKE', $prefix.'%')
-            ->orderBy('id', 'desc')
+            ->orderBy('nomor_mitra', 'desc')
             ->first();
 
         $nextNumber = 1;

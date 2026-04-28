@@ -45,21 +45,30 @@
     </div>
 
     <!-- Enhanced Data Table -->
-    <div class="dr-table-container mb-4">
-        <table class="dr-table align-middle">
+    <div class="dr-table-container mb-4" style="overflow-x: auto;">
+        <table class="dr-table align-middle" style="min-width: 1400px;">
             <thead>
                 <tr>
-                    <th width="120" class="ps-4" style="cursor: pointer;" onclick="toggleSort('sku_kode')">SKU <span id="sort-icon-sku_kode"></span></th>
+                    <th width="120" class="ps-4" style="cursor: pointer;" onclick="toggleSort('sku_kode')">SKU
+                        <span id="sort-icon-sku_kode"></span>
+                    </th>
                     <th>Supplier</th>
                     <th>Brand</th>
-                    <th style="cursor: pointer;" onclick="toggleSort('nama_produk')">Nama Produk <span id="sort-icon-nama_produk"></span></th>
+                    <th style="cursor: pointer;" onclick="toggleSort('nama_produk')">Nama Produk <span
+                            id="sort-icon-nama_produk"></span></th>
                     <th>Kategori</th>
-                    <th class="text-center" style="cursor: pointer;" onclick="toggleSort('kemasan')">Kemasan <span id="sort-icon-kemasan"></span></th>
-                    <th class="text-center" style="cursor: pointer;" onclick="toggleSort('satuan')">Satuan <span id="sort-icon-satuan"></span></th>
-                    <th class="text-center" style="cursor: pointer;" onclick="toggleSort('qty')">Qty <span id="sort-icon-qty"></span></th>
-                    <th class="text-end" style="cursor: pointer;" onclick="toggleSort('harga_beli')">Harga Beli <span id="sort-icon-harga_beli"></span></th>
-                    <th class="text-end" style="cursor: pointer;" onclick="toggleSort('harga_jual')">Harga Jual <span id="sort-icon-harga_jual"></span></th>
-                    <th class="text-end" style="cursor: pointer;" onclick="toggleSort('harga_tempo')">Harga Tempo <span id="sort-icon-harga_tempo"></span></th>
+                    <th class="text-center" style="cursor: pointer;" onclick="toggleSort('kemasan')">Kemasan <span
+                            id="sort-icon-kemasan"></span></th>
+                    <th class="text-center" style="cursor: pointer;" onclick="toggleSort('satuan')">Satuan <span
+                            id="sort-icon-satuan"></span></th>
+                    <th class="text-center" style="cursor: pointer;" onclick="toggleSort('qty')">Qty <span
+                            id="sort-icon-qty"></span></th>
+                    <th class="text-end" style="cursor: pointer;" onclick="toggleSort('harga_beli')">Harga Beli <span
+                            id="sort-icon-harga_beli"></span></th>
+                    <th class="text-end" style="cursor: pointer;" onclick="toggleSort('harga_jual')">Harga Jual <span
+                            id="sort-icon-harga_jual"></span></th>
+                    <th class="text-end" style="cursor: pointer;" onclick="toggleSort('harga_tempo')">Harga Tempo <span
+                            id="sort-icon-harga_tempo"></span></th>
                     <th>COA</th>
                     <th width="60" class="text-center pe-4">Aksi</th>
                 </tr>
@@ -102,19 +111,25 @@
         <td class="col-coa text-start"></td>
         <td class="text-center pe-4">
             <div class="dropdown">
-                <button class="dr-btn dr-btn-outline p-2 shadow-none border-0 bg-light-subtle dropdown-toggle no-caret" data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="dr-btn dr-btn-outline p-2 shadow-none border-0 bg-light-subtle dropdown-toggle no-caret"
+                    data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="iconoir-more-vert fs-5"></i>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-2" style="border-radius: 12px; min-width: 160px;">
+                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-2"
+                    style="border-radius: 12px; min-width: 160px;">
                     <li>
-                        <a class="dropdown-item btn-edit d-flex align-items-center gap-2 py-2 px-3 rounded-2" href="javascript:void(0)">
-                            <i class="iconoir-edit-pencil text-warning"></i> 
+                        <a class="dropdown-item btn-edit d-flex align-items-center gap-2 py-2 px-3 rounded-2"
+                            href="javascript:void(0)">
+                            <i class="iconoir-edit-pencil text-warning"></i>
                             <span class="fw-semibold" style="font-size: 13px;">Edit Produk</span>
                         </a>
                     </li>
-                    <li><hr class="dropdown-divider opacity-50"></li>
                     <li>
-                        <a class="dropdown-item text-danger btn-delete d-flex align-items-center gap-2 py-2 px-3 rounded-2" href="javascript:void(0)">
+                        <hr class="dropdown-divider opacity-50">
+                    </li>
+                    <li>
+                        <a class="dropdown-item text-danger btn-delete d-flex align-items-center gap-2 py-2 px-3 rounded-2"
+                            href="javascript:void(0)">
                             <i class="iconoir-trash"></i>
                             <span class="fw-semibold" style="font-size: 13px;">Hapus Produk</span>
                         </a>
@@ -161,14 +176,14 @@
         function initResizableTable() {
             const table = document.querySelector('.table');
             const cols = table.querySelectorAll('th');
-            
+
             cols.forEach((col) => {
                 // Add resizer element if not exists
                 if (!col.querySelector('.resizer')) {
                     const resizer = document.createElement('div');
                     resizer.classList.add('resizer');
                     col.appendChild(resizer);
-                    
+
                     createResizableColumn(col, resizer);
                 }
             });
@@ -249,9 +264,9 @@
 
         function resetFilterProduk() {
             document.getElementById('filter-produk-search').value = '';
-            if(window.tsProductSupplierFilter) window.tsProductSupplierFilter.clear();
-            if(window.tsProductBrandFilter) window.tsProductBrandFilter.clear();
-            if(window.tsProductKategoriFilter) window.tsProductKategoriFilter.clear();
+            if (window.tsProductSupplierFilter) window.tsProductSupplierFilter.clear();
+            if (window.tsProductBrandFilter) window.tsProductBrandFilter.clear();
+            if (window.tsProductKategoriFilter) window.tsProductKategoriFilter.clear();
             pCurrentSort = 'created_at';
             pCurrentDir = 'desc';
             updateSortIcons();
@@ -304,15 +319,21 @@
 
         async function editProduk(id) {
             document.getElementById('edit-produk-id').value = id;
-            
+
             const inBeli = document.getElementById('edit-produk-beli');
             const inJual = document.getElementById('edit-produk-jual');
             const inTempo = document.getElementById('edit-produk-tempo');
 
-            if(!inBeli.hasAttribute('data-listener')) {
-                inBeli.addEventListener('input', function() { formatRupiahInput(this); });
-                inJual.addEventListener('input', function() { formatRupiahInput(this); });
-                inTempo.addEventListener('input', function() { formatRupiahInput(this); });
+            if (!inBeli.hasAttribute('data-listener')) {
+                inBeli.addEventListener('input', function() {
+                    formatRupiahInput(this);
+                });
+                inJual.addEventListener('input', function() {
+                    formatRupiahInput(this);
+                });
+                inTempo.addEventListener('input', function() {
+                    formatRupiahInput(this);
+                });
                 inBeli.setAttribute('data-listener', 'true');
             }
 
@@ -328,29 +349,33 @@
                 document.getElementById('edit-produk-kemasan').value = item.kemasan || '';
                 document.getElementById('edit-produk-satuan').value = item.satuan || '';
                 document.getElementById('edit-produk-qty').value = item.qty || 0;
-                
+
                 inBeli.value = item.harga_beli || 0;
                 inJual.value = item.harga_jual || 0;
                 inTempo.value = item.harga_tempo || 0;
-                
+
                 formatRupiahInput(inBeli);
                 formatRupiahInput(inJual);
                 formatRupiahInput(inTempo);
 
-                if(tsEditSupplier) tsEditSupplier.destroy();
-                if(tsEditBrand) tsEditBrand.destroy();
-                if(tsEditKategori) tsEditKategori.destroy();
-                if(tsEditCOA) tsEditCOA.destroy();
+                if (tsEditSupplier) tsEditSupplier.destroy();
+                if (tsEditBrand) tsEditBrand.destroy();
+                if (tsEditKategori) tsEditKategori.destroy();
+                if (tsEditCOA) tsEditCOA.destroy();
 
                 tsEditBrand = new TomSelect('#edit-produk-brand', {
                     valueField: 'value',
                     labelField: 'text',
                     searchField: 'text',
-                    options: masterBrands.map(b => ({ value: b.id, text: b.nama_brand })),
+                    options: masterBrands.map(b => ({
+                        value: b.id,
+                        text: b.nama_brand
+                    })),
                     placeholder: 'Pilih Brand...',
                     dropdownParent: 'body',
                     create: async function(input, callback) {
-                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute(
+                            'content') || '';
                         const supplierId = tsEditSupplier ? tsEditSupplier.getValue() : null;
 
                         try {
@@ -361,12 +386,18 @@
                                     'Accept': 'application/json',
                                     'X-CSRF-TOKEN': token
                                 },
-                                body: JSON.stringify({ nama_brand: input, supplier_ids: [supplierId] })
+                                body: JSON.stringify({
+                                    nama_brand: input,
+                                    supplier_ids: [supplierId]
+                                })
                             });
                             const data = await res.json();
                             if (data.status === 'success' || data.success) {
                                 masterBrands.push(data.data);
-                                callback({ value: data.data.id, text: data.data.nama_brand });
+                                callback({
+                                    value: data.data.id,
+                                    text: data.data.nama_brand
+                                });
                             } else {
                                 alert(data.message || 'Gagal memproses brand');
                                 callback(false);
@@ -382,14 +413,20 @@
                     valueField: 'value',
                     labelField: 'text',
                     searchField: 'text',
-                    options: masterSuppliers.map(s => ({ value: s.id, text: s.nama })),
+                    options: masterSuppliers.map(s => ({
+                        value: s.id,
+                        text: s.nama
+                    })),
                     placeholder: 'Pilih Supplier...',
                     dropdownParent: 'body',
                     onChange: function(supplierId) {
                         if (!tsEditBrand) return;
                         tsEditBrand.clear();
                         tsEditBrand.clearOptions();
-                        const options = masterBrands.map(b => ({ value: b.id, text: b.nama_brand }));
+                        const options = masterBrands.map(b => ({
+                            value: b.id,
+                            text: b.nama_brand
+                        }));
                         tsEditBrand.addOptions(options);
                         tsEditBrand.refreshOptions(false);
                     }
@@ -399,11 +436,15 @@
                     valueField: 'value',
                     labelField: 'text',
                     searchField: 'text',
-                    options: masterCategories.map(c => ({ value: c.id, text: c.nama_kategori })),
+                    options: masterCategories.map(c => ({
+                        value: c.id,
+                        text: c.nama_kategori
+                    })),
                     placeholder: 'Pilih Kategori...',
                     dropdownParent: 'body',
                     create: async function(input, callback) {
-                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute(
+                            'content') || '';
                         try {
                             const res = await fetch(CATEGORY_URL, {
                                 method: 'POST',
@@ -412,12 +453,17 @@
                                     'Accept': 'application/json',
                                     'X-CSRF-TOKEN': token
                                 },
-                                body: JSON.stringify({ nama_kategori: input })
+                                body: JSON.stringify({
+                                    nama_kategori: input
+                                })
                             });
                             const data = await res.json();
                             if (data.success) {
                                 masterCategories.push(data.data);
-                                callback({ value: data.data.id, text: data.data.nama_kategori });
+                                callback({
+                                    value: data.data.id,
+                                    text: data.data.nama_kategori
+                                });
                             } else {
                                 alert(data.message || 'Gagal memproses kategori');
                                 callback(false);
@@ -433,7 +479,10 @@
                     valueField: 'value',
                     labelField: 'text',
                     searchField: 'text',
-                    options: masterCOA.map(c => ({ value: c.id, text: c.nama_akun })),
+                    options: masterCOA.map(c => ({
+                        value: c.id,
+                        text: c.nama_akun
+                    })),
                     placeholder: 'Pilih COA...',
                     dropdownParent: 'body'
                 });
@@ -479,11 +528,36 @@
                 coa_id: coaId,
             };
 
-            if (!payload.nama_produk) { alert('Nama produk wajib diisi'); btn.disabled = false; btn.innerHTML = 'Simpan Perubahan'; return; }
-            if (!payload.supplier_id) { alert('Supplier wajib dipilih'); btn.disabled = false; btn.innerHTML = 'Simpan Perubahan'; return; }
-            if (!payload.brand_id) { alert('Brand wajib dipilih.'); btn.disabled = false; btn.innerHTML = 'Simpan Perubahan'; return; }
-            if (!payload.product_category_id) { alert('Kategori wajib dipilih'); btn.disabled = false; btn.innerHTML = 'Simpan Perubahan'; return; }
-            if (!payload.coa_id) { alert('COA wajib dipilih'); btn.disabled = false; btn.innerHTML = 'Simpan Perubahan'; return; }
+            if (!payload.nama_produk) {
+                alert('Nama produk wajib diisi');
+                btn.disabled = false;
+                btn.innerHTML = 'Simpan Perubahan';
+                return;
+            }
+            if (!payload.supplier_id) {
+                alert('Supplier wajib dipilih');
+                btn.disabled = false;
+                btn.innerHTML = 'Simpan Perubahan';
+                return;
+            }
+            if (!payload.brand_id) {
+                alert('Brand wajib dipilih.');
+                btn.disabled = false;
+                btn.innerHTML = 'Simpan Perubahan';
+                return;
+            }
+            if (!payload.product_category_id) {
+                alert('Kategori wajib dipilih');
+                btn.disabled = false;
+                btn.innerHTML = 'Simpan Perubahan';
+                return;
+            }
+            if (!payload.coa_id) {
+                alert('COA wajib dipilih');
+                btn.disabled = false;
+                btn.innerHTML = 'Simpan Perubahan';
+                return;
+            }
 
             try {
                 const saveRes = await fetch(`${PRODUCT_URL}/${id}`, {
@@ -491,7 +565,8 @@
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
+                            'content')
                     },
                     body: JSON.stringify(payload)
                 });
@@ -577,14 +652,14 @@
 
                 // Mengisi Konten Baris
                 clone.querySelector('.col-sku').textContent = item.sku_kode || '-';
-                
+
                 const supplierLabel = item.supplier?.nama || 'TANPA SUPLIER';
                 const brandLabel = item.brand?.nama_brand || 'TANPA BRAND';
-                
+
                 const supplierEl = clone.querySelector('.col-supplier');
                 supplierEl.textContent = supplierLabel;
                 if (!item.supplier) supplierEl.classList.add('text-faint');
-                
+
                 const brandEl = clone.querySelector('.col-brand');
                 brandEl.textContent = brandLabel;
                 if (!item.brand) brandEl.classList.add('text-faint');
@@ -595,8 +670,9 @@
                 clone.querySelector('.col-satuan').textContent = item.satuan || '-';
 
                 const qty = item.qty || 0;
-                if(qty < 10 && qty >= 0) {
-                    clone.querySelector('.col-qty').innerHTML = `<span class="badge bg-danger p-2" style="font-size: 13px;">${qty}</span>`;
+                if (qty < 10 && qty >= 0) {
+                    clone.querySelector('.col-qty').innerHTML =
+                        `<span class="badge bg-danger p-2" style="font-size: 13px;">${qty}</span>`;
                 } else {
                     clone.querySelector('.col-qty').textContent = qty;
                 }
