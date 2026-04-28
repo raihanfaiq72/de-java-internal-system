@@ -26,3 +26,23 @@
      display: inline-block !important;
      /* muncul DJ */
  }
+
+/* ===== Modal Backdrop ===== */
+
+/* Abu-abu semi-transparan, tanpa blur berlebihan */
+.modal-backdrop {
+    background-color: rgba(100, 100, 100, 0.55) !important;
+    opacity: 1 !important;
+}
+
+/* Smooth modal entrance */
+.modal.fade .modal-dialog {
+    transform: translateY(-10px) scale(0.99);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    opacity: 0;
+}
+
+.modal.show .modal-dialog {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
