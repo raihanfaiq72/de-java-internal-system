@@ -93,6 +93,11 @@ return [
         'id' => 'sidebarSales',
         'submenu' => [
             [
+                'title' => 'Surat Jalan',
+                'route' => 'surat-jalan',
+                'icon' => 'iconoir-truck',
+            ],
+            [
                 'title' => 'Invoice Penjualan',
                 'route' => 'sales',
                 'icon' => 'iconoir-coins',

@@ -140,6 +140,21 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::post('/invoice-create-api', [InvoiceController::class, 'createFullInvoice'])
         ->name('invoice.create-full-api');
 
+    // Surat Jalan API
+    Route::post('/surat-jalan-create-api', [\App\Http\Controllers\Api\SuratJalanController::class, 'createFullSuratJalan'])
+        ->name('surat-jalan.create-full-api');
+    Route::prefix('surat-jalan-api')
+        ->name('surat-jalan-api.')
+        ->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\SuratJalanController::class, 'apiIndex'])->name('index');
+            Route::get('/{id}', [\App\Http\Controllers\Api\SuratJalanController::class, 'apiShow'])->name('show');
+            Route::put('/{id}', [\App\Http\Controllers\Api\SuratJalanController::class, 'apiUpdate'])->name('update');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\SuratJalanController::class, 'apiDestroy'])->name('destroy');
+            Route::post('/{id}/restore', [\App\Http\Controllers\Api\SuratJalanController::class, 'apiRestore'])->name('restore');
+            Route::delete('/{id}/force-delete', [\App\Http\Controllers\Api\SuratJalanController::class, 'apiForceDestroy'])->name('force-delete');
+            Route::post('/{id}/convert-to-invoice', [\App\Http\Controllers\Api\SuratJalanController::class, 'convertToInvoice'])->name('convert-to-invoice');
+        });
+
     Route::prefix('invoice-api')
         ->name('invoice-api.')
         ->group(function () {
