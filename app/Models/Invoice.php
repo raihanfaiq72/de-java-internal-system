@@ -30,7 +30,6 @@ class Invoice extends Model
         'status_dok',
         'status_pembayaran',
         'status_perjalanan',
-        'stock_location_id',
         'subtotal',
         'total_diskon_item',
         'diskon_tambahan_nilai',

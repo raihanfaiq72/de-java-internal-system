@@ -468,62 +468,88 @@ class JournalService
         });
     }
 
-    /**
-     * Handle Return Invoice Journal
-     * Reverses the original sales invoice:
-     * Debit Retur Penjualan (4xxx), Credit Piutang Usaha (1301)
-     * Also reverse COGS: Debit Inventory, Credit HPP
-     */
     public function recordReturnInvoice(Invoice $returnInvoice)
     {
         $officeId = $returnInvoice->office_id;
 
-        $accAR      = $this->findAccount($officeId, '1301'); // Piutang Usaha
-        $accReturn  = $this->findAccount($officeId, '4103'); // Retur Penjualan
-        $accHPP     = $this->findAccount($officeId, '5101'); // HPP
+        $accAR = $this->findAccount($officeId, '1301'); // Piutang Usaha
+        $accReturn = $this->findAccount($officeId, '4103'); // Retur Penjualan
+        $accRevenue = $this->findAccount($officeId, '4101'); // Penjualan
+        $accHPP = $this->findAccount($officeId, '5101'); // HPP
         $accInventory = $this->findAccount($officeId, '1501'); // Persediaan
 
-        if (! $accAR || ! $accReturn) {
+        if (! $accAR || ! $accReturn || ! $accRevenue) {
             return;
         }
 
         $details = [];
 
-        // Debit Retur Penjualan
-        $details[] = [
-            'akun_id' => $accReturn->id,
-            'debit'   => $returnInvoice->total_akhir ?: 0,
-            'kredit'  => 0,
-        ];
-        // Credit AR
-        $details[] = [
-            'akun_id' => $accAR->id,
-            'debit'   => 0,
-            'kredit'  => $returnInvoice->total_akhir ?: 0,
-        ];
+        $originalInvoice = $returnInvoice->returnOf;
+        $originalTotal = $originalInvoice ? $originalInvoice->total_akhir : 0;
+        $returnTotal = $returnInvoice->total_akhir;
 
-        // Reverse COGS: Debit Inventory, Credit HPP
+        if ($returnTotal <= $originalTotal) {
+            // Normal Return: Debit Sales Return, Credit AR
+            $details[] = [
+                'akun_id' => $accReturn->id,
+                'debit' => $returnTotal ?: 0,
+                'kredit' => 0,
+            ];
+            $details[] = [
+                'akun_id' => $accAR->id,
+                'debit' => 0,
+                'kredit' => $returnTotal ?: 0,
+            ];
+        } else {
+            $details[] = [
+                'akun_id' => $accAR->id,
+                'debit' => $returnTotal ?: 0,
+                'kredit' => 0,
+            ];
+            $details[] = [
+                'akun_id' => $accRevenue->id,
+                'debit' => 0,
+                'kredit' => $returnTotal ?: 0,
+            ];
+        }
+
         $mutations = StockMutation::where('reference_id', $returnInvoice->id)
-            ->where('reference_type', 'Sales Return (Nota Return)')
+            ->whereIn('reference_type', ['Sales Return (Nota Return)', 'Sales Correction (Nota Return)'])
             ->get();
 
-        $totalCOGS = 0;
+        $totalCOGS_IN = 0;
+        $totalCOGS_OUT = 0;
         foreach ($mutations as $mut) {
             if ($mut->type === 'IN') {
-                $totalCOGS += ($mut->qty * $mut->cost_price);
+                $totalCOGS_IN += ($mut->qty * $mut->cost_price);
+            } else {
+                $totalCOGS_OUT += ($mut->qty * $mut->cost_price);
             }
         }
 
-        if ($totalCOGS > 0 && $accHPP && $accInventory) {
+        if ($totalCOGS_IN > 0 && $accHPP && $accInventory) {
             $details[] = [
                 'akun_id' => $accInventory->id,
-                'debit'   => $totalCOGS,
-                'kredit'  => 0,
+                'debit' => $totalCOGS_IN,
+                'kredit' => 0,
             ];
             $details[] = [
                 'akun_id' => $accHPP->id,
-                'debit'   => 0,
-                'kredit'  => $totalCOGS,
+                'debit' => 0,
+                'kredit' => $totalCOGS_IN,
+            ];
+        }
+
+        if ($totalCOGS_OUT > 0 && $accHPP && $accInventory) {
+            $details[] = [
+                'akun_id' => $accHPP->id,
+                'debit' => $totalCOGS_OUT,
+                'kredit' => 0,
+            ];
+            $details[] = [
+                'akun_id' => $accInventory->id,
+                'debit' => 0,
+                'kredit' => $totalCOGS_OUT,
             ];
         }
 

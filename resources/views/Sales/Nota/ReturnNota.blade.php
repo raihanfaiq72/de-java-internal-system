@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Nota Return Penjualan</title>
+    <title>Nota Return</title>
     <style>
         * {
             box-sizing: border-box;
@@ -44,17 +44,6 @@
             max-height: 80px;
         }
 
-        .return-banner {
-            text-align: center;
-            background: #000;
-            color: #fff;
-            font-size: 16px;
-            font-weight: bold;
-            letter-spacing: 3px;
-            padding: 4px 0;
-            margin-bottom: 6px;
-        }
-
         .header-info {
             display: flex;
             justify-content: space-between;
@@ -76,14 +65,16 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 0;
-            font-size: 13px;
+            font-size: 14px;
         }
 
         .main-table th,
         .main-table td {
             border: 2px solid #000;
-            padding: 1px;
+            padding: 0px 3px !important;
             font-weight: bold;
+            line-height: 1.0 !important;
+            /* Extremely tight */
         }
 
         .main-table tbody td {
@@ -91,7 +82,8 @@
             border-right: 2px solid #000;
             border-top: none !important;
             border-bottom: none !important;
-            padding: 0px !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
         }
 
         .main-table tbody tr:last-child td {
@@ -102,63 +94,36 @@
             text-transform: uppercase;
         }
 
-        .text-left   { text-align: left !important; }
-        .text-right  { text-align: right !important; }
-        .text-center { text-align: center !important; }
-
-        .footer-wrapper {
-            display: flex;
-            width: 100%;
-            margin-top: -2px;
+        .text-left {
+            text-align: left !important;
         }
 
-        .footer-left {
-            width: 68%;
-            padding: 5px 0;
+        .text-right {
+            text-align: right !important;
+        }
+
+        .text-center {
+            text-align: center !important;
+        }
+
+        .total-footer {
+            font-size: 18px !important;
+        }
+
+        .signature-section {
             display: flex;
-            flex-direction: column;
             justify-content: space-between;
+            margin-top: 15px;
+            text-align: center;
         }
 
-        .footer-right {
-            width: 32%;
-            margin-left: -2px;
+        .sig-box {
+            width: 22%;
+            font-size: 12px;
         }
 
-        .total-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .total-table td {
-            padding: 0px 5px !important;
-            border: 2px solid #000;
-            font-weight: bold;
-            font-size: 11px;
-        }
-
-        .total-table tr td {
-            border-top: none !important;
-            border-bottom: none !important;
-        }
-
-        .total-table td:first-child { border-right: none !important; }
-        .total-table td:last-child  { border-left: none !important; }
-
-        .total-table tr:first-child td { border-top: 2px solid #000 !important; }
-        .total-table tr:last-child td  { border-bottom: 2px solid #000 !important; }
-
-        .total-table td:first-child { width: 45%; }
-        .total-table td:last-child  { width: 55%; }
-
-        .total-footer { font-size: 18px !important; }
-
-        .ref-invoice-box {
-            margin-top: 5px;
-            font-size: 11px;
-            border: 1px dashed #000;
-            padding: 3px 6px;
-            display: inline-block;
+        .sig-space {
+            height: 50px;
         }
 
         #loading {
@@ -179,7 +144,9 @@
                 border: 2px solid #000;
             }
 
-            .no-print { display: none; }
+            .no-print {
+                display: none;
+            }
 
             @page {
                 size: auto;
@@ -196,8 +163,6 @@
     <div class="nota-container" id="nota-content" style="display: none;">
         <div id="kop-section" class="kop-header" style="display: none;"></div>
 
-        <div class="return-banner">★ NOTA RETURN / RETUR PENJUALAN ★</div>
-
         <div class="header-info">
             <div class="customer-details">
                 <table>
@@ -213,16 +178,12 @@
                         <td>Salesman</td>
                         <td id="ref_no"></td>
                     </tr>
-                    <tr>
-                        <td>Ref. Nota Asal</td>
-                        <td id="ref_invoice_asal"></td>
-                    </tr>
                 </table>
             </div>
             <div class="invoice-meta">
                 <span id="tgl_invoice" style="font-size: 18px; font-weight: bold;"></span><br>
-                <strong>NO. RETURN:</strong> <strong id="nomor_invoice"></strong><br>
-                <strong>ALASAN: <span id="keterangan_return">-</span></strong>
+                <strong style="font-size: 12px;">NOTA RETURN</strong><br>
+                <span style="font-size: 12px;">NO NOTA RETURN: <strong id="nomor_invoice"></strong></span>
             </div>
         </div>
 
@@ -230,42 +191,58 @@
             <thead>
                 <tr>
                     <th width="5%">NO</th>
-                    <th width="12%">KODE</th>
-                    <th width="30%">NAMA BARANG</th>
+                    <th width="18%">KODE</th>
+                    <th width="27%">NAMA BARANG</th>
                     <th width="8%">SATUAN</th>
                     <th width="8%">QTY</th>
-                    <th width="15%">HARGA SATUAN</th>
+                    <th width="12%">HARGA</th>
                     <th width="7%">DISC</th>
                     <th width="15%">TOTAL</th>
                 </tr>
             </thead>
             <tbody id="items-body"></tbody>
             <tfoot>
-                <tr>
+                <tr class="total-footer">
                     <td colspan="5" rowspan="3"
-                        style="border: none !important; vertical-align: top; padding-top: 5px !important;">
+                        style="border: none !important; border-top: 2px solid #000 !important; vertical-align: top; padding: 5px !important;">
                         <div style="font-style: italic; font-size: 10px;">
                             <strong>Nota return ini merupakan koreksi atas kesalahan cetak nota penjualan.</strong>
                         </div>
-                        <div style="display: flex; justify-content: space-between; margin-top: 5px;">
-                            <div style="text-align:center; width:30%;"><strong>Admin</strong><br><br><br>( . . . . .)</div>
-                            <div style="text-align:center; width:30%;"><strong>Checker</strong><br><br><br>( . . . . . .)</div>
-                            <div style="text-align:center; width:30%;"><strong>Penerima</strong><br><br><br>( . . . . .)</div>
-                        </div>
                     </td>
-                </tr>
-                <tr class="total-footer">
-                    <td class="text-left">TOTAL RETURN Rp</td>
-                    <td colspan="2" class="text-right" id="total_akhir"></td>
+                    <td colspan="2" class="text-left"
+                        style="border-top: 2px solid #000 !important; padding: 0 5px !important; line-height: 1.0 !important; height: 20px;">
+                        TOTAL Rp</td>
+                    <td class="text-right"
+                        style="border-top: 2px solid #000 !important; padding: 0 5px !important; line-height: 1.0 !important; height: 20px;">
+                        <span id="total_akhir"></span>
+                    </td>
                 </tr>
             </tfoot>
         </table>
+
+        <div class="signature-section">
+            <div class="sig-box">
+                <strong>Penerima</strong>
+                <div class="sig-space"></div>
+                ( . . . . . . . . )
+            </div>
+            <div class="sig-box">
+                <strong>Checker</strong>
+                <div class="sig-space"></div>
+                ( . . . . . . . . )
+            </div>
+            <div class="sig-box">
+                <strong>Admin</strong>
+                <div class="sig-space"></div>
+                ( . . . . . . . . )
+            </div>
+        </div>
     </div>
 
     <template id="item-row-template">
         <tr>
             <td class="text-center col-no"></td>
-            <td class="text-center col-supplier-code" style="font-size: 12px;"></td>
+            <td class="text-center col-supplier-code"></td>
             <td class="text-left col-nama"></td>
             <td class="text-center col-satuan"></td>
             <td class="text-center col-qty"></td>
@@ -314,41 +291,40 @@
                     document.getElementById('ref_no').innerText = ': ' + (data.sales?.name || '-');
                     document.getElementById('mitra_nama').innerText = ': ' + (data.mitra?.nama || '-');
                     document.getElementById('mitra_alamat').innerText = ': ' + (data.mitra?.alamat || '-');
-                    document.getElementById('keterangan_return').innerText = data.keterangan || '-';
-
-                    // Reference to original invoice
-                    if (data.return_of) {
-                        document.getElementById('ref_invoice_asal').innerText = ': ' + data.return_of.nomor_invoice;
-                    } else if (data.ref_no) {
-                        document.getElementById('ref_invoice_asal').innerText = ': ' + data.ref_no;
-                    } else {
-                        document.getElementById('ref_invoice_asal').innerText = ': -';
-                    }
 
                     data.items.forEach((item, index) => {
                         const clone = template.content.cloneNode(true);
                         const p = item.product || {};
                         clone.querySelector('.col-no').textContent = index + 1;
-                        clone.querySelector('.col-supplier-code').textContent = p.supplier?.nomor_mitra || '-';
-                        clone.querySelector('.col-nama').textContent = p.nama_produk || item.nama_produk_manual || '-';
-                        clone.querySelector('.col-satuan').textContent = p.satuan || '-';
+                        clone.querySelector('.col-supplier-code').textContent = p.supplier
+                            ?.nomor_mitra || '-';
+                        clone.querySelector('.col-nama').innerHTML =
+                            `<strong>${p.nama_produk || item.nama_produk_manual || '-'}</strong>` +
+                            (item.deskripsi_produk ?
+                                `<br><span style="font-size:11px; font-weight:normal;">${item.deskripsi_produk}</span>` :
+                                '');
+
+                        clone.querySelector('.col-satuan').textContent = p.unit?.nama_unit || item
+                            .satuan || 'Pcs';
                         clone.querySelector('.col-qty').textContent = formatNumber(item.qty);
-                        clone.querySelector('.col-harga').textContent = formatNumber(item.harga_satuan || 0);
+                        clone.querySelector('.col-harga').textContent = formatNumber(item
+                            .harga_satuan || 0);
                         let discText = '-';
                         if (item.diskon_nilai > 0) {
-                            discText = item.diskon_tipe === 'Percentage'
-                                ? formatNumber(item.diskon_nilai) + '%'
-                                : formatNumber(item.diskon_nilai);
+                            discText = item.diskon_tipe === 'Percentage' ?
+                                formatNumber(item.diskon_nilai) + '%' :
+                                formatNumber(item.diskon_nilai);
                         }
                         clone.querySelector('.col-disc').textContent = discText;
-                        clone.querySelector('.col-total').textContent = formatNumber(item.total_harga_item);
+                        clone.querySelector('.col-total').textContent = formatNumber(item
+                            .total_harga_item);
                         tbody.appendChild(clone);
                     });
 
-                    // Padding rows (min 10)
-                    for (let i = data.items.length; i < 10; i++) {
+                    // Fill empty rows (min 15)
+                    for (let i = data.items.length; i < 15; i++) {
                         tbody.insertAdjacentHTML('beforeend',
-                            `<tr><td class="text-center" style="height:15px;">${i + 1}</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`
+                            `<tr><td class="text-center" style="height:14px; line-height: 1;">${i + 1}</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`
                         );
                     }
 
@@ -359,7 +335,9 @@
 
                     const urlParams = new URLSearchParams(window.location.search);
                     if (!urlParams.get('no_print')) {
-                        setTimeout(() => window.print(), 500);
+                        setTimeout(() => {
+                            window.print();
+                        }, 500);
                     }
                 }
             } catch (error) {

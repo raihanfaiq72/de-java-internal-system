@@ -622,6 +622,7 @@
                         <div class="d-flex gap-1">
                             <a href="{{ url('sales/print-return') }}/${ret.id}?no_print=1"
                                class="btn btn-sm btn-light border"
+                               data-no-loader="true"
                                onclick="event.preventDefault(); openReturnPrintPreview(${ret.id});"
                                title="Preview Cetak">
                                 <i class="fa fa-eye"></i>
@@ -633,13 +634,28 @@
         }
 
         function openReturnPrintPreview(returnId) {
+            if (window.PageLoader) window.PageLoader.hide();
             const printUrl = `{{ url('sales/print-return') }}/${returnId}?no_print=1`;
-            const iframe = document.getElementById('print-iframe');
-            if (iframe) {
-                iframe.src = printUrl;
-                const bModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalPrintPreview'));
-                bModal.show();
+
+            const modalContainer = document.getElementById('modalPrintPreview');
+
+            if (!modalContainer) {
+                console.error('Modal container tidak ditemukan di halaman ini.');
+                return;
             }
+
+            const iframe = modalContainer.querySelector('iframe');
+
+            if (!iframe) {
+                console.error('Elemen iframe tidak ditemukan di dalam modal.');
+                alert('Gagal memuat preview cetak.');
+                return;
+            }
+
+            iframe.src = printUrl;
+
+            const bModal = bootstrap.Modal.getOrCreateInstance(modalContainer);
+            bModal.show();
         }
 
         function renderTimeline(activities) {
@@ -730,6 +746,7 @@
         }
 
         function openPrintPreview(id) {
+            if (window.PageLoader) window.PageLoader.hide();
             const printUrl = `{{ url('sales/print') }}/${id}?no_print=1`;
 
             const modalContainer = document.getElementById('modalPrintPreview');

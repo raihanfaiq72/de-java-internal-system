@@ -170,6 +170,7 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::post('/{id}/reject', [InvoiceController::class, 'reject'])->name('reject');
             Route::post('/{id}/withdraw', [InvoiceController::class, 'withdraw'])->name('withdraw');
             Route::post('/', [InvoiceController::class, 'store'])->name('store');
+            Route::get('/next-return-number', [InvoiceController::class, 'nextReturnNumber'])->name('next-return-number');
             Route::get('/{id}', [InvoiceController::class, 'show'])->name('show');
             Route::put('/{id}', [InvoiceController::class, 'update'])->name('update');
             Route::delete('/{id}', [InvoiceController::class, 'destroy'])->name('destroy');

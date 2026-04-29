@@ -292,8 +292,7 @@ class InvoiceController extends Controller
                                 $this->stockService->recordIn(
                                     $item->produk_id,
                                     $item->qty,
-                                    $item->product->harga_beli,
-                                    $invoice->stock_location_id,
+                                    null,
                                     'Sales Return (Edited)',
                                     $invoice->id,
                                     "Stock Return (Invoice Edited): #{$invoice->nomor_invoice}"
@@ -302,7 +301,7 @@ class InvoiceController extends Controller
                                 $this->stockService->recordOut(
                                     $item->produk_id,
                                     $item->qty,
-                                    $invoice->stock_location_id,
+                                    null,
                                     'Purchase Cancel (Edited)',
                                     $invoice->id,
                                     "Stock Deduct (Purchase Edited): #{$invoice->nomor_invoice}"
@@ -332,7 +331,7 @@ class InvoiceController extends Controller
                                     $item->produk_id,
                                     $item->qty,
                                     $item->harga_satuan,
-                                    $invoice->stock_location_id,
+                                    null,
                                     'Purchase',
                                     $invoice->id,
                                     "Purchase Invoice #{$invoice->nomor_invoice} (Edited)"
@@ -341,7 +340,7 @@ class InvoiceController extends Controller
                                 $this->stockService->recordOut(
                                     $item->produk_id,
                                     $item->qty,
-                                    $invoice->stock_location_id,
+                                    null,
                                     'Sales',
                                     $invoice->id,
                                     "Sales Invoice #{$invoice->nomor_invoice} (Edited)"
@@ -403,7 +402,7 @@ class InvoiceController extends Controller
                                 $item->produk_id,
                                 $item->qty,
                                 $item->product->harga_beli,
-                                $invoice->stock_location_id,
+                                null,
                                 'Sales Return (Archived/Deleted)',
                                 $invoice->id,
                                 "Stock Return (Invoice Deleted): #{$invoice->nomor_invoice}"
@@ -412,7 +411,7 @@ class InvoiceController extends Controller
                             $this->stockService->recordOut(
                                 $item->produk_id,
                                 $item->qty,
-                                $invoice->stock_location_id,
+                                null,
                                 'Purchase Cancel (Archived/Deleted)',
                                 $invoice->id,
                                 "Stock Deduct (Purchase Invoice Deleted): #{$invoice->nomor_invoice}"
@@ -422,7 +421,7 @@ class InvoiceController extends Controller
                             $this->stockService->recordOut(
                                 $item->produk_id,
                                 $item->qty,
-                                $invoice->stock_location_id,
+                                null,
                                 'Return Cancel (Deleted)',
                                 $invoice->id,
                                 "Stock Deduct (Return Invoice Deleted): #{$invoice->nomor_invoice}"
@@ -551,17 +550,6 @@ class InvoiceController extends Controller
             $warningMessage = "Harus ACC Owner, dikarenakan umur nota ($maxOverdue hari). Invoice masuk ke Arsip.";
         }
 
-        // Validate Stock Location if provided
-        if (! empty($request->invoice['stock_location_id'])) {
-            $location = StockLocation::where('id', $request->invoice['stock_location_id'])
-                ->where('office_id', session('active_office_id'))
-                ->first();
-
-            if (! $location) {
-                return apiResponse(false, 'Lokasi stok tidak valid untuk outlet ini', null, null, 422);
-            }
-        }
-
         return DB::transaction(function () use ($request, $invoiceData, $warningMessage, $needsApproval) {
 
             // $invoiceData = $request->invoice; // Removed because defined above
@@ -591,7 +579,7 @@ class InvoiceController extends Controller
                             $item->produk_id, // Fixed: use produk_id from InvoiceItem
                             $item->qty,
                             $item->harga_satuan,
-                            $request->invoice['stock_location_id'] ?? null, // Support location
+                            null, // Support location
                             'Purchase',
                             $invoice->id,
                             "Purchase Invoice #{$invoice->nomor_invoice}"
@@ -600,7 +588,7 @@ class InvoiceController extends Controller
                         $this->stockService->recordOut(
                             $item->produk_id, // Fixed: use produk_id from InvoiceItem
                             $item->qty,
-                            $request->invoice['stock_location_id'] ?? null, // Support location
+                            null, // Support location
                             'Sales',
                             $invoice->id,
                             "Sales Invoice #{$invoice->nomor_invoice}"
@@ -681,27 +669,53 @@ class InvoiceController extends Controller
             $invoiceData['tipe_invoice']      = 'Return';
             $invoiceData['mitra_id']          = $originalInvoice->mitra_id;
             $invoiceData['sales_id']          = $originalInvoice->sales_id;
-            $invoiceData['stock_location_id'] = $originalInvoice->stock_location_id;
             $invoiceData['status_dok']        = 'Approved';
             $invoiceData['status_pembayaran'] = 'Unpaid';
 
             $returnInvoice = Invoice::create($invoiceData);
 
+            // Load original items for comparison
+            $originalItems = $originalInvoice->items->keyBy('id');
+
             foreach ($request->items as $itemData) {
                 $itemData['invoice_id'] = $returnInvoice->id;
                 $item = InvoiceItem::create($itemData);
 
-                // Return stock: items come back IN
+                $originalItem = null;
+                if (!empty($itemData['original_item_id'])) {
+                    $originalItem = $originalItems->get($itemData['original_item_id']);
+                }
+
+                // Correction logic for stock
                 if ($item->product && $item->product->track_stock) {
-                    $this->stockService->recordIn(
-                        $item->produk_id,
-                        $item->qty,
-                        $item->product->harga_beli,
-                        $returnInvoice->stock_location_id,
-                        'Sales Return (Nota Return)',
-                        $returnInvoice->id,
-                        "Return Invoice #{$returnInvoice->nomor_invoice}"
-                    );
+                    $originalQty = $originalItem ? $originalItem->qty : 0;
+                    $returnQty = $item->qty;
+
+                    if ($returnQty <= $originalQty) {
+                        // Normal return or partial return: stock comes back IN
+                        $this->stockService->recordIn(
+                            $item->produk_id,
+                            $returnQty,
+                            $item->product->harga_beli,
+                            null,
+                            'Sales Return (Nota Return)',
+                            $returnInvoice->id,
+                            "Return Invoice #{$returnInvoice->nomor_invoice}"
+                        );
+                    } else {
+                        // Excess return: stock for original is returned, but extra is taken OUT
+                        // User logic: Sold 10, Return 15 -> Stock decreases by 5.
+                        $excessQty = $returnQty - $originalQty;
+
+                        $this->stockService->recordOut(
+                            $item->produk_id,
+                            $excessQty,
+                            null,
+                            'Sales Correction (Nota Return)',
+                            $returnInvoice->id,
+                            "Correction Invoice #{$returnInvoice->nomor_invoice} (Excess)"
+                        );
+                    }
                 }
 
                 if (! empty($itemData['taxes'])) {
@@ -810,7 +824,7 @@ class InvoiceController extends Controller
                         $this->stockService->recordOut(
                             $item->produk_id,
                             $item->qty,
-                            $invoice->stock_location_id,
+                            null,
                             'Sales',
                             $invoice->id,
                             "Sales Invoice #{$invoice->nomor_invoice} (Approved)"
@@ -908,7 +922,7 @@ class InvoiceController extends Controller
                                 $item->produk_id,
                                 $item->qty,
                                 $item->product->harga_beli,
-                                $invoice->stock_location_id,
+                                null,
                                 'Sales Return (Approval Withdrawn)',
                                 $invoice->id,
                                 "Stock Return (Approval Withdrawn): #{$invoice->nomor_invoice}"
@@ -918,7 +932,7 @@ class InvoiceController extends Controller
                             $this->stockService->recordOut(
                                 $item->produk_id,
                                 $item->qty,
-                                $invoice->stock_location_id,
+                                null,
                                 'Purchase Cancel (Approval Withdrawn)',
                                 $invoice->id,
                                 "Stock Deduct (Purchase Approval Withdrawn): #{$invoice->nomor_invoice}"
@@ -960,7 +974,7 @@ class InvoiceController extends Controller
                             $item->produk_id,
                             $item->qty,
                             $item->product->harga_beli,
-                            $invoice->stock_location_id,
+                            null,
                             'Sales Return (Archived)',
                             $invoice->id,
                             "Stock Return (Invoice Archived): #{$invoice->nomor_invoice}"
@@ -969,7 +983,7 @@ class InvoiceController extends Controller
                         $this->stockService->recordOut(
                             $item->produk_id,
                             $item->qty,
-                            $invoice->stock_location_id,
+                            null,
                             'Purchase Cancel (Archived)',
                             $invoice->id,
                             "Stock Deduct (Purchase Invoice Archived): #{$invoice->nomor_invoice}"
@@ -1006,7 +1020,7 @@ class InvoiceController extends Controller
                         $this->stockService->recordOut(
                             $item->produk_id,
                             $item->qty,
-                            $invoice->stock_location_id,
+                            null,
                             'Sales',
                             $invoice->id,
                             "Sales Invoice (Unarchived) #{$invoice->nomor_invoice}"
@@ -1016,7 +1030,7 @@ class InvoiceController extends Controller
                             $item->produk_id,
                             $item->qty,
                             $item->harga_satuan,
-                            $invoice->stock_location_id,
+                            null,
                             'Purchase',
                             $invoice->id,
                             "Purchase Invoice (Unarchived) #{$invoice->nomor_invoice}"
@@ -1060,7 +1074,7 @@ class InvoiceController extends Controller
                         $this->stockService->recordOut(
                             $item->produk_id,
                             $item->qty,
-                            $invoice->stock_location_id,
+                            null,
                             'Sales',
                             $invoice->id,
                             "Sales Invoice (Restored) #{$invoice->nomor_invoice}"
@@ -1070,7 +1084,7 @@ class InvoiceController extends Controller
                             $item->produk_id,
                             $item->qty,
                             $item->harga_satuan,
-                            $invoice->stock_location_id,
+                            null,
                             'Purchase',
                             $invoice->id,
                             "Purchase Invoice (Restored) #{$invoice->nomor_invoice}"
@@ -1198,5 +1212,26 @@ class InvoiceController extends Controller
 
             return apiResponse(true, 'Invoice Overdue telah ditolak (Rejected).');
         });
+    }
+    public function nextReturnNumber()
+    {
+        $year = date('Y');
+        $prefix = "RTR/{$year}/";
+
+        $lastInvoice = Invoice::withTrashed()
+            ->where('nomor_invoice', 'LIKE', $prefix . '%')
+            ->where('tipe_invoice', 'Return')
+            ->orderBy('nomor_invoice', 'desc')
+            ->first();
+
+        $nextNumber = 1;
+        if ($lastInvoice) {
+            $parts = explode('/', $lastInvoice->nomor_invoice);
+            if (count($parts) >= 3 && is_numeric(end($parts))) {
+                $nextNumber = intval(end($parts)) + 1;
+            }
+        }
+
+        return apiResponse(true, 'Next return number', $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT));
     }
 }
