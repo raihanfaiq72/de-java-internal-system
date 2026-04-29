@@ -468,12 +468,81 @@ class JournalService
         });
     }
 
+    /**
+     * Handle Return Invoice Journal
+     * Reverses the original sales invoice:
+     * Debit Retur Penjualan (4xxx), Credit Piutang Usaha (1301)
+     * Also reverse COGS: Debit Inventory, Credit HPP
+     */
+    public function recordReturnInvoice(Invoice $returnInvoice)
+    {
+        $officeId = $returnInvoice->office_id;
+
+        $accAR      = $this->findAccount($officeId, '1301'); // Piutang Usaha
+        $accReturn  = $this->findAccount($officeId, '4103'); // Retur Penjualan
+        $accHPP     = $this->findAccount($officeId, '5101'); // HPP
+        $accInventory = $this->findAccount($officeId, '1501'); // Persediaan
+
+        if (! $accAR || ! $accReturn) {
+            return;
+        }
+
+        $details = [];
+
+        // Debit Retur Penjualan
+        $details[] = [
+            'akun_id' => $accReturn->id,
+            'debit'   => $returnInvoice->total_akhir ?: 0,
+            'kredit'  => 0,
+        ];
+        // Credit AR
+        $details[] = [
+            'akun_id' => $accAR->id,
+            'debit'   => 0,
+            'kredit'  => $returnInvoice->total_akhir ?: 0,
+        ];
+
+        // Reverse COGS: Debit Inventory, Credit HPP
+        $mutations = StockMutation::where('reference_id', $returnInvoice->id)
+            ->where('reference_type', 'Sales Return (Nota Return)')
+            ->get();
+
+        $totalCOGS = 0;
+        foreach ($mutations as $mut) {
+            if ($mut->type === 'IN') {
+                $totalCOGS += ($mut->qty * $mut->cost_price);
+            }
+        }
+
+        if ($totalCOGS > 0 && $accHPP && $accInventory) {
+            $details[] = [
+                'akun_id' => $accInventory->id,
+                'debit'   => $totalCOGS,
+                'kredit'  => 0,
+            ];
+            $details[] = [
+                'akun_id' => $accHPP->id,
+                'debit'   => 0,
+                'kredit'  => $totalCOGS,
+            ];
+        }
+
+        $this->createJournal(
+            $officeId,
+            $returnInvoice->tgl_invoice,
+            $returnInvoice->nomor_invoice,
+            "Return Invoice #{$returnInvoice->nomor_invoice}",
+            $details
+        );
+    }
+
     public function deleteInvoiceJournal(Invoice $invoice)
     {
         DB::transaction(function () use ($invoice) {
             $journal = Journal::where('nomor_referensi', $invoice->nomor_invoice)
                 ->orWhere('nomor_referensi', "Sales Invoice #{$invoice->nomor_invoice}")
                 ->orWhere('nomor_referensi', "Purchase Invoice #{$invoice->nomor_invoice}")
+                ->orWhere('nomor_referensi', "Return Invoice #{$invoice->nomor_invoice}")
                 ->first();
 
             if ($journal) {

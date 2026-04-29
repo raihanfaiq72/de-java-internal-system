@@ -140,6 +140,9 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::post('/invoice-create-api', [InvoiceController::class, 'createFullInvoice'])
         ->name('invoice.create-full-api');
 
+    Route::post('/invoice-return-api', [InvoiceController::class, 'createReturnInvoice'])
+        ->name('invoice.create-return-api');
+
     // Surat Jalan API
     Route::post('/surat-jalan-create-api', [\App\Http\Controllers\Api\SuratJalanController::class, 'createFullSuratJalan'])
         ->name('surat-jalan.create-full-api');

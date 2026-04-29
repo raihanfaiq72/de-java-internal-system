@@ -92,6 +92,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('sales/approval/{id}', [App\Http\Controllers\Api\SalesController::class, 'approvalDetail'])->name('sales.approval.show');
         Route::get('sales/approval-overdue/{id}', [App\Http\Controllers\Api\SalesController::class, 'approvalOverdueDetail'])->name('sales.approval.overdue.show');
         Route::get('sales/print/{id}', [SalesController::class, 'printInvoice'])->name('sales.print');
+        Route::get('sales/print-return/{id}', [SalesController::class, 'printReturnInvoice'])->name('sales.print.return');
         Route::get('sales/{id}', [SalesController::class, 'show'])->name('sales.show');
         Route::get('sales-receipt', [SalesController::class, 'receipt'])->name('sales.receipt');
         Route::get('sales-receipt/{id}', [SalesController::class, 'showReceipt'])->name('sales.receipt.show');

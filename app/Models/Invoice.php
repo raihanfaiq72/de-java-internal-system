@@ -23,6 +23,7 @@ class Invoice extends Model
         'tgl_invoice',
         'tgl_jatuh_tempo',
         'ref_no',
+        'return_of_invoice_id',
         'mitra_id',
         'kontak_person_id',
         'sales_id',
@@ -46,6 +47,16 @@ class Invoice extends Model
     public function mitra()
     {
         return $this->belongsTo(Partner::class, 'mitra_id');
+    }
+
+    public function returnOf()
+    {
+        return $this->belongsTo(Invoice::class, 'return_of_invoice_id');
+    }
+
+    public function returns()
+    {
+        return $this->hasMany(Invoice::class, 'return_of_invoice_id');
     }
 
     public function sales()

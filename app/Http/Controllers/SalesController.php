@@ -41,6 +41,11 @@ class SalesController extends Controller
         return view($this->views.'Nota.SalesNota', compact('id'));
     }
 
+    public function printReturnInvoice($id)
+    {
+        return view($this->views.'Nota.ReturnNota', compact('id'));
+    }
+
     public function printReceipt($id)
     {
         return view($this->views.'Nota.ReceiptNota', compact('id'));

@@ -138,6 +138,8 @@ class InvoiceController extends Controller
             'approvals.processedBy',
             'activities.user',
             'sales',
+            'returnOf',
+            'returns',
         ])
             ->withSum('payment', 'jumlah_bayar')
             ->where('office_id', session('active_office_id'))
@@ -415,6 +417,16 @@ class InvoiceController extends Controller
                                 $invoice->id,
                                 "Stock Deduct (Purchase Invoice Deleted): #{$invoice->nomor_invoice}"
                             );
+                        } elseif ($invoice->tipe_invoice === 'Return') {
+                            // Return invoice added stock back IN; deleting it means stock goes OUT again
+                            $this->stockService->recordOut(
+                                $item->produk_id,
+                                $item->qty,
+                                $invoice->stock_location_id,
+                                'Return Cancel (Deleted)',
+                                $invoice->id,
+                                "Stock Deduct (Return Invoice Deleted): #{$invoice->nomor_invoice}"
+                            );
                         }
                     }
                 }
@@ -630,6 +642,85 @@ class InvoiceController extends Controller
             }
 
             return apiResponse(true, $msg, $invoice->load('items'), null, 201);
+        });
+    }
+
+    public function createReturnInvoice(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'invoice.return_of_invoice_id' => 'required|exists:invoices,id',
+            'invoice.nomor_invoice'        => 'required|unique:invoices,nomor_invoice',
+            'invoice.tgl_invoice'          => 'required|date',
+            'items'                        => 'required|array|min:1',
+            'items.*.qty'                  => 'required|numeric|min:0.01',
+            'items.*.harga_satuan'         => 'required|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return apiResponse(false, 'Validasi gagal', null, $validator->errors(), 422);
+        }
+
+        if (! session()->has('active_office_id')) {
+            return apiResponse(false, 'Silakan pilih outlet terlebih dahulu.', null, null, 422);
+        }
+
+        $officeId = session('active_office_id');
+
+        // Load original invoice
+        $originalInvoice = Invoice::where('office_id', $officeId)
+            ->where('tipe_invoice', 'Sales')
+            ->find($request->input('invoice.return_of_invoice_id'));
+
+        if (! $originalInvoice) {
+            return apiResponse(false, 'Invoice asal tidak ditemukan atau bukan invoice penjualan.', null, null, 422);
+        }
+
+        return DB::transaction(function () use ($request, $officeId, $originalInvoice) {
+            $invoiceData                      = $request->invoice;
+            $invoiceData['office_id']         = $officeId;
+            $invoiceData['tipe_invoice']      = 'Return';
+            $invoiceData['mitra_id']          = $originalInvoice->mitra_id;
+            $invoiceData['sales_id']          = $originalInvoice->sales_id;
+            $invoiceData['stock_location_id'] = $originalInvoice->stock_location_id;
+            $invoiceData['status_dok']        = 'Approved';
+            $invoiceData['status_pembayaran'] = 'Unpaid';
+
+            $returnInvoice = Invoice::create($invoiceData);
+
+            foreach ($request->items as $itemData) {
+                $itemData['invoice_id'] = $returnInvoice->id;
+                $item = InvoiceItem::create($itemData);
+
+                // Return stock: items come back IN
+                if ($item->product && $item->product->track_stock) {
+                    $this->stockService->recordIn(
+                        $item->produk_id,
+                        $item->qty,
+                        $item->product->harga_beli,
+                        $returnInvoice->stock_location_id,
+                        'Sales Return (Nota Return)',
+                        $returnInvoice->id,
+                        "Return Invoice #{$returnInvoice->nomor_invoice}"
+                    );
+                }
+
+                if (! empty($itemData['taxes'])) {
+                    foreach ($itemData['taxes'] as $taxData) {
+                        if (! empty($taxData['tax_id'])) {
+                            InvoiceItemTax::create([
+                                'invoice_item_id'        => $item->id,
+                                'tax_id'                 => $taxData['tax_id'],
+                                'nilai_pajak_diterapkan' => $taxData['nilai_pajak_diterapkan'] ?? 0,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            // Record journal for return
+            $this->journalService->recordReturnInvoice($returnInvoice->fresh(['items.product']));
+
+            return apiResponse(true, 'Nota return berhasil dibuat', $returnInvoice->load('items'), null, 201);
         });
     }
 

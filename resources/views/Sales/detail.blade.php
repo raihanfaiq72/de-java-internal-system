@@ -82,6 +82,10 @@
                     <div class="col-md-6 text-md-end">
                         <span id="header-status-badge"
                             class="badge bg-secondary fs-6 px-3 py-2 rounded-pill me-2">Loading...</span>
+                        <button id="btn-return-nota" class="btn btn-outline-danger fw-bold px-3 shadow-sm me-2 d-none"
+                            onclick="openReturnNotaModal(invoiceId, document.getElementById('header-subtitle').textContent.replace('No. ',''))">
+                            <i class="fa fa-undo me-1"></i> Return Nota
+                        </button>
                         <a id="btn-print" href="#"
                             class="btn btn-white border fw-bold px-3 shadow-sm text-dark me-2 d-none">
                             <i class="fa fa-print me-1"></i> Cetak
@@ -281,6 +285,20 @@
                             </div>
                         </div>
 
+                        <!-- Return Nota Card (if any returns exist) -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4 d-none" id="return-nota-card">
+                            <div class="card-header bg-white border-bottom py-3 px-4">
+                                <h6 class="fw-bold text-dark mb-0">
+                                    <i class="fa fa-undo text-danger me-2"></i> Nota Return
+                                </h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="list-group list-group-flush" id="return-nota-list">
+                                    <!-- Dynamic content -->
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Activity/Status Sidebar -->
                         <div class="card border-0 shadow-sm rounded-4">
                             <div class="card-header bg-white border-bottom py-3 px-4">
@@ -364,6 +382,7 @@
 
     @include('Sales.Modal.modal-fullscreen')
     @include('Sales.Modal.detail-modal')
+    @include('Sales.Modal.modal-return-nota')
     @include('Sales.Partials.invoice-templates')
 @endsection
 
@@ -431,6 +450,17 @@
             btnPrint.href = 'javascript:void(0)';
             btnPrint.onclick = () => openPrintPreview(data.id);
             btnPrint.classList.remove('d-none');
+
+            // Return Nota button — only show for approved Sales invoices
+            const btnReturn = document.getElementById('btn-return-nota');
+            if (btnReturn) {
+                if (data.tipe_invoice === 'Sales' && data.status_dok === 'Approved') {
+                    btnReturn.classList.remove('d-none');
+                    btnReturn.onclick = () => openReturnNotaModal(data.id, data.nomor_invoice);
+                } else {
+                    btnReturn.classList.add('d-none');
+                }
+            }
 
             // Setup Kop Toggle
             const toggleKop = document.getElementById('toggle-kop');
@@ -558,6 +588,58 @@
 
             // Timeline
             renderTimeline(data.activities);
+
+            // Return Nota list
+            renderReturnNotaList(data.returns || []);
+        }
+
+        function renderReturnNotaList(returns) {
+            const card = document.getElementById('return-nota-card');
+            const list = document.getElementById('return-nota-list');
+
+            if (!returns || returns.length === 0) {
+                card.classList.add('d-none');
+                return;
+            }
+
+            card.classList.remove('d-none');
+            list.innerHTML = '';
+
+            returns.forEach(ret => {
+                list.innerHTML += `
+                    <div class="list-group-item p-3 d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-danger bg-opacity-10 rounded p-2 me-3 text-danger">
+                                <i class="fa fa-undo fs-5"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 text-dark fw-medium" style="font-size: 13px;">${ret.nomor_invoice}</h6>
+                                <small class="text-muted" style="font-size: 11px;">
+                                    ${formatDate(ret.tgl_invoice)} &bull; ${formatIDR(ret.total_akhir)}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-1">
+                            <a href="{{ url('sales/print-return') }}/${ret.id}?no_print=1"
+                               class="btn btn-sm btn-light border"
+                               onclick="event.preventDefault(); openReturnPrintPreview(${ret.id});"
+                               title="Preview Cetak">
+                                <i class="fa fa-eye"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openReturnPrintPreview(returnId) {
+            const printUrl = `{{ url('sales/print-return') }}/${returnId}?no_print=1`;
+            const iframe = document.getElementById('print-iframe');
+            if (iframe) {
+                iframe.src = printUrl;
+                const bModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalPrintPreview'));
+                bModal.show();
+            }
         }
 
         function renderTimeline(activities) {
