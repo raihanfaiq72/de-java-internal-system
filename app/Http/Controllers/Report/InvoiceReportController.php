@@ -9,8 +9,11 @@ use App\Models\Office;
 use App\Models\Partner;
 use App\Models\Payment;
 use App\Models\Product;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -50,12 +53,21 @@ class InvoiceReportController extends Controller
         $mitras = Partner::where('office_id', $officeId)->get();
         // Products for filter
         $products = Product::select('id', 'nama_produk')->orderBy('nama_produk')->get();
+        // Salespersons for filter
+        $salespersons = User::where('is_sales', true)
+            ->whereHas('plots', function ($query) use ($officeId) {
+                $query->where('office_id', $officeId);
+            })
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
 
         return view('Report.Invoice.index', compact(
             'startDate',
             'endDate',
             'mitras',
             'products',
+            'salespersons',
             'chartLabels',
             'chartIncome',
             'chartExpense',
@@ -177,7 +189,7 @@ class InvoiceReportController extends Controller
             ->whereYear('tgl_pembayaran', $year)
             ->get()
             ->groupBy(function ($payment) {
-                return \Carbon\Carbon::parse($payment->tgl_pembayaran)->format('n');
+                return Carbon::parse($payment->tgl_pembayaran)->format('n');
             })
             ->map(function ($group) {
                 return $group->sum('jumlah_bayar');
@@ -213,10 +225,11 @@ class InvoiceReportController extends Controller
 
     private function getPaymentsData(Request $request, $startDate, $endDate, $officeId, $mitraId, $search)
     {
-        $paymentsQuery = Invoice::with(['mitra'])
+        $paymentsQuery = Invoice::with(['mitra', 'sales'])
             ->leftJoin('mitras', 'invoices.mitra_id', '=', 'mitras.id')
+            ->leftJoin('users', 'invoices.sales_id', '=', 'users.id')
             ->select('invoices.*')
-            ->addSelect(['mitras.nama as nama_mitra', 'mitras.nomor_mitra as nomor_mitra'])
+            ->addSelect(['mitras.nama as nama_mitra', 'mitras.nomor_mitra as nomor_mitra', 'users.name as nama_sales'])
             ->withSum(['payment as jumlah_bayar'], 'jumlah_bayar')
             ->selectRaw('(invoices.total_akhir - COALESCE((SELECT SUM(jumlah_bayar) FROM payments WHERE invoice_id = invoices.id AND deleted_at IS NULL), 0)) as sisa_piutang_virtual')
             ->selectSub(function ($query) {
@@ -257,7 +270,7 @@ class InvoiceReportController extends Controller
         */
 
         $totalPaymentAmount = $allPayments->sum('jumlah_bayar');
-        $totalNotaAmount    = $allPayments->sum('total_akhir');
+        $totalNotaAmount = $allPayments->sum('total_akhir');
         $totalUniqueInvoices = $allPayments->count();
 
         /*
@@ -269,8 +282,8 @@ class InvoiceReportController extends Controller
         // Create a paginator with all results to maintain pagination UI compatibility
         $perPage = 50; // Increased from 10 to 50 for better user experience
         $page = request()->get('page', 1);
-        
-        $payments = new \Illuminate\Pagination\LengthAwarePaginator(
+
+        $payments = new LengthAwarePaginator(
             $allPayments->forPage($page, $perPage)->values(),
             $allPayments->count(),
             $perPage,
@@ -380,14 +393,15 @@ class InvoiceReportController extends Controller
     private function getSoldProductsData(Request $request, $startDate, $endDate, $officeId, $mitraId, $search)
     {
         $soldProductsQuery = InvoiceItem::query()
-            ->selectRaw('products.nama_produk, products.sku_kode, products.satuan, product_categories.nama_kategori, SUM(invoice_items.qty) as total_qty, SUM(invoice_items.total_harga_item) as total_base_value')
             ->join('products', 'invoice_items.produk_id', '=', 'products.id')
             ->leftJoin('product_categories', 'products.product_category_id', '=', 'product_categories.id')
             ->join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
+            ->leftJoin('users', 'invoices.sales_id', '=', 'users.id')
+            ->selectRaw('products.nama_produk, products.sku_kode, products.satuan, product_categories.nama_kategori, users.name as nama_sales, SUM(invoice_items.qty) as total_qty, SUM(invoice_items.total_harga_item) as total_base_value')
             ->where('invoices.office_id', $officeId)
             ->where('invoices.tipe_invoice', 'Sales')
             ->whereBetween('invoices.tgl_invoice', [$startDate, $endDate])
-            ->groupBy('products.id', 'products.nama_produk', 'products.sku_kode', 'products.satuan', 'product_categories.nama_kategori');
+            ->groupBy('products.id', 'products.nama_produk', 'products.sku_kode', 'products.satuan', 'product_categories.nama_kategori', 'users.name');
 
         $this->applyCommonFilters($soldProductsQuery, $request, $mitraId, $search, false, true);
 
@@ -400,27 +414,26 @@ class InvoiceReportController extends Controller
         $this->applySorting($soldProductsQuery, $request, 'products.nama_produk', 'asc');
         $soldProducts = $soldProductsQuery->paginate(10)->withQueryString();
 
-        // Attach total_value including tax if needed for each row (usually done via subquery or accessor)
-        // For simplicity in this refactor, we'll use base value or add a tax subquery if critical.
-
         return compact('soldProducts', 'totalSoldQty', 'totalSoldValue');
     }
 
     private function getInvoiceItemsData(Request $request, $startDate, $endDate, $officeId, $mitraId, $search)
     {
-        $itemsQuery = InvoiceItem::with(['invoice.mitra', 'product'])
+        $itemsQuery = InvoiceItem::with(['invoice.mitra', 'product', 'invoice.sales'])
             ->join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
             ->leftJoin('mitras', 'invoices.mitra_id', '=', 'mitras.id')
+            ->leftJoin('users', 'invoices.sales_id', '=', 'users.id')
             ->join('products', 'invoice_items.produk_id', '=', 'products.id')
-            ->select('invoice_items.*')
-            ->addSelect([
+            ->select([
+                'invoice_items.*',
                 'invoices.tgl_invoice',
                 'invoices.nomor_invoice',
                 'invoices.status_pembayaran',
                 'invoices.tipe_invoice',
                 'mitras.nama as nama_mitra',
+                'users.name as nama_sales',
                 'products.nama_produk',
-                DB::raw('(invoice_items.qty * invoice_items.diskon_nilai) as total_diskon')
+                DB::raw('(invoice_items.qty * invoice_items.diskon_nilai) as total_diskon'),
             ])
             ->withSum(['taxes as total_tax'], 'nilai_pajak_diterapkan')
             ->where('invoices.office_id', $officeId);
@@ -443,14 +456,8 @@ class InvoiceReportController extends Controller
         $invoiceItems = $itemsQuery->paginate(10)->withQueryString();
 
         $invoiceItems->getCollection()->transform(function ($item) {
-            $item->status_pembayaran = $item->invoice?->status_pembayaran;
-            $item->tgl_invoice = $item->invoice?->tgl_invoice;
-            $item->nama_produk = $item->product?->nama_produk;
-            $item->nama_mitra = $item->invoice?->mitra?->nama;
-            $item->nomor_invoice = $item->invoice?->nomor_invoice;
-            $item->total_akhir_row = $item->total_harga_item + ($item->total_tax ?? 0);
-            $item->total_akhir = $item->invoice?->total_akhir;
-            $item->item_id = $item->id;
+            // total_akhir for this row is total_harga_item + tax
+            $item->total_akhir = $item->total_harga_item + ($item->total_tax ?? 0);
 
             return $item;
         });
@@ -528,9 +535,12 @@ class InvoiceReportController extends Controller
 
     private function exportPaymentsSpreadsheet($request, $startDate, $endDate, $officeId, $mitraId, $search, $hiddenColumns)
     {
-        $paymentsQuery = Invoice::with(['mitra'])
+        $paymentsQuery = Invoice::with(['mitra', 'sales'])
+            ->leftJoin('users', 'invoices.sales_id', '=', 'users.id')
             ->withSum(['items as total_qty'], 'qty')
             ->withSum(['payment as jumlah_bayar'], 'jumlah_bayar')
+            ->select('invoices.*')
+            ->addSelect(['users.name as nama_sales'])
             ->selectSub(function ($query) {
                 $query->from('payments')
                     ->select('metode_pembayaran')
@@ -551,8 +561,8 @@ class InvoiceReportController extends Controller
         $sheet->setTitle('Daftar Nota');
 
         $allHeaders = [
-            0 => 'Status', 1 => 'Tanggal', 2 => 'No. Nota', 3 => 'Metode', 4 => 'No. Mitra',
-            5 => 'Nama Mitra', 6 => 'Qty', 7 => 'Total Nota', 8 => 'Terbayar', 9 => 'Sisa Piutang',
+            0 => 'Status', 1 => 'Tanggal', 2 => 'No. Nota', 3 => 'Metode', 4 => 'Sales',
+            5 => 'No. Mitra', 6 => 'Nama Mitra', 7 => 'Qty', 8 => 'Total Nota', 9 => 'Terbayar', 10 => 'Sisa Piutang',
         ];
 
         $visibleHeaders = ['No'];
@@ -576,12 +586,13 @@ class InvoiceReportController extends Controller
                     1 => Carbon::parse($item->tgl_invoice)->format('d-m-Y'),
                     2 => $item->nomor_invoice,
                     3 => $item->metode_pembayaran ?? 'Belum Bayar',
-                    4 => $item->mitra?->nomor_mitra,
-                    5 => $item->mitra?->nama,
-                    6 => (float) $item->total_qty,
-                    7 => (float) $item->total_akhir,
-                    8 => (float) $item->jumlah_bayar,
-                    9 => (float) ($item->total_akhir - $item->jumlah_bayar),
+                    4 => $item->nama_sales ?? '-',
+                    5 => $item->mitra?->nomor_mitra,
+                    6 => $item->mitra?->nama,
+                    7 => (float) $item->total_qty,
+                    8 => (float) $item->total_akhir,
+                    9 => (float) $item->jumlah_bayar,
+                    10 => (float) ($item->total_akhir - $item->jumlah_bayar),
                     default => ''
                 };
                 $sheet->setCellValue([$colIdx++, $row], $val);
@@ -592,7 +603,7 @@ class InvoiceReportController extends Controller
         $lastCol = Coordinate::stringFromColumnIndex(count($visibleHeaders));
         $this->applyBodyStyle($sheet, 'A1', $lastCol.($row - 1));
 
-        return $this->streamSpreadsheet($spreadsheet, 'Laporan_Pembayaran_'.date('Y-m-d').'.xlsx');
+        return $this->streamSpreadsheet($spreadsheet, 'Laporan_Nota_'.date('Y-m-d').'.xlsx');
     }
 
     private function exportSoldProductsSpreadsheet($request, $startDate, $endDate, $officeId, $mitraId, $search, $hiddenColumns)
@@ -843,6 +854,12 @@ class InvoiceReportController extends Controller
         $sortBy = $request->sort_by ?: $defaultSortField;
         $sortDir = $request->sort_dir ?: $defaultSortDir;
 
+        // Skip sorting by users.name if users table is not joined to avoid SQL error
+        if (($sortBy === 'users.name' || $sortBy === 'nama_sales') && ! str_contains(strtolower($query->toSql()), 'join `users`')) {
+            $sortBy = $defaultSortField;
+            $sortDir = $defaultSortDir;
+        }
+
         if ($sortBy === 'status_pembayaran') {
             $query->orderByRaw("CASE status_pembayaran 
                 WHEN 'Overdue' THEN 1 
@@ -865,6 +882,9 @@ class InvoiceReportController extends Controller
             if ($sortBy === 'total_akhir' || $sortBy === 'invoices.total_akhir') {
                 $sortBy = 'invoices.total_akhir';
             }
+            if ($sortBy === 'nama_sales') {
+                $sortBy = 'users.name';
+            }
             $query->orderBy($sortBy, $sortDir);
         }
     }
@@ -874,26 +894,41 @@ class InvoiceReportController extends Controller
         $prodIdFilter = $this->extractProductFilter($request);
         $invTypeFilter = $request->invoice_type;
         $payStatusFilter = $request->payment_status;
+        $salesIdFilter = $request->sales_id;
         $showDeleted = $request->show_deleted;
 
         // Soft delete handling
         if (! $showDeleted) {
-            $query->whereNull($query->getModel()->getTable().'.deleted_at');
+            $table = ($query instanceof Builder) ? $query->getModel()->getTable() : null;
+            if ($table) {
+                $query->whereNull($table.'.deleted_at');
+            }
+
+            // If invoices is joined or is the main table, ensure we also filter out deleted invoices
+            $sql = strtolower($query->toSql());
+            if (str_contains($sql, 'join `invoices`') || ($table === 'invoices') || (isset($query->from) && $query->from === 'invoices')) {
+                $query->whereNull('invoices.deleted_at');
+            }
         }
 
         // Apply filters
+        $invoiceTable = 'invoices';
+
         if (! empty($mitraId)) {
-            $query->whereIn('mitra_id', (array) $mitraId);
+            $query->whereIn($invoiceTable.'.mitra_id', (array) $mitraId);
         }
         if ($invTypeFilter) {
-            $query->where('tipe_invoice', $invTypeFilter);
+            $query->where($invoiceTable.'.tipe_invoice', $invTypeFilter);
+        } else {
+            // Default to Sales invoices only
+            $query->where($invoiceTable.'.tipe_invoice', 'Sales');
         }
         if ($payStatusFilter) {
-            $query->where('status_pembayaran', $payStatusFilter);
+            $query->where($invoiceTable.'.status_pembayaran', $payStatusFilter);
         }
-        
-        // Return the query object to ensure it can be cloned
-        return $query;
+        if ($salesIdFilter) {
+            $query->where($invoiceTable.'.sales_id', $salesIdFilter);
+        }
 
         // Apply product filter
         if (! empty($prodIdFilter)) {
@@ -941,5 +976,7 @@ class InvoiceReportController extends Controller
                 }
             });
         }
+
+        return $query;
     }
 }

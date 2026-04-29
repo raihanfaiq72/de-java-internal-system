@@ -65,6 +65,14 @@
                     <th class="py-3 text-muted small fw-bold text-uppercase">
                         Metode
                     </th>
+                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable" data-sort="users.name">
+                        Sales
+                        @if($sortBy === 'users.name' || $sortBy === 'nama_sales')
+                            <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                        @else
+                            <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
+                        @endif
+                    </th>
                     <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable" data-sort="mitras.nomor_mitra">
                         No. Mitra
                         @if($sortBy === 'mitras.nomor_mitra')
@@ -160,6 +168,7 @@
                                 {{ $method }}
                             </span>
                         </td>
+                        <td class="small">{{ $payment->nama_sales ?: '-' }}</td>
                         <td>{{ $payment->nomor_mitra ?: '-' }}</td>
                         <td>{{ $payment->nama_mitra }}</td>
                         <td>{{ (int) $payment->total_qty ?? '-' }}</td>
@@ -183,7 +192,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="10" class="text-center py-5">
+                        <td colspan="11" class="text-center py-5">
                             <div class="mb-3"><i class="iconoir-file-not-found fs-1 text-muted opacity-50"></i></div>
                             <h6 class="fw-bold text-dark">Tidak ada data pembayaran</h6>
                             <p class="text-muted small mb-0">Sesuaikan filter periode atau pencarian.</p>
@@ -193,7 +202,7 @@
             </tbody>
             <tfoot class="bg-light fw-bold">
                 <tr>
-                    <td colspan="7" class="fw-bold text-end text-uppercase">Total</td>
+                    <td colspan="8" class="fw-bold text-end text-uppercase">Total</td>
                     <td class="px-4text-dark fw-bold">Rp {{ number_format($totalNotaAmount, 0, ',', '.') }}</td>
                     <td class="px-4 text-end text-dark fw-bold">Rp
                         {{ number_format($totalPaymentAmount, 0, ',', '.') }}</td>

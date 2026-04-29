@@ -30,6 +30,44 @@
             background-color: #0d6efd !important;
             border-color: #0d6efd !important;
         }
+
+        /* Equalize heights for filter fields */
+        .form-control, .form-select, .input-group-text {
+            height: 38px !important; 
+        }
+        .input-group-sm > .form-control, 
+        .input-group-sm > .form-select, 
+        .input-group-sm > .input-group-text {
+            height: 31px !important; 
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+        /* TomSelect adjustments */
+        .ts-control {
+            height: 38px !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        .form-select-sm + .ts-wrapper .ts-control,
+        .ts-wrapper.form-select-sm .ts-control {
+            height: 31px !important;
+            min-height: 31px !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+        .ts-wrapper .ts-control > input {
+            height: 100% !important;
+        }
+        .ts-wrapper.multi .ts-control > div {
+            margin: 2px 4px 2px 0 !important;
+        }
+        /* Fix input-group alignment */
+        .input-group-sm {
+            height: 31px !important;
+        }
+        .input-group-sm .form-control {
+            line-height: 31px !important;
+        }
     </style>
 @endpush
 
@@ -86,19 +124,21 @@
                                             </select>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label fw-bold small text-muted">Pencarian</label>
-                                            <div class="input-group input-group-sm">
-                                                <span class="input-group-text bg-white border-end-0">
-                                                    <i class="fa fa-search text-muted small"></i>
-                                                </span>
-                                                <input type="text" class="form-control border-start-0" name="search"
-                                                    placeholder="No. Nota/Mitra..." value="{{ request('search') }}">
-                                            </div>
+                                            <label class="form-label fw-bold small text-muted">Salesperson</label>
+                                            <select class="form-select form-select-sm" name="sales_id">
+                                                <option value="">Semua Sales</option>
+                                                @foreach ($salespersons as $s)
+                                                    <option value="{{ $s->id }}"
+                                                        {{ request('sales_id') == $s->id ? 'selected' : '' }}>
+                                                        {{ $s->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
                                         </div>
                                     </div>
-                                    <!-- Row 2: Produk, Tipe Nota, Status Pembayaran -->
+                                    <!-- Row 2: Produk, Tipe Nota, Status Pembayaran, Pencarian -->
                                     <div class="row g-3 align-items-end mt-1">
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <label class="form-label fw-bold small text-muted">Produk</label>
                                             @php
                                                 $selectedProducts = (array) request('product_id', []);
@@ -112,7 +152,7 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <label class="form-label fw-bold small text-muted">Tipe Nota</label>
                                             <select class="form-select form-select-sm" name="invoice_type">
                                                 <option value="">Semua</option>
@@ -123,7 +163,7 @@
                                                     {{ request('invoice_type') == 'Purchase' ? 'selected' : '' }}>Purchase</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <label class="form-label fw-bold small text-muted">Status Pembayaran</label>
                                             <select class="form-select form-select-sm" name="payment_status">
                                                 <option value="">Semua</option>
@@ -140,6 +180,16 @@
                                                     {{ request('payment_status') == 'Overdue' ? 'selected' : '' }}>Jatuh Tempo
                                                     (Overdue)</option>
                                             </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold small text-muted">Pencarian</label>
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-white border-end-0">
+                                                    <i class="fa fa-search text-muted small"></i>
+                                                </span>
+                                                <input type="text" class="form-control border-start-0" name="search"
+                                                    placeholder="No. Nota/Mitra..." value="{{ request('search') }}">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -684,6 +734,15 @@
                     create: false,
                     persist: false,
                     placeholder: 'Pilih Mitra...',
+                });
+            }
+
+            const salesSelect = document.querySelector('select[name="sales_id"]');
+            if (salesSelect) {
+                new TomSelect(salesSelect, {
+                    create: false,
+                    persist: false,
+                    placeholder: 'Pilih Sales...',
                 });
             }
         });
