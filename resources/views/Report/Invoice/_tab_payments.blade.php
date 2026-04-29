@@ -38,25 +38,28 @@
                     $sortDir = request('sort_dir', 'desc');
                 @endphp
                 <tr>
-                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable" data-sort="status_pembayaran">
+                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable"
+                        data-sort="status_pembayaran">
                         Status
-                        @if($sortBy === 'status_pembayaran')
+                        @if ($sortBy === 'status_pembayaran')
                             <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
                         @else
                             <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
                         @endif
                     </th>
-                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable" data-sort="invoices.tgl_invoice">
+                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable"
+                        data-sort="invoices.tgl_invoice">
                         Tanggal
-                        @if($sortBy === 'invoices.tgl_invoice')
+                        @if ($sortBy === 'invoices.tgl_invoice')
                             <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
                         @else
                             <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
                         @endif
                     </th>
-                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable" data-sort="invoices.nomor_invoice">
+                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable"
+                        data-sort="invoices.nomor_invoice">
                         No. Nota
-                        @if($sortBy === 'invoices.nomor_invoice')
+                        @if ($sortBy === 'invoices.nomor_invoice')
                             <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
                         @else
                             <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
@@ -65,25 +68,28 @@
                     <th class="py-3 text-muted small fw-bold text-uppercase">
                         Metode
                     </th>
-                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable" data-sort="users.name">
+                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable"
+                        data-sort="users.name">
                         Sales
-                        @if($sortBy === 'users.name' || $sortBy === 'nama_sales')
+                        @if ($sortBy === 'users.name' || $sortBy === 'nama_sales')
                             <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
                         @else
                             <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
                         @endif
                     </th>
-                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable" data-sort="mitras.nomor_mitra">
+                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable"
+                        data-sort="mitras.nomor_mitra">
                         No. Mitra
-                        @if($sortBy === 'mitras.nomor_mitra')
+                        @if ($sortBy === 'mitras.nomor_mitra')
                             <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
                         @else
                             <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
                         @endif
                     </th>
-                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable" data-sort="mitras.nama">
+                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable"
+                        data-sort="mitras.nama">
                         Nama Mitra
-                        @if($sortBy === 'mitras.nama')
+                        @if ($sortBy === 'mitras.nama')
                             <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
                         @else
                             <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
@@ -92,25 +98,28 @@
                     <th class="py-3 text-muted small fw-bold text-uppercase">
                         Qty
                     </th>
-                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable" data-sort="invoices.total_akhir">
+                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable"
+                        data-sort="invoices.total_akhir">
                         Total Nota
-                        @if($sortBy === 'invoices.total_akhir')
+                        @if ($sortBy === 'invoices.total_akhir')
                             <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
                         @else
                             <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
                         @endif
                     </th>
-                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end cursor-pointer sortable" data-sort="payments.jumlah_bayar">
+                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end cursor-pointer sortable"
+                        data-sort="payments.jumlah_bayar">
                         Terbayar
-                        @if($sortBy === 'payments.jumlah_bayar')
+                        @if ($sortBy === 'payments.jumlah_bayar')
                             <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
                         @else
                             <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
                         @endif
                     </th>
-                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable" data-sort="sisa_piutang">
+                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable"
+                        data-sort="sisa_piutang">
                         Sisa Piutang
-                        @if($sortBy === 'sisa_piutang')
+                        @if ($sortBy === 'sisa_piutang')
                             <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
                         @else
                             <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
@@ -138,7 +147,8 @@
                         </td>
                         <td>{{ \Carbon\Carbon::parse($payment->tgl_pembayaran)->format('d M Y') }}</td>
                         <td class="fw-bold">
-                            <a href="{{ $payment->tipe_invoice === 'Sales' ? route('sales.show', $payment->id) : route('purchase.show', $payment->id) }}" class="text-primary text-decoration-none">
+                            <a href="{{ $payment->tipe_invoice === 'Sales' ? route('sales.show', $payment->id) : route('purchase.show', $payment->id) }}"
+                                class="text-primary text-decoration-none">
                                 {{ $payment->nomor_invoice }}
                             </a>
                         </td>
@@ -168,7 +178,7 @@
                                 {{ $method }}
                             </span>
                         </td>
-                        <td class="small">{{ $payment->nama_sales ?: '-' }}</td>
+                        <td>{{ $payment->nama_sales ?: '-' }}</td>
                         <td>{{ $payment->nomor_mitra ?: '-' }}</td>
                         <td>{{ $payment->nama_mitra }}</td>
                         <td>{{ (int) $payment->total_qty ?? '-' }}</td>

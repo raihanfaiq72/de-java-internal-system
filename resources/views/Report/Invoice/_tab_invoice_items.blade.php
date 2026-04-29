@@ -69,6 +69,15 @@
                         @endif
                     </th>
                     <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable"
+                        data-sort="suppliers.nomor_mitra">
+                        Kode
+                        @if ($sortBy === 'suppliers.nomor_mitra' || $sortBy === 'kode_supplier')
+                            <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                        @else
+                            <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
+                        @endif
+                    </th>
+                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable"
                         data-sort="products.nama_produk">
                         Produk
                         @if ($sortBy === 'products.nama_produk')
@@ -153,6 +162,7 @@
                                 {{ $item->nomor_invoice }}
                             </a>
                         </td>
+                        <td class="text-muted font-monospace small">{{ $item->kode_supplier ?: '-' }}</td>
                         <td class="fw-bold text-dark">{{ $item->nama_produk }}</td>
                         <td>{{ $item->nama_mitra }}</td>
                         <td class="text-end fw-bold">{{ number_format($item->qty, 0, ',', '.') }}</td>
@@ -167,7 +177,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="10" class="text-center py-5">
+                        <td colspan="11" class="text-center py-5">
                             <div class="mb-3"><i class="iconoir-list fs-1 text-muted opacity-50"></i></div>
                             <h6 class="fw-bold text-dark">Tidak ada data item nota</h6>
                             <p class="text-muted small mb-0">Sesuaikan filter untuk melihat data.</p>
@@ -177,7 +187,7 @@
             </tbody>
             <tfoot class="bg-light fw-bold">
                 <tr>
-                    <td colspan="9" class="px-4 text-end text-uppercase text-muted small fw-bold">Total Transaksi
+                    <td colspan="10" class="px-4 text-end text-uppercase text-muted small fw-bold">Total Transaksi
                     </td>
                     <td class="px-4 text-primary fw-bold">Rp
                         {{ number_format($summaryTotalTransaction, 0, ',', '.') }}</td>

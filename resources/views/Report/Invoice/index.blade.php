@@ -63,10 +63,17 @@
         }
         /* Fix input-group alignment */
         .input-group-sm {
-            height: 31px !important;
+            height: 38px !important;
+            display: flex !important;
         }
-        .input-group-sm .form-control {
-            line-height: 31px !important;
+        .input-group-sm .form-control, 
+        .input-group-sm .input-group-text {
+            height: 38px !important;
+            line-height: 1 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            display: flex !important;
+            align-items: center !important;
         }
     </style>
 @endpush

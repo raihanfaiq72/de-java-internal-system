@@ -7,7 +7,7 @@
         <div>
             <h6 class="mb-0 fw-bold text-dark">Daftar Produk Terjual</h6>
             <small class="text-muted">
-                @if($metric === 'qty')
+                @if ($metric === 'qty')
                     Total Qty: <span class="fw-bold text-success">{{ number_format($totalSoldQty, 0, ',', '.') }}</span>
                 @elseif($metric === 'value')
                     Total Value: <span class="fw-bold text-primary">Rp
@@ -50,46 +50,51 @@
                     $sortDir = request('sort_dir', 'asc');
                 @endphp
                 <tr>
-                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable" data-sort="products.nama_produk">
+                    <th class="px-4 py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable"
+                        data-sort="products.nama_produk">
                         Nama Produk
-                        @if($sortBy === 'products.nama_produk')
+                        @if ($sortBy === 'products.nama_produk')
                             <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
                         @else
                             <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
                         @endif
                     </th>
-                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable" data-sort="products.sku_kode">
-                        Kode (SKU)
-                        @if($sortBy === 'products.sku_kode')
+                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable"
+                        data-sort="suppliers.nomor_mitra">
+                        Kode
+                        @if ($sortBy === 'suppliers.nomor_mitra' || $sortBy === 'kode_supplier')
                             <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
                         @else
                             <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
                         @endif
                     </th>
-                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable" data-sort="product_categories.nama_kategori">
+                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable"
+                        data-sort="product_categories.nama_kategori">
                         Kategori
-                        @if($sortBy === 'product_categories.nama_kategori')
+                        @if ($sortBy === 'product_categories.nama_kategori')
                             <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
                         @else
                             <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
                         @endif
                     </th>
-                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable" data-sort="products.satuan">
+                    <th class="py-3 text-muted small fw-bold text-uppercase cursor-pointer sortable"
+                        data-sort="products.satuan">
                         Satuan
-                        @if($sortBy === 'products.satuan')
+                        @if ($sortBy === 'products.satuan')
                             <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
                         @else
                             <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
                         @endif
                     </th>
-                    @if($metric === 'qty')
+                    @if ($metric === 'qty')
                         <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end">
                             Kuantitas
                         </th>
                     @elseif($metric === 'value')
-                        <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end cursor-pointer sortable" data-sort="total_value">
+                        <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end cursor-pointer sortable"
+                            data-sort="total_value">
                             Value (Rp)
-                            @if($sortBy === 'total_value')
+                            @if ($sortBy === 'total_value')
                                 <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
                             @else
                                 <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
@@ -99,9 +104,10 @@
                         <th class="py-3 text-muted small fw-bold text-uppercase text-end">
                             Kuantitas
                         </th>
-                        <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end cursor-pointer sortable" data-sort="total_value">
+                        <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end cursor-pointer sortable"
+                            data-sort="total_value">
                             Value (Rp)
-                            @if($sortBy === 'total_value')
+                            @if ($sortBy === 'total_value')
                                 <i class="fa fa-sort-{{ $sortDir === 'asc' ? 'up' : 'down' }} ms-1"></i>
                             @else
                                 <i class="fa fa-sort text-muted opacity-50 ms-1"></i>
@@ -114,17 +120,19 @@
                 @forelse($soldProducts as $product)
                     <tr>
                         <td class="px-4 fw-bold text-dark">{{ $product->nama_produk }}</td>
-                        <td class="text-muted font-monospace small">{{ $product->sku_kode }}</td>
+                        <td class="text-muted font-monospace small">{{ $product->kode_supplier ?: '-' }}</td>
                         <td>{{ $product->nama_kategori ?? '-' }}</td>
                         <td>{{ $product->satuan }}</td>
-                        @if($metric === 'qty')
-                            <td class="px-4 text-end fw-bold text-success">{{ number_format($product->total_qty, 0, ',', '.') }}
+                        @if ($metric === 'qty')
+                            <td class="px-4 text-end fw-bold text-success">
+                                {{ number_format($product->total_qty, 0, ',', '.') }}
                             </td>
                         @elseif($metric === 'value')
                             <td class="px-4 text-end fw-bold text-primary">Rp
                                 {{ number_format($product->total_value ?? 0, 0, ',', '.') }}</td>
                         @else
-                            <td class="text-end fw-bold text-success">{{ number_format($product->total_qty, 0, ',', '.') }}</td>
+                            <td class="text-end fw-bold text-success">
+                                {{ number_format($product->total_qty, 0, ',', '.') }}</td>
                             <td class="px-4 text-end fw-bold text-primary">Rp
                                 {{ number_format($product->total_value ?? 0, 0, ',', '.') }}</td>
                         @endif
@@ -141,17 +149,22 @@
             </tbody>
             <tfoot class="bg-light fw-bold">
                 <tr>
-                    @if($metric === 'qty')
-                        <td colspan="4" class="px-4 text-end text-uppercase text-muted small">Total Kuantitas</td>
-                        <td class="px-4 text-end text-success">{{ number_format($totalSoldQty, 0, ',', '.') }}</td>
+                    @if ($metric === 'qty')
+                        <td colspan="4" class="px-4 text-end text-uppercase fw-bold">Total Kuantitas
+                        </td>
+                        <td class="px-4 text-end text-success fw-bold">{{ number_format($totalSoldQty, 0, ',', '.') }}
+                        </td>
                     @elseif($metric === 'value')
-                        <td colspan="4" class="px-4 text-end text-uppercase text-muted small">Total Value</td>
-                        <td class="px-4 text-end text-primary">Rp {{ number_format($totalSoldValue ?? 0, 0, ',', '.') }}
+                        <td colspan="4" class="px-4 text-end text-uppercase fw-bold">Total Value
+                        </td>
+                        <td class="px-4 text-end text-primary fw-bold">Rp
+                            {{ number_format($totalSoldValue ?? 0, 0, ',', '.') }}
                         </td>
                     @else
-                        <td colspan="4" class="px-4 text-end text-uppercase text-muted small">Total Kuantitas</td>
-                        <td class="text-end text-success">{{ number_format($totalSoldQty, 0, ',', '.') }}</td>
-                        <td class="px-4 text-end text-primary">Rp {{ number_format($totalSoldValue ?? 0, 0, ',', '.') }}
+                        <td colspan="4" class="px-4 text-end text-uppercase fw-bold">Total Kuantitas</td>
+                        <td class="text-end text-success fw-bold">{{ number_format($totalSoldQty, 0, ',', '.') }}</td>
+                        <td class="px-4 text-end text-primary fw-bold">Rp
+                            {{ number_format($totalSoldValue ?? 0, 0, ',', '.') }}
                         </td>
                     @endif
                 </tr>
