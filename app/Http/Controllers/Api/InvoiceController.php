@@ -10,7 +10,6 @@ use App\Models\InvoiceItemTax;
 use App\Models\Journal;
 use App\Models\Partner;
 use App\Models\Permission;
-use App\Models\StockLocation;
 use App\Models\User;
 use App\Models\UserOfficeRole;
 use App\Services\JournalService;
@@ -292,6 +291,7 @@ class InvoiceController extends Controller
                                 $this->stockService->recordIn(
                                     $item->produk_id,
                                     $item->qty,
+                                    $item->product->harga_beli,
                                     null,
                                     'Sales Return (Edited)',
                                     $invoice->id,
@@ -444,7 +444,7 @@ class InvoiceController extends Controller
                     ->where('ref_no', $invoice->nomor_invoice)
                     ->update([
                         'status_dok' => 'Draft',
-                        'ref_no' => null
+                        'ref_no' => null,
                     ]);
             }
 
@@ -637,11 +637,11 @@ class InvoiceController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'invoice.return_of_invoice_id' => 'required|exists:invoices,id',
-            'invoice.nomor_invoice'        => 'required|unique:invoices,nomor_invoice',
-            'invoice.tgl_invoice'          => 'required|date',
-            'items'                        => 'required|array|min:1',
-            'items.*.qty'                  => 'required|numeric|min:0.01',
-            'items.*.harga_satuan'         => 'required|numeric|min:0',
+            'invoice.nomor_invoice' => 'required|unique:invoices,nomor_invoice',
+            'invoice.tgl_invoice' => 'required|date',
+            'items' => 'required|array|min:1',
+            'items.*.qty' => 'required|numeric|min:0.01',
+            'items.*.harga_satuan' => 'required|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -664,12 +664,12 @@ class InvoiceController extends Controller
         }
 
         return DB::transaction(function () use ($request, $officeId, $originalInvoice) {
-            $invoiceData                      = $request->invoice;
-            $invoiceData['office_id']         = $officeId;
-            $invoiceData['tipe_invoice']      = 'Return';
-            $invoiceData['mitra_id']          = $originalInvoice->mitra_id;
-            $invoiceData['sales_id']          = $originalInvoice->sales_id;
-            $invoiceData['status_dok']        = 'Approved';
+            $invoiceData = $request->invoice;
+            $invoiceData['office_id'] = $officeId;
+            $invoiceData['tipe_invoice'] = 'Return';
+            $invoiceData['mitra_id'] = $originalInvoice->mitra_id;
+            $invoiceData['sales_id'] = $originalInvoice->sales_id;
+            $invoiceData['status_dok'] = 'Approved';
             $invoiceData['status_pembayaran'] = 'Unpaid';
 
             $returnInvoice = Invoice::create($invoiceData);
@@ -682,7 +682,7 @@ class InvoiceController extends Controller
                 $item = InvoiceItem::create($itemData);
 
                 $originalItem = null;
-                if (!empty($itemData['original_item_id'])) {
+                if (! empty($itemData['original_item_id'])) {
                     $originalItem = $originalItems->get($itemData['original_item_id']);
                 }
 
@@ -722,8 +722,8 @@ class InvoiceController extends Controller
                     foreach ($itemData['taxes'] as $taxData) {
                         if (! empty($taxData['tax_id'])) {
                             InvoiceItemTax::create([
-                                'invoice_item_id'        => $item->id,
-                                'tax_id'                 => $taxData['tax_id'],
+                                'invoice_item_id' => $item->id,
+                                'tax_id' => $taxData['tax_id'],
                                 'nilai_pajak_diterapkan' => $taxData['nilai_pajak_diterapkan'] ?? 0,
                             ]);
                         }
@@ -1213,13 +1213,14 @@ class InvoiceController extends Controller
             return apiResponse(true, 'Invoice Overdue telah ditolak (Rejected).');
         });
     }
+
     public function nextReturnNumber()
     {
         $year = date('Y');
         $prefix = "RTR/{$year}/";
 
         $lastInvoice = Invoice::withTrashed()
-            ->where('nomor_invoice', 'LIKE', $prefix . '%')
+            ->where('nomor_invoice', 'LIKE', $prefix.'%')
             ->where('tipe_invoice', 'Return')
             ->orderBy('nomor_invoice', 'desc')
             ->first();
@@ -1232,6 +1233,6 @@ class InvoiceController extends Controller
             }
         }
 
-        return apiResponse(true, 'Next return number', $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT));
+        return apiResponse(true, 'Next return number', $prefix.str_pad($nextNumber, 4, '0', STR_PAD_LEFT));
     }
 }
