@@ -7,6 +7,8 @@ use App\Models\BulkReport;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Payment;
+use App\Models\COAGroup;
+use App\Models\JournalDetail;
 use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -179,6 +181,7 @@ class BulkReportController extends Controller
                 $query->withTrashed();
             },
             'items',
+            'payment',
         ])
             ->where('tipe_invoice', 'Sales')
             ->whereBetween('tgl_invoice', [$startDate, $endDate])
@@ -189,6 +192,23 @@ class BulkReportController extends Controller
                 $invoice->tgl_invoice = is_string($invoice->tgl_invoice)
                     ? Carbon::parse($invoice->tgl_invoice)
                     : ($invoice->tgl_invoice instanceof Carbon ? $invoice->tgl_invoice : Carbon::parse($invoice->tgl_invoice));
+
+                // Calculate full payment vs down payment
+                $invoiceTotal = $invoice->total_akhir;
+                $paidAmount = 0;
+                $downPaymentAmount = 0;
+
+                foreach ($invoice->payment as $payment) {
+                    if ($payment->jumlah_bayar >= $invoiceTotal) {
+                        $paidAmount += $payment->jumlah_bayar;
+                    } else {
+                        $downPaymentAmount += $payment->jumlah_bayar;
+                    }
+                }
+
+                $invoice->full_payment_amount = $paidAmount;
+                $invoice->down_payment_amount = $downPaymentAmount;
+                $invoice->amount_due = $invoiceTotal - $paidAmount - $downPaymentAmount;
 
                 return $invoice;
             });
@@ -215,6 +235,20 @@ class BulkReportController extends Controller
                 $payment->tgl_pembayaran = is_string($payment->tgl_pembayaran)
                     ? Carbon::parse($payment->tgl_pembayaran)
                     : $payment->tgl_pembayaran;
+
+                // Calculate full payment vs down payment
+                $invoiceTotal = $payment->invoice ? $payment->invoice->total_akhir : 0;
+                $paymentAmount = $payment->jumlah_bayar;
+
+                if ($paymentAmount >= $invoiceTotal) {
+                    $payment->full_payment_amount = $paymentAmount;
+                    $payment->down_payment_amount = 0;
+                } else {
+                    $payment->full_payment_amount = 0;
+                    $payment->down_payment_amount = $paymentAmount;
+                }
+
+                $payment->amount_due = $invoiceTotal - $payment->full_payment_amount - $payment->down_payment_amount;
 
                 return $payment;
             });
@@ -267,50 +301,86 @@ class BulkReportController extends Controller
 
     private function getProfitLossData($startDate, $endDate)
     {
-        // Revenue from invoices
-        $salesRevenue = (float) Invoice::whereBetween('tgl_invoice', [$startDate, $endDate])
-            ->where('tipe_invoice', 'Sales')
-            ->sum('total_akhir');
+        $officeId = session('active_office_id');
 
-        // Cost of goods sold using products purchase price
-        $costOfGoodsSold = (float) InvoiceItem::whereHas('invoice', function ($query) use ($startDate, $endDate) {
-            $query->where('tipe_invoice', 'Sales')
-                  ->whereBetween('tgl_invoice', [$startDate, $endDate]);
-        })
-            ->join('products', 'invoice_items.produk_id', '=', 'products.id')
-            ->selectRaw('SUM(invoice_items.qty * products.harga_beli) as total_cogs')
-            ->value('total_cogs') ?? 0;
+        // Define groups that appear in P&L
+        // 4000: Revenue, 5000: COGS, 6000: Expenses, etc.
+        $targetGroups = [4000, 5000, 6000, 6800, 7001, 8001, 9000];
 
-        // Alternative approach using collection for better performance
-        // $costOfGoodsSold = Invoice::with('items')
-        //     ->whereBetween('tgl_invoice', [$startDate, $endDate])
-        //     ->get()
-        //     ->sum(function ($invoice) {
-        //         return $invoice->items->sum(function ($item) {
-        //             return $item->qty * $item->harga_satuan;
-        //         });
-        //     });
+        $movements = JournalDetail::query()
+            ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
+            ->where('journals.office_id', $officeId)
+            ->whereBetween('journals.tgl_jurnal', [$startDate, $endDate])
+            ->selectRaw('journal_details.akun_id, SUM(journal_details.debit) as total_debit, SUM(journal_details.kredit) as total_credit')
+            ->groupBy('journal_details.akun_id')
+            ->get()
+            ->keyBy('akun_id');
 
-        // Other revenues
-        $otherRevenues = 0; // Can be expanded later
+        $groups = COAGroup::with(['type.coas'])
+            ->where('office_id', $officeId)
+            ->whereIn('kode_kelompok', $targetGroups)
+            ->orderBy('kode_kelompok')
+            ->get();
 
-        // Operating expenses (can be expanded with actual expense tracking)
-        $operatingExpenses = 0; // Placeholder
+        $report = [];
+        $totalRevenue = 0;
+        $totalExpense = 0;
 
-        // Gross profit
-        $grossProfit = $salesRevenue - $costOfGoodsSold;
+        foreach ($groups as $group) {
+            $groupData = [
+                'code' => $group->kode_kelompok,
+                'name' => $group->nama_kelompok,
+                'types' => [],
+                'total_balance' => 0,
+            ];
 
-        // Net profit
-        $netProfit = $grossProfit + $otherRevenues - $operatingExpenses;
+            foreach ($group->type as $type) {
+                $typeData = [
+                    'name' => $type->nama_tipe,
+                    'accounts' => [],
+                    'total_balance' => 0,
+                ];
+
+                foreach ($type->coas as $coa) {
+                    $m = $movements->get($coa->id);
+                    $debit = $m ? $m->total_debit : 0;
+                    $credit = $m ? $m->total_credit : 0;
+
+                    // Normal balance: Credit for Revenue (4xxx, 7xxx), Debit for others
+                    if (in_array($group->kode_kelompok, [4000, 7001])) {
+                        $balance = $credit - $debit;
+                    } else {
+                        $balance = $debit - $credit;
+                    }
+
+                    $typeData['accounts'][] = [
+                        'code' => $coa->kode_akun,
+                        'name' => $coa->nama_akun,
+                        'balance' => $balance,
+                    ];
+                    $typeData['total_balance'] += $balance;
+                }
+
+                $groupData['types'][] = $typeData;
+                $groupData['total_balance'] += $typeData['total_balance'];
+            }
+
+            if (in_array($group->kode_kelompok, [4000, 7001])) {
+                $totalRevenue += $groupData['total_balance'];
+            } else {
+                $totalExpense += $groupData['total_balance'];
+            }
+
+            $report[] = $groupData;
+        }
 
         return [
-            'sales_revenue' => $salesRevenue,
-            'cost_of_goods_sold' => $costOfGoodsSold,
-            'other_revenues' => $otherRevenues,
-            'operating_expenses' => $operatingExpenses,
-            'gross_profit' => $grossProfit,
-            'net_profit' => $netProfit,
-            'period' => $startDate->format('d M Y').' - '.$endDate->format('d M Y'),
+            'report' => $report,
+            'total_revenue' => $totalRevenue,
+            'total_expense' => $totalExpense,
+            'net_profit' => $totalRevenue - $totalExpense,
+            'period_start' => $startDate->format('Y-m-d'),
+            'period_end' => $endDate->format('Y-m-d'),
         ];
     }
 }
