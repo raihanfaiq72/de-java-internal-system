@@ -197,6 +197,41 @@ class StockService
                 }
             }
 
+            // 5a. Legacy fallback: product.qty > 0 but no mutations exist (stock set directly on product)
+            // Treat the product's qty column as the source of truth and allow deduction.
+            if ($remainingToDeduct > 0) {
+                $product->refresh();
+                $legacyAvailable = (float) $product->qty - ($qty - $remainingToDeduct);
+
+                if ($legacyAvailable > 0) {
+                    $toTakeFromLegacy = min($legacyAvailable, $remainingToDeduct);
+                    $primaryLocId = $this->getDefaultLocation($product->office_id);
+
+                    // Create a synthetic IN mutation to represent the legacy stock so that
+                    // updateProductTotalQty stays consistent (IN - OUT = 0 after deduction).
+                    StockMutation::create([
+                        'office_id'        => $product->office_id,
+                        'product_id'       => $productId,
+                        'stock_location_id' => $primaryLocId,
+                        'type'             => 'IN',
+                        'qty'              => $toTakeFromLegacy,
+                        'remaining_qty'    => 0, // immediately consumed
+                        'cost_price'       => $product->harga_beli ?? 0,
+                        'reference_type'   => 'Legacy Stock Reconciliation',
+                        'reference_id'     => null,
+                        'notes'            => 'Auto-created to reconcile legacy product qty with mutations',
+                    ]);
+
+                    if (! isset($deductions[$primaryLocId])) {
+                        $deductions[$primaryLocId] = ['qty' => 0, 'total_cost' => 0];
+                    }
+                    $deductions[$primaryLocId]['qty'] += $toTakeFromLegacy;
+                    $deductions[$primaryLocId]['total_cost'] += ($toTakeFromLegacy * ($product->harga_beli ?? 0));
+
+                    $remainingToDeduct -= $toTakeFromLegacy;
+                }
+            }
+
             // 5. Create OUT mutations for actual deductions (Splitting per warehouse)
             foreach ($deductions as $locId => $data) {
                 StockMutation::create([
