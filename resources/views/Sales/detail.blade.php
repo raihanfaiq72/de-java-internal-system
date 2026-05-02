@@ -179,7 +179,28 @@
                                     </table>
                                 </div>
 
-                                <div class="row mt-5">
+                                <!-- Return summary rows (shown only when returns exist) -->
+                                <div id="return-summary-rows" style="display:none;">
+                                    <table class="table table-borderless align-middle mb-0">
+                                        <tbody>
+                                            <tr class="border-top border-danger border-opacity-25">
+                                                <td colspan="4" class="text-end py-2 text-danger fw-bold">
+                                                    <i class="fa fa-undo me-1"></i> Total Return
+                                                </td>
+                                                <td class="text-end py-2 fw-bold text-danger pe-4" id="val-total-return">- Rp 0</td>
+                                            </tr>
+                                            <tr class="bg-danger bg-opacity-10 rounded">
+                                                <td colspan="4" class="text-end py-2 fw-bold text-dark fs-6">Sisa Tagihan Efektif</td>
+                                                <td class="text-end py-2 fw-bold text-success pe-4 fs-6" id="val-sisa-tagihan">Rp 0</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Return badge tags -->
+                                <div id="return-badge-area" class="mt-3" style="display:none;"></div>
+
+                                <div class="row mt-4">
                                     <div class="col-12">
                                         <div class="p-3 bg-light rounded border border-light">
                                             <p class="mb-1 fw-bold text-dark small">Catatan:</p>
@@ -557,6 +578,10 @@
             document.getElementById('val-cashback').textContent = `- ${formatIDR(data.cashback || 0)}`;
             document.getElementById('val-total').textContent = formatIDR(data.total_akhir);
 
+            // Store raw total for return summary calculation
+            const summaryRows = document.getElementById('return-summary-rows');
+            if (summaryRows) summaryRows.dataset.invoiceTotal = data.total_akhir || 0;
+
             document.getElementById('inv-notes').textContent = data.catatan || 'Tidak ada catatan.';
 
             // Sidebar
@@ -596,16 +621,26 @@
         function renderReturnNotaList(returns) {
             const card = document.getElementById('return-nota-card');
             const list = document.getElementById('return-nota-list');
+            const summaryRows = document.getElementById('return-summary-rows');
+            const badgeArea = document.getElementById('return-badge-area');
+            const valTotalReturn = document.getElementById('val-total-return');
+            const valSisaTagihan = document.getElementById('val-sisa-tagihan');
+            const valTotal = document.getElementById('val-total');
 
             if (!returns || returns.length === 0) {
                 card.classList.add('d-none');
+                if (summaryRows) summaryRows.style.display = 'none';
+                if (badgeArea) badgeArea.style.display = 'none';
                 return;
             }
 
+            // ── Sidebar card ──────────────────────────────────────────────
             card.classList.remove('d-none');
             list.innerHTML = '';
 
+            let totalReturn = 0;
             returns.forEach(ret => {
+                totalReturn += parseFloat(ret.total_akhir || 0);
                 list.innerHTML += `
                     <div class="list-group-item p-3 d-flex align-items-center justify-content-between">
                         <div class="d-flex align-items-center">
@@ -615,15 +650,15 @@
                             <div>
                                 <h6 class="mb-0 text-dark fw-medium" style="font-size: 13px;">${ret.nomor_invoice}</h6>
                                 <small class="text-muted" style="font-size: 11px;">
-                                    ${formatDate(ret.tgl_invoice)} &bull; ${formatIDR(ret.total_akhir)}
+                                    ${formatDate(ret.tgl_invoice)} &bull; <span class="text-danger fw-bold">${formatIDR(ret.total_akhir)}</span>
                                 </small>
+                                ${ret.keterangan ? `<div class="text-muted fst-italic" style="font-size:10px;">${ret.keterangan}</div>` : ''}
                             </div>
                         </div>
                         <div class="d-flex gap-1">
-                            <a href="{{ url('sales/print-return') }}/${ret.id}?no_print=1"
+                            <a href="javascript:void(0)"
                                class="btn btn-sm btn-light border"
-                               data-no-loader="true"
-                               onclick="event.preventDefault(); openReturnPrintPreview(${ret.id});"
+                               onclick="openReturnPrintPreview(${ret.id});"
                                title="Preview Cetak">
                                 <i class="fa fa-eye"></i>
                             </a>
@@ -631,6 +666,29 @@
                     </div>
                 `;
             });
+
+            // ── Return summary rows in invoice card ───────────────────────
+            if (summaryRows && valTotalReturn && valSisaTagihan) {
+                summaryRows.style.display = 'block';
+                const rawTotal = parseFloat(summaryRows.dataset.invoiceTotal || 0);
+                const sisa = rawTotal - totalReturn;
+
+                valTotalReturn.textContent = `- ${formatIDR(totalReturn)}`;
+                valSisaTagihan.textContent = formatIDR(Math.max(0, sisa));
+            }
+
+            // ── Badge tags below invoice ──────────────────────────────────
+            if (badgeArea) {
+                badgeArea.style.display = 'block';
+                badgeArea.innerHTML = '';
+                returns.forEach(ret => {
+                    badgeArea.innerHTML += `
+                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 me-2 mb-1 px-3 py-2 rounded-pill fw-bold" style="font-size:12px;">
+                            <i class="fa fa-undo me-1"></i> RETUR: ${ret.nomor_invoice} &mdash; ${formatIDR(ret.total_akhir)}
+                        </span>
+                    `;
+                });
+            }
         }
 
         function openReturnPrintPreview(returnId) {
