@@ -78,11 +78,11 @@
                                     <table class="table table-striped table-hover align-middle" id="salesTable">
                                         <thead>
                                             <tr>
-                                                <th>Tanggal</th>
-                                                <th>No. Faktur</th>
+                                                <th class="text-nowrap">Tanggal</th>
+                                                <th class="text-nowrap">No. Faktur</th>
                                                 <th>Pelanggan</th>
-                                                <th>Total</th>
-                                                <th>Status</th>
+                                                <th class="text-nowrap">Total</th>
+                                                <th class="text-nowrap">Status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -91,7 +91,7 @@
                                                     <td>{{ $invoice->tgl_invoice->format('d/m/Y') }}</td>
                                                     <td>{{ $invoice->nomor_invoice }}</td>
                                                     <td>{{ $invoice->mitra->nama }}</td>
-                                                    <td class="fw-bold">Rp
+                                                    <td class="fw-bold text-nowrap">Rp
                                                         {{ number_format($invoice->total_akhir, 0, ',', '.') }}</td>
                                                     <td>
                                                         <span
@@ -120,26 +120,39 @@
                                     <table class="table table-striped table-hover align-middle" id="paymentsTable">
                                         <thead>
                                             <tr>
-                                                <th>Tanggal</th>
-                                                <th>Pelanggan</th>
-                                                <th>No. Referensi</th>
-                                                <th>Jumlah</th>
-                                                <th>Metode</th>
+                                                <th class="text-nowrap">No.</th>
+                                                <th class="text-nowrap">No. Invoice</th>
+                                                <th class="text-nowrap">Tanggal</th>
+                                                <th class="text-nowrap">Status</th>
+                                                <th class="text-nowrap">Metode</th>
+                                                <th class="text-nowrap">No. Mitra</th>
+                                                <th>Nama Mitra</th>
+                                                <th class="text-nowrap">Jumlah</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @forelse($paymentsData as $payment)
+                                            @php $paymentsTotal = 0; @endphp
+                                            @forelse($paymentsData as $i => $payment)
+                                                @php $paymentsTotal += $payment->jumlah_bayar; @endphp
                                                 <tr>
+                                                    <td>{{ $i + 1 }}</td>
+                                                    <td>{{ $payment->invoice->nomor_invoice ?? '-' }}</td>
                                                     <td>{{ $payment->tgl_pembayaran->format('d/m/Y') }}</td>
-                                                    <td>{{ $payment->invoice->mitra->name }}</td>
-                                                    <td>{{ $payment->nomor_pembayaran }}</td>
-                                                    <td class="fw-bold text-success">Rp
-                                                        {{ number_format($payment->jumlah_bayar, 0, ',', '.') }}</td>
+                                                    <td>
+                                                        <span
+                                                            class="badge bg-{{ $payment->invoice && $payment->invoice->status_pembayaran == 'Paid' ? 'success' : 'warning' }} rounded-pill px-2 small">
+                                                            {{ $payment->invoice->status_pembayaran ?? '-' }}
+                                                        </span>
+                                                    </td>
                                                     <td>{{ ucfirst($payment->metode_pembayaran) }}</td>
+                                                    <td>{{ $payment->invoice->mitra->kode ?? '-' }}</td>
+                                                    <td>{{ $payment->invoice->mitra->nama ?? '-' }}</td>
+                                                    <td class="fw-bold text-success text-nowrap">Rp
+                                                        {{ number_format($payment->jumlah_bayar, 0, ',', '.') }}</td>
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="5" class="text-center py-4 text-muted">
+                                                    <td colspan="8" class="text-center py-4 text-muted">
                                                         <i
                                                             class="fa fa-money-bill fs-1 text-secondary opacity-50 d-block mb-2"></i>
                                                         Tidak ada data pembayaran pada periode ini
@@ -147,6 +160,15 @@
                                                 </tr>
                                             @endforelse
                                         </tbody>
+                                        @if ($paymentsData->count() > 0)
+                                            <tfoot>
+                                                <tr class="bg-light fw-bold">
+                                                    <td colspan="7" class="text-end">TOTAL</td>
+                                                    <td class="text-success text-nowrap">Rp
+                                                        {{ number_format($paymentsTotal, 0, ',', '.') }}</td>
+                                                </tr>
+                                            </tfoot>
+                                        @endif
                                     </table>
                                 </div>
                             </div>
@@ -157,157 +179,171 @@
                                     <i class="fa fa-info-circle me-2"></i>
                                     Laporan ini akan dicetak dalam format landscape
                                 </div>
-                                <div class="table-responsive">
-                                    <table class="table table-striped table-hover align-middle" id="arAgingTable">
-                                        <thead>
-                                            <tr>
-                                                <th>Pelanggan</th>
-                                                <th>No. Invoice</th>
-                                                <th>Jatuh Tempo</th>
-                                                <th>Current</th>
-                                                <th>1-15</th>
-                                                <th>16-30</th>
-                                                <th>31-45</th>
-                                                <th>46-60</th>
-                                                <th>61+</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse($arAgingData as $aging)
-                                                <tr>
-                                                    <td>{{ $aging['customer'] }}</td>
-                                                    <td>{{ $aging['invoice_no'] }}</td>
-                                                    <td>{{ $aging['due_date'] }}</td>
-                                                    <td class="text-end">Rp
-                                                        {{ number_format($aging['aging_buckets']['current'], 0, ',', '.') }}
-                                                    </td>
-                                                    <td class="text-end">Rp
-                                                        {{ number_format($aging['aging_buckets']['1_15'], 0, ',', '.') }}
-                                                    </td>
-                                                    <td class="text-end">Rp
-                                                        {{ number_format($aging['aging_buckets']['16_30'], 0, ',', '.') }}
-                                                    </td>
-                                                    <td class="text-end">Rp
-                                                        {{ number_format($aging['aging_buckets']['31_45'], 0, ',', '.') }}
-                                                    </td>
-                                                    <td class="text-end">Rp
-                                                        {{ number_format($aging['aging_buckets']['46_60'], 0, ',', '.') }}
-                                                    </td>
-                                                    <td class="text-end">Rp
-                                                        {{ number_format($aging['aging_buckets']['61_plus'], 0, ',', '.') }}
-                                                    </td>
-                                                </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="9" class="text-center py-4 text-muted">
-                                                        <i
-                                                            class="fa fa-calendar fs-1 text-secondary opacity-50 d-block mb-2"></i>
-                                                        Tidak ada data piutang jatuh tempo
-                                                    </td>
-                                                </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                </div>
+                                @php
+                                    $groupedAging = collect($arAgingData)->groupBy('customer');
+                                @endphp
+
+                                @forelse($groupedAging as $customer => $items)
+                                    <div class="mb-4">
+                                        <h6 class="fw-bold text-primary mb-3">
+                                            <i class="iconoir-user me-1"></i> Mitra: {{ $customer }}
+                                        </h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-hover align-middle">
+                                                <thead class="bg-light">
+                                                    <tr>
+                                                        <th class="text-nowrap">No. Invoice</th>
+                                                        <th class="text-nowrap">Jatuh Tempo</th>
+                                                        <th class="text-nowrap text-end">Current</th>
+                                                        <th class="text-nowrap text-end">1 - 15</th>
+                                                        <th class="text-nowrap text-end">16 - 30</th>
+                                                        <th class="text-nowrap text-end">31 - 45</th>
+                                                        <th class="text-nowrap text-end">46 - 60</th>
+                                                        <th class="text-nowrap text-end">61+</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @php
+                                                        $subTotal = [
+                                                            'current' => 0,
+                                                            '1_15' => 0,
+                                                            '16_30' => 0,
+                                                            '31_45' => 0,
+                                                            '46_60' => 0,
+                                                            '61_plus' => 0,
+                                                        ];
+                                                    @endphp
+                                                    @foreach ($items as $item)
+                                                        @php
+                                                            foreach ($subTotal as $key => $val) {
+                                                                $subTotal[$key] += $item['aging_buckets'][$key] ?? 0;
+                                                            }
+                                                        @endphp
+                                                        <tr>
+                                                            <td>{{ $item['invoice_no'] }}</td>
+                                                            <td>{{ $item['due_date'] }}</td>
+                                                            <td class="text-end text-nowrap">Rp.
+                                                                {{ number_format($item['aging_buckets']['current'], 2, '.', ',') }}
+                                                            </td>
+                                                            <td class="text-end text-nowrap">Rp.
+                                                                {{ number_format($item['aging_buckets']['1_15'], 2, '.', ',') }}
+                                                            </td>
+                                                            <td class="text-end text-nowrap">Rp.
+                                                                {{ number_format($item['aging_buckets']['16_30'], 2, '.', ',') }}
+                                                            </td>
+                                                            <td class="text-end text-nowrap">Rp.
+                                                                {{ number_format($item['aging_buckets']['31_45'], 2, '.', ',') }}
+                                                            </td>
+                                                            <td class="text-end text-nowrap">Rp.
+                                                                {{ number_format($item['aging_buckets']['46_60'], 2, '.', ',') }}
+                                                            </td>
+                                                            <td class="text-end text-nowrap">Rp.
+                                                                {{ number_format($item['aging_buckets']['61_plus'], 2, '.', ',') }}
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                                <tfoot class="bg-light fw-bold">
+                                                    <tr>
+                                                        <td class="text-end">TOTAL</td>
+                                                        <td></td>
+                                                        <td class="text-end text-nowrap text-primary">Rp.
+                                                            {{ number_format($subTotal['current'], 2, '.', ',') }}</td>
+                                                        <td class="text-end text-nowrap text-primary">Rp.
+                                                            {{ number_format($subTotal['1_15'], 2, '.', ',') }}</td>
+                                                        <td class="text-end text-nowrap text-primary">Rp.
+                                                            {{ number_format($subTotal['16_30'], 2, '.', ',') }}</td>
+                                                        <td class="text-end text-nowrap text-primary">Rp.
+                                                            {{ number_format($subTotal['31_45'], 2, '.', ',') }}</td>
+                                                        <td class="text-end text-nowrap text-primary">Rp.
+                                                            {{ number_format($subTotal['46_60'], 2, '.', ',') }}</td>
+                                                        <td class="text-end text-nowrap text-primary">Rp.
+                                                            {{ number_format($subTotal['61_plus'], 2, '.', ',') }}</td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="text-center py-4 text-muted">
+                                        <i class="fa fa-calendar fs-1 text-secondary opacity-50 d-block mb-2"></i>
+                                        Tidak ada data piutang jatuh tempo
+                                    </div>
+                                @endforelse
                             </div>
 
                             <!-- Profit Loss Tab -->
                             <div class="tab-pane fade" id="profit-loss" role="tabpanel">
-                                <div class="row g-4">
-                                    <div class="col-md-6">
-                                        <div class="card border-0 shadow-sm h-100">
-                                            <div class="card-body p-4">
-                                                <div class="d-flex align-items-center mb-3">
-                                                    <div class="bg-primary-subtle p-2 rounded-3 me-3">
-                                                        <i class="iconoir-nav-arrow-right text-primary fs-4"></i>
-                                                    </div>
-                                                    <h6 class="card-title mb-0 fw-bold">Pendapatan</h6>
-                                                </div>
-                                                <div class="space-y-3">
-                                                    <div
-                                                        class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                                                        <span class="text-muted">Total Penjualan</span>
-                                                        <span class="fw-bold">Rp
-                                                            {{ number_format($profitLossData['sales_revenue'], 0, ',', '.') }}</span>
-                                                    </div>
-                                                    <div
-                                                        class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                                                        <span class="text-muted">Pendapatan Lainnya</span>
-                                                        <span class="fw-bold">Rp
-                                                            {{ number_format($profitLossData['other_revenues'], 0, ',', '.') }}</span>
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    class="d-flex justify-content-between align-items-center mt-4 p-3 bg-primary-subtle rounded-3">
-                                                    <span class="fw-bold text-primary">Total Pendapatan</span>
-                                                    <h5 class="fw-bold text-primary mb-0">Rp
-                                                        {{ number_format($profitLossData['sales_revenue'] + $profitLossData['other_revenues'], 0, ',', '.') }}
-                                                    </h5>
-                                                </div>
-                                            </div>
+                                <div class="card border-0 shadow-sm overflow-hidden mb-4">
+                                    <div class="card-header bg-light py-3 border-0">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0 fw-bold text-dark">Ringkasan Laporan Laba Rugi</h6>
+                                            <span class="badge bg-primary px-3 py-2">Periode:
+                                                {{ $bulkReport->period_name }}</span>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="card border-0 shadow-sm h-100">
-                                            <div class="card-body p-4">
-                                                <div class="d-flex align-items-center mb-3">
-                                                    <div class="bg-danger-subtle p-2 rounded-3 me-3">
-                                                        <i class="iconoir-nav-arrow-left text-danger fs-4"></i>
-                                                    </div>
-                                                    <h6 class="card-title mb-0 fw-bold">Beban & HPP</h6>
-                                                </div>
-                                                <div class="space-y-3">
-                                                    <div
-                                                        class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                                                        <span class="text-muted">Harga Pokok Penjualan (HPP)</span>
-                                                        <span class="fw-bold">Rp
-                                                            {{ number_format($profitLossData['cost_of_goods_sold'], 0, ',', '.') }}</span>
-                                                    </div>
-                                                    <div
-                                                        class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                                                        <span class="text-muted">Beban Operasional</span>
-                                                        <span class="fw-bold">Rp
-                                                            {{ number_format($profitLossData['operating_expenses'], 0, ',', '.') }}</span>
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    class="d-flex justify-content-between align-items-center mt-4 p-3 bg-danger-subtle rounded-3">
-                                                    <span class="fw-bold text-danger">Total Beban</span>
-                                                    <h5 class="fw-bold text-danger mb-0">Rp
-                                                        {{ number_format($profitLossData['cost_of_goods_sold'] + $profitLossData['operating_expenses'], 0, ',', '.') }}
-                                                    </h5>
-                                                </div>
-                                            </div>
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover align-middle mb-0">
+                                                <thead class="bg-light">
+                                                    <tr>
+                                                        <th class="ps-4 py-3">Tipe Akun</th>
+                                                        <th class="text-end pe-4 py-3">Saldo</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach ($profitLossData['report'] as $group)
+                                                        @if ($group['total_balance'] != 0 || collect($group['types'])->flatMap(fn($t) => $t['accounts'])->count() > 0)
+                                                            <tr class="table-light">
+                                                                <td colspan="2" class="ps-4 fw-bold text-uppercase"
+                                                                    style="letter-spacing: 1px; font-size: 0.85rem;">
+                                                                    {{ $group['name'] }}</td>
+                                                            </tr>
+                                                            @foreach ($group['types'] as $type)
+                                                                <tr>
+                                                                    <td class="ps-5 fw-bold text-dark">
+                                                                        {{ $type['name'] }}</td>
+                                                                    <td class="text-end pe-4 fw-bold text-dark">
+                                                                        Rp.
+                                                                        {{ number_format($type['total_balance'], 2, ',', '.') }}
+                                                                    </td>
+                                                                </tr>
+                                                                @foreach ($type['accounts'] as $account)
+                                                                    <tr>
+                                                                        <td class="ps-5 text-muted"
+                                                                            style="padding-left: 4rem !important;">
+                                                                            {{ $account['name'] }} -
+                                                                            {{ $account['code'] }}</td>
+                                                                        <td class="text-end pe-4 text-muted">
+                                                                            Rp.
+                                                                            {{ number_format($account['balance'], 2, ',', '.') }}
+                                                                        </td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            @endforeach
+                                                            <tr class="bg-light-subtle">
+                                                                <td class="ps-4 fw-bold text-primary">Total
+                                                                    {{ $group['name'] }}</td>
+                                                                <td class="text-end pe-4 fw-bold text-primary">
+                                                                    Rp.
+                                                                    {{ number_format($group['total_balance'], 2, ',', '.') }}
+                                                                </td>
+                                                            </tr>
+                                                        @endif
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
-                                </div>
-
-                                <div class="card border-0 shadow-sm mt-4 bg-dark text-white overflow-hidden">
-                                    <div class="card-body p-4 position-relative">
+                                    <div class="card-footer bg-dark py-4 border-0">
                                         <div class="row align-items-center">
-                                            <div class="col-md-6 border-end border-secondary">
-                                                <div class="d-flex justify-content-between align-items-center pe-md-4">
-                                                    <div>
-                                                        <p class="text-light-subtle small mb-0">Laba Kotor (Gross Profit)
-                                                        </p>
-                                                        <h3 class="fw-bold mb-0 text-info">Rp
-                                                            {{ number_format($profitLossData['gross_profit'], 0, ',', '.') }}
-                                                        </h3>
-                                                    </div>
-                                                    <i class="iconoir-graph-up text-white fs-1 opacity-25"></i>
-                                                </div>
+                                            <div class="col-6">
+                                                <h5 class="text-white mb-0 fw-bold ps-3">Laba Bersih</h5>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="d-flex justify-content-between align-items-center ps-md-4">
-                                                    <div>
-                                                        <p class="text-light-subtle small mb-0">Laba Bersih (Net Profit)
-                                                        </p>
-                                                        <h3 class="fw-bold mb-0 text-success">Rp
-                                                            {{ number_format($profitLossData['net_profit'], 0, ',', '.') }}
-                                                        </h3>
-                                                    </div>
-                                                    <i class="iconoir-coins text-white fs-1 opacity-25"></i>
-                                                </div>
+                                            <div class="col-6 text-end">
+                                                <h4 class="text-primary mb-0 fw-bold pe-3">
+                                                    Rp. {{ number_format($profitLossData['net_profit'], 2, ',', '.') }}
+                                                </h4>
                                             </div>
                                         </div>
                                     </div>
@@ -492,6 +528,8 @@
 
             // Show loading state
             if (loading) {
+                loading.classList.remove('d-none');
+                loading.style.removeProperty('display');
                 loading.style.display = 'flex';
             }
             iframe.style.display = 'none';
@@ -502,14 +540,26 @@
             // Show modal
             const bModal = bootstrap.Modal.getOrCreateInstance(modalContainer);
             bModal.show();
+
+            // Safety timeout in case onload doesn't fire
+            setTimeout(() => {
+                const loadingElement = document.getElementById('preview-loading');
+                if (loadingElement && loadingElement.style.display !== 'none' && !loadingElement.classList.contains('d-none')) {
+                    console.log('Safety timeout triggered, forcing hideLoading...');
+                    hideLoading();
+                }
+            }, 5000);
         }
 
         function hideLoading() {
             const iframe = document.getElementById('bulk-preview-iframe');
             const loading = document.getElementById('preview-loading');
 
+            console.log('Iframe loaded, hiding loading overlay...');
+
             if (loading) {
-                loading.style.display = 'none';
+                loading.classList.add('d-none');
+                loading.style.setProperty('display', 'none', 'important');
             }
             if (iframe) {
                 iframe.style.display = 'block';
@@ -537,6 +587,8 @@
                         iframe.style.display = 'none';
                     }
                     if (loading) {
+                        loading.classList.remove('d-none');
+                        loading.style.removeProperty('display');
                         loading.style.display = 'flex';
                     }
                 });
