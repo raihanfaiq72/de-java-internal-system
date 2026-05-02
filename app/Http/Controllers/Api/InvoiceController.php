@@ -259,32 +259,147 @@ class InvoiceController extends Controller
 
     public function update(Request $request, $id)
     {
-        return DB::transaction(function () use ($request, $id) {
-            $invoice = Invoice::where('office_id', session('active_office_id'))->find($id);
-            if (! $invoice) {
-                return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
+            try {
+                return DB::transaction(function () use ($request, $id) {
+                    $invoice = Invoice::where('office_id', session('active_office_id'))->find($id);
+                    if (! $invoice) {
+                        return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
+                    }
+
+                    $message = 'Invoice berhasil diperbarui';
+
+                    $dataToUpdate = $request->invoice ?? $request->all();
+
+                    // Handle Logo Upload
+                    if ($request->hasFile('logo_img')) {
+                        $file = $request->file('logo_img');
+                        $filename = 'kop_'.time().'_'.$file->getClientOriginalName();
+                        $path = $file->move(public_path('invoices/kop'), $filename);
+                        $dataToUpdate['logo_img'] = 'invoices/kop/'.$filename;
+                    }
+
+                    // Update Invoice Details
+                    $invoice->update($dataToUpdate);
+
+                    // If items are provided, replace them (Full Sync)
+                    if ($request->has('items') && is_array($request->items)) {
+
+                        // 1. Reverse Stock for old items (Only if already approved)
+                        if ($invoice->status_dok === 'Approved') {
+                            foreach ($invoice->items as $item) {
+                                if ($item->product && $item->product->track_stock) {
+                                    if ($invoice->tipe_invoice === 'Sales') {
+                                        $this->stockService->recordIn(
+                                            $item->produk_id,
+                                            $item->qty,
+                                            $item->product->harga_beli,
+                                            null,
+                                            'Sales Return (Edited)',
+                                            $invoice->id,
+                                            "Stock Return (Invoice Edited): #{$invoice->nomor_invoice}"
+                                        );
+                                    } elseif ($invoice->tipe_invoice === 'Purchase') {
+                                        $this->stockService->recordOut(
+                                            $item->produk_id,
+                                            $item->qty,
+                                            null,
+                                            'Purchase Cancel (Edited)',
+                                            $invoice->id,
+                                            "Stock Deduct (Purchase Edited): #{$invoice->nomor_invoice}"
+                                        );
+                                    }
+                                }
+                            }
+
+                            // 2. Reverse COA
+                            $this->journalService->deleteInvoiceJournal($invoice);
+
+                            // 3. Delete old items
+                            $invoice->items()->each(function ($item) {
+                                $item->taxes()->delete();
+                                $item->delete();
+                            });
+
+                            // 4. Create new items and record new Stock
+                            foreach ($request->items as $itemData) {
+                                $itemData['invoice_id'] = $invoice->id;
+                                $item = InvoiceItem::create($itemData);
+
+                                // FIFO Stock Tracking (Only if already approved)
+                                if ($invoice->status_dok === 'Approved' && $item->product && $item->product->track_stock) {
+                                    if ($invoice->tipe_invoice === 'Purchase') {
+                                        $this->stockService->recordIn(
+                                            $item->produk_id,
+                                            $item->qty,
+                                            $item->harga_satuan,
+                                            null,
+                                            'Purchase',
+                                            $invoice->id,
+                                            "Purchase Invoice #{$invoice->nomor_invoice} (Edited)"
+                                        );
+                                    } elseif ($invoice->tipe_invoice === 'Sales') {
+                                        $this->stockService->recordOut(
+                                            $item->produk_id,
+                                            $item->qty,
+                                            null,
+                                            'Sales',
+                                            $invoice->id,
+                                            "Sales Invoice #{$invoice->nomor_invoice} (Edited)"
+                                        );
+                                    }
+                                }
+
+                                if (! empty($itemData['taxes'])) {
+                                    foreach ($itemData['taxes'] as $taxData) {
+                                        InvoiceItemTax::create([
+                                            'invoice_item_id' => $item->id,
+                                            'tax_id' => $taxData['tax_id'],
+                                            'nilai_pajak_diterapkan' => $taxData['nilai_pajak_diterapkan'] ?? 0,
+                                        ]);
+                                    }
+                                }
+                            }
+
+                            // 5. Re-record Journal entries
+                            if ($invoice->tipe_invoice === 'Purchase') {
+                                $this->journalService->recordPurchaseInvoice($invoice->fresh(['items.product']));
+                            } elseif ($invoice->tipe_invoice === 'Sales') {
+                                // Only record if not pending approval
+                                $needsApproval = InvoiceApprovalDetail::where('invoice_id', $invoice->id)
+                                    ->where('status', 'pending')
+                                    ->exists();
+
+                                if (! $needsApproval) {
+                                    $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
+                                } else {
+                                    $message .= '. Journal entry ditangguhkan (perlu ACC).';
+                                }
+                            }
+                        }
+                    }
+
+                    return apiResponse(true, $message, $invoice->load('items.taxes.tax'));
+                });
+            } catch (\Exception $e) {
+                return apiResponse(false, $e->getMessage(), null, null, 422);
             }
+    }
 
-            $message = 'Invoice berhasil diperbarui';
+    public function destroy($id)
+    {
+        try {
+            return DB::transaction(function () use ($id) {
+                $invoice = Invoice::where('office_id', session('active_office_id'))->find($id);
+                if (! $invoice) {
+                    return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
+                }
 
-            $dataToUpdate = $request->invoice ?? $request->all();
+                // If NOT archived, we MUST archive first to preserve data integrity (Stock/Journals)
+                if ($invoice->status_dok !== 'Draft' || $invoice->status_pembayaran !== 'Draft') {
+                    // Reverse COA
+                    $this->journalService->deleteInvoiceJournal($invoice);
 
-            // Handle Logo Upload
-            if ($request->hasFile('logo_img')) {
-                $file = $request->file('logo_img');
-                $filename = 'kop_'.time().'_'.$file->getClientOriginalName();
-                $path = $file->move(public_path('invoices/kop'), $filename);
-                $dataToUpdate['logo_img'] = 'invoices/kop/'.$filename;
-            }
-
-            // Update Invoice Details
-            $invoice->update($dataToUpdate);
-
-            // If items are provided, replace them (Full Sync)
-            if ($request->has('items') && is_array($request->items)) {
-
-                // 1. Reverse Stock for old items (Only if already approved)
-                if ($invoice->status_dok === 'Approved') {
+                    // Reverse Stock
                     foreach ($invoice->items as $item) {
                         if ($item->product && $item->product->track_stock) {
                             if ($invoice->tipe_invoice === 'Sales') {
@@ -293,165 +408,58 @@ class InvoiceController extends Controller
                                     $item->qty,
                                     $item->product->harga_beli,
                                     null,
-                                    'Sales Return (Edited)',
+                                    'Sales Return (Archived/Deleted)',
                                     $invoice->id,
-                                    "Stock Return (Invoice Edited): #{$invoice->nomor_invoice}"
+                                    "Stock Return (Invoice Deleted): #{$invoice->nomor_invoice}"
                                 );
                             } elseif ($invoice->tipe_invoice === 'Purchase') {
                                 $this->stockService->recordOut(
                                     $item->produk_id,
                                     $item->qty,
                                     null,
-                                    'Purchase Cancel (Edited)',
+                                    'Purchase Cancel (Archived/Deleted)',
                                     $invoice->id,
-                                    "Stock Deduct (Purchase Edited): #{$invoice->nomor_invoice}"
+                                    "Stock Deduct (Purchase Invoice Deleted): #{$invoice->nomor_invoice}"
                                 );
-                            }
-                        }
-                    }
-
-                    // 2. Reverse COA
-                    $this->journalService->deleteInvoiceJournal($invoice);
-
-                    // 3. Delete old items
-                    $invoice->items()->each(function ($item) {
-                        $item->taxes()->delete();
-                        $item->delete();
-                    });
-
-                    // 4. Create new items and record new Stock
-                    foreach ($request->items as $itemData) {
-                        $itemData['invoice_id'] = $invoice->id;
-                        $item = InvoiceItem::create($itemData);
-
-                        // FIFO Stock Tracking (Only if already approved)
-                        if ($invoice->status_dok === 'Approved' && $item->product && $item->product->track_stock) {
-                            if ($invoice->tipe_invoice === 'Purchase') {
-                                $this->stockService->recordIn(
-                                    $item->produk_id,
-                                    $item->qty,
-                                    $item->harga_satuan,
-                                    null,
-                                    'Purchase',
-                                    $invoice->id,
-                                    "Purchase Invoice #{$invoice->nomor_invoice} (Edited)"
-                                );
-                            } elseif ($invoice->tipe_invoice === 'Sales') {
+                            } elseif ($invoice->tipe_invoice === 'Return') {
+                                // Return invoice added stock back IN; deleting it means stock goes OUT again
                                 $this->stockService->recordOut(
                                     $item->produk_id,
                                     $item->qty,
                                     null,
-                                    'Sales',
+                                    'Return Cancel (Deleted)',
                                     $invoice->id,
-                                    "Sales Invoice #{$invoice->nomor_invoice} (Edited)"
+                                    "Stock Deduct (Return Invoice Deleted): #{$invoice->nomor_invoice}"
                                 );
                             }
                         }
-
-                        if (! empty($itemData['taxes'])) {
-                            foreach ($itemData['taxes'] as $taxData) {
-                                InvoiceItemTax::create([
-                                    'invoice_item_id' => $item->id,
-                                    'tax_id' => $taxData['tax_id'],
-                                    'nilai_pajak_diterapkan' => $taxData['nilai_pajak_diterapkan'] ?? 0,
-                                ]);
-                            }
-                        }
                     }
 
-                    // 5. Re-record Journal entries
-                    if ($invoice->tipe_invoice === 'Purchase') {
-                        $this->journalService->recordPurchaseInvoice($invoice->fresh(['items.product']));
-                    } elseif ($invoice->tipe_invoice === 'Sales') {
-                        // Only record if not pending approval
-                        $needsApproval = InvoiceApprovalDetail::where('invoice_id', $invoice->id)
-                            ->where('status', 'pending')
-                            ->exists();
-
-                        if (! $needsApproval) {
-                            $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
-                        } else {
-                            $message .= '. Journal entry ditangguhkan (perlu ACC).';
-                        }
-                    }
-                }
-            }
-
-            return apiResponse(true, $message, $invoice->load('items.taxes.tax'));
-        });
-    }
-
-    public function destroy($id)
-    {
-        return DB::transaction(function () use ($id) {
-            $invoice = Invoice::where('office_id', session('active_office_id'))->find($id);
-            if (! $invoice) {
-                return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
-            }
-
-            // If NOT archived, we MUST archive first to preserve data integrity (Stock/Journals)
-            if ($invoice->status_dok !== 'Draft' || $invoice->status_pembayaran !== 'Draft') {
-                // Reverse COA
-                $this->journalService->deleteInvoiceJournal($invoice);
-
-                // Reverse Stock
-                foreach ($invoice->items as $item) {
-                    if ($item->product && $item->product->track_stock) {
-                        if ($invoice->tipe_invoice === 'Sales') {
-                            $this->stockService->recordIn(
-                                $item->produk_id,
-                                $item->qty,
-                                $item->product->harga_beli,
-                                null,
-                                'Sales Return (Archived/Deleted)',
-                                $invoice->id,
-                                "Stock Return (Invoice Deleted): #{$invoice->nomor_invoice}"
-                            );
-                        } elseif ($invoice->tipe_invoice === 'Purchase') {
-                            $this->stockService->recordOut(
-                                $item->produk_id,
-                                $item->qty,
-                                null,
-                                'Purchase Cancel (Archived/Deleted)',
-                                $invoice->id,
-                                "Stock Deduct (Purchase Invoice Deleted): #{$invoice->nomor_invoice}"
-                            );
-                        } elseif ($invoice->tipe_invoice === 'Return') {
-                            // Return invoice added stock back IN; deleting it means stock goes OUT again
-                            $this->stockService->recordOut(
-                                $item->produk_id,
-                                $item->qty,
-                                null,
-                                'Return Cancel (Deleted)',
-                                $invoice->id,
-                                "Stock Deduct (Return Invoice Deleted): #{$invoice->nomor_invoice}"
-                            );
-                        }
-                    }
-                }
-
-                // Update Status to Archived before deleting
-                $invoice->update([
-                    'status_dok' => 'Draft',
-                    'status_pembayaran' => 'Draft',
-                ]);
-            }
-
-            // If this is a Sales invoice, check if it was generated from a Surat Jalan
-            if ($invoice->tipe_invoice === 'Sales') {
-                Invoice::where('office_id', session('active_office_id'))
-                    ->where('tipe_invoice', 'SuratJalan')
-                    ->where('ref_no', $invoice->nomor_invoice)
-                    ->update([
+                    // Update Status to Archived before deleting
+                    $invoice->update([
                         'status_dok' => 'Draft',
-                        'ref_no' => null,
+                        'status_pembayaran' => 'Draft',
                     ]);
-            }
+                }
 
-            $invoice->delete();
+                // If this is a Sales invoice, check if it was generated from a Surat Jalan
+                if ($invoice->tipe_invoice === 'Sales') {
+                    Invoice::where('office_id', session('active_office_id'))
+                        ->where('tipe_invoice', 'SuratJalan')
+                        ->where('ref_no', $invoice->nomor_invoice)
+                        ->update([
+                            'status_dok' => 'Draft',
+                            'ref_no' => null,
+                        ]);
+                }
 
-            return apiResponse(true, 'Invoice berhasil dihapus (Archive)');
-        });
+                $invoice->delete();
+
+                return apiResponse(true, 'Invoice berhasil dihapus (Archive)');
+            });
+        } catch (\Exception $e) {
+            return apiResponse(false, $e->getMessage(), null, null, 422);
+        }
     }
 
     public function search(Request $request, $value)
@@ -550,87 +558,91 @@ class InvoiceController extends Controller
             $warningMessage = "Harus ACC Owner, dikarenakan umur nota ($maxOverdue hari). Invoice masuk ke Arsip.";
         }
 
-        return DB::transaction(function () use ($request, $invoiceData, $warningMessage, $needsApproval) {
+        try {
+            return DB::transaction(function () use ($request, $invoiceData, $warningMessage, $needsApproval) {
 
-            // $invoiceData = $request->invoice; // Removed because defined above
-            $invoiceData['office_id'] = session('active_office_id');
-            $invoice = Invoice::create($invoiceData);
+                // $invoiceData = $request->invoice; // Removed because defined above
+                $invoiceData['office_id'] = session('active_office_id');
+                $invoice = Invoice::create($invoiceData);
 
-            if ($needsApproval) {
-                InvoiceApprovalDetail::create([
-                    'invoice_id' => $invoice->id,
-                    'office_id' => session('active_office_id'),
-                    'requested_by' => auth()->id(),
-                    'status' => 'pending',
-                ]);
-            }
-
-            foreach ($request->items as $itemData) {
-
-                $itemData['invoice_id'] = $invoice->id;
-
-                $item = InvoiceItem::create($itemData);
-
-                // FIFO Stock Tracking
-                // Skip stock recording if approval is needed
-                if (! $needsApproval && $item->product && $item->product->track_stock) {
-                    if ($invoice->tipe_invoice === 'Purchase') {
-                        $this->stockService->recordIn(
-                            $item->produk_id, // Fixed: use produk_id from InvoiceItem
-                            $item->qty,
-                            $item->harga_satuan,
-                            null, // Support location
-                            'Purchase',
-                            $invoice->id,
-                            "Purchase Invoice #{$invoice->nomor_invoice}"
-                        );
-                    } elseif ($invoice->tipe_invoice === 'Sales') {
-                        $this->stockService->recordOut(
-                            $item->produk_id, // Fixed: use produk_id from InvoiceItem
-                            $item->qty,
-                            null, // Support location
-                            'Sales',
-                            $invoice->id,
-                            "Sales Invoice #{$invoice->nomor_invoice}"
-                        );
-                    }
+                if ($needsApproval) {
+                    InvoiceApprovalDetail::create([
+                        'invoice_id' => $invoice->id,
+                        'office_id' => session('active_office_id'),
+                        'requested_by' => auth()->id(),
+                        'status' => 'pending',
+                    ]);
                 }
 
-                // Tax Logic (Simplified)
-                if (! empty($itemData['taxes'])) {
-                    foreach ($itemData['taxes'] as $taxData) {
-                        if (! empty($taxData['tax_id'])) {
-                            $tax = InvoiceItemTax::create([
-                                'invoice_item_id' => $item->id,
-                                'tax_id' => $taxData['tax_id'],
-                                'nilai_pajak_diterapkan' => $taxData['nilai_pajak_diterapkan'] ?? 0,
-                            ]);
+                foreach ($request->items as $itemData) {
+
+                    $itemData['invoice_id'] = $invoice->id;
+
+                    $item = InvoiceItem::create($itemData);
+
+                    // FIFO Stock Tracking
+                    // Skip stock recording if approval is needed
+                    if (! $needsApproval && $item->product && $item->product->track_stock) {
+                        if ($invoice->tipe_invoice === 'Purchase') {
+                            $this->stockService->recordIn(
+                                $item->produk_id, // Fixed: use produk_id from InvoiceItem
+                                $item->qty,
+                                $item->harga_satuan,
+                                null, // Support location
+                                'Purchase',
+                                $invoice->id,
+                                "Purchase Invoice #{$invoice->nomor_invoice}"
+                            );
+                        } elseif ($invoice->tipe_invoice === 'Sales') {
+                            $this->stockService->recordOut(
+                                $item->produk_id, // Fixed: use produk_id from InvoiceItem
+                                $item->qty,
+                                null, // Support location
+                                'Sales',
+                                $invoice->id,
+                                "Sales Invoice #{$invoice->nomor_invoice}"
+                            );
+                        }
+                    }
+
+                    // Tax Logic (Simplified)
+                    if (! empty($itemData['taxes'])) {
+                        foreach ($itemData['taxes'] as $taxData) {
+                            if (! empty($taxData['tax_id'])) {
+                                $tax = InvoiceItemTax::create([
+                                    'invoice_item_id' => $item->id,
+                                    'tax_id' => $taxData['tax_id'],
+                                    'nilai_pajak_diterapkan' => $taxData['nilai_pajak_diterapkan'] ?? 0,
+                                ]);
+                            }
                         }
                     }
                 }
-            }
 
-            // Automatic Journal Entry
-            // BUT: Defer journal for Sales Invoices that need approval
-            if ($invoice->tipe_invoice === 'Purchase') {
-                $this->journalService->recordPurchaseInvoice($invoice->fresh(['items.product']));
-            } elseif ($invoice->tipe_invoice === 'Sales') {
-                if (! $needsApproval) {
-                    // Check if journal already exists to prevent duplicate entries
-                    $hasJournal = Journal::where('nomor_referensi', "Sales Invoice #{$invoice->nomor_invoice}")->exists();
-                    if (! $hasJournal) {
-                        $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
+                // Automatic Journal Entry
+                // BUT: Defer journal for Sales Invoices that need approval
+                if ($invoice->tipe_invoice === 'Purchase') {
+                    $this->journalService->recordPurchaseInvoice($invoice->fresh(['items.product']));
+                } elseif ($invoice->tipe_invoice === 'Sales') {
+                    if (! $needsApproval) {
+                        // Check if journal already exists to prevent duplicate entries
+                        $hasJournal = Journal::where('nomor_referensi', "Sales Invoice #{$invoice->nomor_invoice}")->exists();
+                        if (! $hasJournal) {
+                            $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
+                        }
                     }
                 }
-            }
 
-            $msg = 'Invoice berhasil dibuat';
-            if ($warningMessage) {
-                $msg .= '. '.$warningMessage;
-            }
+                $msg = 'Invoice berhasil dibuat';
+                if ($warningMessage) {
+                    $msg .= '. '.$warningMessage;
+                }
 
-            return apiResponse(true, $msg, $invoice->load('items'), null, 201);
-        });
+                return apiResponse(true, $msg, $invoice->load('items'), null, 201);
+            });
+        } catch (\Exception $e) {
+            return apiResponse(false, $e->getMessage(), null, null, 422);
+        }
     }
 
     public function createReturnInvoice(Request $request)
@@ -790,60 +802,64 @@ class InvoiceController extends Controller
 
     public function approve($id)
     {
-        return DB::transaction(function () use ($id) {
-            $invoice = Invoice::where('office_id', session('active_office_id'))->find($id);
+        try {
+            return DB::transaction(function () use ($id) {
+                $invoice = Invoice::where('office_id', session('active_office_id'))->find($id);
 
-            if (! $invoice) {
-                return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
-            }
+                if (! $invoice) {
+                    return apiResponse(false, 'Invoice tidak ditemukan', null, null, 404);
+                }
 
-            if ($invoice->payment()->exists()) {
-                return apiResponse(false, 'Invoice tidak dapat disetujui karena sudah ada kuitansi/pembayaran.', null, null, 422);
-            }
+                if ($invoice->payment()->exists()) {
+                    return apiResponse(false, 'Invoice tidak dapat disetujui karena sudah ada kuitansi/pembayaran.', null, null, 422);
+                }
 
-            $approval = InvoiceApprovalDetail::where('invoice_id', $id)
-                ->where('status', 'pending')
-                ->first();
+                $approval = InvoiceApprovalDetail::where('invoice_id', $id)
+                    ->where('status', 'pending')
+                    ->first();
 
-            if (! $approval) {
-                return apiResponse(false, 'Request approval tidak ditemukan', null, null, 404);
-            }
+                if (! $approval) {
+                    return apiResponse(false, 'Request approval tidak ditemukan', null, null, 404);
+                }
 
-            $approval->update([
-                'status' => 'approved',
-                'processed_by' => auth()->id(),
-            ]);
+                $approval->update([
+                    'status' => 'approved',
+                    'processed_by' => auth()->id(),
+                ]);
 
-            // Sync invoice status
-            $invoice->update(['status_dok' => 'Approved']);
+                // Sync invoice status
+                $invoice->update(['status_dok' => 'Approved']);
 
-            // Record Stock changes upon Approval (for Sales invoices that needed approval)
-            if ($invoice->tipe_invoice === 'Sales') {
-                foreach ($invoice->items as $item) {
-                    if ($item->product && $item->product->track_stock) {
-                        $this->stockService->recordOut(
-                            $item->produk_id,
-                            $item->qty,
-                            null,
-                            'Sales',
-                            $invoice->id,
-                            "Sales Invoice #{$invoice->nomor_invoice} (Approved)"
-                        );
+                // Record Stock changes upon Approval (for Sales invoices that needed approval)
+                if ($invoice->tipe_invoice === 'Sales') {
+                    foreach ($invoice->items as $item) {
+                        if ($item->product && $item->product->track_stock) {
+                            $this->stockService->recordOut(
+                                $item->produk_id,
+                                $item->qty,
+                                null,
+                                'Sales',
+                                $invoice->id,
+                                "Sales Invoice #{$invoice->nomor_invoice} (Approved)"
+                            );
+                        }
                     }
                 }
-            }
 
-            // Record Journal Entry upon Approval (if not already recorded)
-            if ($invoice->tipe_invoice === 'Sales') {
-                // To be safe, check if journal already exists (optional but good for idempotency)
-                $hasJournal = Journal::where('nomor_referensi', "Sales Invoice #{$invoice->nomor_invoice}")->exists();
-                if (! $hasJournal) {
-                    $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
+                // Record Journal Entry upon Approval (if not already recorded)
+                if ($invoice->tipe_invoice === 'Sales') {
+                    // To be safe, check if journal already exists (optional but good for idempotency)
+                    $hasJournal = Journal::where('nomor_referensi', "Sales Invoice #{$invoice->nomor_invoice}")->exists();
+                    if (! $hasJournal) {
+                        $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
+                    }
                 }
-            }
 
-            return apiResponse(true, 'Invoice berhasil disetujui');
-        });
+                return apiResponse(true, 'Invoice berhasil disetujui');
+            });
+        } catch (\Exception $e) {
+            return apiResponse(false, $e->getMessage(), null, null, 422);
+        }
     }
 
     public function reject($id)
@@ -1004,104 +1020,112 @@ class InvoiceController extends Controller
 
     public function unarchive($id)
     {
-        return DB::transaction(function () use ($id) {
-            $invoice = Invoice::where('office_id', session('active_office_id'))->findOrFail($id);
+        try {
+            return DB::transaction(function () use ($id) {
+                $invoice = Invoice::where('office_id', session('active_office_id'))->findOrFail($id);
 
-            // 1. Update Status to Approved (as per new requirement)
-            $invoice->update([
-                'status_dok' => 'Approved',
-                'status_pembayaran' => 'Unpaid',
-            ]);
+                // 1. Update Status to Approved (as per new requirement)
+                $invoice->update([
+                    'status_dok' => 'Approved',
+                    'status_pembayaran' => 'Unpaid',
+                ]);
 
-            // 2. Redo Stock
-            foreach ($invoice->items as $item) {
-                if ($item->product && $item->product->track_stock) {
-                    if ($invoice->tipe_invoice === 'Sales') {
-                        $this->stockService->recordOut(
-                            $item->produk_id,
-                            $item->qty,
-                            null,
-                            'Sales',
-                            $invoice->id,
-                            "Sales Invoice (Unarchived) #{$invoice->nomor_invoice}"
-                        );
-                    } elseif ($invoice->tipe_invoice === 'Purchase') {
-                        $this->stockService->recordIn(
-                            $item->produk_id,
-                            $item->qty,
-                            $item->harga_satuan,
-                            null,
-                            'Purchase',
-                            $invoice->id,
-                            "Purchase Invoice (Unarchived) #{$invoice->nomor_invoice}"
-                        );
+                // 2. Redo Stock
+                foreach ($invoice->items as $item) {
+                    if ($item->product && $item->product->track_stock) {
+                        if ($invoice->tipe_invoice === 'Sales') {
+                            $this->stockService->recordOut(
+                                $item->produk_id,
+                                $item->qty,
+                                null,
+                                'Sales',
+                                $invoice->id,
+                                "Sales Invoice (Unarchived) #{$invoice->nomor_invoice}"
+                            );
+                        } elseif ($invoice->tipe_invoice === 'Purchase') {
+                            $this->stockService->recordIn(
+                                $item->produk_id,
+                                $item->qty,
+                                $item->harga_satuan,
+                                null,
+                                'Purchase',
+                                $invoice->id,
+                                "Purchase Invoice (Unarchived) #{$invoice->nomor_invoice}"
+                            );
+                        }
                     }
                 }
-            }
 
-            // 3. Redo COA
-            if ($invoice->tipe_invoice === 'Purchase') {
-                $this->journalService->recordPurchaseInvoice($invoice->fresh(['items.product']));
-            } elseif ($invoice->tipe_invoice === 'Sales') {
-                $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
-            }
+                // 3. Redo COA
+                if ($invoice->tipe_invoice === 'Purchase') {
+                    $this->journalService->recordPurchaseInvoice($invoice->fresh(['items.product']));
+                } elseif ($invoice->tipe_invoice === 'Sales') {
+                    $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
+                }
 
-            return apiResponse(true, 'Invoice berhasil dikembalikan dari arsip');
-        });
+                return apiResponse(true, 'Invoice berhasil dikembalikan dari arsip');
+            });
+        } catch (\Exception $e) {
+            return apiResponse(false, $e->getMessage(), null, null, 422);
+        }
     }
 
     public function restore($id)
     {
-        return DB::transaction(function () use ($id) {
-            $invoice = Invoice::withTrashed()
-                ->where('office_id', session('active_office_id'))
-                ->findOrFail($id);
+        try {
+            return DB::transaction(function () use ($id) {
+                $invoice = Invoice::withTrashed()
+                    ->where('office_id', session('active_office_id'))
+                    ->findOrFail($id);
 
-            // 1. Restore the SoftDelete
-            $invoice->restore();
+                // 1. Restore the SoftDelete
+                $invoice->restore();
 
-            // 2. Perform Unarchive logic (Ensure Approved/Unpaid & redo stock/journals)
-            // This is exactly what unarchive does, so we ensure consistency
-            $invoice->update([
-                'status_dok' => 'Approved',
-                'status_pembayaran' => 'Unpaid',
-            ]);
+                // 2. Perform Unarchive logic (Ensure Approved/Unpaid & redo stock/journals)
+                // This is exactly what unarchive does, so we ensure consistency
+                $invoice->update([
+                    'status_dok' => 'Approved',
+                    'status_pembayaran' => 'Unpaid',
+                ]);
 
-            // Redo Stock
-            foreach ($invoice->items as $item) {
-                if ($item->product && $item->product->track_stock) {
-                    if ($invoice->tipe_invoice === 'Sales') {
-                        $this->stockService->recordOut(
-                            $item->produk_id,
-                            $item->qty,
-                            null,
-                            'Sales',
-                            $invoice->id,
-                            "Sales Invoice (Restored) #{$invoice->nomor_invoice}"
-                        );
-                    } elseif ($invoice->tipe_invoice === 'Purchase') {
-                        $this->stockService->recordIn(
-                            $item->produk_id,
-                            $item->qty,
-                            $item->harga_satuan,
-                            null,
-                            'Purchase',
-                            $invoice->id,
-                            "Purchase Invoice (Restored) #{$invoice->nomor_invoice}"
-                        );
+                // Redo Stock
+                foreach ($invoice->items as $item) {
+                    if ($item->product && $item->product->track_stock) {
+                        if ($invoice->tipe_invoice === 'Sales') {
+                            $this->stockService->recordOut(
+                                $item->produk_id,
+                                $item->qty,
+                                null,
+                                'Sales',
+                                $invoice->id,
+                                "Sales Invoice (Restored) #{$invoice->nomor_invoice}"
+                            );
+                        } elseif ($invoice->tipe_invoice === 'Purchase') {
+                            $this->stockService->recordIn(
+                                $item->produk_id,
+                                $item->qty,
+                                $item->harga_satuan,
+                                null,
+                                'Purchase',
+                                $invoice->id,
+                                "Purchase Invoice (Restored) #{$invoice->nomor_invoice}"
+                            );
+                        }
                     }
                 }
-            }
 
-            // Redo COA
-            if ($invoice->tipe_invoice === 'Purchase') {
-                $this->journalService->recordPurchaseInvoice($invoice->fresh(['items.product']));
-            } elseif ($invoice->tipe_invoice === 'Sales') {
-                $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
-            }
+                // Redo COA
+                if ($invoice->tipe_invoice === 'Purchase') {
+                    $this->journalService->recordPurchaseInvoice($invoice->fresh(['items.product']));
+                } elseif ($invoice->tipe_invoice === 'Sales') {
+                    $this->journalService->recordSalesInvoice($invoice->fresh(['items.product']));
+                }
 
-            return apiResponse(true, 'Invoice berhasil dipulihkan');
-        });
+                return apiResponse(true, 'Invoice berhasil dipulihkan');
+            });
+        } catch (\Exception $e) {
+            return apiResponse(false, $e->getMessage(), null, null, 422);
+        }
     }
 
     public function forceDestroy($id)

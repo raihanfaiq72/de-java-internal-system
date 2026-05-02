@@ -213,21 +213,9 @@ class StockService
                 ]);
             }
 
-            // Deficit handling: If still remaining, record against primary location instead of NULL
+            // Deficit handling: Throw exception instead of allowing negative stock
             if ($remainingToDeduct > 0) {
-                $deficitLocId = $stockLocationId ?? $this->getDefaultLocation($product->office_id);
-                StockMutation::create([
-                    'office_id' => $product->office_id,
-                    'product_id' => $productId,
-                    'stock_location_id' => $deficitLocId,
-                    'type' => 'OUT',
-                    'qty' => $remainingToDeduct,
-                    'remaining_qty' => 0,
-                    'cost_price' => $product->harga_beli ?? 0,
-                    'reference_type' => $referenceType,
-                    'reference_id' => $referenceId,
-                    'notes' => $notes.($qty > $remainingToDeduct ? ' (Defisit stok)' : ''),
-                ]);
+                throw new \Exception("Stok produk '{$product->nama_produk}' tidak mencukupi. Dibutuhkan {$qty} {$product->satuan}, namun hanya tersedia " . ($qty - $remainingToDeduct) . " {$product->satuan}.");
             }
 
             $this->updateProductTotalQty($productId);

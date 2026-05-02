@@ -338,160 +338,164 @@ class SuratJalanController extends Controller
             return apiResponse(false, 'Surat jalan tidak ditemukan', null, null, 404);
         }
 
-        return DB::transaction(function () use ($request, $suratJalan) {
-            // Build new invoice data from surat jalan
-            $subtotal = 0;
-            $totalDiskon = 0;
+        try {
+            return DB::transaction(function () use ($request, $suratJalan) {
+                // Build new invoice data from surat jalan
+                $subtotal = 0;
+                $totalDiskon = 0;
 
-            $itemsData = collect($request->items)->keyBy('id');
+                $itemsData = collect($request->items)->keyBy('id');
 
-            foreach ($suratJalan->items as $item) {
-                $override = $itemsData->get($item->id);
-                if (! $override) {
-                    continue;
+                foreach ($suratJalan->items as $item) {
+                    $override = $itemsData->get($item->id);
+                    if (! $override) {
+                        continue;
+                    }
+
+                    $harga = (float) $override['harga_satuan'];
+                    $qty = (float) $override['qty'];
+                    $diskon = (float) ($override['diskon_nilai'] ?? 0);
+                    $diskonTipe = $override['diskon_tipe'] ?? 'Fixed';
+
+                    $diskonNilai = $diskonTipe === 'Percentage'
+                        ? ($harga * $qty * $diskon / 100)
+                        : $diskon;
+
+                    $total = ($harga * $qty) - $diskonNilai;
+
+                    $subtotal += $harga * $qty;
+                    $totalDiskon += $diskonNilai;
                 }
 
-                $harga = (float) $override['harga_satuan'];
-                $qty = (float) $override['qty'];
-                $diskon = (float) ($override['diskon_nilai'] ?? 0);
-                $diskonTipe = $override['diskon_tipe'] ?? 'Fixed';
+                $diskonTambahan = (float) ($request->diskon_tambahan_nilai ?? 0);
+                $diskonTambahanTipe = $request->diskon_tambahan_tipe ?? 'Fixed';
+                $diskonTambahanNilai = $diskonTambahanTipe === 'Percentage'
+                    ? (($subtotal - $totalDiskon) * $diskonTambahan / 100)
+                    : $diskonTambahan;
 
-                $diskonNilai = $diskonTipe === 'Percentage'
-                    ? ($harga * $qty * $diskon / 100)
-                    : $diskon;
+                $biayaKirim = (float) ($request->biaya_kirim ?? 0);
+                $uangMuka = (float) ($request->uang_muka ?? 0);
+                $totalAkhir = ($subtotal - $totalDiskon - $diskonTambahanNilai) + $biayaKirim - $uangMuka;
 
-                $total = ($harga * $qty) - $diskonNilai;
+                // AR Aging Check
+                $needsApproval = false;
+                $maxOverdue = 0;
+                $mitra = Partner::find($suratJalan->mitra_id);
 
-                $subtotal += $harga * $qty;
-                $totalDiskon += $diskonNilai;
-            }
-
-            $diskonTambahan = (float) ($request->diskon_tambahan_nilai ?? 0);
-            $diskonTambahanTipe = $request->diskon_tambahan_tipe ?? 'Fixed';
-            $diskonTambahanNilai = $diskonTambahanTipe === 'Percentage'
-                ? (($subtotal - $totalDiskon) * $diskonTambahan / 100)
-                : $diskonTambahan;
-
-            $biayaKirim = (float) ($request->biaya_kirim ?? 0);
-            $uangMuka = (float) ($request->uang_muka ?? 0);
-            $totalAkhir = ($subtotal - $totalDiskon - $diskonTambahanNilai) + $biayaKirim - $uangMuka;
-
-            // AR Aging Check
-            $needsApproval = false;
-            $maxOverdue = 0;
-            $mitra = Partner::find($suratJalan->mitra_id);
-
-            if ($mitra) {
-                $maxOverdue = $this->getMaxOverdueDays($mitra->id);
-                if ($maxOverdue > 60) {
-                    $needsApproval = true;
+                if ($mitra) {
+                    $maxOverdue = $this->getMaxOverdueDays($mitra->id);
+                    if ($maxOverdue > 60) {
+                        $needsApproval = true;
+                    }
                 }
-            }
 
-            $statusDok = $needsApproval ? 'Draft' : 'Approved';
-            $statusPembayaran = $needsApproval ? 'Draft' : 'Unpaid';
-            $keterangan = $request->keterangan ?? $suratJalan->keterangan;
+                $statusDok = $needsApproval ? 'Draft' : 'Approved';
+                $statusPembayaran = $needsApproval ? 'Draft' : 'Unpaid';
+                $keterangan = $request->keterangan ?? $suratJalan->keterangan;
 
-            if ($needsApproval) {
-                $keterangan .= "\nAuto-Archived: Umur nota > 60 hari ($maxOverdue hari). Perlu ACC Owner.";
-            }
+                if ($needsApproval) {
+                    $keterangan .= "\nAuto-Archived: Umur nota > 60 hari ($maxOverdue hari). Perlu ACC Owner.";
+                }
 
-            // Create the new Sales invoice
-            $newInvoice = Invoice::create([
-                'office_id' => $suratJalan->office_id,
-                'tipe_invoice' => 'Sales',
-                'nomor_invoice' => $request->nomor_invoice,
-                'tgl_invoice' => $request->tgl_invoice,
-                'tgl_jatuh_tempo' => $request->tgl_jatuh_tempo,
-                'ref_no' => $request->ref_no ?? $suratJalan->nomor_invoice,
-                'mitra_id' => $suratJalan->mitra_id,
-                'sales_id' => $suratJalan->sales_id,
-                'status_dok' => $statusDok,
-                'status_pembayaran' => $statusPembayaran,
-                'subtotal' => $subtotal,
-                'total_diskon_item' => $totalDiskon,
-                'diskon_tambahan_nilai' => $diskonTambahanNilai,
-                'diskon_tambahan_tipe' => $diskonTambahanTipe,
-                'biaya_kirim' => $biayaKirim,
-                'uang_muka' => $uangMuka,
-                'total_akhir' => $totalAkhir,
-                'keterangan' => $keterangan,
-                'syarat_ketentuan' => $request->syarat_ketentuan ?? $suratJalan->syarat_ketentuan,
-            ]);
-
-            if ($needsApproval) {
-                InvoiceApprovalDetail::create([
-                    'invoice_id' => $newInvoice->id,
+                // Create the new Sales invoice
+                $newInvoice = Invoice::create([
                     'office_id' => $suratJalan->office_id,
-                    'requested_by' => auth()->id(),
-                    'status' => 'pending',
-                ]);
-            }
-
-            // Copy items with pricing
-            foreach ($suratJalan->items as $item) {
-                $override = $itemsData->get($item->id);
-                if (! $override) {
-                    continue;
-                }
-
-                $harga = (float) $override['harga_satuan'];
-                $qty = (float) $override['qty'];
-                $diskon = (float) ($override['diskon_nilai'] ?? 0);
-                $diskonTipe = $override['diskon_tipe'] ?? 'Fixed';
-
-                $diskonNilai = $diskonTipe === 'Percentage'
-                    ? ($harga * $qty * $diskon / 100)
-                    : $diskon;
-
-                $total = ($harga * $qty) - $diskonNilai;
-
-                $newInvoiceItem = InvoiceItem::create([
-                    'invoice_id' => $newInvoice->id,
-                    'produk_id' => $item->produk_id,
-                    'nama_produk_manual' => $item->nama_produk_manual,
-                    'deskripsi_produk' => $item->deskripsi_produk,
-                    'qty' => $qty,
-                    'harga_satuan' => $harga,
-                    'diskon_nilai' => $diskonNilai,
-                    'diskon_tipe' => $diskonTipe,
-                    'total_harga_item' => $total,
+                    'tipe_invoice' => 'Sales',
+                    'nomor_invoice' => $request->nomor_invoice,
+                    'tgl_invoice' => $request->tgl_invoice,
+                    'tgl_jatuh_tempo' => $request->tgl_jatuh_tempo,
+                    'ref_no' => $request->ref_no ?? $suratJalan->nomor_invoice,
+                    'mitra_id' => $suratJalan->mitra_id,
+                    'sales_id' => $suratJalan->sales_id,
+                    'status_dok' => $statusDok,
+                    'status_pembayaran' => $statusPembayaran,
+                    'subtotal' => $subtotal,
+                    'total_diskon_item' => $totalDiskon,
+                    'diskon_tambahan_nilai' => $diskonTambahanNilai,
+                    'diskon_tambahan_tipe' => $diskonTambahanTipe,
+                    'biaya_kirim' => $biayaKirim,
+                    'uang_muka' => $uangMuka,
+                    'total_akhir' => $totalAkhir,
+                    'keterangan' => $keterangan,
+                    'syarat_ketentuan' => $request->syarat_ketentuan ?? $suratJalan->syarat_ketentuan,
                 ]);
 
-                // FIFO Stock Tracking
-                if (! $needsApproval && $newInvoiceItem->product && $newInvoiceItem->product->track_stock) {
-                    $this->stockService->recordOut(
-                        $newInvoiceItem->produk_id,
-                        $newInvoiceItem->qty,
-                        $request->stock_location_id,
-                        'Sales',
-                        $newInvoice->id,
-                        "Sales Invoice #{$newInvoice->nomor_invoice} (from SJ #{$suratJalan->nomor_invoice})"
-                    );
+                if ($needsApproval) {
+                    InvoiceApprovalDetail::create([
+                        'invoice_id' => $newInvoice->id,
+                        'office_id' => $suratJalan->office_id,
+                        'requested_by' => auth()->id(),
+                        'status' => 'pending',
+                    ]);
                 }
-            }
 
-            // Automatic Journal Entry
-            if (! $needsApproval) {
-                $this->journalService->recordSalesInvoice($newInvoice->fresh(['items.product']));
-            }
+                // Copy items with pricing
+                foreach ($suratJalan->items as $item) {
+                    $override = $itemsData->get($item->id);
+                    if (! $override) {
+                        continue;
+                    }
 
-            // Mark surat jalan as converted (status_dok = Sent means "converted")
-            $suratJalan->update([
-                'status_dok' => 'Sent',
-                'ref_no' => $newInvoice->nomor_invoice,
-            ]);
+                    $harga = (float) $override['harga_satuan'];
+                    $qty = (float) $override['qty'];
+                    $diskon = (float) ($override['diskon_nilai'] ?? 0);
+                    $diskonTipe = $override['diskon_tipe'] ?? 'Fixed';
 
-            $msg = 'Surat jalan berhasil dikonversi ke invoice penjualan';
-            if ($needsApproval) {
-                $msg .= '. Harus ACC Owner, dikarenakan umur nota (> 60 hari). Invoice masuk ke Arsip.';
-            }
+                    $diskonNilai = $diskonTipe === 'Percentage'
+                        ? ($harga * $qty * $diskon / 100)
+                        : $diskon;
 
-            return apiResponse(true, $msg, [
-                'surat_jalan' => $suratJalan,
-                'invoice' => $newInvoice->load('items'),
-            ], null, 201);
-        });
+                    $total = ($harga * $qty) - $diskonNilai;
+
+                    $newInvoiceItem = InvoiceItem::create([
+                        'invoice_id' => $newInvoice->id,
+                        'produk_id' => $item->produk_id,
+                        'nama_produk_manual' => $item->nama_produk_manual,
+                        'deskripsi_produk' => $item->deskripsi_produk,
+                        'qty' => $qty,
+                        'harga_satuan' => $harga,
+                        'diskon_nilai' => $diskonNilai,
+                        'diskon_tipe' => $diskonTipe,
+                        'total_harga_item' => $total,
+                    ]);
+
+                    // FIFO Stock Tracking
+                    if (! $needsApproval && $newInvoiceItem->product && $newInvoiceItem->product->track_stock) {
+                        $this->stockService->recordOut(
+                            $newInvoiceItem->produk_id,
+                            $newInvoiceItem->qty,
+                            $request->stock_location_id,
+                            'Sales',
+                            $newInvoice->id,
+                            "Sales Invoice #{$newInvoice->nomor_invoice} (from SJ #{$suratJalan->nomor_invoice})"
+                        );
+                    }
+                }
+
+                // Automatic Journal Entry
+                if (! $needsApproval) {
+                    $this->journalService->recordSalesInvoice($newInvoice->fresh(['items.product']));
+                }
+
+                // Mark surat jalan as converted (status_dok = Sent means "converted")
+                $suratJalan->update([
+                    'status_dok' => 'Sent',
+                    'ref_no' => $newInvoice->nomor_invoice,
+                ]);
+
+                $msg = 'Surat jalan berhasil dikonversi ke invoice penjualan';
+                if ($needsApproval) {
+                    $msg .= '. Harus ACC Owner, dikarenakan umur nota (> 60 hari). Invoice masuk ke Arsip.';
+                }
+
+                return apiResponse(true, $msg, [
+                    'surat_jalan' => $suratJalan,
+                    'invoice' => $newInvoice->load('items'),
+                ], null, 201);
+            });
+        } catch (\Exception $e) {
+            return apiResponse(false, $e->getMessage(), null, null, 422);
+        }
     }
 
     /**
