@@ -7,7 +7,6 @@ use App\Models\BulkReport;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Payment;
-use App\Models\User;
 use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -175,7 +174,13 @@ class BulkReportController extends Controller
 
     private function getSalesData($startDate, $endDate)
     {
-        return Invoice::with(['mitra', 'items'])
+        return Invoice::with([
+            'mitra' => function ($query) {
+                $query->withTrashed();
+            },
+            'items',
+        ])
+            ->where('tipe_invoice', 'Sales')
             ->whereBetween('tgl_invoice', [$startDate, $endDate])
             ->orderBy('tgl_invoice', 'desc')
             ->get()
@@ -183,7 +188,7 @@ class BulkReportController extends Controller
                 // Ensure dates are Carbon objects
                 $invoice->tgl_invoice = is_string($invoice->tgl_invoice)
                     ? Carbon::parse($invoice->tgl_invoice)
-                    : $invoice->tgl_invoice;
+                    : ($invoice->tgl_invoice instanceof Carbon ? $invoice->tgl_invoice : Carbon::parse($invoice->tgl_invoice));
 
                 return $invoice;
             });
@@ -191,7 +196,17 @@ class BulkReportController extends Controller
 
     private function getPaymentsData($startDate, $endDate)
     {
-        return Payment::with(['invoice.mitra'])
+        return Payment::with([
+            'invoice' => function ($query) {
+                $query->where('tipe_invoice', 'Sales');
+            },
+            'invoice.mitra' => function ($query) {
+                $query->withTrashed();
+            },
+        ])
+            ->whereHas('invoice', function ($query) {
+                $query->where('tipe_invoice', 'Sales');
+            })
             ->whereBetween('tgl_pembayaran', [$startDate, $endDate])
             ->orderBy('tgl_pembayaran', 'desc')
             ->get()
@@ -207,9 +222,14 @@ class BulkReportController extends Controller
 
     private function getARAgingData($asOfDate)
     {
-        $invoices = Invoice::with(['mitra'])
-            ->where('status_pembayaran', '!=', 'Lunas')
-            ->where('tgl_jatuh_tempo', '<=', $asOfDate)
+        $invoices = Invoice::with([
+            'mitra' => function ($query) {
+                $query->withTrashed();
+            },
+        ])
+            ->where('tipe_invoice', 'Sales')
+            ->whereIn('status_pembayaran', ['Partial', 'Unpaid'])
+            ->where('tgl_invoice', '<=', $asOfDate)
             ->get();
 
         $agingData = [];
@@ -235,9 +255,9 @@ class BulkReportController extends Controller
                 'invoice_no' => $invoice->nomor_invoice,
                 'due_date' => $dueDate->format('d/m/Y'),
                 'days_overdue' => $daysOverdue,
-                'total_amount' => $invoice->total_akhir,
-                'paid_amount' => $invoice->payment->sum('jumlah_bayar') ?? 0,
-                'remaining_amount' => $invoice->total_akhir - ($invoice->payment->sum('jumlah_bayar') ?? 0),
+                'total_amount' => (float) $invoice->total_akhir,
+                'paid_amount' => (float) $invoice->payment()->sum('jumlah_bayar'),
+                'remaining_amount' => (float) ($invoice->total_akhir - $invoice->payment()->sum('jumlah_bayar')),
                 'aging_buckets' => $agingBuckets,
             ];
         }
@@ -248,15 +268,18 @@ class BulkReportController extends Controller
     private function getProfitLossData($startDate, $endDate)
     {
         // Revenue from invoices
-        $salesRevenue = Invoice::whereBetween('tgl_invoice', [$startDate, $endDate])
+        $salesRevenue = (float) Invoice::whereBetween('tgl_invoice', [$startDate, $endDate])
+            ->where('tipe_invoice', 'Sales')
             ->sum('total_akhir');
 
-        // Cost of goods sold using Eloquent relationship
-        $costOfGoodsSold = InvoiceItem::whereHas('invoice', function ($query) use ($startDate, $endDate) {
-            $query->whereBetween('tgl_invoice', [$startDate, $endDate]);
-        })->sum(function ($invoiceItem) {
-            return $invoiceItem->qty * $invoiceItem->harga_satuan;
-        });
+        // Cost of goods sold using products purchase price
+        $costOfGoodsSold = (float) InvoiceItem::whereHas('invoice', function ($query) use ($startDate, $endDate) {
+            $query->where('tipe_invoice', 'Sales')
+                  ->whereBetween('tgl_invoice', [$startDate, $endDate]);
+        })
+            ->join('products', 'invoice_items.produk_id', '=', 'products.id')
+            ->selectRaw('SUM(invoice_items.qty * products.harga_beli) as total_cogs')
+            ->value('total_cogs') ?? 0;
 
         // Alternative approach using collection for better performance
         // $costOfGoodsSold = Invoice::with('items')
