@@ -6,7 +6,7 @@
                 <th>Akun Keuangan</th>
                 <th>Referensi</th>
                 <th class="text-end">Debit</th>
-                <th class="text-end">Credit</th>
+                <th class="text-end">Kredit</th>
                 <th>Status</th>
                 <th>Tindakan</th>
             </tr>
@@ -36,10 +36,10 @@
                                 {{ $trx->reference_number }}</small>
                         @endif
                     </td>
-                    <td class="text-end">
+                    <td class="text-end fw-bold">
                         @if (in_array($trx->type, ['income', 'transfer']))
                             @if ($trx->to_account_id)
-                                Rp {{ number_format($trx->amount, 2) }}
+                                Rp {{ number_format($trx->amount, 2, '.', ',') }}
                             @else
                                 -
                             @endif
@@ -47,10 +47,10 @@
                             -
                         @endif
                     </td>
-                    <td class="text-end">
+                    <td class="text-end fw-bold">
                         @if (in_array($trx->type, ['expense', 'transfer']))
                             @if ($trx->from_account_id)
-                                Rp {{ number_format($trx->amount, 2) }}
+                                Rp {{ number_format($trx->amount, 2, ',', '.') }}
                             @else
                                 -
                             @endif
@@ -72,13 +72,11 @@
                     <td>
                         <div class="d-flex gap-1">
                             <button class="btn btn-sm btn-outline-primary"
-                                onclick='openEditTransactionModal(@json($trx))'
-                                title="Edit Transaksi">
+                                onclick='openEditTransactionModal(@json($trx))' title="Edit Transaksi">
                                 <i class="iconoir-edit-pencil"></i>
                             </button>
                             <button class="btn btn-sm btn-outline-danger"
-                                onclick="deleteTransaction({{ $trx->id }})"
-                                title="Hapus Transaksi">
+                                onclick="deleteTransaction({{ $trx->id }})" title="Hapus Transaksi">
                                 <i class="iconoir-trash"></i>
                             </button>
                         </div>
@@ -87,7 +85,7 @@
             @empty
                 <tr>
                     <td colspan="7" class="text-center py-5">
-                        <img src="{{ asset('assets/images/no-data.svg') }}" alt="No Data" style="height: 100px; opacity: 0.5">
+                        {{-- <img src="{{ asset('assets/images/no-data.svg') }}" alt="No Data" style="height: 100px; opacity: 0.5"> --}}
                         <p class="text-muted mt-3">Belum ada transaksi.</p>
                     </td>
                 </tr>
@@ -96,6 +94,12 @@
     </table>
 </div>
 
-<div class="mt-3">
-    {{ $transactions->withQueryString()->links() }}
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <div class="text-muted small">
+        Menampilkan {{ $transactions->firstItem() ?? 0 }} hingga {{ $transactions->lastItem() ?? 0 }} dari
+        {{ $transactions->total() }} baris
+    </div>
+    <div class="finance-pagination">
+        {{ $transactions->links('pagination::bootstrap-5') }}
+    </div>
 </div>

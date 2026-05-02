@@ -193,7 +193,7 @@
                                 <div class="collapse mb-4" id="filterCollapse">
                                     <div class="card card-body bg-light border-0">
                                         <form id="filterForm" action="{{ route('finance.index') }}" method="GET"
-                                            class="row g-3">
+                                            class="row g-3" data-no-loader>
                                             <div class="col-md-3">
                                                 <label class="form-label">Filter Akun</label>
                                                 <select class="form-select" name="account_id">
@@ -243,8 +243,10 @@
                                     </div>
                                 </div>
 
-                                <div id="transactionTableContainer">
-                                    @include('Finance.partials.transaction_table')
+                                <div id="transactionTableContainer" class="position-relative">
+                                    <div id="tableContent">
+                                        @include('Finance.partials.transaction_table')
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -338,6 +340,43 @@
             .cursor-pointer {
                 cursor: pointer;
             }
+
+            /* Loading State */
+            #transactionTableContainer.is-loading #tableSpinner {
+                display: block !important;
+            }
+
+            #transactionTableContainer.is-loading #tableContent {
+                opacity: 0.3;
+                pointer-events: none;
+            }
+
+            /* Hide default Laravel pagination info inside our wrapper */
+            .finance-pagination .flex-1.d-sm-flex>div:first-child,
+            .finance-pagination nav > div:first-child {
+                display: none !important;
+            }
+
+            .finance-pagination .flex-1.d-sm-flex,
+            .finance-pagination nav > div:last-child {
+                display: flex !important;
+                justify-content: flex-end !important;
+                width: 100%;
+            }
+
+            .finance-pagination .small.text-muted {
+                display: none !important;
+            }
+
+            .finance-pagination nav {
+                box-shadow: none !important;
+                background: transparent !important;
+                border: none !important;
+            }
+
+            .finance-pagination .pagination {
+                margin-bottom: 0 !important;
+            }
         </style>
 
         <!-- Modals -->
@@ -354,7 +393,9 @@
             // Initialize Charts
             document.addEventListener('DOMContentLoaded', function() {
                 // Fix Modal Z-Index Issue by moving them to body
-                const modals = ['modalTransfer', 'modalIncome', 'modalExpense', 'modalCreateAccount', 'modalEditTransaction'];
+                const modals = ['modalTransfer', 'modalIncome', 'modalExpense', 'modalCreateAccount',
+                    'modalEditTransaction'
+                ];
                 modals.forEach(id => {
                     const el = document.getElementById(id);
                     if (el) document.body.appendChild(el);
@@ -657,21 +698,27 @@
                     let url = $(this).attr('action');
                     let data = $(this).serialize();
 
-                    // Show loading state
-                    $('#transactionTableContainer').css('opacity', '0.5');
+                    // Show loading state inside table
+                    $('#tableContent tbody').html(
+                        '<tr><td colspan="7" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Memuat data...</td></tr>'
+                        );
+                    $('#tableContent').css('opacity', '0.6');
 
                     $.ajax({
                         url: url,
                         type: 'GET',
-                        data: data,
+                        global: false,
+                        data: data + '&ajax=1',
                         success: function(response) {
-                            $('#transactionTableContainer').html(response);
-                            $('#transactionTableContainer').css('opacity', '1');
+                            $('#tableContent').html(response);
                         },
                         error: function(xhr) {
-                            console.log(xhr.responseText);
-                            $('#transactionTableContainer').css('opacity', '1');
-                            alert('Terjadi kesalahan saat memuat data.');
+                            console.error(xhr.responseText);
+                            alert('Terjadi kesalahan saat memuat data: ' + xhr.statusText);
+                        },
+                        complete: function() {
+                            $('#tableContent').css('opacity', '1');
+                            if (window.PageLoader) window.PageLoader.hide();
                         }
                     });
                 });
@@ -681,12 +728,35 @@
                     e.preventDefault();
                     let url = $(this).attr('href');
 
-                    // Show loading state
-                    $('#transactionTableContainer').css('opacity', '0.5');
+                    // Show loading state inside table
+                    $('#tableContent tbody').html(
+                        '<tr><td colspan="7" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Memuat data...</td></tr>'
+                        );
+                    $('#tableContent').css('opacity', '0.6');
 
-                    $.get(url, function(response) {
-                        $('#transactionTableContainer').html(response);
-                        $('#transactionTableContainer').css('opacity', '1');
+                    let ajaxUrl = url;
+                    if (ajaxUrl.indexOf('?') === -1) ajaxUrl += '?ajax=1';
+                    else ajaxUrl += '&ajax=1';
+
+                    $.ajax({
+                        url: ajaxUrl,
+                        type: 'GET',
+                        global: false,
+                        success: function(response) {
+                            $('#tableContent').html(response);
+                            // Scroll to top of table
+                            document.getElementById('transactionTableContainer').scrollIntoView({
+                                behavior: 'smooth'
+                            });
+                        },
+                        error: function(xhr) {
+                            console.error(xhr.responseText);
+                            alert('Terjadi kesalahan saat memuat data: ' + xhr.statusText);
+                        },
+                        complete: function() {
+                            $('#tableContent').css('opacity', '1');
+                            if (window.PageLoader) window.PageLoader.hide();
+                        }
                     });
                 });
             });
@@ -703,8 +773,8 @@
                 document.getElementById('edit_type').value = trx.type;
                 const typeBadges = {
                     transfer: '<span class="badge bg-info bg-opacity-10 text-info border border-info">Transfer</span>',
-                    income:   '<span class="badge bg-success bg-opacity-10 text-success border border-success">Income / Pemasukan</span>',
-                    expense:  '<span class="badge bg-danger bg-opacity-10 text-danger border border-danger">Expense / Pengeluaran</span>',
+                    income: '<span class="badge bg-success bg-opacity-10 text-success border border-success">Income / Pemasukan</span>',
+                    expense: '<span class="badge bg-danger bg-opacity-10 text-danger border border-danger">Expense / Pengeluaran</span>',
                 };
                 document.getElementById('edit_type_badge').innerHTML = typeBadges[trx.type] || trx.type;
 
@@ -752,20 +822,23 @@
                     },
                     success: function(res) {
                         if (res.success) {
-                            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditTransaction')).hide();
+                            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditTransaction'))
+                                .hide();
                             location.reload();
                         } else {
                             alert(res.message);
                         }
                     },
                     error: function(err) {
-                        alert('Terjadi kesalahan: ' + (err.responseJSON ? err.responseJSON.message : 'Unknown error'));
+                        alert('Terjadi kesalahan: ' + (err.responseJSON ? err.responseJSON.message :
+                            'Unknown error'));
                     }
                 });
             }
 
             async function deleteTransaction(id) {
-                if (!await macConfirm('Hapus Transaksi', 'Yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan.')) return;
+                if (!await macConfirm('Hapus Transaksi',
+                        'Yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan.')) return;
 
                 $.ajax({
                     url: "{{ url('finance/transaction') }}/" + id,
@@ -782,7 +855,8 @@
                         }
                     },
                     error: function(err) {
-                        alert('Terjadi kesalahan: ' + (err.responseJSON ? err.responseJSON.message : 'Unknown error'));
+                        alert('Terjadi kesalahan: ' + (err.responseJSON ? err.responseJSON.message :
+                            'Unknown error'));
                     }
                 });
             }

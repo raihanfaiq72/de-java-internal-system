@@ -460,7 +460,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-bold">
+                <h5 class="modal-title text-black fw-bold">
                     <i class="iconoir-edit-pencil me-2"></i>Edit Transaksi
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -485,7 +485,8 @@
                                 <select class="form-select" name="from_account_id" id="edit_from_account_id">
                                     <option value="">Pilih Akun</option>
                                     @foreach ($all_accounts as $acc)
-                                        <option value="{{ $acc->id }}">{{ $acc->code }} - {{ $acc->name }}</option>
+                                        <option value="{{ $acc->id }}">{{ $acc->code }} -
+                                            {{ $acc->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -494,7 +495,8 @@
                                 <select class="form-select" name="to_account_id" id="edit_to_account_id">
                                     <option value="">Pilih Akun</option>
                                     @foreach ($all_accounts as $acc)
-                                        <option value="{{ $acc->id }}">{{ $acc->code }} - {{ $acc->name }}</option>
+                                        <option value="{{ $acc->id }}">{{ $acc->code }} -
+                                            {{ $acc->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -508,7 +510,8 @@
                             <select class="form-select" name="to_account_id" id="edit_income_to_account_id">
                                 <option value="">Pilih Akun</option>
                                 @foreach ($all_accounts as $acc)
-                                    <option value="{{ $acc->id }}">{{ $acc->code }} - {{ $acc->name }}</option>
+                                    <option value="{{ $acc->id }}">{{ $acc->code }} - {{ $acc->name }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -521,7 +524,8 @@
                             <select class="form-select" name="from_account_id" id="edit_expense_from_account_id">
                                 <option value="">Pilih Akun</option>
                                 @foreach ($all_accounts as $acc)
-                                    <option value="{{ $acc->id }}">{{ $acc->code }} - {{ $acc->name }}</option>
+                                    <option value="{{ $acc->id }}">{{ $acc->code }} - {{ $acc->name }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -529,7 +533,8 @@
 
                     <div class="mb-3">
                         <label class="form-label">Tanggal Transaksi *</label>
-                        <input type="date" class="form-control" name="transaction_date" id="edit_transaction_date" required>
+                        <input type="date" class="form-control" name="transaction_date"
+                            id="edit_transaction_date" required>
                     </div>
 
                     <div class="mb-3">
@@ -554,14 +559,15 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Lampiran Baru <small class="text-muted">(kosongkan jika tidak diubah)</small></label>
+                        <label class="form-label">Lampiran Baru <small class="text-muted">(kosongkan jika tidak
+                                diubah)</small></label>
                         <input type="file" class="form-control" name="lampiran">
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batalkan</button>
                     <button type="submit" class="btn btn-primary px-4">
-                        <i class="iconoir-save-floppy-disk me-1"></i> Simpan Perubahan
+                        <i class="iconoir-floppy-disk me-1"></i> Simpan Perubahan
                     </button>
                 </div>
             </form>
@@ -583,11 +589,13 @@
                 <div class="row g-3 mb-4 align-items-end">
                     <div class="col-md-4">
                         <label class="form-label small fw-bold">Dari Tanggal</label>
-                        <input type="date" class="form-control" id="preview-start-date" value="{{ date('Y-m-01') }}">
+                        <input type="date" class="form-control" id="preview-start-date"
+                            value="{{ date('Y-m-01') }}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small fw-bold">Sampai Tanggal</label>
-                        <input type="date" class="form-control" id="preview-end-date" value="{{ date('Y-m-d') }}">
+                        <input type="date" class="form-control" id="preview-end-date"
+                            value="{{ date('Y-m-d') }}">
                     </div>
                     <div class="col-md-4">
                         <button class="btn btn-primary w-100" onclick="fetchPreviewData()">
