@@ -182,7 +182,7 @@ class BulkReportController extends Controller
         ])
             ->where('tipe_invoice', 'Sales')
             ->whereBetween('tgl_invoice', [$startDate, $endDate])
-            ->orderBy('tgl_invoice', 'desc')
+            ->orderBy('tgl_invoice', 'asc')
             ->get()
             ->map(function ($invoice) {
                 // Ensure dates are Carbon objects
@@ -208,7 +208,7 @@ class BulkReportController extends Controller
                 $query->where('tipe_invoice', 'Sales');
             })
             ->whereBetween('tgl_pembayaran', [$startDate, $endDate])
-            ->orderBy('tgl_pembayaran', 'desc')
+            ->orderBy('tgl_pembayaran', 'asc')
             ->get()
             ->map(function ($payment) {
                 // Ensure dates are Carbon objects

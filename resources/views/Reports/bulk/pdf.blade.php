@@ -105,9 +105,62 @@
                 print-color-adjust: exact;
             }
         }
+        /* Cover Page */
+        .cover-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 90vh;
+            text-align: center;
+            page-break-after: always;
+        }
+        .cover-title {
+            font-size: 28px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            line-height: 1.4;
+            margin-bottom: 30px;
+        }
+        .cover-divider {
+            width: 80px;
+            border-top: 3px solid #000;
+            margin: 20px auto;
+        }
+        .cover-meta {
+            font-size: 13px;
+            color: #444;
+            margin-top: 10px;
+        }
+        .cover-footer {
+            position: absolute;
+            bottom: 30mm;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 11px;
+            color: #888;
+        }
     </style>
 </head>
 <body>
+
+<!-- Cover Page -->
+<div class="cover-page">
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div class="cover-divider"></div>
+        <div class="cover-title">
+            LAPORAN KEUANGAN BULANAN<br>
+            PERIODE {{ strtoupper($bulkReport->period_name) }}
+        </div>
+        <div class="cover-divider"></div>
+        <div class="cover-meta" style="margin-top: 40px;">
+            Tanggal Cetak: {{ date('d F Y') }}<br>
+            Dicetak oleh: {{ auth()->user()->name }}
+        </div>
+    </div>
+</div>
 
 <!-- Page 1: Sales Invoice Report -->
 <div class="report-header">
@@ -118,30 +171,43 @@
 <table>
     <thead>
         <tr>
+            <th width="4%">No.</th>
             <th>Tanggal</th>
             <th>No. Faktur</th>
             <th>Pelanggan</th>
-            <th>Total</th>
-            <th>Status</th>
+            <th class="text-right">Total</th>
+            <th class="text-center">Status</th>
         </tr>
     </thead>
     <tbody>
-        @forelse($salesData as $invoice)
+        @php $salesTotal = 0; @endphp
+        @forelse($salesData as $i => $invoice)
+            @php $salesTotal += $invoice->total_akhir; @endphp
             <tr>
+                <td class="text-center">{{ $i + 1 }}</td>
                 <td>{{ $invoice->tgl_invoice->format('d/m/Y') }}</td>
                 <td>{{ $invoice->nomor_invoice }}</td>
-                <td>{{ $invoice->mitra->nama }}</td>
+                <td>{{ $invoice->mitra->nama ?? '-' }}</td>
                 <td class="text-right bold">Rp {{ number_format($invoice->total_akhir, 0, ',', '.') }}</td>
                 <td class="text-center">{{ $invoice->status_pembayaran == 'Paid' ? 'Lunas' : $invoice->status_pembayaran }}</td>
             </tr>
         @empty
             <tr>
-                <td colspan="5" class="text-center py-4">
+                <td colspan="6" class="text-center py-4">
                     <em>Tidak ada data penjualan pada periode ini</em>
                 </td>
             </tr>
         @endforelse
     </tbody>
+    @if($salesData->count() > 0)
+    <tfoot>
+        <tr style="background-color: #f2f2f2;">
+            <td colspan="4" class="text-right bold">TOTAL</td>
+            <td class="text-right bold">Rp {{ number_format($salesTotal, 0, ',', '.') }}</td>
+            <td></td>
+        </tr>
+    </tfoot>
+    @endif
 </table>
 
 <!-- Page 2: Payments Summary -->
@@ -154,30 +220,43 @@
 <table>
     <thead>
         <tr>
+            <th width="4%">No.</th>
             <th>Tanggal</th>
             <th>Pelanggan</th>
             <th>No. Referensi</th>
-            <th>Jumlah</th>
+            <th class="text-right">Jumlah</th>
             <th>Metode</th>
         </tr>
     </thead>
     <tbody>
-        @forelse($paymentsData as $payment)
+        @php $paymentsTotal = 0; @endphp
+        @forelse($paymentsData as $i => $payment)
+            @php $paymentsTotal += $payment->jumlah_bayar; @endphp
             <tr>
+                <td class="text-center">{{ $i + 1 }}</td>
                 <td>{{ $payment->tgl_pembayaran->format('d/m/Y') }}</td>
-                <td>{{ $payment->invoice->mitra->name }}</td>
+                <td>{{ $payment->invoice->mitra->nama ?? '-' }}</td>
                 <td>{{ $payment->nomor_pembayaran }}</td>
                 <td class="text-right bold">Rp {{ number_format($payment->jumlah_bayar, 0, ',', '.') }}</td>
                 <td>{{ ucfirst($payment->metode_pembayaran) }}</td>
             </tr>
         @empty
             <tr>
-                <td colspan="5" class="text-center py-4">
+                <td colspan="6" class="text-center py-4">
                     <em>Tidak ada data pembayaran pada periode ini</em>
                 </td>
             </tr>
         @endforelse
     </tbody>
+    @if($paymentsData->count() > 0)
+    <tfoot>
+        <tr style="background-color: #f2f2f2;">
+            <td colspan="4" class="text-right bold">TOTAL</td>
+            <td class="text-right bold">Rp {{ number_format($paymentsTotal, 0, ',', '.') }}</td>
+            <td></td>
+        </tr>
+    </tfoot>
+    @endif
 </table>
 
 <!-- Page 3: A/R Aging Summary (Landscape) -->
