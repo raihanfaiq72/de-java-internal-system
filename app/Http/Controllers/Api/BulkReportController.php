@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -159,29 +160,17 @@ class BulkReportController extends Controller
 
     private function sendBulkReportNotification($type, $data)
     {
-        // Get all users who have access to bulk reports
-        $users = User::whereHas('roles', function ($query) {
-            $query->whereHas('permissions', function ($q) {
-                $q->where('name', 'bulk-reports.index');
-            });
-        })->get();
+        $notificationType = $type === 'bulk_report_created' ? 'success' :
+                         ($type === 'bulk_report_generated' ? 'info' : 'warning');
 
-        foreach ($users as $user) {
-            $user->notifications()->create([
-                'type' => $type === 'bulk_report_created' ? 'success' :
-                         ($type === 'bulk_report_generated' ? 'info' : 'warning'),
-                'data' => [
-                    'type' => $type,
-                    'title' => $data['title'],
-                    'message' => $data['message'],
-                    'bulk_report_id' => $data['bulk_report_id'] ?? null,
-                    'period_name' => $data['period_name'] ?? null,
-                    'created_by' => $data['created_by'] ?? null,
-                    'marked_by' => $data['marked_by'] ?? null,
-                    'deleted_by' => $data['deleted_by'] ?? null,
-                ],
-            ]);
-        }
+        NotificationService::notifyByPermission(
+            'bulk-reports.index',
+            $data['title'],
+            $data['message'],
+            route('bulk-reports.index'),
+            $notificationType,
+            $data
+        );
     }
 
     private function getSalesData($startDate, $endDate)
